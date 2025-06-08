@@ -10,6 +10,7 @@ import ElegantMapViewer from './ElegantMapViewer';
 import { Link, useNavigate } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useUserTypeStore } from '@/store/userStore';
 
 // Enhanced MapItem interface with geospatial data
 interface MapItem {
@@ -196,7 +197,7 @@ export default function MapShop() {
     const [selectedMap, setSelectedMap] = useState<MapItem | null>(null);
     //   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
-    const userType: 'guest' | 'buyer' = 'guest'
+    const { userType } = useUserTypeStore()
     const navigate = useNavigate()
 
     // Pagination state
@@ -334,7 +335,7 @@ export default function MapShop() {
                                         placeholder="Search maps..."
                                         value={searchTerm}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                                        className="pl-9"
+                                        className="pl-9 bg-muted"
                                     />
                                 </div>
                             </div>

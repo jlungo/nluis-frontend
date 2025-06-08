@@ -139,12 +139,11 @@ export default function MapPurchaseFlow({ selectedMap, purchaseType, onClose, on
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-screen sm:max-w-6xl">
                 <DialogHeader className="border-b pb-4">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <img src={nlupcLogo} alt="NLUPC" className="h-8 w-8" />
-                            <img src={tanzaniaCoatOfArms} alt="Tanzania" className="h-8 w-8" />
+                            <img src={nlupcLogo} alt="NLUPC" className="h-10 w-10" />
                         </div>
                         <div>
                             <DialogTitle className="text-primary">Tanzania MapShop - Official Purchase</DialogTitle>
@@ -156,22 +155,22 @@ export default function MapPurchaseFlow({ selectedMap, purchaseType, onClose, on
                 </DialogHeader>
 
                 {/* Progress Steps */}
-                <div className="flex items-center justify-between py-4">
+                <div className="flex items-center justify-between flex-wrap lg:py-4">
                     {steps.map((step, index) => (
-                        <div key={step.id} className="flex items-center">
-                            <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${step.completed
+                        <div key={step.id} className="flex items-center flex-col md:flex-row text-center md:text-start">
+                            <div className={`shrink-0 flex items-center justify-center w-7 md:w-8 h-7 md:h-8 rounded-full border-2 ${step.completed
                                 ? 'bg-primary border-primary text-primary-foreground'
                                 : currentStep === step.id
                                     ? 'border-primary text-primary'
                                     : 'border-muted text-muted-foreground'
                                 }`}>
                                 {step.completed ? (
-                                    <CheckCircle className="h-4 w-4" />
+                                    <CheckCircle className="h-3 md:h-4 w-3 md:w-4" />
                                 ) : (
-                                    <span className="text-sm font-medium">{index + 1}</span>
+                                    <span className="text-xs md:text-sm font-medium">{index + 1}</span>
                                 )}
                             </div>
-                            <span className={`ml-2 text-sm ${step.completed || currentStep === step.id
+                            <span className={`ml-2 text-[9px] lg:text-sm ${step.completed || currentStep === step.id
                                 ? 'text-foreground font-medium'
                                 : 'text-muted-foreground'
                                 }`}>
@@ -188,12 +187,12 @@ export default function MapPurchaseFlow({ selectedMap, purchaseType, onClose, on
                 <Separator />
 
                 {/* Step Content */}
-                <div className="py-6">
+                <div className="py-3 lg:py-6">
                     {currentStep === 'details' && (
-                        <div className="space-y-6">
-                            <div className="flex items-start gap-6">
+                        <div className="space-y-3 lg:space-y-6">
+                            <div className="flex items-start flex-col md:flex-row gap-3 lg:gap-6">
                                 {/* Map Preview */}
-                                <div className="flex-1">
+                                <div className="flex-1 w-full">
                                     <h3 className="font-semibold mb-4">Map Details</h3>
                                     <Card>
                                         <CardHeader>
@@ -336,7 +335,7 @@ export default function MapPurchaseFlow({ selectedMap, purchaseType, onClose, on
                                 </div>
 
                                 {/* Purchase Summary */}
-                                <div className="w-80">
+                                <div className="w-full md:w-80">
                                     <h3 className="font-semibold mb-4">Purchase Summary</h3>
                                     <Card>
                                         <CardHeader>

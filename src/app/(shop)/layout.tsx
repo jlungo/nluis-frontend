@@ -6,9 +6,10 @@ import tanzaniaCoatOfArms from '@/assets/bibi_na_bwana.png';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
+import { useUserTypeStore } from "@/store/userStore";
 
 export default function Layout() {
-    const userType: 'guest' | 'buyer' = 'guest'
+    const { userType } = useUserTypeStore()
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -61,7 +62,7 @@ export default function Layout() {
                                 <>
                                     {location.pathname === '/mapshop' ? (
                                         <div className="flex items-center gap-2">
-                                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                                            <Badge className="bg-green-100 dark:bg-green-800/20 text-green-800 border-green-200 dark:border-green-800  hidden lg:flex">
                                                 <User className="h-3 w-3 mr-1" />
                                                 Buyer Account
                                             </Badge>
@@ -73,7 +74,7 @@ export default function Layout() {
                                         <div className="flex items-center gap-3">
                                             <div className="text-right">
                                                 {/* <div className="text-sm font-medium">{buyerInfo.firstName} {buyerInfo.lastName}</div>
-                                <div className="text-xs text-muted-foreground">{buyerInfo.email}</div> */}
+                                                    <div className="text-xs text-muted-foreground">{buyerInfo.email}</div> */}
                                             </div>
                                             <Button variant="outline" onClick={() => navigate('/', { replace: true })} size="sm">
                                                 Logout

@@ -135,9 +135,9 @@ export default function MapShopLoginForm() {
 
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 rounded-full">
+                <TabsTrigger value="login" className="rounded-full cursor-pointer">Login</TabsTrigger>
+                <TabsTrigger value="register" className="rounded-full cursor-pointer">Register</TabsTrigger>
               </TabsList>
 
               {/* Login Tab */}

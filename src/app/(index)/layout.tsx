@@ -46,7 +46,7 @@ export default function Layout() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 md:gap-3">
                             <ThemeTogglePopover />
                             <Link
                                 to="/mapshop"
