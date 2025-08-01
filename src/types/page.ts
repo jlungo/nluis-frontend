@@ -1,0 +1,40 @@
+export type Page =
+  | "dashboard"
+  | "land-uses"
+  | "village-land-use"
+  | "regional-land-use"
+  | "district-land-use"
+  | "land-formalization"
+  | "ccro-management"
+  | "land-use-planning"
+  | "land-use-plans"
+  | "management-evaluation"
+  | "compliance"
+  | "reports"
+  | "user-management"
+  | "system-settings"
+  | "audit-trail"
+  | "project-detail"
+  | "profile"
+  // Village Land Use forms
+  | "village-creation-form"
+  | "village-plan-form"
+  | "village-process-23-steps"
+  | "village-process-23-steps-updated"
+  // CCRO forms
+  | "ccro-registration-form"
+  | "ccro-process"
+  | "ccro-documentation-form"
+  | "ccro-documentation-viewer"
+  // Management & Evaluation forms
+  | "me-registration-form"
+  | "me-process"
+  | "management-evaluation-form"
+  // Compliance forms
+  | "compliance-registration-form"
+  | "compliance-process"
+  | "compliance-form"
+  // Other forms
+  | "regional-plan-form"
+  | "district-plan-form"
+  | "national-plan-form";

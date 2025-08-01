@@ -11,8 +11,10 @@ import {
     Settings,
     Activity,
     ArrowRight,
-    Home
+    Home,
+    Building,
 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 interface ModuleTile {
     id: string;
@@ -25,6 +27,8 @@ interface ModuleTile {
 }
 
 export default function Page() {
+    const navigate = useNavigate();
+
     const userRole = "admin"
 
     const modules: ModuleTile[] = [
@@ -38,7 +42,7 @@ export default function Page() {
             bgColor: 'bg-primary/10'
         },
         {
-            id: 'land-use',
+            id: 'land-use-planning',
             title: 'Land Use Planning',
             description: 'Village, regional, and district land use management',
             icon: <MapIcon className="h-8 w-8" />,
@@ -56,7 +60,7 @@ export default function Page() {
             bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'compliance',
+            id: 'compliance-monitoring',
             title: 'Compliance Monitoring',
             description: 'Environmental and regulatory compliance tracking',
             icon: <AlertTriangle className="h-8 w-8" />,
@@ -65,7 +69,7 @@ export default function Page() {
             bgColor: 'bg-orange-500/10'
         },
         {
-            id: 'management-evaluation',
+            id: 'management-and-evaluation',
             title: 'Management & Evaluation',
             description: 'Project monitoring, evaluation, and reporting',
             icon: <BarChart3 className="h-8 w-8" />,
@@ -74,7 +78,7 @@ export default function Page() {
             bgColor: 'bg-progress-completed/10'
         },
         {
-            id: 'reports',
+            id: 'reports-and-analytics',
             title: 'Reports & Analytics',
             description: 'Comprehensive reporting and data analytics',
             icon: <FileText className="h-8 w-8" />,
@@ -83,16 +87,25 @@ export default function Page() {
             bgColor: 'bg-chart-2/10'
         },
         {
+            id: 'organizations',
+            title: 'Organizations',
+            description: 'Organizational structure and management',
+            icon: <Building className="h-8 w-8" />,
+            roles: ['admin', 'manager', 'planner'],
+            color: 'text-chart-3',
+            bgColor: 'bg-chart-3/10'
+        },
+        {
             id: 'user-management',
             title: 'User Management',
             description: 'User accounts, roles, and permissions',
             icon: <Users className="h-8 w-8" />,
             roles: ['admin'],
-            color: 'text-chart-3',
-            bgColor: 'bg-chart-3/10'
+            color: 'text-chart-4',
+            bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'system-settings',
+            id: 'system-administration',
             title: 'System Administration',
             description: 'System configuration and maintenance',
             icon: <Settings className="h-8 w-8" />,
@@ -101,7 +114,7 @@ export default function Page() {
             bgColor: 'bg-muted/20'
         },
         {
-            id: 'audit-trail',
+            id: 'audit-and-activity',
             title: 'Audit & Activity',
             description: 'System audit logs and user activity tracking',
             icon: <Activity className="h-8 w-8" />,
@@ -116,21 +129,15 @@ export default function Page() {
         module.roles.includes(userRole) || userRole === 'admin'
     );
 
+    const onModuleSelect = (moduleId: string) => {
+
+        // TODO: Implement module selection logic based on roles
+
+        navigate(`/${moduleId}`);
+    };
+
     return (
         <div className="space-y-8">
-            {/* Header Section */}
-            <header className="text-center space-y-4">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                    <div className="p-3 rounded-full bg-primary/10">
-                        <Home className="h-8 w-8 text-primary" />
-                    </div>
-                </div>
-                <h1 className="text-3xl font-semibold text-foreground">Tanzania NLUIS</h1>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    National Land Use Information System - Select a module to begin working with land use planning and management tools
-                </p>
-            </header>
-
             {/* Module Tiles Grid */}
             <main className="space-y-6">
                 <div className="text-center">
@@ -144,8 +151,8 @@ export default function Page() {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Card
-                                        className="group hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 border-2 hover:border-primary/20"
-                                    // onClick={() => onModuleSelect(module.id)}
+                                        className="group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 border-2 hover:border-primary/20"
+                                        onClick={() => onModuleSelect(module.id)}
                                     >
                                         <CardHeader className="pb-3">
                                             <div className="flex items-start justify-between">
@@ -170,7 +177,7 @@ export default function Page() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="text-xs text-primary group-hover:text-primary hover:text-primary group-hover:bg-primary/10 hover:bg-primary/20 w-full"
+                                                    className="text-xs text-primary group-hover:text-primary hover:text-primary group-hover:bg-primary/10 hover:bg-primary/20 hover:dark:bg-primary/20 w-full"
                                                 >
                                                     Access Module
                                                 </Button>
@@ -179,9 +186,9 @@ export default function Page() {
                                     </Card>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="max-w-xs">
-                                    <div className="text-center">
-                                        <p className="font-medium">{module.title}</p>
-                                        <p className="text-sm text-muted-foreground">{module.description}</p>
+                                    <div className="text-center space-y-2">
+                                        <p className="font-medium text-white">{module.title}</p>
+                                        <p className="text-sm text-white/70">{module.description}</p>
                                     </div>
                                 </TooltipContent>
                             </Tooltip>
