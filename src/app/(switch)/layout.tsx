@@ -8,36 +8,20 @@ import {
   LogOut,
   User,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
-import type { Page } from '@/types/page';
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import logo from "@/assets/nlus.png"
 import { MainHeader } from '@/components/MainHeader';
+import { usePageStore } from '@/store/pageStore';
 
-interface UniversalLayoutProps {
-  currentPage: Page;
-  onPageChange: (page: Page) => void;
-  onLogout: () => void;
-  showPageHeader?: boolean;
-  pageTitle?: string;
-  pageActions?: React.ReactNode;
-  backButton?: React.ReactNode;
-  currentModule?: string | null;
-}
-
-export default function UniversalLayout({
-  currentPage,
-  onPageChange,
-  onLogout,
-  showPageHeader = true,
-  pageTitle,
-  pageActions,
-  backButton,
-  currentModule
-}: UniversalLayoutProps) {
+export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const { page } = usePageStore()
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     if (sidebarCollapsed) {
@@ -69,9 +53,6 @@ export default function UniversalLayout({
                   <div className="w-8 h-8 bg-sidebar-primary/90 rounded flex items-center justify-center">
                     <img src={logo} alt="NLUIS Logo" className="w-full h-full ml-0.5 scale-105" />
                   </div>
-                  {/* <div className="w-8 h-8 bg-sidebar-primary rounded flex items-center justify-center">
-                    <span className="text-sidebar-primary-foreground font-semibold text-sm">NL</span>
-                  </div> */}
                   <span className="font-semibold text-sidebar-foreground">NLUIS</span>
                 </div>
               )}
@@ -90,7 +71,7 @@ export default function UniversalLayout({
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="right">
+                      <TooltipContent side="right" className='text-white'>
                         <p>Collapse sidebar</p>
                       </TooltipContent>
                     </Tooltip>
@@ -110,7 +91,7 @@ export default function UniversalLayout({
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="right">
+                      <TooltipContent side="right" className='text-white'>
                         <p>Expand sidebar</p>
                       </TooltipContent>
                     </Tooltip>
@@ -122,12 +103,7 @@ export default function UniversalLayout({
 
           {/* Navigation - SCROLLABLE */}
           <div className="flex-1 overflow-y-auto">
-            <NavigationSidebar
-              currentPage={currentPage}
-              onPageChange={onPageChange}
-              collapsed={sidebarCollapsed}
-              currentModule={currentModule}
-            />
+            <NavigationSidebar collapsed={sidebarCollapsed} />
           </div>
 
           {/* User Section - FIXED */}
@@ -157,7 +133,7 @@ export default function UniversalLayout({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onPageChange('profile')}
+                        // onClick={() => onPageChange('profile')}
                         className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
                       >
                         <User className="h-4 w-4" />
@@ -175,7 +151,7 @@ export default function UniversalLayout({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onPageChange('system-settings')}
+                        // onClick={() => onPageChange('system-settings')}
                         className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
                       >
                         <Settings className="h-4 w-4" />
@@ -193,7 +169,7 @@ export default function UniversalLayout({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={onLogout}
+                        // onClick={onLogout}
                         className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
                       >
                         <LogOut className="h-4 w-4" />
@@ -224,15 +200,45 @@ export default function UniversalLayout({
         <MainHeader
           sidebarOpen={sidebarOpen}
           toggleSidebar={toggleSidebar}
-          backButton={backButton}
-          pageTitle={pageTitle}
-          showPageHeader={showPageHeader}
-          pageActions={pageActions}
         />
 
         {/* Page Content - SCROLLABLE */}
         <main className="flex-1 overflow-hidden">
-          <Outlet />
+          {page && page?.isFormPage !== undefined && page.isFormPage
+            ? <Outlet />
+            : (
+              <div className="h-full overflow-y-auto">
+                <div className="p-6 space-y-6">
+                  {/* Module Context Header */}
+                  <div className="border-b border-border pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(-1)}
+                          className="gap-2 text-muted-foreground hover:text-foreground"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          All Modules
+                        </Button>
+                        <div className="h-4 w-px bg-border" />
+                        {page ?
+                          <h1 className="text-lg font-semibold text-primary">
+                            {page.title}
+                          </h1>
+                          : null}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Module Dashboard
+                      </div>
+                    </div>
+                  </div>
+                  <Outlet />
+                </div>
+              </div>
+            )
+          }
         </main>
       </div>
     </div>

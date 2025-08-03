@@ -13,8 +13,11 @@ import {
     ArrowRight,
     Home,
     Building,
+    Store,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useLayoutEffect } from 'react';
+import { usePageStore } from '@/store/pageStore';
 
 interface ModuleTile {
     id: string;
@@ -28,6 +31,11 @@ interface ModuleTile {
 
 export default function Page() {
     const navigate = useNavigate();
+    const { setPage } = usePageStore();
+
+    useLayoutEffect(() => {
+        setPage(null)
+    }, [setPage])
 
     const userRole = "admin"
 
@@ -42,7 +50,7 @@ export default function Page() {
             bgColor: 'bg-primary/10'
         },
         {
-            id: 'land-use-planning',
+            id: 'land-uses',
             title: 'Land Use Planning',
             description: 'Village, regional, and district land use management',
             icon: <MapIcon className="h-8 w-8" />,
@@ -60,7 +68,7 @@ export default function Page() {
             bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'compliance-monitoring',
+            id: 'compliance',
             title: 'Compliance Monitoring',
             description: 'Environmental and regulatory compliance tracking',
             icon: <AlertTriangle className="h-8 w-8" />,
@@ -69,7 +77,7 @@ export default function Page() {
             bgColor: 'bg-orange-500/10'
         },
         {
-            id: 'management-and-evaluation',
+            id: 'management-evaluation',
             title: 'Management & Evaluation',
             description: 'Project monitoring, evaluation, and reporting',
             icon: <BarChart3 className="h-8 w-8" />,
@@ -78,7 +86,16 @@ export default function Page() {
             bgColor: 'bg-progress-completed/10'
         },
         {
-            id: 'reports-and-analytics',
+            id: 'mapshop-management',
+            title: 'MapShop Management',
+            description: 'E-commerce operations, sales tracking, and billing management',
+            icon: <Store className="h-8 w-8" />,
+            roles: ['admin', 'manager', 'sales-officer'],
+            color: 'text-chart-1',
+            bgColor: 'bg-chart-1/10'
+        },
+        {
+            id: 'reports',
             title: 'Reports & Analytics',
             description: 'Comprehensive reporting and data analytics',
             icon: <FileText className="h-8 w-8" />,
@@ -105,7 +122,7 @@ export default function Page() {
             bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'system-administration',
+            id: 'system-settings',
             title: 'System Administration',
             description: 'System configuration and maintenance',
             icon: <Settings className="h-8 w-8" />,
@@ -114,7 +131,7 @@ export default function Page() {
             bgColor: 'bg-muted/20'
         },
         {
-            id: 'audit-and-activity',
+            id: 'audit-trail',
             title: 'Audit & Activity',
             description: 'System audit logs and user activity tracking',
             icon: <Activity className="h-8 w-8" />,
@@ -151,7 +168,7 @@ export default function Page() {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Card
-                                        className="group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 border-2 hover:border-primary/20"
+                                        className="border group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
                                         onClick={() => onModuleSelect(module.id)}
                                     >
                                         <CardHeader className="pb-3">

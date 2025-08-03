@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'ccro-management',
-            title: "CCRO Management",
+            module: 'management-evaluation',
+            title: "Management & Evaluation",
             backButton: 'Back to Modules',
         })
     }, [setPage])

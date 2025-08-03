@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'ccro-management',
-            title: "CCRO Management",
+            module: 'mapshop-management',
+            title: "MapShop Management",
             backButton: 'Back to Modules',
         })
     }, [setPage])

@@ -1,25 +1,26 @@
-import { Bell, Menu, X } from "lucide-react";
+import { ArrowLeft, Bell, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import ToggleTheme from "./ToggleTheme";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { usePageStore } from "@/store/pageStore";
+import { useNavigate } from "react-router";
 
 interface MainHeaderProps {
     sidebarOpen?: boolean;
     toggleSidebar?: () => void;
-    backButton?: React.ReactNode;
-    pageTitle?: string;
-    showPageHeader?: boolean;
-    pageActions?: React.ReactNode;
 }
 
-export function MainHeader({ sidebarOpen, toggleSidebar, backButton, pageTitle, showPageHeader = true, pageActions }: MainHeaderProps) {
+export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
+    const router = useNavigate();
+    const { page } = usePageStore();
+
     return (
         <header className="sticky top-0 flex-shrink-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-20">
             <div className="flex items-center gap-4">
                 {/* Hamburger Menu - Mobile */}
-                {sidebarOpen && toggleSidebar ? (
+                {sidebarOpen !== undefined && toggleSidebar ? (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -32,7 +33,7 @@ export function MainHeader({ sidebarOpen, toggleSidebar, backButton, pageTitle, 
                                     {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom">
+                            <TooltipContent side="bottom" className="text-white">
                                 <p>{sidebarOpen ? 'Close menu' : 'Open menu'}</p>
                             </TooltipContent>
                         </Tooltip>
@@ -40,21 +41,30 @@ export function MainHeader({ sidebarOpen, toggleSidebar, backButton, pageTitle, 
                 ) : null}
 
                 {/* Back Button */}
-                {backButton}
+                {page && page?.backButton ? (
+                    <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => router(-1)}
+                    >
+                        <ArrowLeft />
+                        {page.backButton}
+                    </Button>
+                ) : null}
 
                 {/* Page Title */}
-                {showPageHeader && pageTitle && (
+                {page && page?.showPageHeader !== undefined && page.showPageHeader && page?.title && (
                     <div>
-                        <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
+                        <h1 className="text-xl font-semibold text-foreground">{page.title}</h1>
                     </div>
                 )}
             </div>
 
             <div className="flex items-center gap-4">
                 {/* Page Actions */}
-                {pageActions && (
+                {page && page?.pageActions && (
                     <div className="flex items-center gap-2">
-                        {pageActions}
+                        {page.pageActions}
                     </div>
                 )}
 
