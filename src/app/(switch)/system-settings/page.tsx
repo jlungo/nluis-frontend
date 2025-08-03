@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'dashboard',
-            title: "Dashboard",
+            module: 'system-settings',
+            title: "System Settings",
             backButton: 'Back to Modules',
         })
     }, [setPage])

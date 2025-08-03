@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'dashboard',
-            title: "Dashboard",
+            module: 'audit-trail',
+            title: "Audit Trail",
             backButton: 'Back to Modules',
         })
     }, [setPage])

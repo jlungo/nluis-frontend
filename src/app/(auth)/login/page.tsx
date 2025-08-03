@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft } from 'lucide-react';
-import logo from '@/assets/react.svg';
+import logo from '@/assets/nlus.png';
 import { useNavigate } from 'react-router';
 
 export default function Page() {
@@ -38,20 +38,18 @@ export default function Page() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <img
-                        src={logo}
-                        alt="Tanzania National Land Use Planning Commission"
-                        className="w-20 h-20 object-contain mx-auto mb-4"
-                    />
+                    <div className="p-0.5 mb-4 w-fit mx-auto rounded-full bg-primary/10">
+                        <img src={logo} alt="Tanzania National Land Use Planning Commission" className="h-28 w-28 ml-1.5" />
+                    </div>
                     <h1 className="text-2xl font-bold text-primary mb-2">NLUIS Login</h1>
                     <p className="text-gray-600">National Land Use Information System</p>
                 </div>
 
-                <Card className="shadow-lg border-0">
+                <Card className="shadow-lg dark:shadow-none border-0 dark:border">
                     <CardHeader className="pb-4">
                         <CardTitle className="text-center text-primary">Access Your Account</CardTitle>
                     </CardHeader>
@@ -105,7 +103,7 @@ export default function Page() {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 bg-primary hover:bg-primary/90"
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? 'Logging in...' : 'Login'}
@@ -113,9 +111,9 @@ export default function Page() {
                             </div>
                         </form>
                         {/* <div className="mt-6 text-center">
-                            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                <p className="font-medium mb-1">Demo Access</p>
-                                <p>Use any email and password to access the system</p>
+                            <div className="text-sm bg-primary/20 p-3 rounded-lg">
+                                <p className="text-foreground font-medium mb-1">Demo Access</p>
+                                <p className="text-muted-foreground">Use any email and password to access the system</p>
                             </div>
                         </div> */}
                     </CardContent>
@@ -123,7 +121,7 @@ export default function Page() {
 
                 <div className="text-center mt-6">
                     <p className="text-sm text-gray-500">
-                        &copy; 2024 National Land Use Planning Commission, Tanzania
+                        &copy; {new Date().getFullYear()} National Land Use Planning Commission, Tanzania
                     </p>
                 </div>
             </div>

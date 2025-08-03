@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'dashboard',
-            title: "Dashboard",
+            module: 'reports',
+            title: "Reports & Analytics",
             backButton: 'Back to Modules',
         })
     }, [setPage])

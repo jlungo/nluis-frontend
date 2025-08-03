@@ -6,8 +6,8 @@ export default function Page() {
 
     useLayoutEffect(() => {
         setPage({
-            module: 'dashboard',
-            title: "Dashboard",
+            module: 'compliance',
+            title: "Compliance Monitoring",
             backButton: 'Back to Modules',
         })
     }, [setPage])
