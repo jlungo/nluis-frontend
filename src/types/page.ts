@@ -14,6 +14,7 @@ export type Page =
   | "user-management"
   | "system-settings"
   | "audit-trail"
+  | "dynamic-forms"
 
   // Dashboard pages
 
@@ -24,8 +25,6 @@ export type Page =
   | "regional-land-use"
   | "district-land-use"
   | "village-land-use"
-  | "land-use-planning"
-  | "land-use-plans"
 
   // CCRO Management pages
   | "overview"

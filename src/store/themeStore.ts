@@ -18,7 +18,7 @@ const applyTheme = (mode: ThemeMode) => {
 };
 
 export const useThemeStore = create<ThemeState>((set) => {
-  let storedMode: ThemeMode = "system";
+  let storedMode: ThemeMode = "light";
   if (typeof window !== "undefined") {
     const saved = localStorage.getItem("theme") as ThemeMode;
     if (["light", "dark", "system"].includes(saved)) storedMode = saved;
