@@ -15,6 +15,7 @@ export type Page =
   | "system-settings"
   | "audit-trail"
   | "dynamic-forms"
+  | "data-collection"
 
   // Dashboard pages
 

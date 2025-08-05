@@ -16,9 +16,7 @@ import {
   Download,
   Filter,
   BarChart3,
-  PieChart,
   Table,
-  Calendar,
   Map,
   Users,
   Building,
@@ -31,16 +29,17 @@ interface Report {
   id: string;
   name: string;
   type:
-    | "land-use"
-    | "ccro"
-    | "compliance"
-    | "spatial"
-    | "demographic"
-    | "financial";
+  | "land-use"
+  | "ccro"
+  | "compliance"
+  | "spatial"
+  | "demographic"
+  | "financial";
   description: string;
   status: "draft" | "generated" | "published";
   createdAt: string;
   updatedAt: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[];
   filters: ReportFilters;
 }
@@ -378,11 +377,10 @@ export default function ReportsPage() {
                 {state.reports.map((report) => (
                   <Card
                     key={report.id}
-                    className={`cursor-pointer transition-colors ${
-                      state.selectedReport?.id === report.id
+                    className={`cursor-pointer transition-colors ${state.selectedReport?.id === report.id
                         ? "border-primary bg-primary/5"
                         : ""
-                    }`}
+                      }`}
                     onClick={() =>
                       setState((prev) => ({ ...prev, selectedReport: report }))
                     }

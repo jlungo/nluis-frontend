@@ -1,20 +1,14 @@
 import Layout from "./layout";
 import Page from "./page";
-import BrowseMaps from "./browse-maps";
-import MyMaps from "./my-maps";
-import AccountSettings from "./account-settings";
 
 const Index = {
-  path: "/portal",
+  path: "browse-maps",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    BrowseMaps,
-    MyMaps,
-    AccountSettings,
   ],
 };
 

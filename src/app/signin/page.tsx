@@ -424,27 +424,27 @@ export default function MapShopLoginForm() {
             Benefits of Creating an Account
           </h3>
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-              <CheckCircle className="h-4 w-4 text-green-600 mx-auto mb-1" />
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-700 rounded-lg p-3 text-center">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500 mx-auto mb-1" />
               <div className="text-green-700 font-medium">Purchase History</div>
               <div className="text-green-600">Track all your map purchases</div>
             </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-              <CheckCircle className="h-4 w-4 text-blue-600 mx-auto mb-1" />
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-center">
+              <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-500 mx-auto mb-1" />
               <div className="text-blue-700 font-medium">Re-download Maps</div>
               <div className="text-blue-600">
                 Access previously purchased files
               </div>
             </div>
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-              <CheckCircle className="h-4 w-4 text-purple-600 mx-auto mb-1" />
+            <div className="bg-purple-50 dark:bg-purple-950/10 border border-purple-200 dark:border-purple-700 rounded-lg p-3 text-center">
+              <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-500 mx-auto mb-1" />
               <div className="text-purple-700 font-medium">Faster Checkout</div>
               <div className="text-purple-600">
                 Save payment and billing info
               </div>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-              <CheckCircle className="h-4 w-4 text-orange-600 mx-auto mb-1" />
+            <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-700 rounded-lg p-3 text-center">
+              <CheckCircle className="h-4 w-4 text-orange-600 dark:text-orange-500 mx-auto mb-1" />
               <div className="text-orange-700 font-medium">Order Tracking</div>
               <div className="text-orange-600">Monitor hardcopy deliveries</div>
             </div>

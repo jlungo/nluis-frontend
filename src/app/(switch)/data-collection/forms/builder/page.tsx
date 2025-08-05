@@ -15,11 +15,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Plus,
-  Edit,
   Trash2,
   Save,
-  X,
-  ArrowLeft,
   FormInput,
   Type,
   Hash,
@@ -38,18 +35,18 @@ interface FormField {
   id: string;
   name: string;
   type:
-    | "text"
-    | "number"
-    | "email"
-    | "tel"
-    | "date"
-    | "textarea"
-    | "select"
-    | "checkbox"
-    | "radio"
-    | "file"
-    | "image"
-    | "location";
+  | "text"
+  | "number"
+  | "email"
+  | "tel"
+  | "date"
+  | "textarea"
+  | "select"
+  | "checkbox"
+  | "radio"
+  | "file"
+  | "image"
+  | "location";
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -468,6 +465,7 @@ export default function FormBuilderPage() {
                             <Select
                               value={field.type}
                               onValueChange={(value) =>
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 updateField(field.id, { type: value as any })
                               }
                             >
@@ -534,23 +532,23 @@ export default function FormBuilderPage() {
 
                         {(field.type === "select" ||
                           field.type === "radio") && (
-                          <div>
-                            <label className="text-sm font-medium">
-                              Options
-                            </label>
-                            <Textarea
-                              placeholder="Enter options separated by commas"
-                              value={field.options?.join(", ") || ""}
-                              onChange={(e) =>
-                                updateField(field.id, {
-                                  options: e.target.value
-                                    .split(",")
-                                    .map((s) => s.trim()),
-                                })
-                              }
-                            />
-                          </div>
-                        )}
+                            <div>
+                              <label className="text-sm font-medium">
+                                Options
+                              </label>
+                              <Textarea
+                                placeholder="Enter options separated by commas"
+                                value={field.options?.join(", ") || ""}
+                                onChange={(e) =>
+                                  updateField(field.id, {
+                                    options: e.target.value
+                                      .split(",")
+                                      .map((s) => s.trim()),
+                                  })
+                                }
+                              />
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
