@@ -328,7 +328,18 @@ export default function ElegantMapViewer({
     );
 
     const ActionButtons = () => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+            {/* MapShop Purchase Button */}
+            {isPreview && onPurchase && (
+                <Button
+                    onClick={onPurchase}
+                    className="bg-primary hover:bg-primary/90"
+                >
+                    <Download className="h-4 w-4 mr-2" />
+                    <span className='sr-only 2xl:not-sr-only'>Purchase -</span> {price?.toLocaleString()} TZS
+                </Button>
+            )}
+
             {showLayerPanel && (
                 <Button
                     variant="outline"
@@ -381,17 +392,6 @@ export default function ElegantMapViewer({
                 >
                     {isFullScreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
                     {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-                </Button>
-            )}
-
-            {/* MapShop Purchase Button */}
-            {isPreview && onPurchase && (
-                <Button
-                    onClick={onPurchase}
-                    className="bg-primary hover:bg-primary/90"
-                >
-                    <Download className="h-4 w-4 mr-2" />
-                    Purchase - {price?.toLocaleString()} TZS
                 </Button>
             )}
         </div>
@@ -507,8 +507,8 @@ export default function ElegantMapViewer({
     // Regular Card Wrapper
     const CardWrapper = ({ children }: { children: React.ReactNode }) => (
         <Card className={className}>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+            <CardHeader>
+                <div className="flex flex-col justify-center gap-4">
                     <CardTitle className="flex items-center gap-2">
                         <MapIcon className="h-5 w-5" />
                         {title}

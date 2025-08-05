@@ -18,10 +18,10 @@ export default function Layout() {
             <div className="border-b border-border bg-card sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2 lg:gap-6">
                             <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
                                 <ArrowLeft className="h-4 w-4" />
-                                {location.pathname === '/mapshop' ? "Back to Home" : "Back to MapShop"}
+                                <span className="sr-only lg:not-sr-only">{location.pathname === '/mapshop' ? "Back to Home" : "Back to MapShop"}</span>
                             </Button>
                             <div className="h-6 w-px bg-border" />
 
@@ -29,9 +29,9 @@ export default function Layout() {
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <img src={tanzaniaCoatOfArms} alt="Tanzania Coat of Arms" className="h-8 w-8" />
-                                    <img src={nlupcLogo} alt="NLUPC Logo" className="h-8 w-8" />
+                                    <img src={nlupcLogo} alt="NLUPC Logo" className="h-10 w-10" />
                                 </div>
-                                <div>
+                                <div className="hidden lg:block">
                                     <h1 className="font-semibold text-primary">Tanzania MapShop</h1>
                                     <p className="text-sm text-muted-foreground">
                                         {location.pathname === '/mapshop' ? 'Official Land Use Maps & Shapefiles' : 'Customer Dashboard'}
@@ -48,13 +48,13 @@ export default function Layout() {
                             {/* User Status Indicator */}
                             {userType === 'guest' ? (
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-muted-foreground">
+                                    <Badge variant="outline" className="text-muted-foreground hidden lg:flex">
                                         <User className="h-3 w-3 mr-1" />
                                         Guest Mode
                                     </Badge>
                                     <Link to="/signin" className={cn(buttonVariants(), "gap-2")}>
-                                        <LogIn className="h-4 w-4" />
-                                        Login for Full Access
+                                        <LogIn className="h-4 w-4 hidden lg:block" />
+                                        Login<span className="sr-only lg:not-sr-only"> for Full Access</span>
                                     </Link>
                                 </div>
                             ) : (

@@ -342,7 +342,7 @@ export default function MapShop() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Region</label>
                                 <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className='w-full'>
                                         <SelectValue placeholder="All Regions" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -356,7 +356,7 @@ export default function MapShop() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">District</label>
                                 <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className='w-full'>
                                         <SelectValue placeholder="All Districts" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -370,7 +370,7 @@ export default function MapShop() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Land Use Type</label>
                                 <Select value={selectedLandUseType} onValueChange={setSelectedLandUseType}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className='w-full'>
                                         <SelectValue placeholder="All Land Use Types" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -385,7 +385,7 @@ export default function MapShop() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Sort By</label>
                                 <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className='w-full'>
                                         <SelectValue placeholder="Sort by..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -420,7 +420,7 @@ export default function MapShop() {
                 {/* Results Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <h2 className="font-semibold">
+                        <h2 className="font-semibold dark:opacity-80">
                             {filteredMaps.length} Official Maps Found
                             {selectedLandUseType !== 'All' && ` • ${selectedLandUseType} Level`}
                             {selectedRegion !== 'All' && ` • ${selectedRegion} Region`}
@@ -429,14 +429,14 @@ export default function MapShop() {
                 </div>
 
                 {/* Maps Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6 mb-8">
                     {paginatedMaps.map((map) => (
                         <Card key={map.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                            <CardHeader className="pb-3">
+                            <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <CardTitle className="text-lg">{map.villageName}</CardTitle>
-                                        <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                                        <CardTitle className="text-lg dark:opacity-80">{map.villageName}</CardTitle>
+                                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-500 mt-1">
                                             <MapPin className="h-3 w-3" />
                                             <span>
                                                 {map.landUseType === 'Village'
@@ -478,7 +478,6 @@ export default function MapShop() {
                                     format="digital"
                                     onPurchase={() => handlePurchase(map, 'softcopy')}
                                     height="h-48"
-                                    className="mb-4"
                                     layers={[
                                         { id: 'base-map', name: 'Base Map', visible: true, type: 'base', opacity: 1 },
                                         { id: 'land-use', name: 'Land Use Zones', visible: true, type: 'data', opacity: 0.8 },
@@ -490,26 +489,26 @@ export default function MapShop() {
                                 {/* Shapefile Details */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 space-y-2">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Scale:</span>
-                                        <span className="font-medium">{map.scale}</span>
+                                        <span className="text-gray-600 dark:text-gray-500">Scale:</span>
+                                        <span className="font-medium dark:opacity-80">{map.scale}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Total Area:</span>
-                                        <span className="font-medium">{map.totalArea.toLocaleString()} ha</span>
+                                        <span className="text-gray-600 dark:text-gray-500">Total Area:</span>
+                                        <span className="font-medium dark:opacity-80">{map.totalArea.toLocaleString()} ha</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Survey Date:</span>
-                                        <span className="font-medium">{new Date(map.surveyDate).toLocaleDateString()}</span>
+                                        <span className="text-gray-600 dark:text-gray-500">Survey Date:</span>
+                                        <span className="font-medium dark:opacity-80">{new Date(map.surveyDate).toLocaleDateString()}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Downloads:</span>
-                                        <span className="font-medium">{map.downloadCount}</span>
+                                        <span className="text-gray-600 dark:text-gray-500">Downloads:</span>
+                                        <span className="font-medium dark:opacity-80">{map.downloadCount}</span>
                                     </div>
                                 </div>
 
                                 {/* Land Use Zones */}
                                 <div>
-                                    <p className="text-sm font-medium mb-2">Land Use Zones:</p>
+                                    <p className="text-sm font-medium mb-2 dark:opacity-80">Land Use Zones:</p>
                                     <div className="flex flex-wrap gap-1">
                                         {map.landUseZones.slice(0, 3).map((zone, index) => (
                                             <Badge key={index} variant="secondary" className="text-xs">
@@ -527,14 +526,14 @@ export default function MapShop() {
                                 {/* Pricing */}
                                 <div className="space-y-2 pt-2 border-t">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium flex items-center gap-1">
+                                        <span className="text-sm font-medium flex items-center gap-1 dark:opacity-80">
                                             <Monitor className="h-3 w-3" />
                                             View Access (1 year)
                                         </span>
                                         <span className="font-semibold text-primary">TZS {map.softcopyPrice.toLocaleString()}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium flex items-center gap-1">
+                                        <span className="text-sm font-medium flex items-center gap-1 dark:opacity-80">
                                             <Printer className="h-3 w-3" />
                                             Print Rights (unlimited)
                                         </span>
