@@ -59,7 +59,7 @@ export default function MapShopLoginForm() {
 
     setIsLoading(false);
 
-    // navigate("/board");
+    navigate("/portal");
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -83,6 +83,8 @@ export default function MapShopLoginForm() {
     }
 
     setIsLoading(false);
+
+    navigate("/portal");
   };
 
   const onCancel = () => {

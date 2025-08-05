@@ -5,12 +5,13 @@ import Signin from "./signin";
 import Login from "./login";
 import Board from "./board";
 import Switch from "./(switch)";
+import Shop from "./(shop)";
 
 const Index = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    children: [Home, Signin, Login, Board, Switch],
+    children: [Home, Signin, Login, Board, Switch, Shop],
   },
 ]);
 
