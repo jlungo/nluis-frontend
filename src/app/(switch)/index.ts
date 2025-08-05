@@ -13,10 +13,6 @@ import AuditTrail from "./audit-trail";
 
 const Index = {
   Component: Layout,
-  lazy: async () => {
-    const [Component] = await Promise.all([import("./layout")]);
-    return { Component };
-  },
   children: [
     Dashboard,
     LandUses,
