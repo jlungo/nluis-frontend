@@ -12,7 +12,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router';
-import logo from "@/assets/nlus.png"
+import logo from "@/assets/nluis.png"
 import { MainHeader } from '@/components/MainHeader';
 import { usePageStore } from '@/store/pageStore';
 
@@ -50,8 +50,8 @@ export default function Layout() {
             <div className="flex items-center justify-between">
               {!sidebarCollapsed && (
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-sidebar-primary/90 rounded flex items-center justify-center">
-                    <img src={logo} alt="NLUIS Logo" className="w-full h-full ml-0.5 scale-105" />
+                  <div className="w-8 h-8 rounded flex items-center justify-center">
+                    <img src={logo} alt="NLUIS Logo" className="w-full h-full scale-150" />
                   </div>
                   <span className="font-semibold text-sidebar-foreground">NLUIS</span>
                 </div>

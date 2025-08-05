@@ -2,7 +2,7 @@ import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "/management-evaluation",
+  path: "/mapshop-management",
   Component: Layout,
   children: [
     {

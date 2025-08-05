@@ -1,10 +1,10 @@
 import Layout from "./layout";
-import Signup from "./signup";
-import Login from "./login";
+import MapShop from "./mapshop";
+import Portal from "./portal";
 
 const Index = {
   Component: Layout,
-  children: [Signup, Login],
+  children: [MapShop, Portal],
 };
 
 export default Index;
