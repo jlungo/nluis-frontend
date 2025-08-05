@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Shield, User, Lock, AlertCircle } from "lucide-react";
-import nlupcLogo from "@/assets/nlus.png";
+import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
 import { useNavigate } from "react-router";
 

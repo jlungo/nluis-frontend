@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { ToggleTheme } from "./ToggleTheme";
+import { ThemeTogglePopover } from "./ToggleTheme";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePageStore } from "@/store/pageStore";
@@ -76,7 +76,7 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
           <div className="flex items-center gap-2">{page.pageActions}</div>
         )}
 
-        <ToggleTheme />
+        <ThemeTogglePopover />
 
         {/* Top Bar Actions */}
         <div className="flex items-center gap-2">

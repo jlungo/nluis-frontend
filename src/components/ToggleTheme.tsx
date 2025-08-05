@@ -1,6 +1,9 @@
 import { useThemeStore } from "@/store/themeStore";
 import { Button } from "./ui/button";
-import { Laptop2, Moon, Sun } from "lucide-react";
+import { Laptop, Laptop2, Moon, Sun } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 export const ToggleTheme = () => {
   const { mode, setMode } = useThemeStore();
@@ -40,3 +43,48 @@ export const ToggleTheme = () => {
     </div>
   );
 };
+
+export const ThemeTogglePopover = () => {
+  const { mode, setMode } = useThemeStore()
+
+  const options = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Laptop },
+  ] as const
+
+  return (
+    <TooltipProvider>
+      <Popover>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                {mode === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            Change theme
+          </TooltipContent>
+        </Tooltip>
+        <PopoverContent className="w-40 p-2 rounded-xl">
+          {options.map(({ value, label, icon: Icon }) => (
+            <Button
+              key={value}
+              variant="ghost"
+              className={cn(
+                "w-full justify-start",
+                mode === value && "bg-accent"
+              )}
+              onClick={() => setMode(value)}
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </Button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    </TooltipProvider>
+  )
+}

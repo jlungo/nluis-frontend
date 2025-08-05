@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import Layout from "./layout";
 import Home from "./(index)";
-import Auth from "./auth";
+import Signin from "./signin";
 import Login from "./login";
 import Board from "./board";
 import Switch from "./(switch)";
@@ -10,7 +10,7 @@ const Index = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    children: [Home, Auth, Login, Board, Switch],
+    children: [Home, Signin, Login, Board, Switch],
   },
 ]);
 

@@ -43,10 +43,10 @@ export default function DashboardPage() {
   });
   const [selectedProjectType, setSelectedProjectType] = useState<string>("5");
 
-    useLayoutEffect(() => {
-        setPage({
+  useLayoutEffect(() => {
+    setPage({
       module: "dashboard",
-            title: "Dashboard",
+      title: "Dashboard",
       backButton: "Back to Modules",
     });
   }, [setPage]);

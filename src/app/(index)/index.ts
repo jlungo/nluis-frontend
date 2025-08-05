@@ -1,5 +1,6 @@
 import Layout from "./layout";
 import Page from "./page";
+import Mapshop from "./mapshop";
 
 const Index = {
   Component: Layout,
@@ -8,6 +9,7 @@ const Index = {
       index: true,
       Component: Page,
     },
+    Mapshop,
   ],
 };
 
