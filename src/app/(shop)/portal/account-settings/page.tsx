@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Settings } from "lucide-react";
-import { buyerInfo } from "../mock";
+import { buyerInfo } from "../../mock";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -20,24 +20,24 @@ export default function Page() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label className="text-sm">First Name</Label>
-                            <Input readOnly value={buyerInfo.firstName} className="mt-1 bg-muted cursor-default" />
+                            <Input readOnly value={buyerInfo.firstName} className="mt-1 cursor-default" />
                         </div>
                         <div>
                             <Label className="text-sm">Last Name</Label>
-                            <Input readOnly value={buyerInfo.lastName} className="mt-1 bg-muted cursor-default" />
+                            <Input readOnly value={buyerInfo.lastName} className="mt-1 cursor-default" />
                         </div>
                         <div>
                             <Label className="text-sm">Email Address</Label>
-                            <Input readOnly value={buyerInfo.email} className="mt-1 bg-muted cursor-default" />
+                            <Input readOnly value={buyerInfo.email} className="mt-1 cursor-default" />
                         </div>
                         <div>
                             <Label className="text-sm">Phone Number</Label>
-                            <Input readOnly value={buyerInfo.phone} className="mt-1 bg-muted cursor-default" />
+                            <Input readOnly value={buyerInfo.phone} className="mt-1 cursor-default" />
                         </div>
                         {buyerInfo.organization && (
                             <div className="md:col-span-2">
                                 <Label className="text-sm">Organization</Label>
-                                <Input readOnly value={buyerInfo.organization} className="mt-1 bg-muted cursor-default" />
+                                <Input readOnly value={buyerInfo.organization} className="mt-1 cursor-default" />
                             </div>
                         )}
                     </div>

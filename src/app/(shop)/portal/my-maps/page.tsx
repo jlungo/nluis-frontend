@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Monitor, Printer, Receipt } from "lucide-react";
-import { getStatusColor, getStatusIcon, mockPurchaseHistory } from "../mock";
+import { getStatusColor, getStatusIcon, mockPurchaseHistory } from "../../mock";
 
 export default function Page() {
     const handleViewMap = (accessUrl: string, mapName: string) => {

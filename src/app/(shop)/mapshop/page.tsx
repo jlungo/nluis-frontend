@@ -465,7 +465,7 @@ export default function MapShop() {
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-2 md:space-y-4">
                                 {/* Enhanced Map Preview */}
                                 <ElegantMapViewer
                                     title={`${map.villageName} - ${map.landUseType} Map`}
@@ -582,7 +582,7 @@ export default function MapShop() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs lg:text-sm text-muted-foreground">
                             Showing {((currentPage - 1) * mapsPerPage) + 1} to {Math.min(currentPage * mapsPerPage, filteredMaps.length)} of {filteredMaps.length} maps
                         </p>
 
@@ -592,7 +592,7 @@ export default function MapShop() {
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
-                                className="gap-2"
+                                className="text-xs gap-2"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                                 Previous
@@ -617,7 +617,7 @@ export default function MapShop() {
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                 disabled={currentPage === totalPages}
-                                className="gap-2"
+                                className="text-xs gap-2"
                             >
                                 Next
                                 <ChevronRight className="h-4 w-4" />

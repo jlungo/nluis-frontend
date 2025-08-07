@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { User, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, NavLink, Outlet } from 'react-router';
-import { buyerInfo, mockPurchaseHistory } from './mock';
+import { buyerInfo, mockPurchaseHistory } from '../mock';
 
 export default function Layout() {
     const activeViewAccess = mockPurchaseHistory.filter(p => p.purchaseType === 'view-access' && p.status === 'active').length;

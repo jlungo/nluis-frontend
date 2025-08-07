@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
 import { useUserTypeStore } from "@/store/userStore";
+import { buyerInfo } from "./mock";
 
 export default function Layout() {
     const { userType } = useUserTypeStore()
@@ -20,7 +21,12 @@ export default function Layout() {
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 lg:gap-6">
-                            <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(location.pathname === '/mapshop' ? '/' : '/mapshop', { replace: true })}
+                                className="gap-2"
+                            >
                                 <ArrowLeft className="h-4 w-4" />
                                 <span className="sr-only lg:not-sr-only">{location.pathname === '/mapshop' ? "Back to Home" : "Back to MapShop"}</span>
                             </Button>
@@ -72,9 +78,9 @@ export default function Layout() {
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-3">
-                                            <div className="text-right">
-                                                {/* <div className="text-sm font-medium">{buyerInfo.firstName} {buyerInfo.lastName}</div>
-                                                    <div className="text-xs text-muted-foreground">{buyerInfo.email}</div> */}
+                                            <div className="text-right hidden md:block">
+                                                <div className="text-sm font-medium">{buyerInfo.firstName} {buyerInfo.lastName}</div>
+                                                <div className="text-xs text-muted-foreground">{buyerInfo.email}</div>
                                             </div>
                                             <Button variant="outline" onClick={() => navigate('/', { replace: true })} size="sm">
                                                 Logout
