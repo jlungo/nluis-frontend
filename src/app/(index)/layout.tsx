@@ -1,12 +1,15 @@
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Shield, Map } from "lucide-react";
+import { Shield, Map, LayoutDashboard } from "lucide-react";
 import { Link, Outlet } from "react-router";
 import bibiNaBwana from "@/assets/bibi_na_bwana.png"
 import logo from "@/assets/nluis.png"
+import { useAuth } from "@/store/auth";
 
 export default function Layout() {
+    const { user } = useAuth()
+
     return (
         <div className="min-h-screen bg-background">
             <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -55,10 +58,17 @@ export default function Layout() {
                                 <Map className="h-4 w-4 hidden lg:block" />
                                 MapShop
                             </Link>
-                            <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
-                                <Shield className="h-4 w-4 hidden lg:block" />
-                                <span className="sr-only lg:not-sr-only">Official</span> Login
-                            </Link>
+                            {user ?
+                                <Link to="/board" className={cn(buttonVariants(), "gap-2")}>
+                                    <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                    <span className="sr-only lg:not-sr-only">All</span> Modules
+                                </Link>
+                                :
+                                <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
+                                    <Shield className="h-4 w-4 hidden lg:block" />
+                                    <span className="sr-only lg:not-sr-only">Official</span> Login
+                                </Link>
+                            }
                         </div>
                     </div>
                 </div>

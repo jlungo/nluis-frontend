@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL!;
+const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -27,7 +27,7 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        const res = await axios.post(`${API_URL}/refresh`, {
+        const res = await axios.post(`${API_URL}/auth/token/refresh/`, {
           refresh: localStorage.getItem("refreshToken"),
         });
 
@@ -38,7 +38,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         localStorage.clear();
-        window.location.href = "/login";
+        window.location.href = "/";
         return Promise.reject(err);
       }
     }

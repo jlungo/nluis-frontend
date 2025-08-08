@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,36 +14,46 @@ import { ArrowLeft, Shield, User, Lock, AlertCircle } from "lucide-react";
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
 import { useNavigate } from "react-router";
+import { useAuth } from "@/store/auth";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { login, loading, user } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+    const formData = new FormData(e.currentTarget);
+    const { email, password } = Object.fromEntries(formData.entries()) as {
+      email: string;
+      password: string;
+    };
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const success = true;
-
-    if (!success) {
-      setError("Invalid credentials. Please check your email and password.");
+    try {
+      await login(email, password)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err?.detail || "Something went wrong");
     }
-
-    setIsLoading(false);
-    navigate("/board");
   };
 
   const onCancel = () => {
     navigate(-1);
   };
+
+  useEffect(() => {
+    if (user) {
+      if (user?.modules && Array.isArray(user.modules) && user.modules.length >= 1)
+        navigate("/board", { replace: true });
+      else
+        // TODO Go to a specific moddule
+        navigate(`/portal`, { replace: true });
+    }
+  }, [navigate, user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/20 flex items-start lg:items-center justify-center p-4">
@@ -104,11 +114,12 @@ export default function LoginForm() {
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.name@nlupc.go.tz"
                   required
-                  disabled={isLoading}
+                  disabled={loading}
                   className="transition-colors"
                 />
               </div>
@@ -121,11 +132,12 @@ export default function LoginForm() {
                 <Input
                   id="password"
                   type="password"
+                  name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  disabled={isLoading}
+                  disabled={loading}
                   className="transition-colors"
                 />
               </div>
@@ -134,9 +146,9 @@ export default function LoginForm() {
                 <Button
                   type="submit"
                   className="w-full gap-2"
-                  disabled={isLoading || !email || !password}
+                  disabled={loading || !email || !password}
                 >
-                  {isLoading ? (
+                  {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Authenticating...
@@ -154,7 +166,7 @@ export default function LoginForm() {
                   variant="outline"
                   className="w-full gap-2"
                   onClick={onCancel}
-                  disabled={isLoading}
+                  disabled={loading}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back to Home

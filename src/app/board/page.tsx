@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router';
 import { useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
+import { useAuth } from '@/store/auth';
 
 interface ModuleTile {
     id: string;
@@ -32,12 +33,14 @@ interface ModuleTile {
 export default function Page() {
     const navigate = useNavigate();
     const { setPage } = usePageStore();
+    const { user } = useAuth()
 
     useLayoutEffect(() => {
         setPage(null)
     }, [setPage])
 
     const userRole = "admin"
+    console.log(user)
 
     const modules: ModuleTile[] = [
         {
