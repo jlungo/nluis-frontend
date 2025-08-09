@@ -11,4 +11,4 @@ export type ModuleTypes =
   | "system-settings"
   | "audit-trail"
   | "dynamic-forms"
-  | "data-collection";
+  | "data-management";

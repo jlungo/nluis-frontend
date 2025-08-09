@@ -15,7 +15,7 @@ export type Page =
   | "system-settings"
   | "audit-trail"
   | "dynamic-forms"
-  | "data-collection"
+  | "data-management"
 
   // Dashboard pages
 
@@ -51,6 +51,11 @@ export type Page =
   // Audit Trail pages
 
   // Organizations pages
+
+  // Form Management
+  | "forms"
+  | "builder"
+  | "responses"
 
   // Village Land Use forms
   | "village-creation-form"

@@ -28,7 +28,7 @@ export default function Page() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="xl:container mx-auto px-4 py-16">
         <div className="text-center space-y-8">
           {/* Official Government Header */}
           <div className="space-y-4">
@@ -118,7 +118,7 @@ export default function Page() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-16">
+      <section id="features" className="xl:container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-foreground mb-4">
             Comprehensive Land Use Management
@@ -344,7 +344,7 @@ export default function Page() {
 
       {/* MapShop CTA Section */}
       <section className="bg-primary/5 border-y border-primary/10">
-        <div className="container mx-auto px-4 py-16">
+        <div className="xl:container mx-auto px-4 py-16">
           <div className="text-center space-y-8">
             <div className="space-y-4">
               <Badge

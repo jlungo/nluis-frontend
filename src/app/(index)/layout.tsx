@@ -13,7 +13,7 @@ export default function Layout() {
     return (
         <div className="min-h-screen bg-background">
             <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4">
+                <div className="xl:container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-6">
                             {/* Tanzania Coat of Arms */}
@@ -77,7 +77,7 @@ export default function Layout() {
             <Outlet />
 
             <footer className="bg-background border-t border-primary/10">
-                <div className="container mx-auto px-4 py-12">
+                <div className="xl:container mx-auto px-4 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">

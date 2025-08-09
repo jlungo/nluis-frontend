@@ -15,7 +15,7 @@ import {
     Building,
     Store,
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { redirect, useNavigate } from 'react-router';
 import { useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
 import { useAuth } from '@/store/auth';
@@ -40,7 +40,6 @@ export default function Page() {
     }, [setPage])
 
     const userRole = "admin"
-    console.log(user)
 
     const modules: ModuleTile[] = [
         {
@@ -156,6 +155,7 @@ export default function Page() {
         navigate(`/${moduleId}`);
     };
 
+    if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length < 1) redirect('/mapshop')
     return (
         <div className="space-y-8">
             {/* Module Tiles Grid */}
@@ -184,7 +184,7 @@ export default function Page() {
                                                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
                                             </div>
                                             <div className="space-y-2">
-                                                <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">
+                                                <CardTitle className="text-lg font-normal group-hover:text-primary transition-colors duration-300">
                                                     {module.title}
                                                 </CardTitle>
                                                 <CardDescription className="text-sm leading-relaxed">
@@ -221,9 +221,9 @@ export default function Page() {
             <footer className="text-center mt-8">
                 <p className="text-sm text-muted-foreground">
                     Logged in as: <span className="font-medium capitalize">
-                        {/* {userRole.replace('-', ' ')} */}Admin
+                        {user?.role?.name}
                     </span> •
-                    {visibleModules.length} of {modules.length} modules available
+                    {user?.modules?.length} of {modules.length} modules available
                 </p>
             </footer>
         </div>

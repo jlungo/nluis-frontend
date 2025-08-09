@@ -5,7 +5,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { NavigationSidebar } from '@/components/NavigationSidebar';
 import {
   Settings,
-  LogOut,
   User,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +14,9 @@ import { Outlet, useNavigate } from 'react-router';
 import logo from "@/assets/nluis.png"
 import { MainHeader } from '@/components/MainHeader';
 import { usePageStore } from '@/store/pageStore';
+import { LogoutButton } from '@/components/LogoutButton';
+import { useEffect } from "react";
+import { useAuth } from '@/store/auth';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -22,6 +24,7 @@ export default function Layout() {
 
   const { page } = usePageStore()
   const navigate = useNavigate();
+  const { user } = useAuth()
 
   const toggleSidebar = () => {
     if (sidebarCollapsed) {
@@ -40,10 +43,15 @@ export default function Layout() {
     setSidebarCollapsed(false);
   };
 
+  useEffect(() => {
+    if (!user) navigate(`/login`, { replace: true })
+  }, [navigate, user])
+
+  if (!user) return null
   return (
     <div className="h-screen bg-background flex overflow-hidden">
       {/* Main Sidebar - FIXED */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-52'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-60 sm:w-80 lg:w-52'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
         <div className="h-full bg-sidebar border-r border-sidebar-border flex flex-col">
           {/* Sidebar Header - FIXED */}
           <div className="flex-shrink-0 p-3 h-14 border-b border-sidebar-border">
@@ -66,7 +74,7 @@ export default function Layout() {
                           variant="ghost"
                           size="sm"
                           onClick={collapseSidebar}
-                          className="text-sidebar-foreground hover:bg-sidebar-accent"
+                          className="text-sidebar-foreground hover:bg-sidebar-accent hidden lg:block"
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -113,15 +121,15 @@ export default function Layout() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/api/placeholder/32/32" alt="User" />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                    JD
+                    {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-sidebar-foreground truncate">
-                    John Doe
+                    {user?.first_name} {user?.last_name}
                   </p>
                   <p className="text-xs text-sidebar-foreground/70 truncate">
-                    Land Use Planner
+                    {user?.role?.name}
                   </p>
                 </div>
               </div>
@@ -163,23 +171,7 @@ export default function Layout() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        // onClick={onLogout}
-                        className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
-                      >
-                        <LogOut className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Logout</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <LogoutButton />
               </div>
             </div>
           )}

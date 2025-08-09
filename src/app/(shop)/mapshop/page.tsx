@@ -10,7 +10,7 @@ import ElegantMapViewer from './ElegantMapViewer';
 import { Link, useNavigate } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useUserTypeStore } from '@/store/userStore';
+import { useAuth } from '@/store/auth';
 
 // Enhanced MapItem interface with geospatial data
 interface MapItem {
@@ -197,7 +197,7 @@ export default function MapShop() {
     const [selectedMap, setSelectedMap] = useState<MapItem | null>(null);
     //   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
-    const { userType } = useUserTypeStore()
+    const { user } = useAuth()
     const navigate = useNavigate()
 
     // Pagination state
@@ -265,7 +265,7 @@ export default function MapShop() {
 
     const handlePurchase = (map: MapItem, type: 'softcopy' | 'print-rights') => {
         // For guest users, prompt to login first
-        if (userType === 'guest') {
+        if (!user) {
             if (confirm('You need to login or create an account to purchase maps. Would you like to login now?')) {
                 // onLogin();
             }
@@ -292,9 +292,9 @@ export default function MapShop() {
 
     return (
         <>
-            <div className="container mx-auto px-4 py-6">
+            <div className="xl:container mx-auto px-4 py-6">
                 {/* Guest Mode Notice */}
-                {userType === 'guest' && (
+                {!user && (
                     <div className="mb-6">
                         <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-950 rounded-lg p-4">
                             <div className="flex items-start gap-3">
@@ -557,19 +557,19 @@ export default function MapShop() {
                                         size="sm"
                                         className="flex-1 gap-2"
                                         onClick={() => {
-                                            if (userType === 'guest') navigate('/signin')
+                                            if (!user) navigate('/signin')
                                             else handlePurchase(map, 'softcopy')
                                         }}
                                     >
                                         <Monitor className="h-3 w-3" />
-                                        {userType === 'guest' ? 'Login to Buy' : 'View Access'}
+                                        {!user ? 'Login to Buy' : 'View Access'}
                                     </Button>
                                     <Button
                                         variant="secondary"
                                         size="sm"
                                         className="gap-2"
                                         onClick={() => handlePurchase(map, 'print-rights')}
-                                        title={userType === 'guest' ? 'Login required to purchase' : 'Get print rights'}
+                                        title={!user ? 'Login required to purchase' : 'Get print rights'}
                                     >
                                         <Printer className="h-3 w-3" />
                                     </Button>
@@ -652,7 +652,7 @@ export default function MapShop() {
             </div>
 
             {/* Purchase Flow Modal - Only show for authenticated buyers */}
-            {showPurchaseFlow && purchaseMap && userType !== 'guest' && (
+            {showPurchaseFlow && purchaseMap && user && (
                 <MapPurchaseFlow
                     selectedMap={purchaseMap}
                     purchaseType={purchaseType}

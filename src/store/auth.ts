@@ -25,7 +25,7 @@ interface AuthState {
   user: UserProps | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
 }
 
@@ -64,13 +64,14 @@ export const useAuth = create<AuthState>((set, get) => ({
   logout: async () => {
     set({ loading: true });
     try {
-      await api.post("/auth/login/", {
-        refresh: localStorage.get("refreshToken"),
+      await api.post("/auth/logout/", {
+        refresh: localStorage.getItem("refreshToken"),
       });
 
       set({ accessToken: null, refreshToken: null, user: null });
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);

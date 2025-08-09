@@ -2,15 +2,25 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 import { buyerInfo, mockPurchaseHistory } from '../mock';
+import { useAuth } from '@/store/auth';
+import { useEffect } from 'react';
 
 export default function Layout() {
+    const { user } = useAuth()
+    const navigate = useNavigate()
+
     const activeViewAccess = mockPurchaseHistory.filter(p => p.purchaseType === 'view-access' && p.status === 'active').length;
     const activePrintRights = mockPurchaseHistory.filter(p => p.purchaseType === 'print-rights' && p.status === 'active').length;
 
+    useEffect(() => {
+        if (!user) navigate('/signin', { replace: true })
+    }, [navigate, user])
+
+    if (!user) return null
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="xl:container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Sidebar */}
                 <div className="lg:col-span-1">
