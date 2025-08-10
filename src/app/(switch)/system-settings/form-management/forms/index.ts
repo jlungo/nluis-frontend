@@ -1,16 +1,14 @@
 import Layout from "./layout";
 import Page from "./page";
-import FormManagement from "./form-management";
 
 const Index = {
-  path: "/system-settings",
+  path: "forms",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    FormManagement,
   ],
 };
 

@@ -23,26 +23,15 @@ import {
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
 import { useNavigate } from "react-router";
-import { useAuth } from "@/store/auth";
+import { useAuth, type RegisterDataState } from "@/store/auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { genderTypes } from "@/types/constants";
 
 export default function MapShopLoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { login, loading, user } = useAuth()
-
-  // Registration form state
-  const [regData, setRegData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    organization: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const { signup, login, loading, user } = useAuth()
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,20 +52,15 @@ export default function MapShopLoginForm() {
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (regData.password !== regData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
     setError("");
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries()) as unknown as RegisterDataState;
 
-    // Simulate registration
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Auto-login after registration
-    const success = true;
-
-    if (!success) {
-      setError("Registration failed. Please try again.");
+    try {
+      await signup(data)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err?.detail || "Something went wrong");
     }
   };
 
@@ -160,8 +144,6 @@ export default function MapShopLoginForm() {
                     id="email"
                     type="email"
                     name="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="your.email@example.com"
                     required
                     disabled={loading}
@@ -180,8 +162,6 @@ export default function MapShopLoginForm() {
                     id="password"
                     type="password"
                     name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
                     disabled={loading}
@@ -191,7 +171,7 @@ export default function MapShopLoginForm() {
                 <Button
                   type="submit"
                   className="w-full gap-2"
-                  disabled={loading || !email || !password}
+                  disabled={loading}
                 >
                   {loading ? (
                     <>
@@ -245,19 +225,13 @@ export default function MapShopLoginForm() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="md:grid md:grid-cols-2 md:gap-4 space-y-4 md:space-y-0">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
-                      value={regData.firstName}
-                      onChange={(e) =>
-                        setRegData((prev) => ({
-                          ...prev,
-                          firstName: e.target.value,
-                        }))
-                      }
-                      placeholder="John"
+                      name="firstName"
+                      placeholder="Enter First Name"
                       required
                       disabled={loading}
                     />
@@ -266,14 +240,8 @@ export default function MapShopLoginForm() {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
-                      value={regData.lastName}
-                      onChange={(e) =>
-                        setRegData((prev) => ({
-                          ...prev,
-                          lastName: e.target.value,
-                        }))
-                      }
-                      placeholder="Doe"
+                      name="lastName"
+                      placeholder="Enter Last Name"
                       required
                       disabled={loading}
                     />
@@ -285,50 +253,50 @@ export default function MapShopLoginForm() {
                   <Input
                     id="regEmail"
                     type="email"
-                    value={regData.email}
-                    onChange={(e) =>
-                      setRegData((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
+                    name="email"
                     placeholder="your.email@example.com"
                     required
                     disabled={loading}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={regData.phone}
-                    onChange={(e) =>
-                      setRegData((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
-                    placeholder="+255 XXX XXX XXX"
-                    required
-                    disabled={loading}
-                  />
+                <div className="md:grid md:grid-cols-2 md:gap-4 space-y-4 md:space-y-0">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      placeholder="+255 XXX XXX XXX"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select required disabled={loading} name="gender">
+                      <SelectTrigger id="gender" className="w-full">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(genderTypes).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="organization">
-                    Organization (Optional)
+                  <Label htmlFor="company">
+                    Company (Optional)
                   </Label>
                   <Input
-                    id="organization"
-                    value={regData.organization}
-                    onChange={(e) =>
-                      setRegData((prev) => ({
-                        ...prev,
-                        organization: e.target.value,
-                      }))
-                    }
-                    placeholder="Company/Institution name"
+                    id="company"
+                    name="company"
+                    placeholder="Company/Organization/Institution name"
                     disabled={loading}
                   />
                 </div>
@@ -338,13 +306,7 @@ export default function MapShopLoginForm() {
                   <Input
                     id="regPassword"
                     type="password"
-                    value={regData.password}
-                    onChange={(e) =>
-                      setRegData((prev) => ({
-                        ...prev,
-                        password: e.target.value,
-                      }))
-                    }
+                    name="password"
                     placeholder="Create a password"
                     required
                     disabled={loading}
@@ -356,13 +318,7 @@ export default function MapShopLoginForm() {
                   <Input
                     id="confirmPassword"
                     type="password"
-                    value={regData.confirmPassword}
-                    onChange={(e) =>
-                      setRegData((prev) => ({
-                        ...prev,
-                        confirmPassword: e.target.value,
-                      }))
-                    }
+                    name="confirmPassword"
                     placeholder="Confirm your password"
                     required
                     disabled={loading}
@@ -372,12 +328,7 @@ export default function MapShopLoginForm() {
                 <Button
                   type="submit"
                   className="w-full gap-2"
-                  disabled={
-                    loading ||
-                    !regData.email ||
-                    !regData.password ||
-                    !regData.firstName
-                  }
+                  disabled={loading}
                 >
                   {loading ? (
                     <>

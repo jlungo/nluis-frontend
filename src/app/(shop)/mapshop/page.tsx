@@ -296,15 +296,15 @@ export default function MapShop() {
                 {/* Guest Mode Notice */}
                 {!user && (
                     <div className="mb-6">
-                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-950 rounded-lg p-4">
+                        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-950 rounded-lg p-4">
                             <div className="flex items-start gap-3">
                                 <User className="h-5 w-5 text-blue-600 dark:text-blue-800 mt-0.5" />
                                 <div className="flex-1">
-                                    <h3 className="font-medium text-blue-900 dark:text-blue-800 mb-1">Browsing as Guest</h3>
-                                    <p className="text-sm text-blue-700 dark:text-blue-900 mb-3">
+                                    <h3 className="font-medium text-blue-900 dark:text-blue-700 mb-1">Browsing as Guest</h3>
+                                    <p className="text-sm text-blue-700 dark:text-blue-800 mb-3">
                                         You can browse and preview all maps, but you'll need to create an account or login to make purchases.
                                     </p>
-                                    <Link to="/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
+                                    <Link to="/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2 dark:bg-blue-900")}>
                                         <LogIn className="h-3 w-3" />
                                         Create Account or Login
                                     </Link>

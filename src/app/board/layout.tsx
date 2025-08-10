@@ -9,9 +9,10 @@ export default function Layout() {
 
     useEffect(() => {
         if (!user) navigate(`/login`, { replace: true })
+        else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
     }, [navigate, user])
 
-    if (!user) return null
+    if (!user || !user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) return null
     return (
         <div className="min-h-screen bg-gradient-to-b dark:from-background from-primary/5 dark:to-background to-primary/10">
             <MainHeader showLogo />

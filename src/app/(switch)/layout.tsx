@@ -17,6 +17,7 @@ import { usePageStore } from '@/store/pageStore';
 import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
+import type { ModuleTypes } from '@/types/modules';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -45,7 +46,9 @@ export default function Layout() {
 
   useEffect(() => {
     if (!user) navigate(`/login`, { replace: true })
-  }, [navigate, user])
+    else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
+    else if (page?.module && !user.modules.includes(page.module as ModuleTypes)) navigate(`/board`, { replace: true })
+  }, [navigate, page?.module, user])
 
   if (!user) return null
   return (
