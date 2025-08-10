@@ -1,20 +1,26 @@
-// import Layout from "./layout";
+import Layout from "./layout";
 import Page from "./page";
 import Forms from "./forms";
-import Builder from "./builder";
 import Responses from "./responses";
+
+import FormBuilder from "./form-builder";
+import LevelSection from "./level-sections";
+import ModuleLevels from "./module-levels";
 
 const Index = {
   path: "form-management",
-  //   Component: Layout,
+  Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
     Forms,
-    Builder,
     Responses,
+
+    ModuleLevels,
+    LevelSection,
+    FormBuilder,
   ],
 };
 

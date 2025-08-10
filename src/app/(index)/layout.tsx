@@ -59,10 +59,19 @@ export default function Layout() {
                                 MapShop
                             </Link>
                             {user ?
-                                <Link to="/board" className={cn(buttonVariants(), "gap-2")}>
-                                    <LayoutDashboard className="h-4 w-4 hidden lg:block" />
-                                    <span className="sr-only lg:not-sr-only">All</span> Modules
-                                </Link>
+                                <>
+                                    {user?.modules && user.modules.length > 0 ?
+                                        <Link to="/board" className={cn(buttonVariants(), "gap-2")}>
+                                            <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                            <span className="sr-only lg:not-sr-only">All</span> Modules
+                                        </Link>
+                                        :
+                                        <Link to="/portal" className={cn(buttonVariants(), "gap-2")}>
+                                            <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                            <span className="sr-only lg:not-sr-only">My</span> Account
+                                        </Link>
+                                    }
+                                </>
                                 :
                                 <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
                                     <Shield className="h-4 w-4 hidden lg:block" />

@@ -1,5 +1,4 @@
-import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +47,6 @@ interface FormResponseState {
 }
 
 export default function FormResponsesPage() {
-  const { setPage } = usePageStore();
   const [state, setState] = useState<FormResponseState>({
     responses: [],
     filteredResponses: [],
@@ -59,14 +57,6 @@ export default function FormResponsesPage() {
     viewMode: "table",
     loading: true,
   });
-
-  useLayoutEffect(() => {
-    setPage({
-      module: "dynamic-forms",
-      title: "Form Responses",
-      backButton: "Back to Forms",
-    });
-  }, [setPage]);
 
   useEffect(() => {
     loadResponses();

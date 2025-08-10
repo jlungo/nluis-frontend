@@ -14,8 +14,6 @@ export type Page =
   | "user-management"
   | "system-settings"
   | "audit-trail"
-  | "dynamic-forms"
-  | "data-management"
 
   // Dashboard pages
 
@@ -47,6 +45,10 @@ export type Page =
   // User Management pages
 
   // System Settings pages
+  | "form-management"
+  | "form-builder"
+  | "module-levels"
+  | "level-sections"
 
   // Audit Trail pages
 

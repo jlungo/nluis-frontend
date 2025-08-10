@@ -17,7 +17,6 @@ import { usePageStore } from '@/store/pageStore';
 import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
-import type { ModuleTypes } from '@/types/modules';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -47,7 +46,7 @@ export default function Layout() {
   useEffect(() => {
     if (!user) navigate(`/login`, { replace: true })
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
-    else if (page?.module && !user.modules.includes(page.module as ModuleTypes)) navigate(`/board`, { replace: true })
+    // else if (page?.module && !user.modules.includes(page.module as ModuleTypes)) navigate(`/board`, { replace: true })
   }, [navigate, page?.module, user])
 
   if (!user) return null
@@ -203,7 +202,7 @@ export default function Layout() {
             ? <Outlet />
             : (
               <div className="h-full overflow-y-auto">
-                <div className="p-6 space-y-6">
+                <div className="px-4 md:px-6 py-6 space-y-6">
                   {/* Module Context Header */}
                   <div className="border-b border-border pb-4">
                     <div className="flex items-center justify-between">

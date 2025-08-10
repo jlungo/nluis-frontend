@@ -9,6 +9,4 @@ export type ModuleTypes =
   | "organizations"
   | "user-management"
   | "system-settings"
-  | "audit-trail"
-  | "dynamic-forms"
-  | "data-management";
+  | "audit-trail";

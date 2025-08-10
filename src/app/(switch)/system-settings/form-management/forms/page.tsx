@@ -1,5 +1,4 @@
-import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,18 +8,18 @@ interface FormField {
   id: string;
   name: string;
   type:
-    | "text"
-    | "number"
-    | "email"
-    | "tel"
-    | "date"
-    | "textarea"
-    | "select"
-    | "checkbox"
-    | "radio"
-    | "file"
-    | "image"
-    | "location";
+  | "text"
+  | "number"
+  | "email"
+  | "tel"
+  | "date"
+  | "textarea"
+  | "select"
+  | "checkbox"
+  | "radio"
+  | "file"
+  | "image"
+  | "location";
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -77,8 +76,7 @@ interface DynamicFormsState {
   analysisView: "bar" | "pie" | "table";
 }
 
-export default function DynamicFormsPage() {
-  const { setPage } = usePageStore();
+export default function Page() {
   const [state, setState] = useState<DynamicFormsState>({
     questionnaires: [],
     forms: [],
@@ -95,14 +93,6 @@ export default function DynamicFormsPage() {
     viewMode: "list",
     analysisView: "table",
   });
-
-  useLayoutEffect(() => {
-    setPage({
-      module: "dynamic-forms",
-      title: "Dynamic Forms & Questionnaires",
-      backButton: "Back to Data Collection",
-    });
-  }, [setPage]);
 
   useEffect(() => {
     loadData();
@@ -194,7 +184,7 @@ export default function DynamicFormsPage() {
             Create and manage dynamic forms for data collection
           </p>
         </div>
-        <Button onClick={() => {}}>
+        <Button onClick={() => { }}>
           <Plus className="h-4 w-4 mr-2" />
           New Form
         </Button>

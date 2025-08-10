@@ -26,6 +26,9 @@ import {
   User,
   ChevronDown,
   ChevronRight,
+  ClipboardPenLine,
+  LayoutTemplate,
+  List,
 } from "lucide-react";
 import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
@@ -224,12 +227,28 @@ export function NavigationSidebar({
           ];
         case "system-settings":
           return [
-            // {
-            //     id: "system-settings",
-            //     label: "System Settings",
-            //     icon: <Settings className="h-4 w-4" />,
-            //     type: "standalone",
-            // },
+            {
+              id: "form-management",
+              label: "Form Management",
+              icon: <ClipboardPenLine className="h-4 w-4" />,
+              items: [
+                {
+                  id: "module-levels",
+                  label: "Module Levels",
+                  icon: <List className="h-4 w-4" />
+                },
+                {
+                  id: "level-sections",
+                  label: "Level Sections",
+                  icon: <LayoutTemplate className="h-4 w-4" />
+                },
+                {
+                  id: "form-builder",
+                  label: "Form Builder",
+                  icon: <User className="h-4 w-4" />
+                },
+              ],
+            },
           ];
         case "audit-trail":
           return [
@@ -239,15 +258,6 @@ export function NavigationSidebar({
             //     icon: <Activity className="h-4 w-4" />,
             //     type: "standalone",
             // },
-          ];
-        case "data-management":
-          return [
-            {
-              id: "forms",
-              label: "Form Management",
-              icon: <Activity className="h-4 w-4" />,
-              type: "standalone",
-            },
           ];
         default:
           return [];
@@ -586,13 +596,13 @@ export function NavigationSidebar({
 
   return (
     <nav className="p-3 space-y-1">
-      {page && page?.module
+      {/* {page && page?.module
         ? renderNavigationItem({
           id: page.module,
           label: "Dashboard",
           icon: <Home className="h-4 w-4" />,
         })
-        : null}
+        : null} */}
       {navigationItems.map(renderNavigationElement)}
     </nav>
   );
