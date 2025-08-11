@@ -4,137 +4,48 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Filter, Search } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-
-// Dummy modules and levels for demonstration
-const MODULES = [
-  // { value: "all", label: "All" },
-  { value: "dashboard", label: "System Dashboard" },
-  { value: "land-uses", label: "Land Use Planning" },
-  { value: "ccro-management", label: "CCRO Management" },
-  { value: "compliance", label: "Compliance Monitoring" },
-  { value: "management-evaluation", label: "Management & Evaluation" },
-  { value: "mapshop-management", label: "MapShop Management" },
-  { value: "reports", label: "Reports & Analytics" },
-  { value: "organizations", label: "Organizations" },
-  { value: "user-management", label: "User Management" },
-  { value: "system-settings", label: "System Administration" },
-  { value: "audit-trail", label: "Audit & Activity" },
-];
-
-interface Level {
-  id: number;
-  name: string;
-  module: string;
-}
-
-interface Section {
-  id: number;
-  name: string;
-  module: string;
-  levelId: number;
-}
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { useModulesQuery } from "@/queries/useModuleQuery";
+import Delete from "./Delete";
+import Form from "./Form";
+import { useSectionsQuery, type SectionProps } from "@/queries/useSectionQuery";
+import { useLevelsQuery } from "@/queries/useLevelQuery";
 
 export default function Page() {
-  const { setPage } = usePageStore();
+  const { setPage: setPageData } = usePageStore();
 
   useLayoutEffect(() => {
-    setPage({
+    setPageData({
       module: 'system-settings',
       title: "System Settings",
       backButton: 'Back',
     })
-  }, [setPage])
+  }, [setPageData])
 
-  // Dummy levels for demonstration. Replace with API data as needed.
-  const [levels] = useState<Level[]>([
-    { id: 1, name: "Village", module: "land-uses" },
-    { id: 2, name: "District", module: "land-uses" },
-    { id: 3, name: "Compliance Level 1", module: "compliance" },
-    { id: 4, name: "Compliance Level 2", module: "compliance" },
-    { id: 5, name: "Dashboard Level", module: "dashboard" },
-  ]);
-
-  const [sections, setSections] = useState<Section[]>([]);
-  const [editing, setEditing] = useState<Section | null>(null);
+  const [keyword, setKeyword] = useState<string>("");
   const [filterModule, setFilterModule] = useState<string>("");
-  const [filterLevel, setFilterLevel] = useState<number | "">("");
-  const [form, setForm] = useState({ name: "", module: "", levelId: "" as number | "" });
+  const [filterLevel, setFilterLevel] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const offset = (page - 1) * limit;
 
-  // Dialog state for add/edit section
-  const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
+  const [editing, setEditing] = useState<SectionProps | null>(null);
+  const [form, setForm] = useState<SectionProps | null>(null);
+  const [openFormDialog, setOpenFormDialog] = useState(false);
 
-  // Filter levels by selected module
-  const filteredLevelsForSelect = filterModule && filterModule !== "all"
-    ? levels.filter(l => l.module === filterModule)
-    : levels;
-
-  // Filter levels for the form dialog
-  const filteredLevelsForForm = form?.module
-    ? levels.filter(l => l.module === form.module)
-    : [];
-
-  // Filter sections by module and level
-  const filteredSections = sections.filter(section => {
-    let match = true;
-    if (filterModule && filterModule !== "all") {
-      match = match && section.module === filterModule;
-    }
-    if (filterLevel) {
-      match = match && section.levelId === filterLevel;
-    }
-    return match;
-  });
-
-  const handleChange = (key: string, value: string | number) => {
-    console.log(key, value)
-    setForm({ ...form, [key]: value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.module || !form.levelId) return;
-    if (editing) {
-      setSections(sections.map(s => s.id === editing.id ? { ...editing, ...form, levelId: Number(form.levelId) } : s));
-      setEditing(null);
-    } else {
-      setSections([...sections, { id: Date.now(), ...form, levelId: Number(form.levelId) }]);
-    }
-    setForm({ name: "", module: "", levelId: "" });
-    setSectionDialogOpen(false);
-  };
-
-  const handleEdit = (section: Section) => {
+  const handleEdit = (section: SectionProps) => {
     setEditing(section);
-    setForm({ name: section.name, module: section.module, levelId: section.levelId });
-    setSectionDialogOpen(true);
+    setForm(section);
+    setOpenFormDialog(true);
   };
 
-  const handleDelete = (section: Section) => {
-    setSectionToDelete(section);
-    setDeleteDialogOpen(true);
-  };
+  const { data: sections, isLoading: isLoadingSections } = useSectionsQuery(limit, offset, keyword, filterModule, filterLevel)
+  const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', '')
+  const { data: modules, isLoading: isLoadingModules } = useModulesQuery()
 
-  const confirmDelete = () => {
-    if (sectionToDelete) {
-      setSections(sections.filter(s => s.id !== sectionToDelete.id));
-      setSectionToDelete(null);
-      setDeleteDialogOpen(false);
-    }
-  };
+  const totalPages = levels ? Math.ceil(levels.count / limit) : 1;
 
   return (
     <div className="space-y-6">
@@ -147,89 +58,16 @@ export default function Page() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Dialog open={sectionDialogOpen} onOpenChange={open => {
-            setSectionDialogOpen(open);
-            if (!open) {
-              setEditing(null);
-              setForm({ name: "", module: "", levelId: "" });
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { setEditing(null); setForm({ name: "", module: "", levelId: "" }); }}>
-                Add Section
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editing ? "Edit Section" : "Add Section"}</DialogTitle>
-              </DialogHeader>
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-4"
-              >
-                <Input
-                  placeholder="Section name"
-                  value={form.name}
-                  onChange={e => handleChange("name", e.target.value)}
-                  required
-                />
-                <Select
-                  value={form.module}
-                  required
-                  onValueChange={val => {
-                    handleChange("module", val);
-                    // Reset levelId if module changes
-                    // handleChange("levelId", "");
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select module" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODULES.filter(m => m.value !== "all").map(m => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={form.levelId === "" ? "" : String(form.levelId)}
-                  onValueChange={val => handleChange("levelId", Number(val))}
-                  disabled={!form.module}
-                  required
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredLevelsForForm.map(l => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setEditing(null);
-                        setForm({ name: "", module: "", levelId: "" });
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button type="submit">
-                    {editing ? "Update" : "Add"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Form
+            open={openFormDialog}
+            setOpen={setOpenFormDialog}
+            form={form}
+            setForm={setForm}
+            editing={editing}
+            setEditing={setEditing}
+            modules={modules || []}
+            levels={levels?.results || []}
+          />
         </div>
       </div>
 
@@ -247,44 +85,52 @@ export default function Page() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search sections..."
-                // value={state.searchTerm}
-                // onChange={(e) =>
-                //   setState((prev) => ({ ...prev, searchTerm: e.target.value }))}
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
                 className="pl-10"
               />
             </div>
             <Select
               value={filterModule}
-              onValueChange={val => {
-                setFilterModule(val);
-                setFilterLevel("");
+              onValueChange={value => {
+                setPage(1)
+                setFilterModule(value === "all" ? "" : value)
+                setFilterLevel("")
               }}
             >
               <SelectTrigger className="w-full md:w-56">
                 <SelectValue placeholder="All Modules" />
               </SelectTrigger>
               <SelectContent>
-                {MODULES.map(m => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
+                <SelectItem value="all">All</SelectItem>
+                {!isLoadingModules && modules ? modules.map(m => (
+                  <SelectItem key={m.slug} value={m.slug}>
+                    {m.name}
                   </SelectItem>
-                ))}
+                )) : <></>}
               </SelectContent>
             </Select>
             <Select
-              value={filterLevel === "" ? "" : String(filterLevel)}
-              onValueChange={val => setFilterLevel(Number(val))}
+              value={filterLevel}
+              onValueChange={value => {
+                setPage(1)
+                setFilterLevel(value === "all" ? "" : value)
+              }}
               disabled={!filterModule || filterModule === "all"}
             >
               <SelectTrigger className="w-full md:w-56">
                 <SelectValue placeholder="All Levels" />
               </SelectTrigger>
               <SelectContent>
-                {filteredLevelsForSelect.map(l => (
-                  <SelectItem key={l.id} value={String(l.id)}>
-                    {l.name}
-                  </SelectItem>
-                ))}
+                {!isLoadingLevels && levels?.results ? (
+                  levels.results
+                    .filter(l => l.module_slug === filterModule)
+                    .map(l => (
+                      <SelectItem key={l.slug} value={String(l.slug)}>
+                        {l.name}
+                      </SelectItem>
+                    ))
+                ) : null}
               </SelectContent>
             </Select>
           </div>
@@ -298,21 +144,17 @@ export default function Page() {
             <TableHeader>
               <TableRow>
                 <TableHead>Section Name</TableHead>
-                <TableHead>Module</TableHead>
                 <TableHead>Level</TableHead>
+                <TableHead>Module</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSections.map(section => (
-                <TableRow key={section.id}>
+              {!isLoadingSections && sections?.results && sections.results.length > 0 ? sections.results.map(section => (
+                <TableRow key={section.slug}>
                   <TableCell>{section.name}</TableCell>
-                  <TableCell>
-                    {MODULES.find(m => m.value === section.module)?.label || section.module}
-                  </TableCell>
-                  <TableCell>
-                    {levels.find(l => l.id === section.levelId)?.name || section.levelId}
-                  </TableCell>
+                  <TableCell>{section.level_name}</TableCell>
+                  <TableCell>{section.module_name}</TableCell>
                   <TableCell className="space-x-2">
                     <Button
                       size="sm"
@@ -321,53 +163,63 @@ export default function Page() {
                     >
                       Edit
                     </Button>
-                    <AlertDialog open={deleteDialogOpen && sectionToDelete?.id === section.id} onOpenChange={setDeleteDialogOpen}>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(section)}
-                        >
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you sure you want to delete <span className="font-semibold">{sectionToDelete?.name}</span>?
-                          </AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel
-                            onClick={() => {
-                              setDeleteDialogOpen(false);
-                              setSectionToDelete(null);
-                            }}
-                          >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={confirmDelete}
-                            className="bg-destructive text-white hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+
+                    <Delete section={section} />
                   </TableCell>
                 </TableRow>
-              ))}
-              {filteredSections.length === 0 && (
+              )) : null}
+              {isLoadingSections ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">
-                    No sections found.
+                    Loading...
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
+              {sections?.results && sections.results.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    No results found
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter>
+          {sections && totalPages > 1 ?
+            <Pagination className="ml-auto mr-0 w-fit">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    isActive={sections?.previous ? true : false}
+                    size="sm"
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      isActive={page === i + 1}
+                      onClick={() => setPage(i + 1)}
+                      size="sm"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    isActive={sections?.next ? true : false}
+                    size="sm"
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+            : null}
+        </CardFooter>
       </Card>
     </div>
   )

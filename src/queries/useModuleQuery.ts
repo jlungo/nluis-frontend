@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 export interface ModuleProps {
-  id: string;
+  slug: string;
   name: string;
 }
 
-export const moduleQueryKey = "module";
+export const moduleQueryKey = "moduleKey";
 
 export const useModulesQuery = () => {
-  return useQuery({
+  return useQuery<ModuleProps[]>({
     queryKey: [moduleQueryKey],
-    queryFn: () => api.get(`/module`).then((res) => res.data),
+    queryFn: () => api.get(`/auth/modules`).then((res) => res.data),
   });
 };

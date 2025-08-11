@@ -9,18 +9,18 @@ interface FormField {
   id: string;
   name: string;
   type:
-    | "text"
-    | "number"
-    | "email"
-    | "tel"
-    | "date"
-    | "textarea"
-    | "select"
-    | "checkbox"
-    | "radio"
-    | "file"
-    | "image"
-    | "location";
+  | "text"
+  | "number"
+  | "email"
+  | "tel"
+  | "date"
+  | "textarea"
+  | "select"
+  | "checkbox"
+  | "radio"
+  | "file"
+  | "image"
+  | "location";
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -98,7 +98,7 @@ export default function DynamicFormsPage() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "dynamic-forms",
+      module: "system-settings",
       title: "Dynamic Forms & Questionnaires",
       backButton: "Back to Data Collection",
     });
@@ -194,7 +194,7 @@ export default function DynamicFormsPage() {
             Create and manage dynamic forms for data collection
           </p>
         </div>
-        <Button onClick={() => {}}>
+        <Button onClick={() => { }}>
           <Plus className="h-4 w-4 mr-2" />
           New Form
         </Button>

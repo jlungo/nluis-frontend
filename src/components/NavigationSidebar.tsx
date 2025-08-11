@@ -29,6 +29,7 @@ import {
   ClipboardPenLine,
   LayoutTemplate,
   List,
+  ClipboardList,
 } from "lucide-react";
 import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
@@ -245,7 +246,7 @@ export function NavigationSidebar({
                 {
                   id: "form-builder",
                   label: "Form Builder",
-                  icon: <User className="h-4 w-4" />
+                  icon: <ClipboardList className="h-4 w-4" />
                 },
               ],
             },
@@ -517,7 +518,7 @@ export function NavigationSidebar({
                           size: "sm",
                         }),
                         `w-full justify-start h-8 ${pathname.includes(item.id)
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
                           : "hover:bg-accent"
                         }`
                       )}
@@ -556,7 +557,7 @@ export function NavigationSidebar({
           <Button
             variant="ghost"
             className={`w-full justify-start px-3 h-8 ${hasActiveItem
-              ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
+              ? "bg-sidebar-primary/60 dark:bg-sidebar-primary/20 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
               : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
           >

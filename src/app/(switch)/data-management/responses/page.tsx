@@ -62,7 +62,7 @@ export default function FormResponsesPage() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "dynamic-forms",
+      module: "system-settings",
       title: "Form Responses",
       backButton: "Back to Forms",
     });

@@ -4,81 +4,45 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Filter, Search } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Form from "./Form";
-
-const MODULES = [
-  { value: "all", label: "All" },
-  { value: "dashboard", label: "System Dashboard" },
-  { value: "land-uses", label: "Land Use Planning" },
-  { value: "ccro-management", label: "CCRO Management" },
-  { value: "compliance", label: "Compliance Monitoring" },
-  { value: "management-evaluation", label: "Management & Evaluation" },
-  { value: "mapshop-management", label: "MapShop Management" },
-  { value: "reports", label: "Reports & Analytics" },
-  { value: "organizations", label: "Organizations" },
-  { value: "user-management", label: "User Management" },
-  { value: "system-settings", label: "System Administration" },
-  { value: "audit-trail", label: "Audit & Activity" },
-];
-
-interface Level {
-  id: number;
-  name: string;
-  module: string;
-  sections?: Section[];
-}
-
-interface Section {
-  id: number;
-  name: string;
-}
+import { useModulesQuery } from "@/queries/useModuleQuery";
+import Delete from "./Delete";
+import { useLevelsQuery, type LevelProps } from "@/queries/useLevelQuery";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function Page() {
-  const { setPage } = usePageStore();
+  const { setPage: setPageData } = usePageStore();
 
   useLayoutEffect(() => {
-    setPage({
+    setPageData({
       module: 'system-settings',
       title: "System Settings",
       backButton: 'Back',
     })
-  }, [setPage])
+  }, [setPageData])
 
-  const [levels, setLevels] = useState<Level[]>([]);
-  const [editing, setEditing] = useState<Level | null>(null);
+  const [keyword, setKeyword] = useState<string>("");
   const [filterModule, setFilterModule] = useState<string>("");
-  const [form, setForm] = useState({ name: "", module: "" });
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const offset = (page - 1) * limit;
 
-  // Dialog state for add/edit level
-  const [open, setOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [levelToDelete, setLevelToDelete] = useState<Level | null>(null);
+  const [editing, setEditing] = useState<LevelProps | null>(null);
+  const [form, setForm] = useState<LevelProps | null>(null);
+  const [openFormDialog, setOpenFormDialog] = useState(false);
 
-  const handleEdit = (level: Level) => {
+  const handleEdit = (level: LevelProps) => {
     setEditing(level);
-    setForm({ name: level.name, module: level.module });
-    setOpen(true);
+    setForm(level);
+    setOpenFormDialog(true);
   };
 
-  const handleDelete = (level: Level) => {
-    setLevelToDelete(level);
-    setDeleteDialogOpen(true);
-  };
+  const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(limit, offset, keyword, filterModule)
+  const { data: modules, isLoading: isLoadingModules } = useModulesQuery()
 
-  const confirmDelete = () => {
-    if (levelToDelete) {
-      setLevels(levels.filter(l => l.id !== levelToDelete.id));
-      setLevelToDelete(null);
-      setDeleteDialogOpen(false);
-    }
-  };
-
-  const filteredLevels = filterModule && filterModule !== "all"
-    ? levels.filter(l => l.module === filterModule)
-    : levels;
+  const totalPages = levels ? Math.ceil(levels.count / limit) : 1;
 
   return (
     <div className="space-y-6">
@@ -91,7 +55,15 @@ export default function Page() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Form open={open} setOpen={setOpen} form={form} setForm={setForm} editing={editing} setEditing={setEditing} />
+          <Form
+            open={openFormDialog}
+            setOpen={setOpenFormDialog}
+            form={form}
+            setForm={setForm}
+            editing={editing}
+            setEditing={setEditing}
+            modules={modules || []}
+          />
         </div>
       </div>
 
@@ -109,27 +81,29 @@ export default function Page() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search projects..."
-                // value={state.searchTerm}
-                // onChange={(e) =>
-                //   setState((prev) => ({ ...prev, searchTerm: e.target.value }))
-                // }
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
                 className="pl-10"
               />
             </div>
 
             <Select
               value={filterModule}
-              onValueChange={setFilterModule}
+              onValueChange={(value) => {
+                setPage(1)
+                setFilterModule(value === "all" ? "" : value)
+              }}
             >
               <SelectTrigger className="w-full md:w-56">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
-                {MODULES.map(m => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
+                <SelectItem value="all">All</SelectItem>
+                {!isLoadingModules && modules ? modules.map(m => (
+                  <SelectItem key={m.slug} value={m.slug}>
+                    {m.name}
                   </SelectItem>
-                ))}
+                )) : <></>}
               </SelectContent>
             </Select>
           </div>
@@ -144,24 +118,15 @@ export default function Page() {
               <TableRow>
                 <TableHead>Level Name</TableHead>
                 <TableHead>Module</TableHead>
-                <TableHead>Sections</TableHead>
+                {/* <TableHead>Sections</TableHead> */}
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLevels.map(level => (
-                <TableRow key={level.id}>
+              {!isLoadingLevels && levels?.results && levels.results.length > 0 ? levels.results.map(level => (
+                <TableRow key={level.slug}>
                   <TableCell>{level.name}</TableCell>
-                  <TableCell>
-                    {MODULES.find(m => m.value === level.module)?.label || level.module}
-                  </TableCell>
-                  <TableCell>
-                    <ul className="list-disc ml-4">
-                      {(level.sections || []).map(section => (
-                        <li key={section.id}>{section.name}</li>
-                      ))}
-                    </ul>
-                  </TableCell>
+                  <TableCell>{level.module_name}</TableCell>
                   <TableCell className="space-x-2">
                     <Button
                       size="sm"
@@ -171,53 +136,62 @@ export default function Page() {
                       Edit
                     </Button>
 
-                    <AlertDialog open={deleteDialogOpen && levelToDelete?.id === level.id} onOpenChange={setDeleteDialogOpen}>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(level)}
-                        >
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you sure you want to delete <span className="font-semibold">{levelToDelete?.name}</span>?
-                          </AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel
-                            onClick={() => {
-                              setDeleteDialogOpen(false);
-                              setLevelToDelete(null);
-                            }}
-                          >
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={confirmDelete}
-                            className="bg-destructive text-white hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Delete level={level} />
                   </TableCell>
                 </TableRow>
-              ))}
-              {filteredLevels.length === 0 && (
+              )) : null}
+              {isLoadingLevels ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">
-                    No levels found.
+                    Loading...
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
+              {levels?.results && levels.results.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    No results found
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter>
+          {levels && totalPages > 1 ?
+            <Pagination className="ml-auto mr-0 w-fit">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    isActive={levels?.previous ? true : false}
+                    size="sm"
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink
+                      isActive={page === i + 1}
+                      onClick={() => setPage(i + 1)}
+                      size="sm"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    isActive={levels?.next ? true : false}
+                    size="sm"
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+            : null}
+        </CardFooter>
       </Card>
     </div>
   )

@@ -2,34 +2,31 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
 
-export interface SectionProps {
+export interface LevelProps {
   slug: string;
   name: string;
-  level_slug: string;
-  level_name: string;
   module_slug: string;
   module_name: string;
 }
 
 interface DataProps extends APIResponse {
-  results: SectionProps[];
+  results: LevelProps[];
 }
 
-export const sectionQueryKey = "sectionKey";
+export const levelQueryKey = "levelKey";
 
-export const useSectionsQuery = (
+export const useLevelsQuery = (
   limit: number,
   offset: number,
   keyword: string,
-  module: string,
-  level: string
+  module: string
 ) => {
   return useQuery<DataProps>({
-    queryKey: [sectionQueryKey, { limit, offset, keyword, module, level }],
+    queryKey: [levelQueryKey, { limit, offset, keyword, module }],
     queryFn: () =>
       api
         .get(
-          `/form-management/sections/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}&level=${level}`
+          `/form-management/levels/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}`
         )
         .then((res) => res.data),
   });

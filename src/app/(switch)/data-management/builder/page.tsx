@@ -86,7 +86,7 @@ export default function FormBuilderPage() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "dynamic-forms",
+      module: "system-settings",
       title: "Form Builder",
       backButton: "Back to Forms",
     });
