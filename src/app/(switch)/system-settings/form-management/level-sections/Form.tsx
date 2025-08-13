@@ -115,7 +115,7 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                     Add Section
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>{editing ? "Edit Section" : "Add Section"}</DialogTitle>
                 </DialogHeader>
@@ -131,13 +131,13 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                     <Select
                         defaultValue={form?.module_slug}
                         value={filterModule}
-                        onValueChange={value => setFilterModule(value === "all" ? "" : value)}
+                        onValueChange={setFilterModule}
                     >
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select module" />
                         </SelectTrigger>
                         <SelectContent>
-                            {modules.filter(m => m.slug !== "all").map(m => (
+                            {modules.map(m => (
                                 <SelectItem key={m.slug} value={m.slug}>
                                     {m.name}
                                 </SelectItem>
@@ -153,7 +153,7 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                             <SelectValue placeholder="Select level" />
                         </SelectTrigger>
                         <SelectContent>
-                            {levels.filter(m => m.slug !== "all" && m.module_slug === filterModule).map(m => (
+                            {levels.filter(m => m.module_slug === filterModule).map(m => (
                                 <SelectItem key={m.slug} value={m.slug}>
                                     {m.name}
                                 </SelectItem>

@@ -2,6 +2,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 import { levelQueryKey, type LevelProps } from "@/queries/useLevelQuery";
+import { AlertDialogDescription } from "@radix-ui/react-alert-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useState } from "react";
@@ -59,9 +60,12 @@ export default function Delete({ level }: Props) {
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>
-                        Are you sure you want to delete <span className="font-semibold">{level?.name}</span>?
+                        Delete <span className="font-semibold">{level?.name}</span>
                     </AlertDialogTitle>
                 </AlertDialogHeader>
+                <AlertDialogDescription>
+                    Are you sure you want to delete <span className="font-semibold">{level?.name}</span> module level?
+                </AlertDialogDescription>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setOpen(false)}>
                         Cancel

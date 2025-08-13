@@ -1,9 +1,9 @@
-// import Layout from "./layout";
+import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "responses",
-  //   Component: Layout,
+  path: "builder",
+  Component: Layout,
   children: [
     {
       index: true,

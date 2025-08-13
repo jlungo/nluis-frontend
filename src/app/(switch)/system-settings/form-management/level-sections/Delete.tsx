@@ -1,4 +1,4 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 import { sectionQueryKey, type SectionProps } from "@/queries/useSectionQuery";
@@ -56,12 +56,15 @@ export default function Delete({ section }: Props) {
                     Delete
                 </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent aria-describedby={undefined}>
                 <AlertDialogHeader>
                     <AlertDialogTitle>
-                        Are you sure you want to delete <span className="font-semibold">{section?.name}</span>?
+                        Delete <span className="font-semibold">{section?.name}</span>?
                     </AlertDialogTitle>
                 </AlertDialogHeader>
+                <AlertDialogDescription>
+                    Are you sure you want to delete <span className="font-semibold">{section?.name}</span> level section?
+                </AlertDialogDescription>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setOpen(false)}>
                         Cancel

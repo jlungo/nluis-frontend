@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, Eye, Map, Filter, X, ChevronLeft, ChevronRight, User, LogIn, Monitor, Printer } from 'lucide-react';
 import MapPurchaseFlow from './MapPurchaseFlow';
-import ElegantMapViewer from './ElegantMapViewer';
+import ElegantMapViewer from '@/components/ElegantMapViewer';
 import { Link, useNavigate } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

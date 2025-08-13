@@ -110,7 +110,7 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                     Add Level
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>{editing ? "Edit Level" : "Add Level"}</DialogTitle>
                 </DialogHeader>

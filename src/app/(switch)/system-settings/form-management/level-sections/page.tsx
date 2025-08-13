@@ -12,6 +12,7 @@ import Delete from "./Delete";
 import Form from "./Form";
 import { useSectionsQuery, type SectionProps } from "@/queries/useSectionQuery";
 import { useLevelsQuery } from "@/queries/useLevelQuery";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Page() {
   const { setPage: setPageData } = usePageStore();
@@ -144,18 +145,18 @@ export default function Page() {
             <TableHeader>
               <TableRow>
                 <TableHead>Section Name</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Module</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-center">Level</TableHead>
+                <TableHead className="text-center">Module</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!isLoadingSections && sections?.results && sections.results.length > 0 ? sections.results.map(section => (
                 <TableRow key={section.slug}>
                   <TableCell>{section.name}</TableCell>
-                  <TableCell>{section.level_name}</TableCell>
-                  <TableCell>{section.module_name}</TableCell>
-                  <TableCell className="space-x-2">
+                  <TableCell className="text-center">{section.level_name}</TableCell>
+                  <TableCell className="text-center">{section.module_name}</TableCell>
+                  <TableCell className="gap-2 flex justify-center">
                     <Button
                       size="sm"
                       variant="outline"
@@ -170,14 +171,16 @@ export default function Page() {
               )) : null}
               {isLoadingSections ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Loading...
+                  <TableCell colSpan={4} className="text-center h-40">
+                    <div className="m-auto w-fit h-fit">
+                      <Spinner />
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}
               {sections?.results && sections.results.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={4} className="text-center h-40">
                     No results found
                   </TableCell>
                 </TableRow>
@@ -185,8 +188,8 @@ export default function Page() {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter>
-          {sections && totalPages > 1 ?
+        {sections && totalPages > 1 ?
+          <CardFooter>
             <Pagination className="ml-auto mr-0 w-fit">
               <PaginationContent>
                 <PaginationItem>
@@ -218,8 +221,8 @@ export default function Page() {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-            : null}
-        </CardFooter>
+          </CardFooter>
+          : null}
       </Card>
     </div>
   )

@@ -139,7 +139,7 @@ export default function MapPurchaseFlow({ selectedMap, purchaseType, onClose, on
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-screen sm:max-w-6xl">
+            <DialogContent aria-describedby={undefined} className="max-h-[90vh] overflow-y-auto max-w-screen sm:max-w-6xl">
                 <DialogHeader className="border-b pb-4">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">

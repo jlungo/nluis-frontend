@@ -30,6 +30,7 @@ import {
   LayoutTemplate,
   List,
   ClipboardList,
+  ClipboardPlus
 } from "lucide-react";
 import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
@@ -234,6 +235,11 @@ export function NavigationSidebar({
               icon: <ClipboardPenLine className="h-4 w-4" />,
               items: [
                 {
+                  id: "builder",
+                  label: "Quick Build",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
                   id: "module-levels",
                   label: "Module Levels",
                   icon: <List className="h-4 w-4" />
@@ -247,7 +253,7 @@ export function NavigationSidebar({
                   id: "form-builder",
                   label: "Form Builder",
                   icon: <ClipboardList className="h-4 w-4" />
-                },
+                }
               ],
             },
           ];

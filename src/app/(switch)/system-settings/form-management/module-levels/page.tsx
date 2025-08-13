@@ -11,6 +11,7 @@ import { useModulesQuery } from "@/queries/useModuleQuery";
 import Delete from "./Delete";
 import { useLevelsQuery, type LevelProps } from "@/queries/useLevelQuery";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Page() {
   const { setPage: setPageData } = usePageStore();
@@ -117,17 +118,17 @@ export default function Page() {
             <TableHeader>
               <TableRow>
                 <TableHead>Level Name</TableHead>
-                <TableHead>Module</TableHead>
-                {/* <TableHead>Sections</TableHead> */}
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-center">Module</TableHead>
+                {/* <TableHead className="text-center">Sections</TableHead> */}
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!isLoadingLevels && levels?.results && levels.results.length > 0 ? levels.results.map(level => (
                 <TableRow key={level.slug}>
                   <TableCell>{level.name}</TableCell>
-                  <TableCell>{level.module_name}</TableCell>
-                  <TableCell className="space-x-2">
+                  <TableCell className="text-center">{level.module_name}</TableCell>
+                  <TableCell className="gap-2 flex justify-center">
                     <Button
                       size="sm"
                       variant="outline"
@@ -142,14 +143,16 @@ export default function Page() {
               )) : null}
               {isLoadingLevels ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Loading...
+                  <TableCell colSpan={3} className="text-center h-40">
+                    <div className="m-auto w-fit h-fit">
+                      <Spinner />
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}
               {levels?.results && levels.results.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={3} className="text-center h-40">
                     No results found
                   </TableCell>
                 </TableRow>
@@ -157,8 +160,8 @@ export default function Page() {
             </TableBody>
           </Table>
         </CardContent>
-        <CardFooter>
-          {levels && totalPages > 1 ?
+        {levels && totalPages > 1 ?
+          <CardFooter>
             <Pagination className="ml-auto mr-0 w-fit">
               <PaginationContent>
                 <PaginationItem>
@@ -190,8 +193,8 @@ export default function Page() {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-            : null}
-        </CardFooter>
+          </CardFooter>
+          : null}
       </Card>
     </div>
   )

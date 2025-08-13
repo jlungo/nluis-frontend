@@ -5,6 +5,7 @@ import type { APIResponse } from "@/types/api-response";
 export interface SectionProps {
   slug: string;
   name: string;
+  position?: number;
   level_slug: string;
   level_name: string;
   module_slug: string;
