@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, User, Lock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Shield, User, Lock, AlertCircle, Key } from "lucide-react";
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
 import { useNavigate } from "react-router";
@@ -44,6 +44,10 @@ export default function LoginForm() {
   const onCancel = () => {
     navigate('/', { replace: true });
   };
+
+  const onForgotPassword = () => {
+    navigate('/auth/forgot-password', { replace: true })
+  }
 
   useEffect(() => {
     if (user) {
@@ -141,6 +145,21 @@ export default function LoginForm() {
                 className="transition-colors"
               />
             </div>
+
+            {/* Forgot Password Link */}
+            {onForgotPassword && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-sm text-primary hover:underline flex items-center gap-1 ml-auto"
+                  disabled={loading}
+                >
+                  <Key className="h-3 w-3" />
+                  Forgot your password?
+                </button>
+              </div>
+            )}
 
             <div className="space-y-4 pt-2">
               <Button
