@@ -21,6 +21,7 @@ export default function Page() {
       module: 'system-settings',
       title: "System Settings",
       backButton: 'Back',
+      isFormPage: true
     })
   }, [setPageData])
 
@@ -81,7 +82,7 @@ export default function Page() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search projects..."
+                placeholder="Search levels..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 className="pl-10"

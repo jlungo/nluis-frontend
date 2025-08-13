@@ -43,9 +43,11 @@ export type Page =
   // Reports pages
 
   // User Management pages
+  | "users-dashboard"
 
   // System Settings pages
   | "form-management"
+  | "forms-dashboard"
   | "form-builder"
   | "module-levels"
   | "level-sections"

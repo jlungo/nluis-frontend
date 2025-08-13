@@ -62,7 +62,7 @@ export function LogoutButton() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onLogout}>Logout</AlertDialogAction>
+                    <AlertDialogAction onClick={onLogout} className="bg-destructive text-white hover:bg-destructive/90">Logout</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
