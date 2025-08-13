@@ -62,7 +62,7 @@ export default function FormResponsesPage() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "dynamic-forms",
+      module: "system-settings",
       title: "Form Responses",
       backButton: "Back to Forms",
     });
@@ -269,7 +269,7 @@ export default function FormResponsesPage() {
                 <SelectValue placeholder="Filter by Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                {/* <SelectItem value="">All Status</SelectItem> */}
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
@@ -286,7 +286,7 @@ export default function FormResponsesPage() {
                 <SelectValue placeholder="Filter by Form" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Forms</SelectItem>
+                {/* <SelectItem value="">All Forms</SelectItem> */}
                 <SelectItem value="F001">Land Use Survey</SelectItem>
                 <SelectItem value="F002">Party Information</SelectItem>
               </SelectContent>

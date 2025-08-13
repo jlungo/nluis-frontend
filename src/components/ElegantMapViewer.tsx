@@ -20,6 +20,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface MapLayer {
     id: string;
@@ -333,9 +334,10 @@ export default function ElegantMapViewer({
             {isPreview && onPurchase && (
                 <Button
                     onClick={onPurchase}
-                    className="bg-primary hover:bg-primary/90"
+                    size="sm"
+                    className="text-xs bg-primary hover:bg-primary/90"
                 >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3 w-3 mr-1" />
                     <span className='sr-only 2xl:not-sr-only'>Purchase -</span> {price?.toLocaleString()} TZS
                 </Button>
             )}
@@ -345,8 +347,9 @@ export default function ElegantMapViewer({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowLayerPanelState(!showLayerPanelState)}
+                    className='text-xs'
                 >
-                    <Layers className="h-4 w-4 mr-2" />
+                    <Layers className="h-3 w-3 mr-1" />
                     Layers
                 </Button>
             )}
@@ -356,8 +359,9 @@ export default function ElegantMapViewer({
                     variant="outline"
                     size="sm"
                     onClick={onEdit}
+                    className='text-xs'
                 >
-                    <MapPin className="h-4 w-4 mr-2" />
+                    <MapPin className="h-3 w-3 mr-1" />
                     Edit
                 </Button>
             )}
@@ -367,8 +371,9 @@ export default function ElegantMapViewer({
                     variant="outline"
                     size="sm"
                     onClick={onDownload}
+                    className='text-xs'
                 >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-3 w-3 mr-1" />
                     Download
                 </Button>
             )}
@@ -378,8 +383,9 @@ export default function ElegantMapViewer({
                     variant="outline"
                     size="sm"
                     onClick={onShare}
+                    className='text-xs'
                 >
-                    <Share2 className="h-4 w-4 mr-2" />
+                    <Share2 className="h-3 w-3 mr-1" />
                     Share
                 </Button>
             )}
@@ -389,8 +395,9 @@ export default function ElegantMapViewer({
                     variant="outline"
                     size="sm"
                     onClick={handleFullScreen}
+                    className='text-xs'
                 >
-                    {isFullScreen ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
+                    {isFullScreen ? <Minimize2 className="h-3 w-3 mr-1" /> : <Maximize2 className="h-3 w-3 mr-1" />}
                     {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
                 </Button>
             )}
@@ -398,7 +405,7 @@ export default function ElegantMapViewer({
     );
 
     const MapContent = () => (
-        <div className="relative w-full h-full bg-muted rounded-lg overflow-hidden">
+        <div className="relative w-full h-full bg-muted dark:bg-muted/80 rounded-lg overflow-hidden">
             {/* Mock Map Content */}
             <div
                 className="w-full h-full bg-gradient-to-br from-green-100 via-green-50 to-blue-100 relative"
@@ -506,17 +513,17 @@ export default function ElegantMapViewer({
 
     // Regular Card Wrapper
     const CardWrapper = ({ children }: { children: React.ReactNode }) => (
-        <Card className={className}>
-            <CardHeader>
+        <Card className={cn('py-4 md:py-6 shadow-none bg-background', className)}>
+            <CardHeader className='px-4 md:px-6'>
                 <div className="flex flex-col justify-center gap-4">
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex gap-2">
                         <MapIcon className="h-5 w-5" />
                         {title}
                     </CardTitle>
                     <ActionButtons />
                 </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 px-4 md:px-6">
                 <div className={height}>
                     {children}
                 </div>

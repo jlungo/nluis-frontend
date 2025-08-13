@@ -1,3 +1,5 @@
+import { CheckCircle, Clock } from "lucide-react";
+
 interface PurchaseHistory {
   id: string;
   orderNumber: string;
@@ -69,4 +71,30 @@ export const buyerInfo = {
   joinDate: new Date(),
   totalPurchases: 20,
   totalSpent: 255000,
+};
+
+export const getStatusColor = (status: string) => {
+  switch (status) {
+    case "active":
+      return "bg-green-100 dark:bg-green-800 text-green-800 border-green-200 dark:border-green-800";
+    case "processing":
+      return "bg-yellow-100 dark:bg-yellow-700 text-yellow-800 border-yellow-200 dark:border-yellow-700";
+    case "expired":
+      return "bg-red-100 dark:bg-red-950 text-red-800 border-red-200 dark:border-red-950";
+    default:
+      return "bg-gray-100 dark:bg-gray-800 text-gray-800 border-gray-200 dark:border-gray-800";
+  }
+};
+
+export const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "active":
+      return <CheckCircle className="h-3 w-3" />;
+    case "processing":
+      return <Clock className="h-3 w-3" />;
+    case "expired":
+      return <Clock className="h-3 w-3" />;
+    default:
+      return <Clock className="h-3 w-3" />;
+  }
 };

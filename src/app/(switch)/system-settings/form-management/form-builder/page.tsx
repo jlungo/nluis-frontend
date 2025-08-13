@@ -1,4 +1,3 @@
-import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +29,7 @@ import {
   Eye,
   Copy,
 } from "lucide-react";
+import { usePageStore } from "@/store/pageStore";
 
 interface FormField {
   id: string;
@@ -69,8 +69,17 @@ interface FormBuilderState {
   loading: boolean;
 }
 
-export default function FormBuilderPage() {
+export default function Page() {
   const { setPage } = usePageStore();
+
+  useLayoutEffect(() => {
+    setPage({
+      module: 'system-settings',
+      title: "System Settings",
+      backButton: 'Back',
+    })
+  }, [setPage])
+
   const [state, setState] = useState<FormBuilderState>({
     form: {
       id: "form_" + Date.now(),
@@ -83,14 +92,6 @@ export default function FormBuilderPage() {
     previewMode: false,
     loading: false,
   });
-
-  useLayoutEffect(() => {
-    setPage({
-      module: "dynamic-forms",
-      title: "Form Builder",
-      backButton: "Back to Forms",
-    });
-  }, [setPage]);
 
   const addField = () => {
     const newField: FormField = {
@@ -298,7 +299,7 @@ export default function FormBuilderPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

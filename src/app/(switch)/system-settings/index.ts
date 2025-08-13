@@ -1,5 +1,6 @@
 import Layout from "./layout";
 import Page from "./page";
+import FormManagement from "./form-management";
 
 const Index = {
   path: "/system-settings",
@@ -9,6 +10,7 @@ const Index = {
       index: true,
       Component: Page,
     },
+    FormManagement,
   ],
 };
 

@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Search, MapPin, Eye, Map, Filter, X, ChevronLeft, ChevronRight, User, LogIn, Monitor, Printer } from 'lucide-react';
 import MapPurchaseFlow from './MapPurchaseFlow';
-import ElegantMapViewer from './ElegantMapViewer';
+import ElegantMapViewer from '@/components/ElegantMapViewer';
 import { Link, useNavigate } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/store/auth';
 
 // Enhanced MapItem interface with geospatial data
 interface MapItem {
@@ -196,7 +197,7 @@ export default function MapShop() {
     const [selectedMap, setSelectedMap] = useState<MapItem | null>(null);
     //   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
-    const userType: 'guest' | 'buyer' = 'guest'
+    const { user } = useAuth()
     const navigate = useNavigate()
 
     // Pagination state
@@ -264,7 +265,7 @@ export default function MapShop() {
 
     const handlePurchase = (map: MapItem, type: 'softcopy' | 'print-rights') => {
         // For guest users, prompt to login first
-        if (userType === 'guest') {
+        if (!user) {
             if (confirm('You need to login or create an account to purchase maps. Would you like to login now?')) {
                 // onLogin();
             }
@@ -291,19 +292,19 @@ export default function MapShop() {
 
     return (
         <>
-            <div className="container mx-auto px-4 py-6">
+            <div className="xl:container mx-auto px-4 py-6">
                 {/* Guest Mode Notice */}
-                {userType === 'guest' && (
+                {!user && (
                     <div className="mb-6">
-                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-950 rounded-lg p-4">
+                        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-950 rounded-lg p-4">
                             <div className="flex items-start gap-3">
                                 <User className="h-5 w-5 text-blue-600 dark:text-blue-800 mt-0.5" />
                                 <div className="flex-1">
-                                    <h3 className="font-medium text-blue-900 dark:text-blue-800 mb-1">Browsing as Guest</h3>
-                                    <p className="text-sm text-blue-700 dark:text-blue-900 mb-3">
+                                    <h3 className="font-medium text-blue-900 dark:text-blue-700 mb-1">Browsing as Guest</h3>
+                                    <p className="text-sm text-blue-700 dark:text-blue-800 mb-3">
                                         You can browse and preview all maps, but you'll need to create an account or login to make purchases.
                                     </p>
-                                    <Link to="/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
+                                    <Link to="/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2 dark:bg-blue-900")}>
                                         <LogIn className="h-3 w-3" />
                                         Create Account or Login
                                     </Link>
@@ -334,7 +335,7 @@ export default function MapShop() {
                                         placeholder="Search maps..."
                                         value={searchTerm}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                                        className="pl-9"
+                                        className="pl-9 bg-muted"
                                     />
                                 </div>
                             </div>
@@ -464,7 +465,7 @@ export default function MapShop() {
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-2 md:space-y-4">
                                 {/* Enhanced Map Preview */}
                                 <ElegantMapViewer
                                     title={`${map.villageName} - ${map.landUseType} Map`}
@@ -556,19 +557,19 @@ export default function MapShop() {
                                         size="sm"
                                         className="flex-1 gap-2"
                                         onClick={() => {
-                                            if (userType === 'guest') navigate('/signin')
+                                            if (!user) navigate('/signin')
                                             else handlePurchase(map, 'softcopy')
                                         }}
                                     >
                                         <Monitor className="h-3 w-3" />
-                                        {userType === 'guest' ? 'Login to Buy' : 'View Access'}
+                                        {!user ? 'Login to Buy' : 'View Access'}
                                     </Button>
                                     <Button
                                         variant="secondary"
                                         size="sm"
                                         className="gap-2"
                                         onClick={() => handlePurchase(map, 'print-rights')}
-                                        title={userType === 'guest' ? 'Login required to purchase' : 'Get print rights'}
+                                        title={!user ? 'Login required to purchase' : 'Get print rights'}
                                     >
                                         <Printer className="h-3 w-3" />
                                     </Button>
@@ -581,7 +582,7 @@ export default function MapShop() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs lg:text-sm text-muted-foreground">
                             Showing {((currentPage - 1) * mapsPerPage) + 1} to {Math.min(currentPage * mapsPerPage, filteredMaps.length)} of {filteredMaps.length} maps
                         </p>
 
@@ -591,7 +592,7 @@ export default function MapShop() {
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
-                                className="gap-2"
+                                className="text-xs gap-2"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                                 Previous
@@ -616,7 +617,7 @@ export default function MapShop() {
                                 size="sm"
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                 disabled={currentPage === totalPages}
-                                className="gap-2"
+                                className="text-xs gap-2"
                             >
                                 Next
                                 <ChevronRight className="h-4 w-4" />
@@ -651,7 +652,7 @@ export default function MapShop() {
             </div>
 
             {/* Purchase Flow Modal - Only show for authenticated buyers */}
-            {showPurchaseFlow && purchaseMap && userType !== 'guest' && (
+            {showPurchaseFlow && purchaseMap && user && (
                 <MapPurchaseFlow
                     selectedMap={purchaseMap}
                     purchaseType={purchaseType}

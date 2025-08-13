@@ -10,6 +10,7 @@ import Organizations from "./organizations";
 import UserManagement from "./user-management";
 import SystemSettings from "./system-settings";
 import AuditTrail from "./audit-trail";
+import DataManagement from "./data-management";
 
 const Index = {
   Component: Layout,
@@ -25,6 +26,7 @@ const Index = {
     UserManagement,
     SystemSettings,
     AuditTrail,
+    DataManagement,
   ],
 };
 

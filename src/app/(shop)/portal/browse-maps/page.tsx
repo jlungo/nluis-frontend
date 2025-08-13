@@ -105,9 +105,9 @@ export default function Page() {
                     {/* Maps Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {filteredMaps.map((map) => (
-                            <Card key={map.id} className="hover:shadow-md transition-shadow">
+                            <Card key={map.id} className="hover:shadow-md transition-shadow pt-0">
                                 <CardContent className="p-0">
-                                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                                    <div className="aspect-video bg-muted  dark:bg-muted/30 rounded-t-lg flex items-center justify-center">
                                         <MapPin className="h-8 w-8 text-muted-foreground" />
                                     </div>
                                     <div className="p-4 space-y-3">

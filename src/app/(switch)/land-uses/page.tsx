@@ -103,8 +103,8 @@ export default function LandUsesPage() {
     showCheckout: false,
   });
 
-    useLayoutEffect(() => {
-        setPage({
+  useLayoutEffect(() => {
+    setPage({
       module: "land-uses",
       title: "Land Use Management",
       backButton: "Back to Modules",
@@ -452,7 +452,7 @@ export default function LandUsesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -605,7 +605,7 @@ export default function LandUsesPage() {
                       (p) =>
                         p.status === "active" &&
                         new Date(p.expiryDate) <
-                          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
                     ).length
                   }
                 </p>

@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Settings } from "lucide-react";
-import { buyerInfo } from "../mock";
+import { buyerInfo } from "../../mock";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export default function Page() {
     return (
@@ -17,25 +19,25 @@ export default function Page() {
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium">First Name</label>
-                            <div className="mt-1 p-2 bg-muted rounded border">{buyerInfo.firstName}</div>
+                            <Label className="text-sm">First Name</Label>
+                            <Input readOnly value={buyerInfo.firstName} className="mt-1 cursor-default" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Last Name</label>
-                            <div className="mt-1 p-2 bg-muted rounded border">{buyerInfo.lastName}</div>
+                            <Label className="text-sm">Last Name</Label>
+                            <Input readOnly value={buyerInfo.lastName} className="mt-1 cursor-default" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Email Address</label>
-                            <div className="mt-1 p-2 bg-muted rounded border">{buyerInfo.email}</div>
+                            <Label className="text-sm">Email Address</Label>
+                            <Input readOnly value={buyerInfo.email} className="mt-1 cursor-default" />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Phone Number</label>
-                            <div className="mt-1 p-2 bg-muted rounded border">{buyerInfo.phone}</div>
+                            <Label className="text-sm">Phone Number</Label>
+                            <Input readOnly value={buyerInfo.phone} className="mt-1 cursor-default" />
                         </div>
                         {buyerInfo.organization && (
                             <div className="md:col-span-2">
-                                <label className="text-sm font-medium">Organization</label>
-                                <div className="mt-1 p-2 bg-muted rounded border">{buyerInfo.organization}</div>
+                                <Label className="text-sm">Organization</Label>
+                                <Input readOnly value={buyerInfo.organization} className="mt-1 cursor-default" />
                             </div>
                         )}
                     </div>

@@ -50,8 +50,8 @@ export default function DataCollectionPage() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "data-collection",
-      title: "Data Collection",
+      module: "system-settings",
+      title: "Data Management",
       backButton: "Back to Modules",
     });
   }, [setPage]);

@@ -1,28 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, Eye, Monitor, Printer, Receipt } from "lucide-react";
-import { mockPurchaseHistory } from "../mock";
+import { Eye, Monitor, Printer, Receipt } from "lucide-react";
+import { getStatusColor, getStatusIcon, mockPurchaseHistory } from "../../mock";
 
 export default function Page() {
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active': return 'bg-green-100 text-green-800 border-green-200';
-            case 'processing': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'expired': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active': return <CheckCircle className="h-3 w-3" />;
-            case 'processing': return <Clock className="h-3 w-3" />;
-            case 'expired': return <Clock className="h-3 w-3" />;
-            default: return <Clock className="h-3 w-3" />;
-        }
-    };
-
     const handleViewMap = (accessUrl: string, mapName: string) => {
         console.log(`Opening map viewer for: ${mapName} at ${accessUrl}`);
         alert(`Opening map viewer for ${mapName}...\n\nThis would open the interactive map viewer in a real application.`);

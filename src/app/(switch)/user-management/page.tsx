@@ -85,7 +85,7 @@ export default function UserManagementPage() {
     setPage({
       module: "user-management",
       title: "User Management",
-      backButton: "Back to Dashboard",
+      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -317,7 +317,7 @@ export default function UserManagementPage() {
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Roles</SelectItem>
+                {/* <SelectItem value="">All Roles</SelectItem> */}
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="field_agent">Field Agent</SelectItem>
@@ -335,7 +335,7 @@ export default function UserManagementPage() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                {/* <SelectItem value="">All Status</SelectItem> */}
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>

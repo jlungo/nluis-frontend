@@ -6,9 +6,11 @@ import tanzaniaCoatOfArms from '@/assets/bibi_na_bwana.png';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
+import { useAuth } from "@/store/auth";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export default function Layout() {
-    const userType: 'guest' | 'buyer' = 'guest'
+    const { user } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
 
@@ -16,10 +18,15 @@ export default function Layout() {
         <div className="min-h-screen bg-background">
             {/* Header */}
             <div className="border-b border-border bg-card sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4">
+                <div className="xl:container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 lg:gap-6">
-                            <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(location.pathname === '/mapshop' ? '/' : '/mapshop', { replace: true })}
+                                className="gap-2"
+                            >
                                 <ArrowLeft className="h-4 w-4" />
                                 <span className="sr-only lg:not-sr-only">{location.pathname === '/mapshop' ? "Back to Home" : "Back to MapShop"}</span>
                             </Button>
@@ -46,7 +53,7 @@ export default function Layout() {
                             <ThemeTogglePopover />
 
                             {/* User Status Indicator */}
-                            {userType === 'guest' ? (
+                            {!user ? (
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="text-muted-foreground hidden lg:flex">
                                         <User className="h-3 w-3 mr-1" />
@@ -61,7 +68,7 @@ export default function Layout() {
                                 <>
                                     {location.pathname === '/mapshop' ? (
                                         <div className="flex items-center gap-2">
-                                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                                            <Badge className="bg-green-100 dark:bg-green-800/20 text-green-800 border-green-200 dark:border-green-800  hidden lg:flex">
                                                 <User className="h-3 w-3 mr-1" />
                                                 Buyer Account
                                             </Badge>
@@ -71,13 +78,11 @@ export default function Layout() {
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-3">
-                                            <div className="text-right">
-                                                {/* <div className="text-sm font-medium">{buyerInfo.firstName} {buyerInfo.lastName}</div>
-                                <div className="text-xs text-muted-foreground">{buyerInfo.email}</div> */}
+                                            <div className="text-right hidden md:block">
+                                                <div className="text-sm font-medium">{user?.first_name} {user?.last_name}</div>
+                                                <div className="text-xs text-muted-foreground">{user?.email}</div>
                                             </div>
-                                            <Button variant="outline" onClick={() => navigate('/', { replace: true })} size="sm">
-                                                Logout
-                                            </Button>
+                                            <LogoutButton />
                                         </div>
                                     )}
                                 </>

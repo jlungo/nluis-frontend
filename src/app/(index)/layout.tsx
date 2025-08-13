@@ -1,16 +1,19 @@
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Shield, Map } from "lucide-react";
+import { Shield, Map, LayoutDashboard } from "lucide-react";
 import { Link, Outlet } from "react-router";
 import bibiNaBwana from "@/assets/bibi_na_bwana.png"
 import logo from "@/assets/nluis.png"
+import { useAuth } from "@/store/auth";
 
 export default function Layout() {
+    const { user } = useAuth()
+
     return (
         <div className="min-h-screen bg-background">
             <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-4">
+                <div className="xl:container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-6">
                             {/* Tanzania Coat of Arms */}
@@ -46,7 +49,7 @@ export default function Layout() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 md:gap-3">
                             <ThemeTogglePopover />
                             <Link
                                 to="/mapshop"
@@ -55,10 +58,26 @@ export default function Layout() {
                                 <Map className="h-4 w-4 hidden lg:block" />
                                 MapShop
                             </Link>
-                            <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
-                                <Shield className="h-4 w-4 hidden lg:block" />
-                                <span className="sr-only lg:not-sr-only">Official</span> Login
-                            </Link>
+                            {user ?
+                                <>
+                                    {user?.modules && user.modules.length > 0 ?
+                                        <Link to="/board" className={cn(buttonVariants(), "gap-2")}>
+                                            <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                            <span className="sr-only lg:not-sr-only">All</span> Modules
+                                        </Link>
+                                        :
+                                        <Link to="/portal" className={cn(buttonVariants(), "gap-2")}>
+                                            <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                            <span className="sr-only lg:not-sr-only">My</span> Account
+                                        </Link>
+                                    }
+                                </>
+                                :
+                                <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
+                                    <Shield className="h-4 w-4 hidden lg:block" />
+                                    <span className="sr-only lg:not-sr-only">Official</span> Login
+                                </Link>
+                            }
                         </div>
                     </div>
                 </div>
@@ -67,7 +86,7 @@ export default function Layout() {
             <Outlet />
 
             <footer className="bg-background border-t border-primary/10">
-                <div className="container mx-auto px-4 py-12">
+                <div className="xl:container mx-auto px-4 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">

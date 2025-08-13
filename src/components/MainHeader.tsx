@@ -11,21 +11,36 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePageStore } from "@/store/pageStore";
 import { useNavigate } from "react-router";
+import { useAuth } from "@/store/auth";
+import { LogoutButton } from "./LogoutButton";
+import logo from "@/assets/nluis.png"
 
 interface MainHeaderProps {
+  showLogo?: boolean;
   sidebarOpen?: boolean;
   toggleSidebar?: () => void;
 }
 
-export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
-  const router = useNavigate();
+export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: MainHeaderProps) {
+  const navigate = useNavigate();
   const { page } = usePageStore();
+  const { user } = useAuth()
 
   return (
     <header className="sticky top-0 flex-shrink-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-20">
       <div className="flex items-center gap-4">
+        {/* Logo - Switch Board */}
+        {showLogo ? (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded flex items-center justify-center">
+              <img src={logo} alt="NLUIS Logo" className="w-full h-full scale-150" />
+            </div>
+            <span className="font-semibold text-sidebar-foreground">NLUIS</span>
+          </div>
+        ) : null}
+
         {/* Hamburger Menu - Mobile */}
-        {sidebarOpen !== undefined && toggleSidebar ? (
+        {sidebarOpen !== undefined && showLogo === false && toggleSidebar ? (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -51,9 +66,16 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
 
         {/* Back Button */}
         {page && page?.backButton ? (
-          <Button variant="outline" size="sm" onClick={() => router(-1)}>
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft />
-            {page.backButton}
+            <span>
+              <span className="block lg:inline">
+                {page.backButton.split(" ")[0]}
+              </span>
+              <span className="hidden lg:inline">
+                {" " + page.backButton.split(" ").slice(1).join(" ")}
+              </span>
+            </span>
           </Button>
         ) : null}
 
@@ -103,8 +125,8 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
           {/* User Profile - Desktop */}
           <div className="hidden md:flex items-center gap-3 ml-2">
             <div className="text-right">
-              <p className="text-sm font-medium text-foreground">John Doe</p>
-              <p className="text-xs text-muted-foreground">Land Use Planner</p>
+              <p className="text-sm font-medium text-foreground">{user?.first_name} {user?.last_name}</p>
+              <p className="text-xs text-muted-foreground">{user?.role?.name}</p>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -117,8 +139,8 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        JD
+                      <AvatarFallback className="bg-primary text-primary-foreground dark:text-white">
+                        {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -142,8 +164,8 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/api/placeholder/32/32" alt="User" />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      JD
+                    <AvatarFallback className="bg-primary text-primary-foreground dark:text-white">
+                      {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -153,6 +175,8 @@ export function MainHeader({ sidebarOpen, toggleSidebar }: MainHeaderProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          <LogoutButton />
         </div>
       </div>
     </header>

@@ -26,6 +26,11 @@ import {
   User,
   ChevronDown,
   ChevronRight,
+  ClipboardPenLine,
+  LayoutTemplate,
+  List,
+  ClipboardList,
+  ClipboardPlus
 } from "lucide-react";
 import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
@@ -224,12 +229,33 @@ export function NavigationSidebar({
           ];
         case "system-settings":
           return [
-            // {
-            //     id: "system-settings",
-            //     label: "System Settings",
-            //     icon: <Settings className="h-4 w-4" />,
-            //     type: "standalone",
-            // },
+            {
+              id: "form-management",
+              label: "Form Management",
+              icon: <ClipboardPenLine className="h-4 w-4" />,
+              items: [
+                {
+                  id: "builder",
+                  label: "Quick Build",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
+                  id: "module-levels",
+                  label: "Module Levels",
+                  icon: <List className="h-4 w-4" />
+                },
+                {
+                  id: "level-sections",
+                  label: "Level Sections",
+                  icon: <LayoutTemplate className="h-4 w-4" />
+                },
+                {
+                  id: "form-builder",
+                  label: "Form Builder",
+                  icon: <ClipboardList className="h-4 w-4" />
+                }
+              ],
+            },
           ];
         case "audit-trail":
           return [
@@ -377,16 +403,14 @@ export function NavigationSidebar({
         key={item.id}
         className={cn(
           buttonVariants({ variant: isActive ? "default" : "ghost" }),
-          `w-full ${
-            collapsed
-              ? "px-2 justify-center"
-              : group
+          `w-full ${collapsed
+            ? "px-2 justify-center"
+            : group
               ? "justify-start px-4"
               : "justify-start px-3"
-          } h-8 ${
-            isActive
-              ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          } h-8 ${isActive
+            ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
+            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
         to={navigateTo(group ? `${group}/${item.id}` : item.id, item.label)}
@@ -401,9 +425,8 @@ export function NavigationSidebar({
               {item.badge && (
                 <Badge
                   variant="secondary"
-                  className={`ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs bg-sidebar-accent text-sidebar-accent-foreground ${
-                    isActive ? "text-white dark:text-white" : null
-                  }`}
+                  className={`ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs bg-sidebar-accent text-sidebar-accent-foreground ${isActive ? "text-white dark:text-white" : null
+                    }`}
                 >
                   {item.badge}
                 </Badge>
@@ -463,11 +486,10 @@ export function NavigationSidebar({
               <div className="relative">
                 <Button
                   variant="ghost"
-                  className={`w-full px-2 justify-center h-8 ${
-                    hasActiveItem
-                      ? "bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-primary-foreground hover:bg-sidebar-primary/90 dark:hover:bg-sidebar-primary/90"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  }`}
+                  className={`w-full px-2 justify-center h-8 ${hasActiveItem
+                    ? "bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-primary-foreground hover:bg-sidebar-primary/90 dark:hover:bg-sidebar-primary/90"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    }`}
                 >
                   {group.icon}
                   {group.items.some((item) => item.badge) && (
@@ -501,10 +523,9 @@ export function NavigationSidebar({
                             : "ghost",
                           size: "sm",
                         }),
-                        `w-full justify-start h-8 ${
-                          pathname.includes(item.id)
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-accent"
+                        `w-full justify-start h-8 ${pathname.includes(item.id)
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
+                          : "hover:bg-accent"
                         }`
                       )}
                       to={navigateTo(`${group.id}/${item.id}`, item.label)}
@@ -541,11 +562,10 @@ export function NavigationSidebar({
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className={`w-full justify-start px-3 h-8 ${
-              hasActiveItem
-                ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            }`}
+            className={`w-full justify-start px-3 h-8 ${hasActiveItem
+              ? "bg-sidebar-primary/60 dark:bg-sidebar-primary/20 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              }`}
           >
             <div className="flex items-center gap-3 w-full">
               {group.icon}
@@ -583,13 +603,13 @@ export function NavigationSidebar({
 
   return (
     <nav className="p-3 space-y-1">
-      {page && page?.module
+      {/* {page && page?.module
         ? renderNavigationItem({
-            id: page.module,
-            label: "Dashboard",
-            icon: <Home className="h-4 w-4" />,
-          })
-        : null}
+          id: page.module,
+          label: "Dashboard",
+          icon: <Home className="h-4 w-4" />,
+        })
+        : null} */}
       {navigationItems.map(renderNavigationElement)}
     </nav>
   );
