@@ -154,7 +154,7 @@ export default function ResetPassword() {
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertTitle className="text-red-800">Reset Link Invalid</AlertTitle>
               <AlertDescription className="text-red-700">
-                Please request a new password reset link from the login page.
+                Please request a new password reset link from the forgot password page.
               </AlertDescription>
             </Alert>
 
