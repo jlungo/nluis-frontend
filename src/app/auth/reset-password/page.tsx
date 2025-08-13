@@ -1,373 +1,345 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { toast } from 'sonner';
 import {
-  Lock,
   CheckCircle,
+  ArrowLeft,
+  AlertCircle,
+  Key,
+  Lock,
   Eye,
   EyeOff,
-  AlertCircle,
-  RefreshCw,
-  Key,
-  ArrowRight
 } from 'lucide-react';
-import { toast } from 'sonner';
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
-import { useNavigate } from 'react-router';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@radix-ui/react-label';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/store/auth';
 
-interface ResetPasswordProps {
-  resetToken?: string;
-}
-
-export default function ResetPassword({
-  resetToken = ''
-}: ResetPasswordProps) {
+export default function ResetPassword() {
+  const { uidb64, token } = useParams<{ uidb64: string; token: string }>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isValidToken, setIsValidToken] = useState(false);
+  const [error, setError] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
-  const [errors, setErrors] = useState<{
-    password?: string;
-    confirmPassword?: string;
-    general?: string;
-  }>({});
+  const { verifyPasswordResetToken, completePasswordReset } = useAuth();
 
-  const validatePassword = (pwd: string) => {
-    const errors = [];
-    if (pwd.length < 8) errors.push('at least 8 characters');
-    if (!/[A-Z]/.test(pwd)) errors.push('one uppercase letter');
-    if (!/[a-z]/.test(pwd)) errors.push('one lowercase letter');
-    if (!/\d/.test(pwd)) errors.push('one number');
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) errors.push('one special character');
-    return errors;
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!uidb64 || !token) {
+        setError('Invalid reset link');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await verifyPasswordResetToken(uidb64, token);
+        setIsValidToken(true);
+      } catch (error: any) {
+        setError(error.detail || 'Invalid or expired reset link');
+        toast.error(error.detail || 'Invalid or expired reset link');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [uidb64, token, verifyPasswordResetToken]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    } else if (!/[A-Z]/.test(password)) {
+      errors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[a-z]/.test(password)) {
+      errors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/[0-9]/.test(password)) {
+      errors.password = 'Password must contain at least one number';
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      errors.password = 'Password must contain at least one special character';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleResetPassword = async () => {
-    // Clear previous errors
-    setErrors({});
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Validate password
-    const passwordErrors = validatePassword(password);
-    if (passwordErrors.length > 0) {
-      setErrors({
-        password: `Password must contain ${passwordErrors.join(', ')}`
-      });
-      return;
-    }
+    if (!validateForm() || !uidb64 || !token) return;
 
-    // Validate password confirmation
-    if (password !== confirmPassword) {
-      setErrors({
-        confirmPassword: 'Passwords do not match'
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+    setIsResetting(true);
     try {
-      // Simulate API call to reset password
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Password reset completed with token:', resetToken);
-      
-      setShowSuccess(true);
+      await completePasswordReset(uidb64, token, password);
       toast.success('Password reset successfully!');
-      
-      // Auto-redirect after 3 seconds
-      setTimeout(() => {
-        onPasswordReset();
-      }, 3000);
-      
-    } catch (error) {
-      setErrors({
-        general: 'Failed to reset password. Please try again.'
-      });
-      toast.error('Password reset failed');
+      navigate('/auth/signin', { replace: true });
+    } catch (error: any) {
+      setError(error.detail || 'Failed to reset password. Please try again.');
+      toast.error(error.detail || 'Failed to reset password');
     } finally {
-      setIsLoading(false);
+      setIsResetting(false);
     }
   };
-
-  const onPasswordReset = () => {
-    navigate('/auth/signin', { replace: true })
-  }
 
   const onBackToLogin = () => {
-    navigate('/auth/signin', { replace: true })
+    navigate('/auth/signin', { replace: true });
   };
 
-  if (showSuccess) {
+  if (isLoading) {
     return (
-        <div className="max-w-md w-full space-y-8">
-          {/* Success Header */}
-          <div className="text-center space-y-6">
-            <div className="w-20 h-20 mx-auto flex items-center justify-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Password Updated
-              </Badge>
-            </div>
-            
-            <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-green-800">Password Reset Complete!</h1>
-              <p className="text-base text-muted-foreground">
-                Your password has been successfully updated
-              </p>
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 mx-auto flex items-center justify-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Key className="h-8 w-8 text-blue-600 animate-pulse" />
             </div>
           </div>
-
-          {/* Success Card */}
-          <Card className="shadow-lg border-0 bg-white">
-            <CardContent className="px-8 py-8">
-              <Alert className="border-green-200 bg-green-50 mb-6">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">Success!</AlertTitle>
-                <AlertDescription className="text-green-700">
-                  Your password has been changed. You will be redirected to the login page shortly.
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex items-center justify-center">
-                <Button onClick={onPasswordReset} className="gap-2 h-12">
-                  <ArrowRight className="h-4 w-4" />
-                  Continue to Login
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Footer */}
-          <div className="text-center space-y-3">
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <div className="w-5 h-5 bg-primary/10 rounded flex items-center justify-center">
-                <img src={tanzaniaCoatOfArms} alt="Tanzania" className="h-4 w-4" />
-              </div>
-              <span>United Republic of Tanzania</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Ministry of Lands, Housing and Human Settlements Development
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold text-foreground">Verifying Reset Link...</h1>
+          <p className="text-base text-muted-foreground">
+            Please wait while we verify your password reset link
+          </p>
         </div>
+      </div>
     );
   }
 
-  return (
+  if (!isValidToken) {
+    return (
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
         <div className="text-center space-y-6">
-          <div className="flex justify-center items-center gap-4 mb-6">
-            <img
-              src={nlupcLogo}
-              alt="NLUPC Logo"
-              className="h-32 w-32 object-contain"
-            />
+          <div className="w-20 h-20 mx-auto flex items-center justify-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
           </div>
           
           <div className="flex justify-center">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+            <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200 px-3 py-1">
               <Lock className="h-3 w-3 mr-1" />
-              Create New Password
+              Invalid Reset Link
             </Badge>
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-foreground">Set New Password</h1>
+            <h1 className="text-2xl font-semibold text-red-800">Password Reset Failed</h1>
             <p className="text-base text-muted-foreground">
-              National Land Use Information System
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Tanzania National Land Use Planning Commission
+              {error || 'The password reset link is invalid or has expired.'}
             </p>
           </div>
         </div>
 
-        {/* Reset Form Card */}
         <Card className="shadow-lg border-0 bg-white">
-          <CardHeader className="text-center pb-6 pt-8">
-            <CardTitle className="flex items-center justify-center gap-2 text-lg">
-              <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-primary rounded-full"></div>
-              </div>
-              Set New Password
-            </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              Your new password must be secure and different from previous passwords
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-8 pb-8">
-            <div className="space-y-6">
-              {/* General Error */}
-              {errors.general && (
-                <Alert className="border-destructive bg-destructive/10">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{errors.general}</AlertDescription>
-                </Alert>
-              )}
+          <CardContent className="px-8 py-8">
+            <Alert className="border-red-200 bg-red-50 mb-6">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertTitle className="text-red-800">Reset Link Invalid</AlertTitle>
+              <AlertDescription className="text-red-700">
+                Please request a new password reset link from the login page.
+              </AlertDescription>
+            </Alert>
 
-              {/* New Password */}
+            <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="w-5 h-5 bg-primary/10 rounded flex items-center justify-center">
+              <img src={tanzaniaCoatOfArms} alt="Tanzania" className="h-4 w-4" />
+            </div>
+            <span>United Republic of Tanzania</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-md w-full space-y-8">
+      <div className="text-center space-y-6">
+        <div className="flex justify-center items-center gap-4 mb-6">
+          <img
+            src={nlupcLogo}
+            alt="NLUPC Logo"
+            className="h-32 w-32 object-contain"
+          />
+        </div>
+        
+        <div className="flex justify-center">
+          <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
+            <Key className="h-3 w-3 mr-1" />
+            Create New Password
+          </Badge>
+        </div>
+        
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold text-foreground">Set a New Password</h1>
+          <p className="text-base text-muted-foreground">
+            National Land Use Information System
+          </p>
+        </div>
+      </div>
+
+      <Card className="shadow-lg border-0 bg-white">
+        <CardHeader className="text-center pb-6 pt-8">
+          <CardTitle className="flex items-center justify-center gap-2 text-lg">
+            <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+            </div>
+            Password Reset
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Create a strong new password for your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-8 pb-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Alert>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle>Reset Link Verified</AlertTitle>
+              <AlertDescription>
+                You can now create a new password for your account.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
                   New Password
                 </Label>
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your new password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors({...errors, password: undefined});
-                    }}
-                    disabled={isLoading}
-                    className={`h-12 bg-gray-50 border-gray-200 focus:bg-white transition-colors pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10 h-12"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.password}
-                  </p>
+                {formErrors.password && (
+                  <p className="text-sm text-destructive">{formErrors.password}</p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  Password must be at least 8 characters with uppercase, lowercase, number, and special character.
+                </p>
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium flex items-center gap-2">
+                <Label htmlFor="confirmPassword" className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
-                  Confirm New Password
+                  Confirm Password
                 </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your new password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      setErrors({...errors, confirmPassword: undefined});
-                    }}
-                    disabled={isLoading}
-                    className={`h-12 bg-gray-50 border-gray-200 focus:bg-white transition-colors pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pr-10 h-12"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    disabled={isLoading}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
-                {errors.confirmPassword && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.confirmPassword}
-                  </p>
+                {formErrors.confirmPassword && (
+                  <p className="text-sm text-destructive">{formErrors.confirmPassword}</p>
                 )}
               </div>
 
-              {/* Password Requirements */}
-              <Alert>
-                <Key className="h-4 w-4" />
-                <AlertTitle>Password Requirements</AlertTitle>
-                <AlertDescription>
-                  <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                    <li>At least 8 characters long</li>
-                    <li>One uppercase letter (A-Z)</li>
-                    <li>One lowercase letter (a-z)</li>
-                    <li>One number (0-9)</li>
-                    <li>One special character (!@#$%^&*)</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
+              <Button
+                type="submit"
+                disabled={isResetting}
+                className="w-full h-12 gap-2"
+              >
+                {isResetting ? (
+                  <>
+                    <Key className="h-4 w-4 animate-spin" />
+                    Resetting Password...
+                  </>
+                ) : (
+                  <>
+                    <Key className="h-4 w-4" />
+                    Reset Password
+                  </>
+                )}
+              </Button>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <Button 
-                  onClick={handleResetPassword} 
-                  disabled={isLoading || !password || !confirmPassword}
-                  className="w-full h-12 gap-2 bg-primary hover:bg-primary/90"
-                >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Resetting Password...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4 w-4" />
-                      Reset Password
-                    </>
-                  )}
-                </Button>
-
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={onBackToLogin}
-                    disabled={isLoading}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+              <Button
+                onClick={onBackToLogin}
+                variant="outline"
+                className="w-full h-12 gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Login
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </form>
+        </CardContent>
+      </Card>
 
-        {/* Footer */}
-        <div className="text-center space-y-3">
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <div className="w-5 h-5 bg-primary/10 rounded flex items-center justify-center">
-                <img src={tanzaniaCoatOfArms} alt="Tanzania" className="h-4 w-4" />
-            </div>
-            <span>United Republic of Tanzania</span>
+      <div className="text-center space-y-3">
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="w-5 h-5 bg-primary/10 rounded flex items-center justify-center">
+            <img src={tanzaniaCoatOfArms} alt="Tanzania" className="h-4 w-4" />
           </div>
-          
-          <p className="text-xs text-muted-foreground">
-            Ministry of Lands, Housing and Human Settlements Development
-          </p>
-          
-          <p className="text-xs text-muted-foreground">
-            © 2025 National Land Use Planning Commission. All rights reserved.
-          </p>
-          
-          <p className="text-xs text-muted-foreground">
-            After resetting your password, you'll be redirected to the login page to sign in with your new credentials.
-          </p>
+          <span>United Republic of Tanzania</span>
         </div>
+        
+        <p className="text-xs text-muted-foreground">
+          Ministry of Lands, Housing and Human Settlements Development
+        </p>
       </div>
+    </div>
   );
 }
