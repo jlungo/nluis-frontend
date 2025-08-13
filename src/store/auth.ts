@@ -48,6 +48,11 @@ interface AuthState {
     uid64: string;
     token: string;
   }>;
+  completePasswordReset: (
+    uidb64: string,
+    token: string,
+    password: string
+  ) => Promise<void>;
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -212,6 +217,22 @@ export const useAuth = create<AuthState>((set, get) => ({
         throw { detail: "Invalid or expired token. Please request a new password reset link." };
       }
       throw error.response?.data || { detail: "Failed to verify token. Please try again." };
+    }
+  },
+
+  completePasswordReset: async (uidb64: string, token: string, password: string) => {
+    set({ loading: true });
+    try {
+      await api.patch("/auth/password-reset-complete/", {
+        password,
+        token,
+        uidb64,
+      });
+    } catch (error: any) {
+      console.error("Password reset failed:", error);
+      throw error.response?.data || { detail: "Failed to reset password. Please try again." };
+    } finally {
+      set({ loading: false });
     }
   },
 
