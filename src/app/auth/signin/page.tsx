@@ -19,6 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
   Mail,
+  Key,
 } from "lucide-react";
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
@@ -70,6 +71,10 @@ export default function MapShopLoginForm() {
 
   const onGuestContinue = () => {
     navigate('/mapshop', { replace: true })
+  }
+
+  const onForgotPassword = () => {
+    navigate('/auth/forgot-password', { replace: true })
   }
 
   useEffect(() => {
@@ -167,6 +172,21 @@ export default function MapShopLoginForm() {
                     disabled={loading}
                   />
                 </div>
+
+                {/* Forgot Password Link */}
+                {onForgotPassword && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={onForgotPassword}
+                      className="text-sm text-primary hover:underline flex items-center gap-1 ml-auto"
+                      disabled={loading}
+                    >
+                      <Key className="h-3 w-3" />
+                      Forgot your password?
+                    </button>
+                  </div>
+                )}
 
                 <Button
                   type="submit"
