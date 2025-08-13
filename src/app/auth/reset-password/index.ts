@@ -1,7 +1,7 @@
 import Page from "./page";
 
 const Index = {
-  path: "reset-password",
+  path: "reset-password/:uidb64/:token",
   Component: Page,
 };
 
