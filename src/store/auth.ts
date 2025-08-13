@@ -41,6 +41,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -179,4 +180,20 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.removeItem("user");
     }
   },
+
+  requestPasswordReset: async (email: string) => {
+    set({ loading: true });
+    try {
+      await api.post("/auth/request-password-reset-email/", { email });
+    } catch (error: any) {
+      console.error("Password reset request failed:", error);
+      if (error.response?.status === 404) {
+        throw { detail: "Email not found. Please check your email address." };
+      }
+      throw error.response?.data || { detail: "Failed to send reset email. Please try again." };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
 }));
