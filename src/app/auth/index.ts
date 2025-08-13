@@ -7,6 +7,10 @@ const Index = {
   path: "auth",
   Component: Layout,
   children: [
+    {
+      index: true,
+      Component: SignIn.Component,
+    },
     SignIn,
     ForgotPassword,
     ResetPassword,
