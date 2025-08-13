@@ -59,7 +59,7 @@ export default function Layout() {
                                         <User className="h-3 w-3 mr-1" />
                                         Guest Mode
                                     </Badge>
-                                    <Link to="/signin" className={cn(buttonVariants(), "gap-2")}>
+                                    <Link to="/auth/signin" className={cn(buttonVariants(), "gap-2")}>
                                         <LogIn className="h-4 w-4 hidden lg:block" />
                                         Login<span className="sr-only lg:not-sr-only"> for Full Access</span>
                                     </Link>
