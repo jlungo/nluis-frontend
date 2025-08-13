@@ -42,6 +42,12 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
+  verifyPasswordResetToken: (uidb64: string, token: string) => Promise<{
+    success: boolean;
+    message: string;
+    uid64: string;
+    token: string;
+  }>;
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -193,6 +199,19 @@ export const useAuth = create<AuthState>((set, get) => ({
       throw error.response?.data || { detail: "Failed to send reset email. Please try again." };
     } finally {
       set({ loading: false });
+    }
+  },
+
+  verifyPasswordResetToken: async (uidb64: string, token: string) => {
+    try {
+      const response = await api.get(`/auth/password-reset/${uidb64}/${token}/`);
+      return response.data;
+    } catch (error: any) {
+      console.error("Token verification failed:", error);
+      if (error.response?.status === 400) {
+        throw { detail: "Invalid or expired token. Please request a new password reset link." };
+      }
+      throw error.response?.data || { detail: "Failed to verify token. Please try again." };
     }
   },
 
