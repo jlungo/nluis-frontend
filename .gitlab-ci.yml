@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+
+before_script:
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY
+
+build:
+  stage: build
+  image: docker:25.0.3
+  services:
+    - docker:25.0.3-dind
+  script:
+    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker push $IMAGE_TAG
+    - docker push $LATEST_TAG
+  only:
+    - main
+    - master
+
