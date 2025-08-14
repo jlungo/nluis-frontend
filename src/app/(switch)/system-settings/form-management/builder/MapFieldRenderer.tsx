@@ -302,7 +302,7 @@ export default function MapFieldRenderer({
                 <ElegantMapViewer
                     center={value?.center || value?.location || { lat: -6.7924, lng: 39.2083 }}
                     zoom={isFullscreen ? 15 : 13}
-                    onLocationSelect={(coords) => {
+                    onLocationSelect={(coords: { lat: number; lng: number }) => {
                         if (mapMode === 'draw') {
                             if (type === 'map-area') {
                                 const newArea: MapArea = {
