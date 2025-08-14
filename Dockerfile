@@ -1,15 +1,21 @@
-# Stage 1: Build React app
+# Stage 1: Build React (Vite) app
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Install dependencies
 COPY package*.json ./
 RUN npm ci
+
+# Copy source code
 COPY . .
+
+# Build the app
 RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:1.27-alpine
 
-# Inline Nginx config
+# Inline Nginx config for React SPA
 RUN echo '\
 server { \
     listen 80; \
@@ -29,8 +35,8 @@ server { \
 } \
 ' > /etc/nginx/conf.d/default.conf
 
-# Copy React build
-COPY --from=build /app/build /usr/share/nginx/html
+# Copy Vite build output
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
