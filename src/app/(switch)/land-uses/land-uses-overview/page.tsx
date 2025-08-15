@@ -1,0 +1,330 @@
+'use client';
+
+import { useState, useEffect, useLayoutEffect } from 'react';
+import { usePageStore } from "@/store/pageStore";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
+import { Search, Download } from 'lucide-react';
+
+interface LandUseData {
+  village: string;
+  district: string;
+  uses: string;
+  sqm: number;
+  hectares: number;
+}
+
+interface ApiResponse {
+  data: LandUseData[];
+  summary: {
+    total_area: number;
+    avg_productivity: number;
+    total_population: number;
+  };
+}
+
+// Custom tooltip component
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <p className="font-medium text-gray-900">{label}</p>
+        <p className="text-primary">
+          {payload[0].value.toLocaleString()} hectares
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Helper function for badge styling
+function getBadgeClass(landUse: string): string {
+  const base = "text-xs";
+  switch(landUse) {
+    case 'Makazi': return `${base} bg-blue-50 text-blue-700 border-blue-200`;
+    case 'Biashara': return `${base} bg-green-50 text-green-700 border-green-200`;
+    case 'Kilimo': return `${base} bg-yellow-50 text-yellow-700 border-yellow-200`;
+    case 'Msitu': return `${base} bg-emerald-50 text-emerald-700 border-emerald-200`;
+    case 'Viwanda': return `${base} bg-orange-50 text-orange-700 border-orange-200`;
+    default: return `${base} bg-gray-50 text-gray-700 border-gray-200`;
+  }
+}
+
+export default function LandUsesOverviewPage() {
+  const { setPage } = usePageStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLandUse, setSelectedLandUse] = useState<string>('all');
+  const [landUseData, setLandUseData] = useState<LandUseData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState({
+    totalArea: 0,
+    avgProductivity: 0,
+    totalPopulation: 0
+  });
+
+  // Initialize page
+  useLayoutEffect(() => {
+    setPage({
+      module: 'land-uses',
+      title: "Land Use Overview",
+      backButton: '',
+    });
+  }, [setPage]);
+
+  // Mock data for development
+  const mockData: LandUseData[] = [
+    { village: 'Kikwe', district: 'Meru', uses: 'Makazi', sqm: 1500000, hectares: 150 },
+    { village: 'Kikwe', district: 'Meru', uses: 'Kilimo', sqm: 5000000, hectares: 500 },
+    { village: 'Kikwe', district: 'Meru', uses: 'Msitu', sqm: 2000000, hectares: 200 },
+    { village: 'Tengeru', district: 'Meru', uses: 'Biashara', sqm: 800000, hectares: 80 },
+    { village: 'Tengeru', district: 'Meru', uses: 'Makazi', sqm: 3000000, hectares: 300 },
+    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Viwanda', sqm: 4000000, hectares: 400 },
+    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Makazi', sqm: 2500000, hectares: 250 },
+    { village: 'Kimandolu', district: 'Arusha', uses: 'Kilimo', sqm: 6000000, hectares: 600 },
+    { village: 'Kimandolu', district: 'Arusha', uses: 'Msitu', sqm: 1800000, hectares: 180 }
+  ];
+
+  const mockSummary = {
+    total_area: 2660, // Total hectares
+    avg_productivity: 75.5, // Percentage
+    total_population: 128500
+  };
+
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // MOCK DATA: Remove this when API is ready
+        setTimeout(() => {
+          setLandUseData(mockData);
+          setSummary({
+            totalArea: mockSummary.total_area,
+            avgProductivity: mockSummary.avg_productivity,
+            totalPopulation: mockSummary.total_population
+          });
+          setLoading(false);
+        }, 1000);
+
+        // REAL DATA: Uncomment this when API is ready
+        // const response = await fetch('/api/land-use/');
+        // if (!response.ok) {
+        //   throw new Error('Failed to fetch land use data');
+        // }
+        // const data: ApiResponse = await response.json();
+        // setLandUseData(data.data);
+        // setSummary({
+        //   totalArea: data.summary.total_area,
+        //   avgProductivity: data.summary.avg_productivity,
+        //   totalPopulation: data.summary.total_population
+        // });
+      } catch (err) {
+        // MOCK DATA: Comment this error handling when using mock data
+        // setError(err instanceof Error ? err.message : 'Failed to fetch data');
+        console.error('Error fetching data:', err);
+      } finally {
+        // REAL DATA: Uncomment this when using real API
+        // setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Get unique land use types for filter dropdown
+  const landUseTypes = Array.from(new Set(landUseData.map(item => item.uses)));
+
+  // Filter data based on search and selection
+  const filteredData = landUseData.filter(item => {
+    const matchesSearch = !searchQuery || 
+      item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.uses.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesType = selectedLandUse === 'all' || item.uses === selectedLandUse;
+
+    return matchesSearch && matchesType;
+  });
+
+  // Prepare chart data
+  const prepareHistogramData = () => {
+    return landUseData.reduce((acc, item) => {
+      const existing = acc.find(d => d.name === item.uses);
+      if (existing) {
+        existing.value += item.hectares;
+      } else {
+        acc.push({
+          name: item.uses,
+          value: item.hectares
+        });
+      }
+      return acc;
+    }, [] as Array<{ name: string; value: number }>);
+  };
+
+  if (loading) return <div className="text-center py-8">Loading land use data...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Area</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalArea.toLocaleString()} ha</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Productivity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.avgProductivity.toFixed(2)}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Population</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalPopulation.toLocaleString()}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by village, district, or land use..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Select 
+                value={selectedLandUse}
+                onValueChange={setSelectedLandUse}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select land use" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Land Uses</SelectItem>
+                  {landUseTypes.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  // MOCK: Remove this alert when API is ready
+                  alert('Export functionality will be available when connected to real API');
+                  
+                  // REAL DATA: Uncomment this when API is ready
+                  // window.open('/api/land-use/export/?format=csv', '_blank');
+                }}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Land Use Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={prepareHistogramData()}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="value" 
+                  fill="#2563eb"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Data Table under the graph */}
+          <div className="mt-8 border-t pt-6">
+            <div className="font-medium mb-4">Land Use Records</div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Village</th>
+                    <th className="text-left p-2">District</th>
+                    <th className="text-left p-2">Land Use</th>
+                    <th className="text-right p-2">Area (ha)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center py-4">No data found</td>
+                    </tr>
+                  ) : (
+                    filteredData.slice(0, 3).map((item, index) => (
+                      <tr key={index} className="border-b hover:bg-muted/50">
+                        <td className="p-2">{item.village}</td>
+                        <td className="p-2">{item.district}</td>
+                        <td className="p-2">
+                          <Badge variant="outline" className={getBadgeClass(item.uses)}>
+                            {item.uses}
+                          </Badge>
+                        </td>
+                        <td className="p-2 text-right">{item.hectares.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              {filteredData.length > 3 && (
+                <button 
+                  onClick={() => alert('Full table view will be implemented')} 
+                  className="w-full text-sm text-blue-600 hover:text-blue-800 text-center mt-4 py-2 border-t"
+                >
+                  View all {filteredData.length} records →
+                </button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -5,6 +5,8 @@ import NationalLandUse from "./national-land-use/page";
 import ZonalLandUse from "./zonal-land-use/page";
 import RegionalLandUse from "./regional-land-use/page";
 import VillageLandUse from "./village-land-use/page";
+import LandUseDashboard from "./land-uses-dashboard/page";  
+import LandUsesOverviewPage from "./land-uses-overview/page";
 
 
 const Index = {
@@ -30,6 +32,14 @@ const Index = {
     {
       path: "village-land-use",
       Component: VillageLandUse
+    },
+    {
+      path: "land-uses-dashboard",
+      Component: LandUseDashboard
+    },
+    {
+      path: "land-uses-overview",
+      Component: LandUsesOverviewPage
     },
     {
       index: true,

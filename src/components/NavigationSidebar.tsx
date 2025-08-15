@@ -32,13 +32,12 @@ import {
   ClipboardList,
   ClipboardPlus
 } from "lucide-react";
-import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
 import { cn } from "@/lib/utils";
 
 interface NavigationItem {
-  id: Page;
+  id: string;
   label: string;
   icon: React.ReactNode;
   badge?: string;
@@ -52,17 +51,13 @@ interface NavigationGroup {
   defaultOpen?: boolean;
 }
 
-interface StandaloneNavigationItem {
-  id: Page;
-  label: string;
-  icon: React.ReactNode;
-  badge?: string;
+interface StandaloneNavigationItem extends Omit<NavigationItem, 'id'> {
+  id: string;
   type: "standalone";
 }
 
 interface NavigationSidebarProps {
   collapsed?: boolean;
-  // navigationItems: (NavigationGroup | StandaloneNavigationItem)[];
 }
 
 export function NavigationSidebar({
@@ -73,12 +68,11 @@ export function NavigationSidebar({
   );
 
   const { page } = usePageStore();
-
   const location = useLocation();
   const pathname = location.pathname;
 
   const toggleGroup = (groupId: string) => {
-    if (collapsed) return; // Don't allow expanding when collapsed
+    if (collapsed) return;
 
     const newOpenGroups = new Set(openGroups);
     if (newOpenGroups.has(groupId)) {
@@ -90,20 +84,15 @@ export function NavigationSidebar({
   };
 
   const navigateTo = (id: string, label: string) => {
-    if (!page || !page?.module) return "";
+    if (!page?.module) return `/${id}`;
     if (label === "Dashboard") {
       return `/${page.module}`;
     }
     return `/${page.module}/${id}`;
   };
 
-  // Get module-specific navigation or default navigation
-  const getNavigationItems = (): (
-    | StandaloneNavigationItem
-    | NavigationGroup
-  )[] => {
-    // If we're in a specific module context, show only that module's content
-    if (page && page?.module) {
+  const getNavigationItems = (): (StandaloneNavigationItem | NavigationGroup)[] => {
+    if (page?.module) {
       switch (page.module) {
         case "dashboard":
           return [
@@ -118,7 +107,13 @@ export function NavigationSidebar({
           return [
             {
               id: "land-uses-overview",
-              label: "Land Uses Overview",
+              label: "Land Use Overview",
+              icon: <LayoutTemplate className="h-4 w-4" />,
+              type: "standalone",
+            },
+            {
+              id: "land-uses-dashboard",
+              label: "Land Uses Dashboard",
               icon: <MapIcon className="h-4 w-4" />,
               type: "standalone",
             },
@@ -209,24 +204,6 @@ export function NavigationSidebar({
               type: "standalone",
             },
           ];
-        case "reports":
-          return [
-            // {
-            //     id: "reports",
-            //     label: "Reports Dashboard",
-            //     icon: <FileText className="h-4 w-4" />,
-            //     type: "standalone",
-            // },
-          ];
-        case "user-management":
-          return [
-            // {
-            //     id: "user-management",
-            //     label: "User Management",
-            //     icon: <User className="h-4 w-4" />,
-            //     type: "standalone",
-            // },
-          ];
         case "system-settings":
           return [
             {
@@ -257,21 +234,11 @@ export function NavigationSidebar({
               ],
             },
           ];
-        case "audit-trail":
-          return [
-            // {
-            //     id: "audit-trail",
-            //     label: "Audit Trail",
-            //     icon: <Activity className="h-4 w-4" />,
-            //     type: "standalone",
-            // },
-          ];
         default:
           return [];
       }
     }
 
-    // Default navigation when not in a module context
     return [
       {
         id: "dashboard",
@@ -292,8 +259,8 @@ export function NavigationSidebar({
         defaultOpen: true,
         items: [
           {
-            id: "land-uses-overview",
-            label: "Land Uses Overview",
+            id: "land-uses-dashboard",
+            label: "Land Uses Dashboard",
             icon: <MapIcon className="h-4 w-4" />,
           },
           {
@@ -396,11 +363,12 @@ export function NavigationSidebar({
   const navigationItems = getNavigationItems();
 
   const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isActive = pathname.includes(item.id);
+    const isActive = pathname.includes(item.id) || (pathname === '/land-uses' && item.id === 'land-uses-dashboard');
 
     const buttonContent = (
       <Link
         key={item.id}
+        to={navigateTo(group ? `${group}/${item.id}` : item.id, item.label)}
         className={cn(
           buttonVariants({ variant: isActive ? "default" : "ghost" }),
           `w-full ${collapsed
@@ -413,7 +381,6 @@ export function NavigationSidebar({
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
-        to={navigateTo(group ? `${group}/${item.id}` : item.id, item.label)}
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>
@@ -478,7 +445,6 @@ export function NavigationSidebar({
     );
 
     if (collapsed) {
-      // In collapsed mode, show group icon with tooltip containing all items
       return (
         <TooltipProvider key={group.id}>
           <Tooltip>
@@ -523,7 +489,7 @@ export function NavigationSidebar({
                             : "ghost",
                           size: "sm",
                         }),
-                        `w-full justify-start h-8 ${pathname.includes(item.id)
+                        `w-full justify-start h-8 ${(pathname.includes(item.id) || (pathname === '/land-uses' && item.id === 'land-uses-dashboard'))
                           ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
                           : "hover:bg-accent"
                         }`
@@ -552,7 +518,6 @@ export function NavigationSidebar({
       );
     }
 
-    // Full width mode with collapsible groups
     return (
       <Collapsible
         key={group.id}
@@ -603,13 +568,6 @@ export function NavigationSidebar({
 
   return (
     <nav className="p-3 space-y-1">
-      {/* {page && page?.module
-        ? renderNavigationItem({
-          id: page.module,
-          label: "Dashboard",
-          icon: <Home className="h-4 w-4" />,
-        })
-        : null} */}
       {navigationItems.map(renderNavigationElement)}
     </nav>
   );
