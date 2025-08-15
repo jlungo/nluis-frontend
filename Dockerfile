@@ -2,15 +2,11 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
-# Define build arguments for environment variables
-ARG VITE_API_BASE_URL
-ARG VITE_API_AUTH_URL
-ARG VITE_API_TIMEOUT
+# Define build argument for API URL
+ARG VITE_API_URL
 
-# Set environment variables from build args
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
-    VITE_API_AUTH_URL=$VITE_API_AUTH_URL \
-    VITE_API_TIMEOUT=$VITE_API_TIMEOUT
+# Set environment variable from build arg
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY package*.json ./
 
@@ -19,9 +15,7 @@ RUN npm ci
 COPY . .
 
 # Create a .env file with build-time values
-RUN echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env && \
-    echo "VITE_API_AUTH_URL=$VITE_API_AUTH_URL" >> .env && \
-    echo "VITE_API_TIMEOUT=$VITE_API_TIMEOUT" >> .env
+RUN echo "VITE_API_URL=$VITE_API_URL" > .env
 
 RUN npm run build
 

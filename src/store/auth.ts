@@ -99,29 +99,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       if (!strongPasswordRegex.test(data.password))
         throw "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
 
-      const response = await api.post('/auth/register/', {
-        email: data.email,
-        password: data.password,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        phone_number: data.phone,
-        gender: data.gender,
-        company: data.company
-      });
-
-      if (response.data) {
-        set({
-          accessToken: response.data.access,
-          refreshToken: response.data.refresh,
-          user: response.data,
-          loading: false,
-        });
-
-        localStorage.setItem("accessToken", response.data.access);
-        localStorage.setItem("refreshToken", response.data.refresh);
-        localStorage.setItem("user", JSON.stringify(response.data));
-      }
-
       const res = await api.post("/auth/register/", {
         first_name: data.firstName,
         last_name: data.lastName,
