@@ -253,7 +253,7 @@ export function NavigationSidebar({
     const buttonContent = (
       <Link
         key={item.id}
-        to={navigateTo(group ? `${group}/${item.id}` : item.id, item.label)}
+        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
         className={cn(
           buttonVariants({ variant: isActive ? "default" : "ghost" }),
           `w-full ${collapsed
@@ -266,7 +266,7 @@ export function NavigationSidebar({
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
-        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
+        
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>
