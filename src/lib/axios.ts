@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 // In development, we use the proxy configured in vite.config.ts
-const API_URL = import.meta.env.DEV ? '/api' : import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Create axios instance with default config
 const api = axios.create({
