@@ -28,6 +28,7 @@ import { useModulesQuery, type ModuleProps } from '@/queries/useModuleQuery';
 import { useLevelsQuery, type LevelProps } from '@/queries/useLevelQuery';
 import { Link } from 'react-router';
 import { Spinner } from '@/components/ui/spinner';
+import { useSectionsQuery } from '@/queries/useSectionQuery';
 
 interface FormField {
     id: string;
@@ -148,6 +149,7 @@ export default function Page() {
 
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
+    const { data: dbSections, isLoading: isLoadingSections } = useSectionsQuery(1000, 0, "", selectedModule?.slug || "", selectedLevel?.slug || "")
 
     const getFormTypes = (): FormType[] => {
         if (!selectedModule || !selectedLevel) return [];
@@ -228,7 +230,7 @@ export default function Page() {
         if (!selectedType?.defaultSections) return;
 
         const defaultSections: FormSection[] = selectedType.defaultSections.map((sectionTemplate, index) => ({
-            id: `section-${Date.now()}-${index}`,
+            id: `section-default-UI-${Date.now()}-${index}`,
             name: sectionTemplate.name || `Section ${index + 1}`,
             description: sectionTemplate.description || '',
             subforms: [],
@@ -240,7 +242,7 @@ export default function Page() {
 
     const addSection = () => {
         const newSection: FormSection = {
-            id: `section-${Date.now()}`,
+            id: `section-default-UI-${Date.now()}`,
             name: `Section ${formSections.length + 1}`,
             description: '',
             subforms: [],
@@ -520,8 +522,6 @@ export default function Page() {
     const onComplete = (formData: FormTemplate) => {
         console.log(formData)
     }
-
-    const onCancel = () => { }
 
     const handlePreviewSave = (formData: FormTemplate) => {
         onComplete(formData);
@@ -845,21 +845,51 @@ export default function Page() {
                                         {formSections.map((section, sectionIndex) => (
                                             <Card key={section.id} className="relative">
                                                 <CardHeader className="pb-4">
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                                            <GripVertical className="h-4 w-4" />
-                                                            <Layers className="h-4 w-4" />
-                                                            <Badge variant="outline" className="text-xs">
-                                                                Section {sectionIndex + 1}
-                                                            </Badge>
+                                                    <div className="flex flex-col md:flex-row items-start gap-4">
+                                                        <div className='flex justify-between w-full md:w-fit md:hidden'>
+                                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                                <GripVertical className="h-4 w-4" />
+                                                                <Layers className="h-4 w-4" />
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    Section {sectionIndex + 1}
+                                                                </Badge>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => removeSection(section.id)}
+                                                                className="text-destructive dark:text-destructive hover:text-destructive ml-auto"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
-                                                        <div className="flex-1 space-y-3">
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                <Input
-                                                                    placeholder="Section name"
-                                                                    value={section.name}
-                                                                    onChange={(e) => updateSection(section.id, { name: e.target.value })}
-                                                                />
+                                                        <div className="flex-1 space-y-3 w-full">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                                                <Select
+                                                                    value={section.id.includes("section-default-UI-") ? '' : section.id}
+                                                                    onValueChange={(e) => updateSection(section.id, { id: e })}
+                                                                >
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue placeholder="Select section" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {!isLoadingSections && dbSections && dbSections?.results ? dbSections.results.map(s => (
+                                                                            <SelectItem
+                                                                                key={s.slug}
+                                                                                value={s.slug}
+                                                                                disabled={formSections.find(sec => sec.id === s.slug) ? true : false}
+                                                                            >
+                                                                                {s.name}
+                                                                            </SelectItem>
+                                                                        )) : null}
+                                                                        {isLoadingSections ? (
+                                                                            <div className='flex flex-col items-center justify-center h-20'>
+                                                                                <Spinner />
+                                                                            </div>
+                                                                        ) : null}
+                                                                    </SelectContent>
+                                                                </Select>
+
                                                                 <Input
                                                                     placeholder="Section description"
                                                                     value={section.description}
@@ -871,7 +901,7 @@ export default function Page() {
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => removeSection(section.id)}
-                                                            className="text-destructive hover:text-destructive"
+                                                            className="text-destructive dark:text-destructive hover:text-destructive ml-auto hidden md:block"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
@@ -921,12 +951,22 @@ export default function Page() {
                                                             {section.subforms.map((subform, subformIndex) => (
                                                                 <div key={subform.id} className="border rounded-lg p-4 bg-muted/30">
                                                                     <div className="space-y-4">
-                                                                        <div className="flex items-start gap-3">
-                                                                            <div className="flex items-center gap-2 text-muted-foreground">
-                                                                                <Move className="h-3 w-3" />
-                                                                                <Badge variant="outline" className="text-xs">
-                                                                                    Subform {subformIndex + 1}
-                                                                                </Badge>
+                                                                        <div className="flex flex-col md:flex-row gap-3">
+                                                                            <div className='flex justify-between w-full md:w-fit md:hidden'>
+                                                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                                                    <Move className="h-3 w-3" />
+                                                                                    <Badge variant="outline" className="text-xs">
+                                                                                        Subform {subformIndex + 1}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="sm"
+                                                                                    onClick={() => removeSubform(section.id, subform.id)}
+                                                                                    className="text-destructive hover:text-destructive"
+                                                                                >
+                                                                                    <Trash2 className="h-3 w-3" />
+                                                                                </Button>
                                                                             </div>
                                                                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                                 <Input
@@ -944,7 +984,7 @@ export default function Page() {
                                                                                 variant="ghost"
                                                                                 size="sm"
                                                                                 onClick={() => removeSubform(section.id, subform.id)}
-                                                                                className="text-destructive hover:text-destructive"
+                                                                                className="text-destructive hover:text-destructive ml-auto hidden md:block"
                                                                             >
                                                                                 <Trash2 className="h-3 w-3" />
                                                                             </Button>
@@ -977,7 +1017,7 @@ export default function Page() {
                                                                         {subform.fields.length > 0 && (
                                                                             <div className="space-y-2 pl-4 border-l-2 border-border">
                                                                                 {subform.fields.map((field, fieldIndex) => (
-                                                                                    <div key={field.id} className="flex items-center gap-3 p-3 bg-background rounded border">
+                                                                                    <div key={field.id} className="flex flex-col md:flex-row items-center gap-3 p-3 bg-background rounded border">
                                                                                         <span className="text-xs text-muted-foreground w-6">
                                                                                             {fieldIndex + 1}
                                                                                         </span>
@@ -994,7 +1034,7 @@ export default function Page() {
                                                                                             value={field.type}
                                                                                             onValueChange={(value) => updateField(section.id, subform.id, field.id, { type: value })}
                                                                                         >
-                                                                                            <SelectTrigger className="w-40">
+                                                                                            <SelectTrigger className="w-full md:w-40">
                                                                                                 <SelectValue />
                                                                                             </SelectTrigger>
                                                                                             <SelectContent>
@@ -1005,22 +1045,24 @@ export default function Page() {
                                                                                                 ))}
                                                                                             </SelectContent>
                                                                                         </Select>
-                                                                                        <Button
-                                                                                            variant="outline"
-                                                                                            size="sm"
-                                                                                            onClick={() => updateField(section.id, subform.id, field.id, { required: !field.required })}
-                                                                                            className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
-                                                                                        >
-                                                                                            {field.required ? 'Required' : 'Optional'}
-                                                                                        </Button>
-                                                                                        <Button
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            onClick={() => removeField(section.id, subform.id, field.id)}
-                                                                                            className="text-destructive hover:text-destructive"
-                                                                                        >
-                                                                                            <Trash2 className="h-3 w-3" />
-                                                                                        </Button>
+                                                                                        <div className='flex justify-between gap-3 w-full md:w-fit'>
+                                                                                            <Button
+                                                                                                variant="outline"
+                                                                                                size="sm"
+                                                                                                onClick={() => updateField(section.id, subform.id, field.id, { required: !field.required })}
+                                                                                                className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                                                                            >
+                                                                                                {field.required ? 'Required' : 'Optional'}
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                variant="ghost"
+                                                                                                size="sm"
+                                                                                                onClick={() => removeField(section.id, subform.id, field.id)}
+                                                                                                className="text-destructive hover:text-destructive"
+                                                                                            >
+                                                                                                <Trash2 className="h-3 w-3" />
+                                                                                            </Button>
+                                                                                        </div>
                                                                                     </div>
                                                                                 ))}
                                                                             </div>
@@ -1100,14 +1142,24 @@ export default function Page() {
                                                 ) : (
                                                     <div key={form.id} className="border rounded-lg p-4 bg-muted/30">
                                                         <div className="space-y-4">
-                                                            <div className="flex items-start gap-3">
-                                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                                    <Move className="h-3 w-3" />
-                                                                    <Badge variant="outline" className="text-xs">
-                                                                        Subform {subformIndex + 1}
-                                                                    </Badge>
+                                                            <div className="flex flex-col md:flex-row items-start gap-4">
+                                                                <div className='flex justify-between w-full md:w-fit md:hidden'>
+                                                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                                                        <Move className="h-3 w-3" />
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            Subform {subformIndex + 1}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => removeSubform("", form.id)}
+                                                                        className="text-destructive hover:text-destructive block md:hidden ml-auto"
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
+                                                                    </Button>
                                                                 </div>
-                                                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                                                                     <Input
                                                                         placeholder="Subform name"
                                                                         value={form.name}
@@ -1123,7 +1175,7 @@ export default function Page() {
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => removeSubform("", form.id)}
-                                                                    className="text-destructive hover:text-destructive"
+                                                                    className="text-destructive hover:text-destructive hidden md:block"
                                                                 >
                                                                     <Trash2 className="h-3 w-3" />
                                                                 </Button>
@@ -1156,7 +1208,7 @@ export default function Page() {
                                                             {form.fields.length > 0 && (
                                                                 <div className="space-y-2 pl-4 border-l-2 border-border">
                                                                     {form.fields.map((field, fieldIndex) => (
-                                                                        <div key={field.id} className="flex items-center gap-3 p-3 bg-background rounded border">
+                                                                        <div key={field.id} className="flex flex-col md:flex-row items-center gap-3 p-3 bg-background rounded border">
                                                                             <span className="text-xs text-muted-foreground w-6">
                                                                                 {fieldIndex + 1}
                                                                             </span>
@@ -1173,7 +1225,7 @@ export default function Page() {
                                                                                 value={field.type}
                                                                                 onValueChange={(value) => updateField("", form.id, field.id, { type: value })}
                                                                             >
-                                                                                <SelectTrigger className="w-40">
+                                                                                <SelectTrigger className="w-full md:w-40">
                                                                                     <SelectValue />
                                                                                 </SelectTrigger>
                                                                                 <SelectContent>
@@ -1184,22 +1236,24 @@ export default function Page() {
                                                                                     ))}
                                                                                 </SelectContent>
                                                                             </Select>
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                onClick={() => updateField("", form.id, field.id, { required: !field.required })}
-                                                                                className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
-                                                                            >
-                                                                                {field.required ? 'Required' : 'Optional'}
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                onClick={() => removeField("", form.id, field.id)}
-                                                                                className="text-destructive hover:text-destructive"
-                                                                            >
-                                                                                <Trash2 className="h-3 w-3" />
-                                                                            </Button>
+                                                                            <div className='flex justify-between gap-3 w-full md:w-fit'>
+                                                                                <Button
+                                                                                    variant="outline"
+                                                                                    size="sm"
+                                                                                    onClick={() => updateField("", form.id, field.id, { required: !field.required })}
+                                                                                    className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                                                                >
+                                                                                    {field.required ? 'Required' : 'Optional'}
+                                                                                </Button>
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="sm"
+                                                                                    onClick={() => removeField("", form.id, field.id)}
+                                                                                    className="text-destructive hover:text-destructive"
+                                                                                >
+                                                                                    <Trash2 className="h-3 w-3" />
+                                                                                </Button>
+                                                                            </div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -1223,7 +1277,6 @@ export default function Page() {
                             formData={createFormForPreview()}
                             onSave={handlePreviewSave}
                             onEdit={handlePreviewEdit}
-                            onCancel={onCancel}
                         />
                     </div>
                 );
@@ -1232,8 +1285,6 @@ export default function Page() {
                 return null;
         }
     };
-
-    console.log(formForms)
 
     // Don't show normal layout for step 6 (preview)
     if (currentStep === 6) return renderStepContent();
