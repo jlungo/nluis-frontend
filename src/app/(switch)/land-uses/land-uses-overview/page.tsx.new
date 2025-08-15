@@ -17,7 +17,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Search, Download } from 'lucide-react';
-import api from '@/lib/api';
 
 interface LandUseData {
   village: string;
@@ -86,48 +85,18 @@ export default function LandUsesOverviewPage() {
     });
   }, [setPage]);
 
-  // Mock data for development
-  const mockData: LandUseData[] = [
-    { village: 'Kikwe', district: 'Meru', uses: 'Makazi', sqm: 1500000, hectares: 150 },
-    { village: 'Kikwe', district: 'Meru', uses: 'Kilimo', sqm: 5000000, hectares: 500 },
-    { village: 'Kikwe', district: 'Meru', uses: 'Msitu', sqm: 2000000, hectares: 200 },
-    { village: 'Tengeru', district: 'Meru', uses: 'Biashara', sqm: 800000, hectares: 80 },
-    { village: 'Tengeru', district: 'Meru', uses: 'Makazi', sqm: 3000000, hectares: 300 },
-    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Viwanda', sqm: 4000000, hectares: 400 },
-    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Makazi', sqm: 2500000, hectares: 250 },
-    { village: 'Kimandolu', district: 'Arusha', uses: 'Kilimo', sqm: 6000000, hectares: 600 },
-    { village: 'Kimandolu', district: 'Arusha', uses: 'Msitu', sqm: 1800000, hectares: 180 }
-  ];
-
-  const mockSummary = {
-    total_area: 2660, // Total hectares
-    avg_productivity: 75.5, // Percentage
-    total_population: 128500
-  };
-
   // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const response = await fetch('/api/land-use/');
         
-        // DEVELOPMENT: Use mock data if API_BASE_URL is not set
-        if (!import.meta.env.VITE_API_BASE_URL) {
-          setTimeout(() => {
-            setLandUseData(mockData);
-            setSummary({
-              totalArea: mockSummary.total_area,
-              avgProductivity: mockSummary.avg_productivity,
-              totalPopulation: mockSummary.total_population
-            });
-            setLoading(false);
-          }, 1000);
-          return;
+        if (!response.ok) {
+          throw new Error('Failed to fetch land use data');
         }
-
-        // PRODUCTION: Use the API
-        const response = await api.get('/land-use/');
-        const data: ApiResponse = response.data;
+        
+        const data: ApiResponse = await response.json();
         setLandUseData(data.data);
         setSummary({
           totalArea: data.summary.total_area,
@@ -135,12 +104,9 @@ export default function LandUsesOverviewPage() {
           totalPopulation: data.summary.total_population
         });
       } catch (err) {
-        // MOCK DATA: Comment this error handling when using mock data
-        // setError(err instanceof Error ? err.message : 'Failed to fetch data');
-        console.error('Error fetching data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
       } finally {
-        // REAL DATA: Uncomment this when using real API
-        // setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -241,16 +207,7 @@ export default function LandUsesOverviewPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  // MOCK: Remove this alert when API is ready
-                  alert('Export functionality will be available when connected to real API');
-                  
-                  // REAL DATA: Uncomment this when API is ready
-                  // window.open('/api/land-use/export/?format=csv', '_blank');
-                }}
-              >
+              <Button variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
@@ -272,57 +229,50 @@ export default function LandUsesOverviewPage() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="value" 
-                  fill="#2563eb"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="value" fill="#16a34a" />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          {/* Data Table under the graph */}
-          <div className="mt-8 border-t pt-6">
-            <div className="font-medium mb-4">Land Use Records</div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Village</th>
-                    <th className="text-left p-2">District</th>
-                    <th className="text-left p-2">Land Use</th>
-                    <th className="text-right p-2">Area (ha)</th>
+        </CardContent>
+      </Card>
+
+      {/* Data Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Land Use Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Village</th>
+                  <th className="text-left p-2">District</th>
+                  <th className="text-left p-2">Land Use</th>
+                  <th className="text-right p-2">Area (ha)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4">No data found</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredData.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-4">No data found</td>
+                ) : (
+                  filteredData.map((item, index) => (
+                    <tr key={index} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{item.village}</td>
+                      <td className="p-2">{item.district}</td>
+                      <td className="p-2">
+                        <Badge variant="outline" className={getBadgeClass(item.uses)}>
+                          {item.uses}
+                        </Badge>
+                      </td>
+                      <td className="p-2 text-right">{item.hectares.toLocaleString()}</td>
                     </tr>
-                  ) : (
-                    filteredData.slice(0, 3).map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-muted/50">
-                        <td className="p-2">{item.village}</td>
-                        <td className="p-2">{item.district}</td>
-                        <td className="p-2">
-                          <Badge variant="outline" className={getBadgeClass(item.uses)}>
-                            {item.uses}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-right">{item.hectares.toLocaleString()}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-              {filteredData.length > 3 && (
-                <button 
-                  onClick={() => alert('Full table view will be implemented')} 
-                  className="w-full text-sm text-blue-600 hover:text-blue-800 text-center mt-4 py-2 border-t"
-                >
-                  View all {filteredData.length} records →
-                </button>
-              )}
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

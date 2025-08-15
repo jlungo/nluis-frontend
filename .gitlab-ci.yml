@@ -6,17 +6,43 @@ variables:
   DOCKER_DRIVER: overlay2
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
   LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  # Environment URLs - Set these in GitLab CI/CD Variables
+  STAGING_API_URL: "http://144.91.125.106:8000"
+  PRODUCTION_API_URL: "http://144.91.125.106:8000"
 
-before_script:
-  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-
-build:
+.build_template: &build_definition
   stage: build
   image: docker:25.0.3
   services:
     - docker:25.0.3-dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+
+# Build for staging environment
+build_staging:
+  <<: *build_definition
   script:
-    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker build 
+      --build-arg VITE_API_BASE_URL=$STAGING_API_URL
+      --build-arg VITE_API_AUTH_URL=$STAGING_API_URL/auth
+      --build-arg VITE_API_TIMEOUT=30000
+      -t $IMAGE_TAG-staging
+      -t $CI_REGISTRY_IMAGE:staging .
+    - docker push $IMAGE_TAG-staging
+    - docker push $CI_REGISTRY_IMAGE:staging
+  only:
+    - develop
+
+# Build for production environment
+build_production:
+  <<: *build_definition
+  script:
+    - docker build 
+      --build-arg VITE_API_BASE_URL=$PRODUCTION_API_URL
+      --build-arg VITE_API_AUTH_URL=$PRODUCTION_API_URL/auth
+      --build-arg VITE_API_TIMEOUT=30000
+      -t $IMAGE_TAG
+      -t $LATEST_TAG .
     - docker push $IMAGE_TAG
     - docker push $LATEST_TAG
   only:
