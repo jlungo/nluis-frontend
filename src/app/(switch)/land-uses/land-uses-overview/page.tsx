@@ -70,7 +70,6 @@ export default function LandUsesOverviewPage() {
   const [selectedLandUse, setSelectedLandUse] = useState<string>('all');
   const [landUseData, setLandUseData] = useState<LandUseData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [summary, setSummary] = useState({
     totalArea: 0,
@@ -147,7 +146,7 @@ export default function LandUsesOverviewPage() {
   };
 
   if (loading) return <div className="text-center py-8">Loading land use data...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+  // if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
 
   return (
     <div className="space-y-6 p-6">
