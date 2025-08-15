@@ -283,7 +283,7 @@ export default function FormPreviewTester({
     };
 
     // Render a single field component
-    const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; subformId?: string }) => {
+    const renderFieldComponent = (field: FormField, _sectionContext?: { sectionId: string; subformId?: string }) => {
         const fieldValue = formValues[field.id];
         const hasError = validationErrors.some(error => error.fieldId === field.id);
         const fieldError = validationErrors.find(error => error.fieldId === field.id);
@@ -565,7 +565,7 @@ export default function FormPreviewTester({
 
                                 <CollapsibleContent>
                                     <CardContent className="space-y-6 pt-0">
-                                        {section.subforms.map((subform, subformIndex) => (
+                                        {section.subforms.map((subform, _subformIndex) => (
                                             <Collapsible
                                                 key={subform.id}
                                                 open={!collapsedSubforms[subform.id]}
