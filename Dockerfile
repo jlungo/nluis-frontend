@@ -14,17 +14,16 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
-RUN npm run build
+# Create a .env file with build-time values
+RUN echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env && \
+    echo "VITE_API_AUTH_URL=$VITE_API_AUTH_URL" >> .env && \
+    echo "VITE_API_TIMEOUT=$VITE_API_TIMEOUT" >> .env
 
-# Generate env-config.js with runtime variables
-RUN cp /app/public/env-config.js.template /app/dist/env-config.js && \
-    sed -i "s|VITE_API_BASE_URL|$VITE_API_BASE_URL|g" /app/dist/env-config.js && \
-    sed -i "s|VITE_API_AUTH_URL|$VITE_API_AUTH_URL|g" /app/dist/env-config.js && \
-    sed -i "s|VITE_API_TIMEOUT|$VITE_API_TIMEOUT|g" /app/dist/env-config.js
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
