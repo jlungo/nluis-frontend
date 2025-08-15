@@ -2,7 +2,7 @@ import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "builder",
+  path: "form-build",
   Component: Layout,
   children: [
     {

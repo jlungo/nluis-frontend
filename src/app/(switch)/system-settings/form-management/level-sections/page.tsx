@@ -22,6 +22,7 @@ export default function Page() {
       module: 'system-settings',
       title: "System Settings",
       backButton: 'Back',
+      isFormPage: true
     })
   }, [setPageData])
 
