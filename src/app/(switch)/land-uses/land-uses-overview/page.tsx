@@ -17,7 +17,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Search, Download } from 'lucide-react';
-import api from '@/lib/api';
+import api from '@/lib/axios';
 
 interface LandUseData {
   village: string;
