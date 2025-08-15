@@ -1,20 +1,11 @@
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const apiAuthUrl = import.meta.env.VITE_API_AUTH_URL || 'http://localhost:3000/auth';
-const apiTimeout = parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10);
+const API_URL = import.meta.env.VITE_API_URL;
 
+// Create axios instance
 export const api = axios.create({
-  baseURL: apiBaseUrl,
-  timeout: apiTimeout,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export const authApi = axios.create({
-  baseURL: apiAuthUrl,
-  timeout: apiTimeout,
+  baseURL: API_URL,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,7 +14,7 @@ export const authApi = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,12 +29,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config._retry) {
       // Handle unauthorized access
-      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
       window.location.href = '/auth/signin';
     }
-    return Promise.reject(error);
+    return Promise.reject(error?.response?.data || error);
   }
 );
 

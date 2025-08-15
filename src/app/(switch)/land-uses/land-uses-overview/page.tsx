@@ -70,6 +70,7 @@ export default function LandUsesOverviewPage() {
   const [selectedLandUse, setSelectedLandUse] = useState<string>('all');
   const [landUseData, setLandUseData] = useState<LandUseData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [summary, setSummary] = useState({
     totalArea: 0,
@@ -86,44 +87,11 @@ export default function LandUsesOverviewPage() {
     });
   }, [setPage]);
 
-  // Mock data for development
-  const mockData: LandUseData[] = [
-    { village: 'Kikwe', district: 'Meru', uses: 'Makazi', sqm: 1500000, hectares: 150 },
-    { village: 'Kikwe', district: 'Meru', uses: 'Kilimo', sqm: 5000000, hectares: 500 },
-    { village: 'Kikwe', district: 'Meru', uses: 'Msitu', sqm: 2000000, hectares: 200 },
-    { village: 'Tengeru', district: 'Meru', uses: 'Biashara', sqm: 800000, hectares: 80 },
-    { village: 'Tengeru', district: 'Meru', uses: 'Makazi', sqm: 3000000, hectares: 300 },
-    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Viwanda', sqm: 4000000, hectares: 400 },
-    { village: 'Ngaramtoni', district: 'Arusha', uses: 'Makazi', sqm: 2500000, hectares: 250 },
-    { village: 'Kimandolu', district: 'Arusha', uses: 'Kilimo', sqm: 6000000, hectares: 600 },
-    { village: 'Kimandolu', district: 'Arusha', uses: 'Msitu', sqm: 1800000, hectares: 180 }
-  ];
-
-  const mockSummary = {
-    total_area: 2660, // Total hectares
-    avg_productivity: 75.5, // Percentage
-    total_population: 128500
-  };
-
   // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // DEVELOPMENT: Use mock data if API_BASE_URL is not set
-        if (!import.meta.env.VITE_API_BASE_URL) {
-          setTimeout(() => {
-            setLandUseData(mockData);
-            setSummary({
-              totalArea: mockSummary.total_area,
-              avgProductivity: mockSummary.avg_productivity,
-              totalPopulation: mockSummary.total_population
-            });
-            setLoading(false);
-          }, 1000);
-          return;
-        }
 
         // PRODUCTION: Use the API
         const response = await api.get('/land-use/');
@@ -179,7 +147,7 @@ export default function LandUsesOverviewPage() {
   };
 
   if (loading) return <div className="text-center py-8">Loading land use data...</div>;
-  // if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
 
   return (
     <div className="space-y-6 p-6">
