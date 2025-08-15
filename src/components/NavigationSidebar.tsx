@@ -21,16 +21,14 @@ import {
   BarChart3,
   AlertTriangle,
   FileText,
-  Settings,
-  Activity,
-  User,
   ChevronDown,
   ChevronRight,
   ClipboardPenLine,
   LayoutTemplate,
   List,
-  ClipboardList,
-  ClipboardPlus
+  ClipboardPlus,
+  LayoutDashboard,
+  User
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
@@ -48,12 +46,6 @@ interface NavigationGroup {
   label: string;
   icon: React.ReactNode;
   items: NavigationItem[];
-  defaultOpen?: boolean;
-}
-
-interface StandaloneNavigationItem extends Omit<NavigationItem, 'id'> {
-  id: string;
-  type: "standalone";
 }
 
 interface NavigationSidebarProps {
@@ -75,80 +67,66 @@ export function NavigationSidebar({
     if (collapsed) return;
 
     const newOpenGroups = new Set(openGroups);
-    if (newOpenGroups.has(groupId)) {
-      newOpenGroups.delete(groupId);
-    } else {
-      newOpenGroups.add(groupId);
-    }
+    if (newOpenGroups.has(groupId)) newOpenGroups.delete(groupId);
+    else newOpenGroups.add(groupId)
     setOpenGroups(newOpenGroups);
   };
 
-  const navigateTo = (id: string, label: string) => {
-    if (!page?.module) return `/${id}`;
-    if (label === "Dashboard") {
-      return `/${page.module}`;
-    }
+  const navigateTo = (id: string) => {
+    if (!page || !page?.module) return "";
     return `/${page.module}/${id}`;
   };
 
-  const getNavigationItems = (): (StandaloneNavigationItem | NavigationGroup)[] => {
-    if (page?.module) {
+  // Get module-specific navigation or default navigation
+  const getNavigationItems = (): (
+    | NavigationItem
+    | NavigationGroup
+  )[] => {
+    // If we're in a specific module context, show only that module's content
+    if (page && page?.module) {
       switch (page.module) {
         case "dashboard":
           return [
             {
               id: "dashboard",
               label: "System Overview",
-              icon: <Home className="h-4 w-4" />,
-              type: "standalone",
+              icon: <Home className="h-4 w-4" />
             },
           ];
         case "land-uses":
           return [
             {
               id: "land-uses-overview",
-              label: "Land Use Overview",
-              icon: <LayoutTemplate className="h-4 w-4" />,
-              type: "standalone",
-            },
-            {
-              id: "land-uses-dashboard",
-              label: "Land Uses Dashboard",
-              icon: <MapIcon className="h-4 w-4" />,
-              type: "standalone",
+              label: "Land Uses Overview",
+              icon: <MapIcon className="h-4 w-4" />
             },
             {
               id: "national-land-use",
               label: "National Land Use",
               icon: <Building className="h-4 w-4" />,
-              badge: "3",
-              type: "standalone",
+              badge: "3"
             },
             {
               id: "zonal-land-use",
               label: "Zonal Land Use",
               icon: <Building className="h-4 w-4" />,
-              badge: "7",
-              type: "standalone",
+              badge: "7"
             },
             {
               id: "regional-land-use",
               label: "Regional Land Use",
-              icon: <Building className="h-4 w-4" />,
-              type: "standalone",
+              icon: <Building className="h-4 w-4" />
             },
             {
               id: "district-land-use",
               label: "District Land Use",
-              icon: <Building className="h-4 w-4" />,
-              type: "standalone",
+              icon: <Building className="h-4 w-4" />
             },
             {
               id: "village-land-use",
               label: "Village Land Use",
               icon: <Users className="h-4 w-4" />,
-              badge: "12",
-              type: "standalone",
+              badge: "12"
             },
           ];
         case "ccro-management":
@@ -157,20 +135,17 @@ export function NavigationSidebar({
               id: "overview",
               label: "CCRO Overview",
               icon: <Shield className="h-4 w-4" />,
-              badge: "8",
-              type: "standalone",
+              badge: "8"
             },
             {
               id: "land-formalization",
               label: "Land Formalization",
-              icon: <FileText className="h-4 w-4" />,
-              type: "standalone",
+              icon: <FileText className="h-4 w-4" />
             },
             {
               id: "reports",
               label: "CCRO Reports",
-              icon: <FileText className="h-4 w-4" />,
-              type: "standalone",
+              icon: <FileText className="h-4 w-4" />
             },
           ];
         case "compliance":
@@ -178,14 +153,12 @@ export function NavigationSidebar({
             {
               id: "overview",
               label: "Compliance Overview",
-              icon: <AlertTriangle className="h-4 w-4" />,
-              type: "standalone",
+              icon: <AlertTriangle className="h-4 w-4" />
             },
             {
               id: "reports",
               label: "Compliance Reports",
-              icon: <FileText className="h-4 w-4" />,
-              type: "standalone",
+              icon: <FileText className="h-4 w-4" />
             },
           ];
         case "management-evaluation":
@@ -194,16 +167,18 @@ export function NavigationSidebar({
               id: "overview",
               label: "M&E Dashboard",
               icon: <BarChart3 className="h-4 w-4" />,
-              badge: "5",
-              type: "standalone",
+              badge: "5"
             },
             {
               id: "reports",
               label: "M&E Reports",
-              icon: <FileText className="h-4 w-4" />,
-              type: "standalone",
+              icon: <FileText className="h-4 w-4" />
             },
           ];
+        case "reports":
+          return [];
+        case "user-management":
+          return [];
         case "system-settings":
           return [
             {
@@ -212,8 +187,13 @@ export function NavigationSidebar({
               icon: <ClipboardPenLine className="h-4 w-4" />,
               items: [
                 {
-                  id: "builder",
-                  label: "Quick Build",
+                  id: "forms-dashboard",
+                  label: "Forms Dashboard",
+                  icon: <LayoutDashboard className="h-4 w-4" />
+                },
+                {
+                  id: "form-builder",
+                  label: "Form Builder",
                   icon: <ClipboardPlus className="h-4 w-4" />
                 },
                 {
@@ -226,144 +206,49 @@ export function NavigationSidebar({
                   label: "Level Sections",
                   icon: <LayoutTemplate className="h-4 w-4" />
                 },
+              ],
+            },
+            {
+              id: "user-management",
+              label: "User Management",
+              icon: <User className="h-4 w-4" />,
+              items: [
                 {
-                  id: "form-builder",
-                  label: "Form Builder",
-                  icon: <ClipboardList className="h-4 w-4" />
-                }
+                  id: "users-dashboard",
+                  label: "Users Dashboard",
+                  icon: <LayoutDashboard className="h-4 w-4" />
+                },
+                // {
+                //   id: "form-builder",
+                //   label: "Form Builder",
+                //   icon: <ClipboardPlus className="h-4 w-4" />
+                // },
+                // {
+                //   id: "module-levels",
+                //   label: "Module Levels",
+                //   icon: <List className="h-4 w-4" />
+                // },
+                // {
+                //   id: "level-sections",
+                //   label: "Level Sections",
+                //   icon: <LayoutTemplate className="h-4 w-4" />
+                // },
               ],
             },
           ];
+        case "audit-trail":
+          return [];
         default:
           return [];
       }
     }
-
-    return [
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: <Home className="h-4 w-4" />,
-        items: [
-          {
-            id: "dashboard",
-            label: "System Overview",
-            icon: <Home className="h-4 w-4" />,
-          },
-        ],
-      },
-      {
-        id: "land-uses",
-        label: "Land Use",
-        icon: <MapIcon className="h-4 w-4" />,
-        defaultOpen: true,
-        items: [
-          {
-            id: "land-uses-dashboard",
-            label: "Land Uses Dashboard",
-            icon: <MapIcon className="h-4 w-4" />,
-          },
-          {
-            id: "national-land-use",
-            label: "National Land Use",
-            icon: <Building className="h-4 w-4" />,
-            badge: "3",
-          },
-          {
-            id: "zonal-land-use",
-            label: "Zonal Land Use",
-            icon: <Building className="h-4 w-4" />,
-            badge: "7",
-          },
-          {
-            id: "regional-land-use",
-            label: "Regional Land Use",
-            icon: <Building className="h-4 w-4" />,
-          },
-          {
-            id: "district-land-use",
-            label: "District Land Use",
-            icon: <Building className="h-4 w-4" />,
-          },
-          {
-            id: "village-land-use",
-            label: "Village Land Use",
-            icon: <Users className="h-4 w-4" />,
-            badge: "12",
-          },
-        ],
-      },
-      {
-        id: "ccro-management",
-        label: "CCRO Management",
-        icon: <Shield className="h-4 w-4" />,
-        items: [
-          {
-            id: "overview",
-            label: "CCRO Overview",
-            icon: <Shield className="h-4 w-4" />,
-            badge: "8",
-          },
-          {
-            id: "land-formalization",
-            label: "Land Formalization",
-            icon: <FileText className="h-4 w-4" />,
-          },
-          {
-            id: "reports",
-            label: "CCRO Reports",
-            icon: <FileText className="h-4 w-4" />,
-          },
-        ],
-      },
-      {
-        id: "compliance",
-        label: "Compliance",
-        icon: <AlertTriangle className="h-4 w-4" />,
-        type: "standalone",
-      },
-      {
-        id: "management-evaluation",
-        label: "Management & Evaluation",
-        icon: <BarChart3 className="h-4 w-4" />,
-        badge: "5",
-        type: "standalone",
-      },
-      {
-        id: "reports",
-        label: "Reports",
-        icon: <FileText className="h-4 w-4" />,
-        type: "standalone",
-      },
-      {
-        id: "administration",
-        label: "Administration",
-        icon: <Settings className="h-4 w-4" />,
-        items: [
-          {
-            id: "user-management",
-            label: "User Management",
-            icon: <User className="h-4 w-4" />,
-          },
-          {
-            id: "audit-trail",
-            label: "Audit Trail",
-            icon: <Activity className="h-4 w-4" />,
-          },
-          {
-            id: "system-settings",
-            label: "System Settings",
-            icon: <Settings className="h-4 w-4" />,
-          },
-        ],
-      },
-    ];
+    return []
   };
 
   const navigationItems = getNavigationItems();
 
   const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isActive = pathname.includes(item.id) || (pathname === '/land-uses' && item.id === 'land-uses-dashboard');
+    const isActive = pathname.endsWith(item.id);
 
     const buttonContent = (
       <Link
@@ -381,6 +266,7 @@ export function NavigationSidebar({
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
+        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>
@@ -453,7 +339,7 @@ export function NavigationSidebar({
                 <Button
                   variant="ghost"
                   className={`w-full px-2 justify-center h-8 ${hasActiveItem
-                    ? "bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-primary-foreground hover:bg-sidebar-primary/90 dark:hover:bg-sidebar-primary/90"
+                    ? "bg-sidebar-primary/80 text-white/80 hover:text-white hover:bg-sidebar-primary/90 dark:hover:bg-sidebar-primary/90"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     }`}
                 >
@@ -475,7 +361,7 @@ export function NavigationSidebar({
             </TooltipTrigger>
             <TooltipContent side="right" className="p-0 max-w-60 text-white">
               <div className="p-2">
-                <div className="font-medium text-sm mb-2 ml-3">
+                <div className="font-medium text-sm mb-2 ml-1">
                   {group.label}
                 </div>
                 <div className="space-y-1">
@@ -494,7 +380,7 @@ export function NavigationSidebar({
                           : "hover:bg-accent"
                         }`
                       )}
-                      to={navigateTo(`${group.id}/${item.id}`, item.label)}
+                      to={navigateTo(`${group.id}/${item.id}`)}
                     >
                       <div className="flex items-center gap-2 w-full">
                         {item.icon}
@@ -528,7 +414,7 @@ export function NavigationSidebar({
           <Button
             variant="ghost"
             className={`w-full justify-start px-3 h-8 ${hasActiveItem
-              ? "bg-sidebar-primary/60 dark:bg-sidebar-primary/20 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
+              ? `${isOpen ? 'bg-sidebar-primary/60 dark:bg-sidebar-primary/20' : 'bg-sidebar-primary/80 dark:hover:bg-sidebar-primary/90'} hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white`
               : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
           >
@@ -552,18 +438,11 @@ export function NavigationSidebar({
     );
   };
 
-  const renderStandaloneItem = (item: StandaloneNavigationItem) => {
-    return renderNavigationItem(item);
-  };
-
   const renderNavigationElement = (
-    element: NavigationGroup | StandaloneNavigationItem
+    element: NavigationGroup | NavigationItem
   ) => {
-    if ("type" in element && element.type === "standalone") {
-      return renderStandaloneItem(element);
-    } else {
-      return renderNavigationGroup(element as NavigationGroup);
-    }
+    if ("items" in element) return renderNavigationGroup(element as NavigationGroup);
+    else return renderNavigationItem(element);
   };
 
   return (

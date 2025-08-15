@@ -59,7 +59,7 @@ export const ThemeTogglePopover = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="sm" aria-label="Change theme">
                 {mode === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               </Button>
             </PopoverTrigger>

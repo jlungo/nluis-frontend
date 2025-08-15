@@ -304,7 +304,7 @@ export default function MapShop() {
                                     <p className="text-sm text-blue-700 dark:text-blue-800 mb-3">
                                         You can browse and preview all maps, but you'll need to create an account or login to make purchases.
                                     </p>
-                                    <Link to="/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2 dark:bg-blue-900")}>
+                                    <Link to="/auth/signin" className={cn(buttonVariants({ size: 'sm' }), "gap-2 dark:bg-blue-900")}>
                                         <LogIn className="h-3 w-3" />
                                         Create Account or Login
                                     </Link>
@@ -557,7 +557,7 @@ export default function MapShop() {
                                         size="sm"
                                         className="flex-1 gap-2"
                                         onClick={() => {
-                                            if (!user) navigate('/signin')
+                                            if (!user) navigate('/auth/signin')
                                             else handlePurchase(map, 'softcopy')
                                         }}
                                     >

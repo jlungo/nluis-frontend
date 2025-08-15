@@ -27,7 +27,6 @@ import {
     Send,
     Layers,
     FolderOpen,
-    MapPin,
     ChevronDown,
     ChevronUp,
     ChevronRight,
@@ -73,22 +72,21 @@ interface FormSection {
 interface FormTemplate {
     id: string;
     name: string;
-    description: string;
-    category: string;
+    description: string | null;
+    type: string;
     module: string;
     isActive: boolean;
     isTemplate: boolean;
     fields: FormField[];
-    sections: FormSection[];
-    mode: 'simple' | 'advanced';
-    version: string;
+    sections?: FormSection[];
+    forms?: FormSubform[]
+    version: number;
 }
 
 interface FormPreviewTesterProps {
     formData: FormTemplate;
     onSave: (formData: FormTemplate) => void;
     onEdit: () => void;
-    onCancel: () => void;
 }
 
 interface FormValidationError {
@@ -102,7 +100,6 @@ export default function FormPreviewTester({
     formData,
     onSave,
     onEdit,
-    onCancel
 }: FormPreviewTesterProps) {
     const [activeTab, setActiveTab] = useState<'preview' | 'test' | 'data'>('preview');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -155,13 +152,15 @@ export default function FormPreviewTester({
         const allSubforms: Record<string, boolean> = {};
         const allPreviewSections: Record<string, boolean> = {};
 
-        formData.sections.forEach(section => {
-            allSections[section.id] = true;
-            allPreviewSections[section.id] = true;
-            section.subforms.forEach(subform => {
-                allSubforms[subform.id] = true;
+        if (formData?.sections) {
+            formData.sections.forEach(section => {
+                allSections[section.id] = true;
+                allPreviewSections[section.id] = true;
+                section.subforms.forEach(subform => {
+                    allSubforms[subform.id] = true;
+                });
             });
-        });
+        }
 
         setCollapsedSections(allSections);
         setCollapsedSubforms(allSubforms);
@@ -191,7 +190,7 @@ export default function FormPreviewTester({
     const validateForm = (): FormValidationError[] => {
         const errors: FormValidationError[] = [];
 
-        if (formData.mode === 'simple') {
+        if (formData.type === 'unsectioned') {
             // Validate simple form fields
             formData.fields.forEach(field => {
                 if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
@@ -203,35 +202,36 @@ export default function FormPreviewTester({
             });
         } else {
             // Validate advanced form (sections/subforms)
-            formData.sections.forEach(section => {
-                section.subforms.forEach(subform => {
-                    if (subform.isRequired) {
-                        const hasAnyValue = subform.fields.some(field =>
-                            formValues[field.id] && formValues[field.id] !== ''
-                        );
+            if (formData?.sections)
+                formData.sections.forEach(section => {
+                    section.subforms.forEach(subform => {
+                        if (subform.isRequired) {
+                            const hasAnyValue = subform.fields.some(field =>
+                                formValues[field.id] && formValues[field.id] !== ''
+                            );
 
-                        if (!hasAnyValue) {
-                            errors.push({
-                                fieldId: subform.fields[0]?.id || '',
-                                sectionId: section.id,
-                                subformId: subform.id,
-                                message: `${subform.name} section is required`
-                            });
+                            if (!hasAnyValue) {
+                                errors.push({
+                                    fieldId: subform.fields[0]?.id || '',
+                                    sectionId: section.id,
+                                    subformId: subform.id,
+                                    message: `${subform.name} section is required`
+                                });
+                            }
                         }
-                    }
 
-                    subform.fields.forEach(field => {
-                        if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
-                            errors.push({
-                                fieldId: field.id,
-                                sectionId: section.id,
-                                subformId: subform.id,
-                                message: `${field.label} is required`
-                            });
-                        }
+                        subform.fields.forEach(field => {
+                            if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
+                                errors.push({
+                                    fieldId: field.id,
+                                    sectionId: section.id,
+                                    subformId: subform.id,
+                                    message: `${field.label} is required`
+                                });
+                            }
+                        });
                     });
                 });
-            });
         }
 
         return errors;
@@ -283,7 +283,8 @@ export default function FormPreviewTester({
     };
 
     // Render a single field component
-    const renderFieldComponent = (field: FormField, _sectionContext?: { sectionId: string; subformId?: string }) => {
+    // const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; subformId?: string }) => {
+    const renderFieldComponent = (field: FormField) => {
         const fieldValue = formValues[field.id];
         const hasError = validationErrors.some(error => error.fieldId === field.id);
         const fieldError = validationErrors.find(error => error.fieldId === field.id);
@@ -460,26 +461,25 @@ export default function FormPreviewTester({
     const renderFormPreview = () => (
         <div className="space-y-6">
             <div className="text-center space-y-2">
-                <h2 className="text-2xl font-semibold">{formData.name}</h2>
+                <h2 className="text-lg md:text-2xl font-semibold">{formData.name}</h2>
                 {formData.description && (
                     <p className="text-muted-foreground">{formData.description}</p>
                 )}
                 <div className="flex items-center justify-center gap-2">
-                    <Badge variant="outline">{formData.category}</Badge>
+                    <Badge variant="outline" className='capitalize'>{formData.type}</Badge>
                     <Badge variant="outline">{formData.module}</Badge>
-                    <Badge variant="outline">{formData.mode === 'simple' ? 'Simple Form' : 'Advanced Form'}</Badge>
                 </div>
             </div>
 
             {/* Section Controls */}
             <div className="flex items-center justify-between border-b pb-4">
-                <div className="flex items-center gap-2">
-                    <h3 className="font-medium">Form Structure</h3>
+                <div className="flex flex-col md:flex-row items-center gap-2">
+                    <h3 className="font-medium text-base md:text-lg">Form Structure</h3>
                     <Badge variant="outline" className="text-xs">
-                        {formData.sections.length} sections
+                        {formData?.sections ? `${formData.sections.length} sections` : formData?.forms ? `${formData.forms.length} forms` : null}
                     </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col md:flex-row items-center gap-2">
                     <Button variant="outline" size="sm" onClick={expandAllSections} className="gap-1">
                         <ChevronDown className="h-3 w-3" />
                         Expand All
@@ -495,36 +495,70 @@ export default function FormPreviewTester({
                 </div>
             </div>
 
-            {formData.mode === 'simple' ? (
-                <div className="space-y-6">
-                    {formData.fields.map((field) => (
-                        <Card key={field.id}>
-                            <CardContent className="p-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                                        {isMapField(field.type) ? <MapPin className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="font-medium flex items-center gap-2">
-                                            {field.label}
-                                            {field.required && <span className="text-destructive">*</span>}
-                                        </h4>
-                                        <p className="text-sm text-muted-foreground">
-                                            {field.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                            {field.placeholder && ` • ${field.placeholder}`}
-                                        </p>
-                                        {field.helpText && (
-                                            <p className="text-xs text-muted-foreground mt-1">{field.helpText}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
+            {formData.type === 'unsectioned' ? (
+                <div className="space-y-4">
+                    {formData?.forms && formData.forms.map((section, sectionIndex) => (
+                        <Card key={section.id}>
+                            <Collapsible
+                                open={!collapsedPreviewSections[section.id]}
+                                onOpenChange={() => toggleSectionCollapse(section.id, true)}
+                            >
+                                <CollapsibleTrigger asChild>
+                                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                                    <Layers className="h-4 w-4" />
+                                                </div>
+                                                <div>
+                                                    <CardTitle className="text-base">
+                                                        Subform {sectionIndex + 1}: {section.name}
+                                                    </CardTitle>
+                                                    {section.description && (
+                                                        <CardDescription>{section.description}</CardDescription>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {section.fields.length} fields
+                                                </Badge>
+                                                {collapsedPreviewSections[section.id] ? (
+                                                    <ChevronRight className="h-4 w-4" />
+                                                ) : (
+                                                    <ChevronDown className="h-4 w-4" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                </CollapsibleTrigger>
+
+                                <CollapsibleContent>
+                                    <CardContent className="space-y-6 pt-0">
+                                        {section.fields.map((field) => (
+                                            <div key={field.id} className="flex items-center gap-2 text-sm p-2 bg-background rounded border">
+                                                <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+                                                <span>{field.label}</span>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {field.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </Badge>
+                                                {field.required && <span className="text-destructive">*</span>}
+                                                {isMapField(field.type) && (
+                                                    <Badge variant="outline" className="text-xs bg-primary/10 text-primary">
+                                                        Interactive Map
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </CollapsibleContent>
+                            </Collapsible>
                         </Card>
                     ))}
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {formData.sections.map((section, sectionIndex) => (
+                    {formData?.sections && formData.sections.map((section, sectionIndex) => (
                         <Card key={section.id}>
                             <Collapsible
                                 open={!collapsedPreviewSections[section.id]}
@@ -565,7 +599,8 @@ export default function FormPreviewTester({
 
                                 <CollapsibleContent>
                                     <CardContent className="space-y-6 pt-0">
-                                        {section.subforms.map((subform, _subformIndex) => (
+                                        {/* {section.subforms.map((subform, subformIndex) => ( */}
+                                        {section.subforms.map((subform) => (
                                             <Collapsible
                                                 key={subform.id}
                                                 open={!collapsedSubforms[subform.id]}
@@ -697,13 +732,13 @@ export default function FormPreviewTester({
                 </Alert>
             )}
 
-            {formData.mode === 'simple' ? (
+            {formData.type === 'unsectioned' ? (
                 <div className="space-y-6">
                     {formData.fields.map((field) => renderFieldComponent(field))}
                 </div>
             ) : (
                 <div className="space-y-6">
-                    {formData.sections.map((section) => (
+                    {formData?.sections && formData.sections.map((section) => (
                         <Card key={section.id}>
                             <Collapsible
                                 open={!collapsedSections[section.id]}
@@ -777,7 +812,8 @@ export default function FormPreviewTester({
                                                 <CollapsibleContent>
                                                     <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
                                                         {subform.fields.map((field) =>
-                                                            renderFieldComponent(field, { sectionId: section.id, subformId: subform.id })
+                                                            // renderFieldComponent(field, { sectionId: section.id, subformId: subform.id })
+                                                            renderFieldComponent(field)
                                                         )}
                                                     </div>
                                                 </CollapsibleContent>
@@ -823,21 +859,22 @@ export default function FormPreviewTester({
                                         id: formData.id,
                                         name: formData.name,
                                         description: formData.description,
-                                        category: formData.category,
+                                        type: formData.type,
                                         module: formData.module,
-                                        mode: formData.mode,
                                         version: formData.version,
-                                        fieldCount: formData.mode === 'simple'
-                                            ? formData.fields.length
-                                            : formData.sections.reduce((count, section) =>
+                                        fieldCount: formData.type === 'unsectioned'
+                                            ? formData?.forms && formData.forms.reduce((subCount, subform) =>
+                                                subCount + subform.fields.length, 0
+                                            )
+                                            : formData?.sections && formData.sections.reduce((count, section) =>
                                                 count + section.subforms.reduce((subCount, subform) =>
                                                     subCount + subform.fields.length, 0
                                                 ), 0
                                             ),
-                                        sectionCount: formData.sections.length,
-                                        subformCount: formData.sections.reduce((count, section) =>
+                                        sectionCount: formData?.sections ? formData.sections.length : 0,
+                                        subformCount: formData.sections ? formData.sections.reduce((count, section) =>
                                             count + section.subforms.length, 0
-                                        )
+                                        ) : 0
                                     },
                                     null,
                                     2
@@ -885,20 +922,17 @@ export default function FormPreviewTester({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold">Form Preview & Testing</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="text-lg md:text-2xl font-semibold">Form Preview & Testing</h1>
+                        <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
                             Preview your form structure and test its functionality before saving
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={onCancel}>
-                            Cancel
-                        </Button>
-                        <Button variant="outline" onClick={onEdit} className="gap-2">
+                    <div className="flex flex-col md:flex-row items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={onEdit} className="gap-2">
                             <Edit className="h-4 w-4" />
                             Edit Form
                         </Button>
-                        <Button onClick={() => onSave(formData)} className="gap-2">
+                        <Button size="sm" onClick={() => onSave(formData)} className="gap-2">
                             <Save className="h-4 w-4" />
                             Save Form
                         </Button>
@@ -907,55 +941,59 @@ export default function FormPreviewTester({
 
                 {/* Form Stats */}
                 <Card>
-                    <CardContent className="p-6">
+                    <CardContent className="px-0 md:py-6">
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
                             <div className="text-center">
-                                <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                <div className="text-lg lg:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <FileText className="h-5 w-5" />
                                     {formData.name}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Form Name</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Form Name</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                <div className="text-lg lg:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
-                                    {formData.mode === 'simple'
-                                        ? formData.fields.length
-                                        : formData.sections.reduce((count, section) =>
+                                    {formData.type === 'unsectioned'
+                                        ? formData?.forms && formData.forms.reduce((subCount, subform) =>
+                                            subCount + subform.fields.length, 0
+                                        )
+                                        : formData?.sections && formData.sections.reduce((count, section) =>
                                             count + section.subforms.reduce((subCount, subform) =>
                                                 subCount + subform.fields.length, 0
                                             ), 0
                                         )
                                     }
                                 </div>
-                                <div className="text-sm text-muted-foreground">Total Fields</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Total Fields</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Layers className="h-5 w-5" />
-                                    {formData.mode === 'simple' ? '1' : formData.sections.length}
+                                    {formData.type === 'unsectioned' ? '1' : formData?.sections ? formData.sections.length : 0}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Sections</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Sections</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Users className="h-5 w-5" />
                                     {Object.keys(formValues).length}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Fields Tested</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Fields Tested</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Clock className="h-5 w-5" />
-                                    {Math.round((Object.keys(formValues).length / (formData.mode === 'simple'
-                                        ? formData.fields.length
-                                        : formData.sections.reduce((count, section) =>
+                                    {Math.round((Object.keys(formValues).length / (formData.type === 'unsectioned'
+                                        ? formData.forms!.reduce((subCount, subform) =>
+                                            subCount + subform.fields.length, 0
+                                        )
+                                        : formData.sections!.reduce((count, section) =>
                                             count + section.subforms.reduce((subCount, subform) =>
                                                 subCount + subform.fields.length, 0
                                             ), 0
                                         ))) * 100) || 0}%
                                 </div>
-                                <div className="text-sm text-muted-foreground">Completion</div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Completion</div>
                             </div>
                         </div>
                     </CardContent>
@@ -964,16 +1002,16 @@ export default function FormPreviewTester({
                 {/* Tabs */}
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as any)}>
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="preview" className="gap-2">
+                    <TabsList className="grid h-fit w-full grid-cols-3 rounded-full">
+                        <TabsTrigger value="preview" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
                             <Eye className="h-4 w-4" />
                             Preview
                         </TabsTrigger>
-                        <TabsTrigger value="test" className="gap-2">
+                        <TabsTrigger value="test" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
                             <TestTube className="h-4 w-4" />
                             Test Form
                         </TabsTrigger>
-                        <TabsTrigger value="data" className="gap-2">
+                        <TabsTrigger value="data" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
                             <Settings className="h-4 w-4" />
                             Data & Export
                         </TabsTrigger>
@@ -986,7 +1024,7 @@ export default function FormPreviewTester({
                                     <Eye className="h-5 w-5" />
                                     Form Structure Preview
                                 </CardTitle>
-                                <CardDescription>
+                                <CardDescription className='text-xs md:text-sm'>
                                     This is how your form structure will appear to end users
                                 </CardDescription>
                             </CardHeader>

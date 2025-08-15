@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// In development, we use the proxy configured in vite.config.ts
 const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({

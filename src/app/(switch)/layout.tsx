@@ -198,11 +198,12 @@ export default function Layout() {
 
         {/* Page Content - SCROLLABLE */}
         <main className="flex-1 overflow-hidden">
-          {page && page?.isFormPage !== undefined && page.isFormPage
-            ? <Outlet />
-            : (
-              <div className="h-full overflow-y-auto">
-                <div className="px-4 md:px-6 py-6 space-y-6">
+          <div className="h-full overflow-y-auto">
+            <div className="px-4 md:px-6 py-6 space-y-6">
+              {page && page?.isFormPage !== undefined && page.isFormPage ? (
+                <Outlet />
+              ) : (
+                <>
                   {/* Module Context Header */}
                   <div className="border-b border-border pb-4">
                     <div className="flex items-center justify-between">
@@ -229,10 +230,10 @@ export default function Layout() {
                     </div>
                   </div>
                   <Outlet />
-                </div>
-              </div>
-            )
-          }
+                </>
+              )}
+            </div>
+          </div>
         </main>
       </div>
     </div>

@@ -15,7 +15,7 @@ export default function Layout() {
     const activePrintRights = mockPurchaseHistory.filter(p => p.purchaseType === 'print-rights' && p.status === 'active').length;
 
     useEffect(() => {
-        if (!user) navigate('/signin', { replace: true })
+        if (!user) navigate('/auth/signin', { replace: true })
     }, [navigate, user])
 
     if (!user) return null

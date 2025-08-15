@@ -28,7 +28,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
 
   return (
     <header className="sticky top-0 flex-shrink-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-20">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Logo - Switch Board */}
         {showLogo ? (
           <div className="flex items-center gap-3">
@@ -46,9 +46,10 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={toggleSidebar}
                   className="lg:hidden text-foreground hover:bg-accent"
+                  aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
                 >
                   {sidebarOpen ? (
                     <X className="h-5 w-5" />
@@ -92,11 +93,9 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
           )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Page Actions */}
-        {page && page?.pageActions && (
-          <div className="flex items-center gap-2">{page.pageActions}</div>
-        )}
+        {page && page?.pageActions && <div className="flex items-center gap-2">{page.pageActions}</div>}
 
         <ThemeTogglePopover />
 
