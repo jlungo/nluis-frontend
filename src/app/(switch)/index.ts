@@ -11,8 +11,9 @@ import UserManagement from "./user-management";
 import SystemSettings from "./system-settings";
 import AuditTrail from "./audit-trail";
 import DataManagement from "./data-management";
+import type { RouteObject } from "react-router";
 
-const Index = {
+const Index: RouteObject = {
   Component: Layout,
   children: [
     Dashboard,

@@ -3,8 +3,9 @@ import Page from "./page";
 import BrowseMaps from "./browse-maps";
 import MyMaps from "./my-maps";
 import AccountSettings from "./account-settings";
+import type { RouteObject } from "react-router";
 
-const Index = {
+const Index: RouteObject = {
   path: "/portal",
   Component: Layout,
   children: [

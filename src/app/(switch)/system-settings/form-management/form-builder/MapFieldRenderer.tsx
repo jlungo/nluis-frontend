@@ -302,37 +302,37 @@ export default function MapFieldRenderer({
                 <ElegantMapViewer
                     center={value?.center || value?.location || { lat: -6.7924, lng: 39.2083 }}
                     zoom={isFullscreen ? 15 : 13}
-                    onLocationSelect={(coords: { lat: number; lng: number }) => {
-                        if (mapMode === 'draw') {
-                            if (type === 'map-area') {
-                                const newArea: MapArea = {
-                                    id: `area-${Date.now()}`,
-                                    name: 'Selected Area',
-                                    type: 'polygon',
-                                    coordinates: [coords],
-                                    center: coords
-                                };
-                                onChange(newArea);
-                            } else if (type === 'boundary-mapper') {
-                                const currentBoundary = value as Boundary;
-                                const newBoundary: Boundary = {
-                                    id: currentBoundary?.id || `boundary-${Date.now()}`,
-                                    name: currentBoundary?.name || 'New Boundary',
-                                    coordinates: [...(currentBoundary?.coordinates || []), coords],
-                                    isComplete: false
-                                };
-                                onChange(newBoundary);
-                            }
-                        } else if (type === 'gps-coordinates') {
-                            onChange(coords);
-                        } else if (type === 'location-picker') {
-                            onChange({
-                                location: coords,
-                                address: 'Selected Location',
-                                description: 'Map-selected location'
-                            });
-                        }
-                    }}
+                    // onLocationSelect={(coords) => {
+                    //     if (mapMode === 'draw') {
+                    //         if (type === 'map-area') {
+                    //             const newArea: MapArea = {
+                    //                 id: `area-${Date.now()}`,
+                    //                 name: 'Selected Area',
+                    //                 type: 'polygon',
+                    //                 coordinates: [coords],
+                    //                 center: coords
+                    //             };
+                    //             onChange(newArea);
+                    //         } else if (type === 'boundary-mapper') {
+                    //             const currentBoundary = value as Boundary;
+                    //             const newBoundary: Boundary = {
+                    //                 id: currentBoundary?.id || `boundary-${Date.now()}`,
+                    //                 name: currentBoundary?.name || 'New Boundary',
+                    //                 coordinates: [...(currentBoundary?.coordinates || []), coords],
+                    //                 isComplete: false
+                    //             };
+                    //             onChange(newBoundary);
+                    //         }
+                    //     } else if (type === 'gps-coordinates') {
+                    //         onChange(coords);
+                    //     } else if (type === 'location-picker') {
+                    //         onChange({
+                    //             location: coords,
+                    //             address: 'Selected Location',
+                    //             description: 'Map-selected location'
+                    //         });
+                    //     }
+                    // }}
                     className="w-full h-full"
                 />
 

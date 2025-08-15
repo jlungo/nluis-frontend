@@ -1,9 +1,8 @@
-import type { RouteObject } from "react-router";
 import Layout from "./layout";
 import Page from "./page";
 
-const Index: RouteObject = {
-  path: "/mapshop",
+const Index = {
+  path: "forms-dashboard",
   Component: Layout,
   children: [
     {
