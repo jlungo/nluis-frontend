@@ -3,14 +3,16 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 # Define build arguments for environment variables
-ARG VITE_API_BASE_URL
-ARG VITE_API_AUTH_URL
-ARG VITE_API_TIMEOUT
+ARG VITE_API_URL
+ARG VITE_TEST_API_URL
+ARG VITE_DODOSO_DOC_TYPE_ID
+ARG VITE_APP_PORT
 
 # Set environment variables from build args
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
-    VITE_API_AUTH_URL=$VITE_API_AUTH_URL \
-    VITE_API_TIMEOUT=$VITE_API_TIMEOUT
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_TEST_API_URL=$VITE_TEST_API_URL \
+    VITE_DODOSO_DOC_TYPE_ID=$VITE_DODOSO_DOC_TYPE_ID \
+    VITE_APP_PORT=$VITE_APP_PORT
 
 COPY package*.json ./
 
@@ -19,9 +21,10 @@ RUN npm ci
 COPY . .
 
 # Create a .env file with build-time values
-RUN echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" > .env && \
-    echo "VITE_API_AUTH_URL=$VITE_API_AUTH_URL" >> .env && \
-    echo "VITE_API_TIMEOUT=$VITE_API_TIMEOUT" >> .env
+RUN echo "VITE_API_URL=$VITE_API_URL" > .env && \
+    echo "VITE_TEST_API_URL=$VITE_TEST_API_URL" >> .env && \
+    echo "VITE_DODOSO_DOC_TYPE_ID=$VITE_DODOSO_DOC_TYPE_ID" >> .env && \
+    echo "VITE_APP_PORT=$VITE_APP_PORT" >> .env
 
 RUN npm run build
 
