@@ -48,6 +48,8 @@ interface MapViewerProps {
     // MapShop specific props
     isPreview?: boolean;
     price?: number;
+    // Map interaction props
+    onLocationSelect?: (coords: { lat: number; lng: number }) => void;
     format?: 'digital' | 'print' | 'both';
     onPurchase?: () => void;
     // Village workflow specific props
