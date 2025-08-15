@@ -417,7 +417,7 @@ export function NavigationSidebar({
           <Button
             variant="ghost"
             className={`w-full justify-start px-3 h-8 ${hasActiveItem
-              ? "bg-sidebar-primary/60 dark:bg-sidebar-primary/20 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white"
+              ? `${isOpen ? 'bg-sidebar-primary/60 dark:bg-sidebar-primary/20' : 'bg-sidebar-primary/80 dark:hover:bg-sidebar-primary/90'} hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white`
               : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
           >

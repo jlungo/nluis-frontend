@@ -73,15 +73,15 @@ interface FormSection {
 interface FormTemplate {
     id: string;
     name: string;
-    description: string;
-    category: string;
+    description: string | null;
+    type: string;
     module: string;
     isActive: boolean;
     isTemplate: boolean;
     fields: FormField[];
-    sections: FormSection[];
-    mode: 'simple' | 'advanced';
-    version: string;
+    sections?: FormSection[];
+    forms?: FormSubform[]
+    version: number;
 }
 
 interface FormPreviewTesterProps {
@@ -155,13 +155,15 @@ export default function FormPreviewTester({
         const allSubforms: Record<string, boolean> = {};
         const allPreviewSections: Record<string, boolean> = {};
 
-        formData.sections.forEach(section => {
-            allSections[section.id] = true;
-            allPreviewSections[section.id] = true;
-            section.subforms.forEach(subform => {
-                allSubforms[subform.id] = true;
+        if (formData?.sections) {
+            formData.sections.forEach(section => {
+                allSections[section.id] = true;
+                allPreviewSections[section.id] = true;
+                section.subforms.forEach(subform => {
+                    allSubforms[subform.id] = true;
+                });
             });
-        });
+        }
 
         setCollapsedSections(allSections);
         setCollapsedSubforms(allSubforms);
@@ -191,7 +193,7 @@ export default function FormPreviewTester({
     const validateForm = (): FormValidationError[] => {
         const errors: FormValidationError[] = [];
 
-        if (formData.mode === 'simple') {
+        if (formData.type === 'unsectioned') {
             // Validate simple form fields
             formData.fields.forEach(field => {
                 if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
@@ -203,35 +205,36 @@ export default function FormPreviewTester({
             });
         } else {
             // Validate advanced form (sections/subforms)
-            formData.sections.forEach(section => {
-                section.subforms.forEach(subform => {
-                    if (subform.isRequired) {
-                        const hasAnyValue = subform.fields.some(field =>
-                            formValues[field.id] && formValues[field.id] !== ''
-                        );
+            if (formData?.sections)
+                formData.sections.forEach(section => {
+                    section.subforms.forEach(subform => {
+                        if (subform.isRequired) {
+                            const hasAnyValue = subform.fields.some(field =>
+                                formValues[field.id] && formValues[field.id] !== ''
+                            );
 
-                        if (!hasAnyValue) {
-                            errors.push({
-                                fieldId: subform.fields[0]?.id || '',
-                                sectionId: section.id,
-                                subformId: subform.id,
-                                message: `${subform.name} section is required`
-                            });
+                            if (!hasAnyValue) {
+                                errors.push({
+                                    fieldId: subform.fields[0]?.id || '',
+                                    sectionId: section.id,
+                                    subformId: subform.id,
+                                    message: `${subform.name} section is required`
+                                });
+                            }
                         }
-                    }
 
-                    subform.fields.forEach(field => {
-                        if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
-                            errors.push({
-                                fieldId: field.id,
-                                sectionId: section.id,
-                                subformId: subform.id,
-                                message: `${field.label} is required`
-                            });
-                        }
+                        subform.fields.forEach(field => {
+                            if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
+                                errors.push({
+                                    fieldId: field.id,
+                                    sectionId: section.id,
+                                    subformId: subform.id,
+                                    message: `${field.label} is required`
+                                });
+                            }
+                        });
                     });
                 });
-            });
         }
 
         return errors;
@@ -283,7 +286,8 @@ export default function FormPreviewTester({
     };
 
     // Render a single field component
-    const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; subformId?: string }) => {
+    // const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; subformId?: string }) => {
+    const renderFieldComponent = (field: FormField) => {
         const fieldValue = formValues[field.id];
         const hasError = validationErrors.some(error => error.fieldId === field.id);
         const fieldError = validationErrors.find(error => error.fieldId === field.id);
@@ -465,9 +469,9 @@ export default function FormPreviewTester({
                     <p className="text-muted-foreground">{formData.description}</p>
                 )}
                 <div className="flex items-center justify-center gap-2">
-                    <Badge variant="outline">{formData.category}</Badge>
+                    <Badge variant="outline">{formData.type}</Badge>
                     <Badge variant="outline">{formData.module}</Badge>
-                    <Badge variant="outline">{formData.mode === 'simple' ? 'Simple Form' : 'Advanced Form'}</Badge>
+                    {/* <Badge variant="outline">{formData.mode === 'simple' ? 'Simple Form' : 'Advanced Form'}</Badge> */}
                 </div>
             </div>
 
@@ -476,7 +480,7 @@ export default function FormPreviewTester({
                 <div className="flex items-center gap-2">
                     <h3 className="font-medium">Form Structure</h3>
                     <Badge variant="outline" className="text-xs">
-                        {formData.sections.length} sections
+                        {formData?.sections ? `${formData.sections.length} sections` : formData?.forms ? `${formData.forms.length} forms` : null}
                     </Badge>
                 </div>
                 <div className="flex items-center gap-2">
@@ -495,7 +499,7 @@ export default function FormPreviewTester({
                 </div>
             </div>
 
-            {formData.mode === 'simple' ? (
+            {formData.type === 'unsectioned' ? (
                 <div className="space-y-6">
                     {formData.fields.map((field) => (
                         <Card key={field.id}>
@@ -524,7 +528,7 @@ export default function FormPreviewTester({
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {formData.sections.map((section, sectionIndex) => (
+                    {formData?.sections && formData.sections.map((section, sectionIndex) => (
                         <Card key={section.id}>
                             <Collapsible
                                 open={!collapsedPreviewSections[section.id]}
@@ -565,7 +569,8 @@ export default function FormPreviewTester({
 
                                 <CollapsibleContent>
                                     <CardContent className="space-y-6 pt-0">
-                                        {section.subforms.map((subform, subformIndex) => (
+                                        {/* {section.subforms.map((subform, subformIndex) => ( */}
+                                        {section.subforms.map((subform) => (
                                             <Collapsible
                                                 key={subform.id}
                                                 open={!collapsedSubforms[subform.id]}
@@ -697,13 +702,13 @@ export default function FormPreviewTester({
                 </Alert>
             )}
 
-            {formData.mode === 'simple' ? (
+            {formData.type === 'unsectioned' ? (
                 <div className="space-y-6">
                     {formData.fields.map((field) => renderFieldComponent(field))}
                 </div>
             ) : (
                 <div className="space-y-6">
-                    {formData.sections.map((section) => (
+                    {formData?.sections && formData.sections.map((section) => (
                         <Card key={section.id}>
                             <Collapsible
                                 open={!collapsedSections[section.id]}
@@ -777,7 +782,8 @@ export default function FormPreviewTester({
                                                 <CollapsibleContent>
                                                     <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
                                                         {subform.fields.map((field) =>
-                                                            renderFieldComponent(field, { sectionId: section.id, subformId: subform.id })
+                                                            // renderFieldComponent(field, { sectionId: section.id, subformId: subform.id })
+                                                            renderFieldComponent(field)
                                                         )}
                                                     </div>
                                                 </CollapsibleContent>
@@ -823,21 +829,22 @@ export default function FormPreviewTester({
                                         id: formData.id,
                                         name: formData.name,
                                         description: formData.description,
-                                        category: formData.category,
+                                        type: formData.type,
                                         module: formData.module,
-                                        mode: formData.mode,
                                         version: formData.version,
-                                        fieldCount: formData.mode === 'simple'
-                                            ? formData.fields.length
-                                            : formData.sections.reduce((count, section) =>
+                                        fieldCount: formData.type === 'unsectioned'
+                                            ? formData?.forms && formData.forms.reduce((subCount, subform) =>
+                                                subCount + subform.fields.length, 0
+                                            )
+                                            : formData?.sections && formData.sections.reduce((count, section) =>
                                                 count + section.subforms.reduce((subCount, subform) =>
                                                     subCount + subform.fields.length, 0
                                                 ), 0
                                             ),
-                                        sectionCount: formData.sections.length,
-                                        subformCount: formData.sections.reduce((count, section) =>
+                                        sectionCount: formData?.sections ? formData.sections.length : 0,
+                                        subformCount: formData.sections ? formData.sections.reduce((count, section) =>
                                             count + section.subforms.length, 0
-                                        )
+                                        ) : 0
                                     },
                                     null,
                                     2
@@ -919,9 +926,11 @@ export default function FormPreviewTester({
                             <div className="text-center">
                                 <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
-                                    {formData.mode === 'simple'
-                                        ? formData.fields.length
-                                        : formData.sections.reduce((count, section) =>
+                                    {formData.type === 'unsectioned'
+                                        ? formData?.forms && formData.forms.reduce((subCount, subform) =>
+                                            subCount + subform.fields.length, 0
+                                        )
+                                        : formData?.sections && formData.sections.reduce((count, section) =>
                                             count + section.subforms.reduce((subCount, subform) =>
                                                 subCount + subform.fields.length, 0
                                             ), 0
@@ -933,7 +942,7 @@ export default function FormPreviewTester({
                             <div className="text-center">
                                 <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Layers className="h-5 w-5" />
-                                    {formData.mode === 'simple' ? '1' : formData.sections.length}
+                                    {formData.type === 'unsectioned' ? '1' : formData?.sections ? formData.sections.length : 0}
                                 </div>
                                 <div className="text-sm text-muted-foreground">Sections</div>
                             </div>
@@ -947,9 +956,11 @@ export default function FormPreviewTester({
                             <div className="text-center">
                                 <div className="text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Clock className="h-5 w-5" />
-                                    {Math.round((Object.keys(formValues).length / (formData.mode === 'simple'
-                                        ? formData.fields.length
-                                        : formData.sections.reduce((count, section) =>
+                                    {Math.round((Object.keys(formValues).length / (formData.type === 'unsectioned'
+                                        ? formData.forms!.reduce((subCount, subform) =>
+                                            subCount + subform.fields.length, 0
+                                        )
+                                        : formData.sections!.reduce((count, section) =>
                                             count + section.subforms.reduce((subCount, subform) =>
                                                 subCount + subform.fields.length, 0
                                             ), 0

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,14 +12,6 @@ import {
     ArrowLeft,
     ArrowRight,
     Check,
-    MapPin,
-    Shield,
-    FileText,
-    Building2,
-    Database,
-    BarChart3,
-    Settings,
-    Users,
     ChevronRight,
     Plus,
     Trash2,
@@ -27,10 +19,15 @@ import {
     Layers,
     FolderOpen,
     Move,
-    TestTube
+    TestTube,
+    Component
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePageStore } from '@/store/pageStore';
+import { useModulesQuery, type ModuleProps } from '@/queries/useModuleQuery';
+import { useLevelsQuery, type LevelProps } from '@/queries/useLevelQuery';
+import { Link } from 'react-router';
+import { Spinner } from '@/components/ui/spinner';
 
 interface FormField {
     id: string;
@@ -69,22 +66,22 @@ interface FormSection {
 //   version: string;
 // }
 
-interface Module {
-    id: string;
-    name: string;
-    description: string;
-    icon: React.ReactNode;
-    color: string;
-}
+// interface Module {
+//     id: string;
+//     name: string;
+//     description: string;
+//     icon: React.ReactNode;
+//     color: string;
+// }
 
-interface Level {
-    id: string;
-    name: string;
-    description: string;
-    applicableModules: string[];
-}
+// interface Level {
+//     id: string;
+//     name: string;
+//     description: string;
+//     applicableModules: string[];
+// }
 
-interface FormCategory {
+interface FormType {
     id: string;
     name: string;
     description: string;
@@ -94,27 +91,28 @@ interface FormCategory {
 interface FormTemplate {
     id: string;
     name: string;
-    description: string;
-    category: string;
+    description: string | null;
+    type: string;
     module: string;
     isActive: boolean;
     isTemplate: boolean;
     fields: FormField[];
-    sections: FormSection[];
-    mode: 'simple' | 'advanced';
-    version: string;
+    sections?: FormSection[];
+    forms?: FormSubform[]
+    version: number;
 }
 
-interface HierarchicalFormWizardProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onComplete: (formData: any) => void;
-    onCancel: () => void;
-}
+// interface HierarchicalFormWizardProps {
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     onComplete: (formData: any) => void;
+//     onCancel: () => void;
+// }
 
-export default function HierarchicalFormWizard({
-    onComplete,
-    onCancel
-}: HierarchicalFormWizardProps) {
+// export default function HierarchicalFormWizard({
+//     onComplete,
+//     onCancel
+// }: HierarchicalFormWizardProps) {
+export default function Page() {
     const { setPage } = usePageStore();
 
     useLayoutEffect(() => {
@@ -127,231 +125,37 @@ export default function HierarchicalFormWizard({
     }, [setPage])
 
     const [currentStep, setCurrentStep] = useState(1);
-    const [selectedModule, setSelectedModule] = useState<Module | null>(null);
-    const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<FormCategory | null>(null);
-    const [formDetails, setFormDetails] = useState({
+    const [selectedModule, setSelectedModule] = useState<ModuleProps | null>(null);
+    const [selectedLevel, setSelectedLevel] = useState<LevelProps | null>(null);
+    const [selectedType, setSelectedType] = useState<FormType | null>(null);
+    const [formDetails, setFormDetails] = useState<{
+        name: string;
+        description: string | null;
+        type: string;
+        category: string;
+        version: number
+    }>({
         name: '',
-        description: '',
+        description: null,
+        type: '',
         category: '',
-        version: '1.0'
+        version: 1.0
     });
+    const [formForms, setFormForms] = useState<FormSubform[]>([]);
     const [formSections, setFormSections] = useState<FormSection[]>([]);
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const [activeSubform, setActiveSubform] = useState<string | null>(null);
 
-    // Available modules
-    const modules: Module[] = [
-        {
-            id: 'land-use',
-            name: 'Land Use Planning',
-            description: 'Village, district, and regional land use planning forms',
-            icon: <MapPin className="h-6 w-6" />,
-            color: 'text-primary bg-primary/10'
-        },
-        {
-            id: 'ccro-management',
-            name: 'CCRO Management',
-            description: 'Certificate of Customary Right of Occupancy forms',
-            icon: <Shield className="h-6 w-6" />,
-            color: 'text-chart-2 bg-chart-2/10'
-        },
-        {
-            id: 'document-management',
-            name: 'Document Management',
-            description: 'Document upload, categorization, and management forms',
-            icon: <FileText className="h-6 w-6" />,
-            color: 'text-chart-3 bg-chart-3/10'
-        },
-        {
-            id: 'billing',
-            name: 'Billing & Payments',
-            description: 'Fee management and payment processing forms',
-            icon: <Building2 className="h-6 w-6" />,
-            color: 'text-chart-4 bg-chart-4/10'
-        },
-        {
-            id: 'inventory-tracking',
-            name: 'Inventory Tracking',
-            description: 'Tool and asset inventory management forms',
-            icon: <Database className="h-6 w-6" />,
-            color: 'text-emerald-600 bg-emerald-600/10'
-        },
-        {
-            id: 'organizations',
-            name: 'Organizations',
-            description: 'Organization registration and management forms',
-            icon: <Users className="h-6 w-6" />,
-            color: 'text-purple-600 bg-purple-600/10'
-        },
-        {
-            id: 'reports',
-            name: 'Reports & Analytics',
-            description: 'Report configuration and generation forms',
-            icon: <BarChart3 className="h-6 w-6" />,
-            color: 'text-orange-600 bg-orange-600/10'
-        },
-        {
-            id: 'system-settings',
-            name: 'System Settings',
-            description: 'System configuration and management forms',
-            icon: <Settings className="h-6 w-6" />,
-            color: 'text-gray-600 bg-gray-600/10'
-        }
-    ];
+    const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
+    const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
 
-    // Available levels
-    const levels: Level[] = [
-        {
-            id: 'village',
-            name: 'Village Level',
-            description: 'Forms for village-level planning and management',
-            applicableModules: ['land-use', 'ccro-management', 'organizations']
-        },
-        {
-            id: 'ward',
-            name: 'Ward Level',
-            description: 'Forms for ward-level administration',
-            applicableModules: ['land-use', 'organizations', 'reports']
-        },
-        {
-            id: 'district',
-            name: 'District Level',
-            description: 'Forms for district-level planning and coordination',
-            applicableModules: ['land-use', 'ccro-management', 'billing', 'reports']
-        },
-        {
-            id: 'regional',
-            name: 'Regional Level',
-            description: 'Forms for regional planning and oversight',
-            applicableModules: ['land-use', 'reports', 'system-settings']
-        },
-        {
-            id: 'zonal',
-            name: 'Zonal Level',
-            description: 'Forms for zonal coordination and management',
-            applicableModules: ['land-use', 'reports']
-        },
-        {
-            id: 'national',
-            name: 'National Level',
-            description: 'Forms for national policy and strategic planning',
-            applicableModules: ['land-use', 'reports', 'system-settings']
-        },
-        {
-            id: 'project',
-            name: 'Project Level',
-            description: 'Forms for specific projects and initiatives',
-            applicableModules: ['land-use', 'ccro-management', 'document-management', 'inventory-tracking']
-        },
-        {
-            id: 'institutional',
-            name: 'Institutional Level',
-            description: 'Forms for institutional management and operations',
-            applicableModules: ['organizations', 'billing', 'inventory-tracking', 'system-settings']
-        }
-    ];
-
-    // Get categories based on selected module and level
-    const getCategories = (): FormCategory[] => {
+    const getFormTypes = (): FormType[] => {
         if (!selectedModule || !selectedLevel) return [];
-
-        const categoryMap: Record<string, Record<string, FormCategory[]>> = {
-            'land-use': {
-                'village': [
-                    {
-                        id: 'village-planning',
-                        name: 'Village Planning',
-                        description: 'Comprehensive village land use planning and zoning forms',
-                        defaultSections: [
-                            {
-                                name: 'Basic Information',
-                                description: 'Essential project and location details',
-                                order: 1
-                            },
-                            {
-                                name: 'Land Assessment',
-                                description: 'Land use evaluation and analysis',
-                                order: 2
-                            },
-                            {
-                                name: 'Community Consultation',
-                                description: 'Stakeholder engagement and feedback',
-                                order: 3
-                            }
-                        ]
-                    },
-                    {
-                        id: 'community-consultation',
-                        name: 'Community Consultation',
-                        description: 'Forms for stakeholder engagement and consultation processes',
-                        defaultSections: [
-                            {
-                                name: 'Stakeholder Identification',
-                                description: 'Identify and categorize stakeholders',
-                                order: 1
-                            },
-                            {
-                                name: 'Consultation Activities',
-                                description: 'Record consultation meetings and activities',
-                                order: 2
-                            }
-                        ]
-                    }
-                ],
-                'district': [
-                    {
-                        id: 'district-planning',
-                        name: 'District Planning',
-                        description: 'Forms for district-level land use planning',
-                        defaultSections: [
-                            {
-                                name: 'District Overview',
-                                description: 'District-wide planning overview',
-                                order: 1
-                            },
-                            {
-                                name: 'Inter-Village Coordination',
-                                description: 'Coordination between villages',
-                                order: 2
-                            }
-                        ]
-                    }
-                ]
-            },
-            'ccro-management': {
-                'village': [
-                    {
-                        id: 'application-processing',
-                        name: 'Application Processing',
-                        description: 'Forms for CCRO application processing workflow',
-                        defaultSections: [
-                            {
-                                name: 'Applicant Information',
-                                description: 'Personal and contact details',
-                                order: 1
-                            },
-                            {
-                                name: 'Land Details',
-                                description: 'Property and land information',
-                                order: 2
-                            },
-                            {
-                                name: 'Documentation',
-                                description: 'Required supporting documents',
-                                order: 3
-                            }
-                        ]
-                    }
-                ]
-            }
-        };
-
-        return categoryMap[selectedModule.id]?.[selectedLevel.id] || [
+        return [
             {
-                id: 'general',
-                name: 'General Forms',
-                description: 'General purpose forms for this module and level',
+                id: 'unsectioned',
+                name: 'Unsectioned Form',
+                description: 'Unsectioned form with no subforms',
                 defaultSections: [
                     {
                         name: 'Basic Information',
@@ -359,7 +163,19 @@ export default function HierarchicalFormWizard({
                         order: 1
                     }
                 ]
-            }
+            },
+            {
+                id: 'sectioned',
+                name: 'Sectioned Form',
+                description: 'Sectioned form with subforms',
+                defaultSections: [
+                    {
+                        name: 'Basic Information',
+                        description: 'Essential form information',
+                        order: 1
+                    }
+                ]
+            },
         ];
     };
 
@@ -396,7 +212,7 @@ export default function HierarchicalFormWizard({
             setCurrentStep(currentStep + 1);
 
             // Auto-generate sections when moving to step 5
-            if (currentStep === 4 && selectedCategory && formSections.length === 0) {
+            if (currentStep === 4 && selectedType && formSections.length === 0) {
                 initializeDefaultSections();
             }
         }
@@ -409,9 +225,9 @@ export default function HierarchicalFormWizard({
     };
 
     const initializeDefaultSections = () => {
-        if (!selectedCategory?.defaultSections) return;
+        if (!selectedType?.defaultSections) return;
 
-        const defaultSections: FormSection[] = selectedCategory.defaultSections.map((sectionTemplate, index) => ({
+        const defaultSections: FormSection[] = selectedType.defaultSections.map((sectionTemplate, index) => ({
             id: `section-${Date.now()}-${index}`,
             name: sectionTemplate.name || `Section ${index + 1}`,
             description: sectionTemplate.description || '',
@@ -449,56 +265,82 @@ export default function HierarchicalFormWizard({
         }
     };
 
-    const addSubform = (sectionId: string) => {
-        const section = formSections.find(s => s.id === sectionId);
-        const newSubform: FormSubform = {
-            id: `subform-${Date.now()}`,
-            name: `Subform ${(section?.subforms.length || 0) + 1}`,
-            description: '',
-            fields: [],
-            isRequired: false,
-            order: (section?.subforms.length || 0) + 1
-        };
+    const addSubform = (sectionId?: string) => {
+        if (sectionId) {
+            const section = formSections.find(s => s.id === sectionId);
+            const newSubform: FormSubform = {
+                id: `subform-${Date.now()}`,
+                name: `Subform ${(section?.subforms.length || 0) + 1}`,
+                description: '',
+                fields: [],
+                isRequired: false,
+                order: (section?.subforms.length || 0) + 1
+            };
 
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
-                    ? {
-                        ...section,
-                        subforms: [...section.subforms, newSubform]
-                    }
-                    : section
-            )
-        );
-        setActiveSubform(newSubform.id);
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: [...section.subforms, newSubform]
+                        }
+                        : section
+                )
+            );
+            setActiveSubform(newSubform.id);
+        } else {
+            const newSubform: FormSubform = {
+                id: `subform-${Date.now()}`,
+                name: `Subform ${(formForms ? formForms.length : 0) + 1}`,
+                description: '',
+                fields: [],
+                isRequired: false,
+                order: (formForms ? formForms.length : 0) + 1
+            };
+
+            setFormForms(forms => [...forms, newSubform])
+            setActiveSubform(newSubform.id);
+        }
     };
 
     const updateSubform = (sectionId: string, subformId: string, updates: Partial<FormSubform>) => {
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
-                    ? {
-                        ...section,
-                        subforms: section.subforms.map(subform =>
-                            subform.id === subformId ? { ...subform, ...updates } : subform
-                        )
-                    }
-                    : section
-            )
-        );
+        const section = formSections.find(s => s.id === sectionId);
+        if (section) {
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: section.subforms.map(subform =>
+                                subform.id === subformId ? { ...subform, ...updates } : subform
+                            )
+                        }
+                        : section
+                )
+            );
+        } else {
+            setFormForms(forms => forms.map(subform =>
+                subform.id === subformId ? { ...subform, ...updates } : subform
+            ));
+        }
     };
 
     const removeSubform = (sectionId: string, subformId: string) => {
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
-                    ? {
-                        ...section,
-                        subforms: section.subforms.filter(subform => subform.id !== subformId)
-                    }
-                    : section
-            )
-        );
+        const section = formSections.find(s => s.id === sectionId);
+        if (section) {
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: section.subforms.filter(subform => subform.id !== subformId)
+                        }
+                        : section
+                )
+            );
+        } else {
+            setFormForms(forms => forms.filter(subform => subform.id !== subformId))
+        }
         if (activeSubform === subformId) {
             setActiveSubform(null);
         }
@@ -506,79 +348,126 @@ export default function HierarchicalFormWizard({
 
     const addField = (sectionId: string, subformId: string) => {
         const section = formSections.find(s => s.id === sectionId);
-        const subform = section?.subforms.find(sf => sf.id === subformId);
-        const newField: FormField = {
-            id: `field-${Date.now()}`,
-            name: '',
-            label: `Field ${(subform?.fields.length || 0) + 1}`,
-            type: 'text',
-            required: false,
-            order: (subform?.fields.length || 0) + 1
-        };
+        if (section) {
+            const subform = section?.subforms.find(sf => sf.id === subformId);
+            const newField: FormField = {
+                id: `field-${Date.now()}`,
+                name: '',
+                label: `Field ${(subform?.fields.length || 0) + 1}`,
+                type: 'text',
+                required: false,
+                order: (subform?.fields.length || 0) + 1
+            };
 
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: section.subforms.map(subform =>
+                                subform.id === subformId
+                                    ? {
+                                        ...subform,
+                                        fields: [...subform.fields, newField]
+                                    }
+                                    : subform
+                            )
+                        }
+                        : section
+                )
+            );
+        } else {
+            const subform = formForms.find(f => f.id === subformId);
+            const newField: FormField = {
+                id: `field-${Date.now()}`,
+                name: '',
+                label: `Field ${(subform?.fields.length || 0) + 1}`,
+                type: 'text',
+                required: false,
+                order: (subform?.fields.length || 0) + 1
+            };
+
+            setFormForms(forms => forms.map(subform =>
+                subform.id === subformId
                     ? {
-                        ...section,
-                        subforms: section.subforms.map(subform =>
-                            subform.id === subformId
-                                ? {
-                                    ...subform,
-                                    fields: [...subform.fields, newField]
-                                }
-                                : subform
-                        )
+                        ...subform,
+                        fields: [...subform.fields, newField]
                     }
-                    : section
-            )
-        );
+                    : subform
+            ));
+        }
     };
 
     const updateField = (sectionId: string, subformId: string, fieldId: string, updates: Partial<FormField>) => {
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
+        const section = formSections.find(s => s.id === sectionId);
+        if (section) {
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: section.subforms.map(subform =>
+                                subform.id === subformId
+                                    ? {
+                                        ...subform,
+                                        fields: subform.fields.map(field =>
+                                            field.id === fieldId ? { ...field, ...updates } : field
+                                        )
+                                    }
+                                    : subform
+                            )
+                        }
+                        : section
+                )
+            )
+        } else {
+            setFormForms(forms => forms.map(subform =>
+                subform.id === subformId
                     ? {
-                        ...section,
-                        subforms: section.subforms.map(subform =>
-                            subform.id === subformId
-                                ? {
-                                    ...subform,
-                                    fields: subform.fields.map(field =>
-                                        field.id === fieldId ? { ...field, ...updates } : field
-                                    )
-                                }
-                                : subform
+                        ...subform,
+                        fields: subform.fields.map(field =>
+                            field.id === fieldId ? { ...field, ...updates } : field
                         )
                     }
-                    : section
-            )
-        );
+                    : subform
+            ))
+        }
     };
 
     const removeField = (sectionId: string, subformId: string, fieldId: string) => {
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
+        const section = formSections.find(s => s.id === sectionId);
+        if (section) {
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            subforms: section.subforms.map(subform =>
+                                subform.id === subformId
+                                    ? {
+                                        ...subform,
+                                        fields: subform.fields.filter(field => field.id !== fieldId)
+                                    }
+                                    : subform
+                            )
+                        }
+                        : section
+                )
+            );
+        } else {
+            setFormForms(forms => forms.map(subform =>
+                subform.id === subformId
                     ? {
-                        ...section,
-                        subforms: section.subforms.map(subform =>
-                            subform.id === subformId
-                                ? {
-                                    ...subform,
-                                    fields: subform.fields.filter(field => field.id !== fieldId)
-                                }
-                                : subform
-                        )
+                        ...subform,
+                        fields: subform.fields.filter(field => field.id !== fieldId)
                     }
-                    : section
-            )
-        );
+                    : subform
+            ))
+        }
     };
 
     const handleComplete = () => {
-        if (!selectedModule || !selectedLevel || !selectedCategory) {
+        if (!selectedModule || !selectedLevel || !selectedType) {
             toast.error('Please complete all required selections');
             return;
         }
@@ -597,13 +486,13 @@ export default function HierarchicalFormWizard({
             id: `form-${Date.now()}`,
             name: formDetails.name,
             description: formDetails.description,
-            category: formDetails.category || selectedCategory.name,
+            type: formDetails.type || selectedType.name,
             module: selectedModule.name,
             isActive: true,
             isTemplate: true,
-            fields: [], // Advanced mode uses sections
-            sections: formSections,
-            mode: 'advanced',
+            fields: [],
+            sections: formSections.length > 0 ? formSections : undefined,
+            forms: formForms.length > 0 ? formForms : undefined,
             version: formDetails.version
         };
 
@@ -617,16 +506,22 @@ export default function HierarchicalFormWizard({
             id: `form-preview-${Date.now()}`,
             name: formDetails.name || 'Untitled Form',
             description: formDetails.description,
-            category: formDetails.category || selectedCategory?.name || 'General',
+            type: formDetails.type || selectedType?.name || 'General',
             module: selectedModule?.name || 'Unknown',
             isActive: true,
             isTemplate: true,
-            fields: [], // Advanced mode uses sections
-            sections: formSections,
-            mode: 'advanced',
+            fields: [],
+            sections: formSections.length > 0 ? formSections : undefined,
+            forms: formForms.length > 0 ? formForms : undefined,
             version: formDetails.version
         };
     };
+
+    const onComplete = (formData: FormTemplate) => {
+        console.log(formData)
+    }
+
+    const onCancel = () => { }
 
     const handlePreviewSave = (formData: FormTemplate) => {
         onComplete(formData);
@@ -649,99 +544,119 @@ export default function HierarchicalFormWizard({
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {modules.map((module) => (
-                                <Card
-                                    key={module.id}
-                                    className={`py-4 md:py-6 cursor-pointer transition-all hover:shadow-md ${selectedModule?.id === module.id
-                                        ? 'ring-2 ring-primary border-primary'
-                                        : 'hover:border-primary/50'
-                                        }`}
-                                    onClick={() => setSelectedModule(module)}
-                                >
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start gap-3">
-                                            <div className={`p-2 rounded-lg ${module.color}`}>
-                                                {module.icon}
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-medium">{module.name}</h3>
-                                                <p className="text-sm text-muted-foreground mt-1">
-                                                    {module.description}
-                                                </p>
-                                            </div>
-                                            {selectedModule?.id === module.id && (
-                                                <Check className="h-5 w-5 text-primary" />
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                );
-
-            case 2:
-                return (
-                    <div className="space-y-6">
-                        <div>
-                            <h2 className="text-base xl:text-xl font-semibold mb-2">Select Level</h2>
-                            <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
-                                Choose the administrative level for this form
-                            </p>
-                            {selectedModule && (
-                                <div className="mt-2 flex items-center gap-2">
-                                    <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}>
-                                        {selectedModule.name}
-                                    </Badge>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {levels
-                                .filter(level =>
-                                    !selectedModule || level.applicableModules.includes(selectedModule.id)
-                                )
-                                .map((level) => (
+                        {!isLoadingModules && modules && modules.length > 0 ?
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {modules.map((module: ModuleProps) => (
                                     <Card
-                                        key={level.id}
-                                        className={`cursor-pointer transition-all hover:shadow-md ${selectedLevel?.id === level.id
+                                        key={module.slug}
+                                        className={`py-4 md:py-6 cursor-pointer transition-all hover:shadow-md ${selectedModule?.slug === module.slug
                                             ? 'ring-2 ring-primary border-primary'
                                             : 'hover:border-primary/50'
                                             }`}
-                                        onClick={() => setSelectedLevel(level)}
+                                        onClick={() => setSelectedModule(module)}
                                     >
                                         <CardContent className="p-4">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="font-medium">{level.name}</h3>
+                                            <div className="flex items-start gap-3">
+                                                <div className={`p-2 rounded-lg text-primary bg-primary/10`}>
+                                                    <Component />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-medium">{module.name}</h3>
                                                     <p className="text-sm text-muted-foreground mt-1">
-                                                        {level.description}
+                                                        Create a form related to {module.name} module.
                                                     </p>
                                                 </div>
-                                                {selectedLevel?.id === level.id && (
+                                                {selectedModule?.slug === module.slug && (
                                                     <Check className="h-5 w-5 text-primary" />
                                                 )}
                                             </div>
                                         </CardContent>
                                     </Card>
                                 ))}
-                        </div>
+                            </div>
+                            :
+                            <div className='w-full h-40 flex flex-col items-center justify-center'>
+                                {isLoadingModules ? (
+                                    <Spinner />
+                                ) :
+                                    <p className='text-muted-foreground'>Either there is no network connection, or there are no modules yet. Contact the administrator to add modules</p>
+                                }
+                            </div>
+                        }
                     </div>
+                );
+
+            case 2:
+                return (
+                    <>
+                        {selectedModule ? (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-base xl:text-xl font-semibold mb-2">Select Level</h2>
+                                    <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
+                                        Choose the administrative level for this form
+                                    </p>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        {/* <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}> */}
+                                        <Badge variant="outline">
+                                            {selectedModule.name}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {!isLoadingLevels && levels && levels?.results && levels.results.length > 0 ?
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {levels.results.map((level) => (
+                                            <Card
+                                                key={level.slug}
+                                                className={`cursor-pointer transition-all hover:shadow-md ${selectedLevel?.slug === level.slug
+                                                    ? 'ring-2 ring-primary border-primary'
+                                                    : 'hover:border-primary/50'
+                                                    }`}
+                                                onClick={() => setSelectedLevel(level)}
+                                            >
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <h3 className="font-medium">{level.name}</h3>
+                                                            <p className="text-sm text-muted-foreground mt-1">
+                                                                Create a form related to {level.name} level
+                                                            </p>
+                                                        </div>
+                                                        {selectedLevel?.slug === level.slug && (
+                                                            <Check className="h-5 w-5 text-primary" />
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                    :
+                                    <div className='w-full h-40 flex flex-col items-center justify-center'>
+                                        {isLoadingLevels ? (
+                                            <Spinner />
+                                        ) :
+                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/form-management/module-levels" className="text-blue-800">here</Link>.</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        ) : null}
+                    </>
                 );
 
             case 3:
                 return (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-base xl:text-xl font-semibold mb-2">Select Category</h2>
+                            <h2 className="text-base xl:text-xl font-semibold mb-2">Select Form Category</h2>
                             <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
                                 Choose the form category or type
                             </p>
                             <div className="mt-2 flex items-center gap-2">
                                 {selectedModule && (
-                                    <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}>
+                                    // <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}>
+                                    <Badge variant="outline">
                                         {selectedModule.name}
                                     </Badge>
                                 )}
@@ -756,31 +671,34 @@ export default function HierarchicalFormWizard({
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            {getCategories().map((category) => (
+                        <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                            {getFormTypes().map((type) => (
                                 <Card
-                                    key={category.id}
-                                    className={`cursor-pointer transition-all hover:shadow-md ${selectedCategory?.id === category.id
+                                    key={type.id}
+                                    className={`cursor-pointer transition-all hover:shadow-md ${selectedType?.id === type.id
                                         ? 'ring-2 ring-primary border-primary'
                                         : 'hover:border-primary/50'
                                         }`}
-                                    onClick={() => setSelectedCategory(category)}
+                                    onClick={() => {
+                                        setSelectedType(type)
+                                        setFormDetails({ ...formDetails, type: type.id })
+                                    }}
                                 >
-                                    <CardContent className="p-4">
+                                    <CardContent className="px-4">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <h3 className="font-medium">{category.name}</h3>
+                                                <h3 className="font-medium">{type.name}</h3>
                                                 <p className="text-sm text-muted-foreground mt-1">
-                                                    {category.description}
+                                                    {type.description}
                                                 </p>
                                                 <div className="flex items-center gap-1 mt-2">
                                                     <Layers className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-xs text-muted-foreground">
-                                                        {category.defaultSections.length} default sections
+                                                        {type.defaultSections.length} default sections
                                                     </span>
                                                 </div>
                                             </div>
-                                            {selectedCategory?.id === category.id && (
+                                            {selectedType?.id === type.id && (
                                                 <Check className="h-5 w-5 text-primary" />
                                             )}
                                         </div>
@@ -801,7 +719,8 @@ export default function HierarchicalFormWizard({
                             </p>
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                                 {selectedModule && (
-                                    <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}>
+                                    // <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}>
+                                    <Badge variant="outline">
                                         {selectedModule.name}
                                     </Badge>
                                 )}
@@ -813,11 +732,11 @@ export default function HierarchicalFormWizard({
                                         </Badge>
                                     </>
                                 )}
-                                {selectedCategory && (
+                                {selectedType && (
                                     <>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         <Badge variant="outline">
-                                            {selectedCategory.name}
+                                            {selectedType.name}
                                         </Badge>
                                     </>
                                 )}
@@ -840,7 +759,7 @@ export default function HierarchicalFormWizard({
                                 <Textarea
                                     id="formDescription"
                                     placeholder="Describe the purpose and use of this form..."
-                                    value={formDetails.description}
+                                    value={formDetails?.description || undefined}
                                     onChange={(e) => setFormDetails({ ...formDetails, description: e.target.value })}
                                     rows={3}
                                 />
@@ -848,7 +767,7 @@ export default function HierarchicalFormWizard({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="formCategory">Category</Label>
+                                    <Label htmlFor="formCategory">Form Category</Label>
                                     <Select
                                         value={formDetails.category}
                                         onValueChange={(value) => setFormDetails({ ...formDetails, category: value })}
@@ -872,7 +791,7 @@ export default function HierarchicalFormWizard({
                                     <Input
                                         id="formVersion"
                                         value={formDetails.version}
-                                        onChange={(e) => setFormDetails({ ...formDetails, version: e.target.value })}
+                                        onChange={(e) => setFormDetails({ ...formDetails, version: Number(e.target.value) })}
                                     />
                                 </div>
                             </div>
@@ -883,107 +802,91 @@ export default function HierarchicalFormWizard({
             case 5:
                 return (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-base xl:text-xl font-semibold mb-2">Build Form Structure</h2>
-                                <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
-                                    Create sections, add subforms, and define fields
-                                </p>
-                                <div className="mt-2">
-                                    <Badge variant="outline" className="font-mono text-xs">
-                                        {formDetails.name || 'Untitled Form'}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <Button onClick={addSection} className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Add Section
-                            </Button>
-                        </div>
-
-                        {formSections.length === 0 ? (
-                            <Card className="border-dashed border-2 p-12 text-center">
-                                <div className="space-y-4">
-                                    <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                                        <Layers className="h-6 w-6 text-muted-foreground" />
-                                    </div>
+                        {formDetails.type === "sectioned" ? (
+                            <>
+                                <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-lg font-medium">No sections yet</h3>
-                                        <p className="text-muted-foreground mt-1">
-                                            Start building your form by adding the first section
+                                        <h2 className="text-base xl:text-xl font-semibold mb-2">Build Form Structure</h2>
+                                        <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
+                                            Create sections, add subforms, and define fields
                                         </p>
+                                        <div className="mt-2">
+                                            <Badge variant="outline" className="font-mono text-xs">
+                                                {formDetails.name || 'Untitled Form'}
+                                            </Badge>
+                                        </div>
                                     </div>
                                     <Button onClick={addSection} className="gap-2">
                                         <Plus className="h-4 w-4" />
-                                        Add First Section
+                                        Add Section
                                     </Button>
                                 </div>
-                            </Card>
-                        ) : (
-                            <div className="space-y-6">
-                                {formSections.map((section, sectionIndex) => (
-                                    <Card key={section.id} className="relative">
-                                        <CardHeader className="pb-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <GripVertical className="h-4 w-4" />
-                                                    <Layers className="h-4 w-4" />
-                                                    <Badge variant="outline" className="text-xs">
-                                                        Section {sectionIndex + 1}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex-1 space-y-3">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        <Input
-                                                            placeholder="Section name"
-                                                            value={section.name}
-                                                            onChange={(e) => updateSection(section.id, { name: e.target.value })}
-                                                        />
-                                                        <Input
-                                                            placeholder="Section description"
-                                                            value={section.description}
-                                                            onChange={(e) => updateSection(section.id, { description: e.target.value })}
-                                                        />
+
+                                {formSections.length === 0 ? (
+                                    <Card className="border-dashed border-2 p-12 text-center">
+                                        <div className="space-y-4">
+                                            <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                                <Layers className="h-6 w-6 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-medium">No sections yet</h3>
+                                                <p className="text-muted-foreground mt-1">
+                                                    Start building your form by adding the first section
+                                                </p>
+                                            </div>
+                                            <Button onClick={addSection} className="gap-2">
+                                                <Plus className="h-4 w-4" />
+                                                Add First Section
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {formSections.map((section, sectionIndex) => (
+                                            <Card key={section.id} className="relative">
+                                                <CardHeader className="pb-4">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                                            <GripVertical className="h-4 w-4" />
+                                                            <Layers className="h-4 w-4" />
+                                                            <Badge variant="outline" className="text-xs">
+                                                                Section {sectionIndex + 1}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex-1 space-y-3">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                <Input
+                                                                    placeholder="Section name"
+                                                                    value={section.name}
+                                                                    onChange={(e) => updateSection(section.id, { name: e.target.value })}
+                                                                />
+                                                                <Input
+                                                                    placeholder="Section description"
+                                                                    value={section.description}
+                                                                    onChange={(e) => updateSection(section.id, { description: e.target.value })}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => removeSection(section.id)}
+                                                            className="text-destructive hover:text-destructive"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => removeSection(section.id)}
-                                                    className="text-destructive hover:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </CardHeader>
+                                                </CardHeader>
 
-                                        <CardContent className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                                                    <span className="text-sm font-medium">Subforms</span>
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {section.subforms.length}
-                                                    </Badge>
-                                                </div>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => addSubform(section.id)}
-                                                    className="gap-2"
-                                                >
-                                                    <Plus className="h-3 w-3" />
-                                                    Add Subform
-                                                </Button>
-                                            </div>
-
-                                            {section.subforms.length === 0 ? (
-                                                <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                                                    <div className="space-y-2">
-                                                        <FolderOpen className="h-8 w-8 text-muted-foreground mx-auto" />
-                                                        <p className="text-sm text-muted-foreground">
-                                                            No subforms in this section yet
-                                                        </p>
+                                                <CardContent className="space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-sm font-medium">Subforms</span>
+                                                            <Badge variant="outline" className="text-xs">
+                                                                {section.subforms.length}
+                                                            </Badge>
+                                                        </div>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -991,128 +894,324 @@ export default function HierarchicalFormWizard({
                                                             className="gap-2"
                                                         >
                                                             <Plus className="h-3 w-3" />
-                                                            Add First Subform
+                                                            Add Subform
                                                         </Button>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    {section.subforms.map((subform, subformIndex) => (
-                                                        <div key={subform.id} className="border rounded-lg p-4 bg-muted/30">
-                                                            <div className="space-y-4">
-                                                                <div className="flex items-start gap-3">
-                                                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                                                        <Move className="h-3 w-3" />
-                                                                        <Badge variant="outline" className="text-xs">
-                                                                            Subform {subformIndex + 1}
-                                                                        </Badge>
-                                                                    </div>
-                                                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                        <Input
-                                                                            placeholder="Subform name"
-                                                                            value={subform.name}
-                                                                            onChange={(e) => updateSubform(section.id, subform.id, { name: e.target.value })}
-                                                                        />
-                                                                        <Input
-                                                                            placeholder="Subform description"
-                                                                            value={subform.description}
-                                                                            onChange={(e) => updateSubform(section.id, subform.id, { description: e.target.value })}
-                                                                        />
-                                                                    </div>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => removeSubform(section.id, subform.id)}
-                                                                        className="text-destructive hover:text-destructive"
-                                                                    >
-                                                                        <Trash2 className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
 
-                                                                <div className="flex items-center gap-2">
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => updateSubform(section.id, subform.id, { isRequired: !subform.isRequired })}
-                                                                        className={subform.isRequired ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
-                                                                    >
-                                                                        {subform.isRequired ? 'Required' : 'Optional'}
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => addField(section.id, subform.id)}
-                                                                        className="gap-2"
-                                                                    >
-                                                                        <Plus className="h-3 w-3" />
-                                                                        Add Field
-                                                                    </Button>
-                                                                    <Badge variant="outline" className="text-xs">
-                                                                        {subform.fields.length} fields
-                                                                    </Badge>
-                                                                </div>
-
-                                                                {/* Fields */}
-                                                                {subform.fields.length > 0 && (
-                                                                    <div className="space-y-2 pl-4 border-l-2 border-border">
-                                                                        {subform.fields.map((field, fieldIndex) => (
-                                                                            <div key={field.id} className="flex items-center gap-3 p-3 bg-background rounded border">
-                                                                                <span className="text-xs text-muted-foreground w-6">
-                                                                                    {fieldIndex + 1}
-                                                                                </span>
-                                                                                <Input
-                                                                                    placeholder="Field label"
-                                                                                    value={field.label}
-                                                                                    onChange={(e) => updateField(section.id, subform.id, field.id, {
-                                                                                        label: e.target.value,
-                                                                                        name: e.target.value.toLowerCase().replace(/\s+/g, '')
-                                                                                    })}
-                                                                                    className="flex-1"
-                                                                                />
-                                                                                <Select
-                                                                                    value={field.type}
-                                                                                    onValueChange={(value) => updateField(section.id, subform.id, field.id, { type: value })}
-                                                                                >
-                                                                                    <SelectTrigger className="w-40">
-                                                                                        <SelectValue />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent>
-                                                                                        {fieldTypes.map((type) => (
-                                                                                            <SelectItem key={type.value} value={type.value}>
-                                                                                                {type.label}
-                                                                                            </SelectItem>
-                                                                                        ))}
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                                <Button
-                                                                                    variant="outline"
-                                                                                    size="sm"
-                                                                                    onClick={() => updateField(section.id, subform.id, field.id, { required: !field.required })}
-                                                                                    className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
-                                                                                >
-                                                                                    {field.required ? 'Required' : 'Optional'}
-                                                                                </Button>
-                                                                                <Button
-                                                                                    variant="ghost"
-                                                                                    size="sm"
-                                                                                    onClick={() => removeField(section.id, subform.id, field.id)}
-                                                                                    className="text-destructive hover:text-destructive"
-                                                                                >
-                                                                                    <Trash2 className="h-3 w-3" />
-                                                                                </Button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
+                                                    {section.subforms.length === 0 ? (
+                                                        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                                                            <div className="space-y-2">
+                                                                <FolderOpen className="h-8 w-8 text-muted-foreground mx-auto" />
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    No subforms in this section yet
+                                                                </p>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => addSubform(section.id)}
+                                                                    className="gap-2"
+                                                                >
+                                                                    <Plus className="h-3 w-3" />
+                                                                    Add First Subform
+                                                                </Button>
                                                             </div>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </CardContent>
+                                                    ) : (
+                                                        <div className="space-y-4">
+                                                            {section.subforms.map((subform, subformIndex) => (
+                                                                <div key={subform.id} className="border rounded-lg p-4 bg-muted/30">
+                                                                    <div className="space-y-4">
+                                                                        <div className="flex items-start gap-3">
+                                                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                                                <Move className="h-3 w-3" />
+                                                                                <Badge variant="outline" className="text-xs">
+                                                                                    Subform {subformIndex + 1}
+                                                                                </Badge>
+                                                                            </div>
+                                                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                                <Input
+                                                                                    placeholder="Subform name"
+                                                                                    value={subform.name}
+                                                                                    onChange={(e) => updateSubform(section.id, subform.id, { name: e.target.value })}
+                                                                                />
+                                                                                <Input
+                                                                                    placeholder="Subform description"
+                                                                                    value={subform.description}
+                                                                                    onChange={(e) => updateSubform(section.id, subform.id, { description: e.target.value })}
+                                                                                />
+                                                                            </div>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                onClick={() => removeSubform(section.id, subform.id)}
+                                                                                className="text-destructive hover:text-destructive"
+                                                                            >
+                                                                                <Trash2 className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </div>
+
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => updateSubform(section.id, subform.id, { isRequired: !subform.isRequired })}
+                                                                                className={subform.isRequired ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
+                                                                            >
+                                                                                {subform.isRequired ? 'Required' : 'Optional'}
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => addField(section.id, subform.id)}
+                                                                                className="gap-2"
+                                                                            >
+                                                                                <Plus className="h-3 w-3" />
+                                                                                Add Field
+                                                                            </Button>
+                                                                            <Badge variant="outline" className="text-xs">
+                                                                                {subform.fields.length} fields
+                                                                            </Badge>
+                                                                        </div>
+
+                                                                        {/* Fields */}
+                                                                        {subform.fields.length > 0 && (
+                                                                            <div className="space-y-2 pl-4 border-l-2 border-border">
+                                                                                {subform.fields.map((field, fieldIndex) => (
+                                                                                    <div key={field.id} className="flex items-center gap-3 p-3 bg-background rounded border">
+                                                                                        <span className="text-xs text-muted-foreground w-6">
+                                                                                            {fieldIndex + 1}
+                                                                                        </span>
+                                                                                        <Input
+                                                                                            placeholder="Field label"
+                                                                                            value={field.label}
+                                                                                            onChange={(e) => updateField(section.id, subform.id, field.id, {
+                                                                                                label: e.target.value,
+                                                                                                name: e.target.value.toLowerCase().replace(/\s+/g, '')
+                                                                                            })}
+                                                                                            className="flex-1"
+                                                                                        />
+                                                                                        <Select
+                                                                                            value={field.type}
+                                                                                            onValueChange={(value) => updateField(section.id, subform.id, field.id, { type: value })}
+                                                                                        >
+                                                                                            <SelectTrigger className="w-40">
+                                                                                                <SelectValue />
+                                                                                            </SelectTrigger>
+                                                                                            <SelectContent>
+                                                                                                {fieldTypes.map((type) => (
+                                                                                                    <SelectItem key={type.value} value={type.value}>
+                                                                                                        {type.label}
+                                                                                                    </SelectItem>
+                                                                                                ))}
+                                                                                            </SelectContent>
+                                                                                        </Select>
+                                                                                        <Button
+                                                                                            variant="outline"
+                                                                                            size="sm"
+                                                                                            onClick={() => updateField(section.id, subform.id, field.id, { required: !field.required })}
+                                                                                            className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                                                                        >
+                                                                                            {field.required ? 'Required' : 'Optional'}
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            onClick={() => removeField(section.id, subform.id, field.id)}
+                                                                                            className="text-destructive hover:text-destructive"
+                                                                                        >
+                                                                                            <Trash2 className="h-3 w-3" />
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-base xl:text-xl font-semibold mb-2">Build Form Structure</h2>
+                                        <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
+                                            Create subforms, and define fields
+                                        </p>
+                                        <div className="mt-2">
+                                            <Badge variant="outline" className="font-mono text-xs">
+                                                {formDetails.name || 'Untitled Form'}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => addSubform()} className="gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        Add Subform
+                                    </Button>
+                                </div>
+
+                                {formForms.length === 0 ? (
+                                    <Card className="border-dashed border-2 p-12 text-center">
+                                        <div className="space-y-4">
+                                            <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                                <Layers className="h-6 w-6 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-medium">No Subforms yet</h3>
+                                                <p className="text-muted-foreground mt-1">
+                                                    Start building your form by adding the first subform
+                                                </p>
+                                            </div>
+                                            <Button onClick={() => addSubform()} className="gap-2">
+                                                <Plus className="h-4 w-4" />
+                                                Add First Subform
+                                            </Button>
+                                        </div>
                                     </Card>
-                                ))}
-                            </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {/* {formForms.map((form, subformIndex) => ( */}
+                                        {formForms.map((form, subformIndex) => (
+                                            <>
+                                                {form.fields.length === 0 ? (
+                                                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                                                        <div className="space-y-2">
+                                                            <FolderOpen className="h-8 w-8 text-muted-foreground mx-auto" />
+                                                            <p className="text-sm text-muted-foreground">
+                                                                No fields in this form yet
+                                                            </p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => addField('', form.id)}
+                                                                className="gap-2"
+                                                            >
+                                                                <Plus className="h-3 w-3" />
+                                                                Add First Field
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div key={form.id} className="border rounded-lg p-4 bg-muted/30">
+                                                        <div className="space-y-4">
+                                                            <div className="flex items-start gap-3">
+                                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                                    <Move className="h-3 w-3" />
+                                                                    <Badge variant="outline" className="text-xs">
+                                                                        Subform {subformIndex + 1}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                    <Input
+                                                                        placeholder="Subform name"
+                                                                        value={form.name}
+                                                                        onChange={(e) => updateSubform("", form.id, { name: e.target.value })}
+                                                                    />
+                                                                    <Input
+                                                                        placeholder="Subform description"
+                                                                        value={form.description}
+                                                                        onChange={(e) => updateSubform("", form.id, { description: e.target.value })}
+                                                                    />
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeSubform("", form.id)}
+                                                                    className="text-destructive hover:text-destructive"
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => updateSubform("", form.id, { isRequired: !form.isRequired })}
+                                                                    className={form.isRequired ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
+                                                                >
+                                                                    {form.isRequired ? 'Required' : 'Optional'}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => addField('', form.id)}
+                                                                    className="gap-2"
+                                                                >
+                                                                    <Plus className="h-3 w-3" />
+                                                                    Add Field
+                                                                </Button>
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    {form.fields.length} fields
+                                                                </Badge>
+                                                            </div>
+
+                                                            {/* Fields */}
+                                                            {form.fields.length > 0 && (
+                                                                <div className="space-y-2 pl-4 border-l-2 border-border">
+                                                                    {form.fields.map((field, fieldIndex) => (
+                                                                        <div key={field.id} className="flex items-center gap-3 p-3 bg-background rounded border">
+                                                                            <span className="text-xs text-muted-foreground w-6">
+                                                                                {fieldIndex + 1}
+                                                                            </span>
+                                                                            <Input
+                                                                                placeholder="Field label"
+                                                                                value={field.label}
+                                                                                onChange={(e) => updateField("", form.id, field.id, {
+                                                                                    label: e.target.value,
+                                                                                    name: e.target.value.toLowerCase().replace(/\s+/g, '')
+                                                                                })}
+                                                                                className="flex-1"
+                                                                            />
+                                                                            <Select
+                                                                                value={field.type}
+                                                                                onValueChange={(value) => updateField("", form.id, field.id, { type: value })}
+                                                                            >
+                                                                                <SelectTrigger className="w-40">
+                                                                                    <SelectValue />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {fieldTypes.map((type) => (
+                                                                                        <SelectItem key={type.value} value={type.value}>
+                                                                                            {type.label}
+                                                                                        </SelectItem>
+                                                                                    ))}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => updateField("", form.id, field.id, { required: !field.required })}
+                                                                                className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                                                            >
+                                                                                {field.required ? 'Required' : 'Optional'}
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                onClick={() => removeField("", form.id, field.id)}
+                                                                                className="text-destructive hover:text-destructive"
+                                                                            >
+                                                                                <Trash2 className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 );
@@ -1133,6 +1232,8 @@ export default function HierarchicalFormWizard({
                 return null;
         }
     };
+
+    console.log(formForms)
 
     // Don't show normal layout for step 6 (preview)
     if (currentStep === 6) return renderStepContent();
@@ -1217,7 +1318,7 @@ export default function HierarchicalFormWizard({
                                 disabled={
                                     (currentStep === 1 && !selectedModule) ||
                                     (currentStep === 2 && !selectedLevel) ||
-                                    (currentStep === 3 && !selectedCategory) ||
+                                    (currentStep === 3 && !selectedType) ||
                                     (currentStep === 4 && !formDetails.name) ||
                                     (currentStep === 5 && formSections.length === 0)
                                 }

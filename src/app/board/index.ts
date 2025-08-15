@@ -1,7 +1,8 @@
+import type { RouteObject } from "react-router";
 import Layout from "./layout";
 import Page from "./page";
 
-const Index = {
+const Index: RouteObject = {
   path: "/board",
   Component: Layout,
   children: [
