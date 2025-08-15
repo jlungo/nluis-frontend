@@ -207,6 +207,19 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
+  // verifyEmailTokenToken: async (token: string) => {
+  //   try {
+  //     const response = await api.get(`/auth/email-verify/${token}/`);
+  //     return response.data;
+  //   } catch (error: any) {
+  //     console.error("Email verification failed:", error);
+  //     if (error.response?.status === 400) {
+  //       throw { detail: "Invalid or expired token. Please verify your email again." };
+  //     }
+  //     throw error.response?.data || { detail: "Failed to verify token. Please try again." };
+  //   }
+  // },
+
   verifyPasswordResetToken: async (uidb64: string, token: string) => {
     try {
       const response = await api.get(`/auth/password-reset/${uidb64}/${token}/`);
@@ -223,7 +236,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   completePasswordReset: async (uidb64: string, token: string, password: string) => {
     set({ loading: true });
     try {
-      await api.patch("/auth/password-reset-complete/", {
+      await api.patch("/auth/password-reset-complete", {
         password,
         token,
         uidb64,
