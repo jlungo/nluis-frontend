@@ -9,4 +9,6 @@ export type ModuleTypes =
   | "organizations"
   | "user-management"
   | "system-settings"
-  | "audit-trail";
+  | "billing"
+  | "document-management"
+  | "equipment-management";

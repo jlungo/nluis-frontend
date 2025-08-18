@@ -3,7 +3,7 @@ import Layout from "./layout";
 import Page from "./page";
 
 const Index: RouteObject = {
-  path: "form-builder",
+  path: "workflow-builder",
   Component: Layout,
   children: [
     {

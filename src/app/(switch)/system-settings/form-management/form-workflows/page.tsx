@@ -7,7 +7,7 @@ export default function Page() {
     useLayoutEffect(() => {
         setPage({
             module: 'system-settings',
-            title: "Form Management",
+            title: "Form Workflows",
             backButton: 'Back'
         })
     }, [setPage])

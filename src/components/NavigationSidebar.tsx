@@ -187,13 +187,13 @@ export function NavigationSidebar({
               icon: <ClipboardPenLine className="h-4 w-4" />,
               items: [
                 {
-                  id: "forms-dashboard",
-                  label: "Forms Dashboard",
+                  id: "form-workflows",
+                  label: "Form Workflows",
                   icon: <LayoutDashboard className="h-4 w-4" />
                 },
                 {
-                  id: "form-builder",
-                  label: "Form Builder",
+                  id: "workflow-builder",
+                  label: "Workflow Builder",
                   icon: <ClipboardPlus className="h-4 w-4" />
                 },
                 {
@@ -236,8 +236,6 @@ export function NavigationSidebar({
               ],
             },
           ];
-        case "audit-trail":
-          return [];
         default:
           return [];
       }
@@ -266,7 +264,7 @@ export function NavigationSidebar({
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
-        
+
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>

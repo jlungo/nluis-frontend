@@ -2,7 +2,7 @@ import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "forms-dashboard",
+  path: "form-workflows",
   Component: Layout,
   children: [
     {
