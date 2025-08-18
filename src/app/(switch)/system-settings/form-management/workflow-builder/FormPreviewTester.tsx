@@ -1,0 +1,921 @@
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import MapFieldRenderer from './MapFieldRenderer';
+import {
+    Edit,
+    Save,
+    Eye,
+    FileText,
+    RefreshCw,
+    AlertCircle,
+    CheckCircle,
+    Settings,
+    TestTube,
+    Send,
+    Layers,
+    FolderOpen,
+    ChevronDown,
+    ChevronUp,
+    ChevronRight,
+    Maximize,
+    Minimize,
+    BarChart3,
+    Users,
+    Clock
+} from 'lucide-react';
+import { toast } from 'sonner';
+import type { FormField, WorkflowTemplate } from './page';
+
+interface WorkflowPreviewTesterProps {
+    workflowData: WorkflowTemplate;
+    onSave: (workflowData: WorkflowTemplate) => void;
+    onEdit: () => void;
+}
+
+interface FormValidationError {
+    fieldId: string;
+    sectionId?: string;
+    formId?: string;
+    message: string;
+}
+
+export default function FormPreviewTester({
+    workflowData,
+    onSave,
+    onEdit,
+}: WorkflowPreviewTesterProps) {
+    const [activeTab, setActiveTab] = useState<'preview' | 'test' | 'data'>('preview');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [formValues, setFormValues] = useState<Record<string, any>>({});
+    const [validationErrors, setValidationErrors] = useState<FormValidationError[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [testSubmissionResult, setTestSubmissionResult] = useState<any>(null);
+    const [showValidation, setShowValidation] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // State for collapsible sections
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+    const [collapsedForms, setCollapsedForms] = useState<Record<string, boolean>>({});
+    const [collapsedPreviewSections, setCollapsedPreviewSections] = useState<Record<string, boolean>>({});
+
+    // Toggle section collapse
+    const toggleSectionCollapse = (sectionId: string, isPreview: boolean = false) => {
+        if (isPreview) {
+            setCollapsedPreviewSections(prev => ({
+                ...prev,
+                [sectionId]: !prev[sectionId]
+            }));
+        } else {
+            setCollapsedSections(prev => ({
+                ...prev,
+                [sectionId]: !prev[sectionId]
+            }));
+        }
+    };
+
+    // Toggle form collapse
+    const toggleFormCollapse = (formId: string) => {
+        setCollapsedForms(prev => ({
+            ...prev,
+            [formId]: !prev[formId]
+        }));
+    };
+
+    // Expand all sections
+    const expandAllSections = () => {
+        setCollapsedSections({});
+        setCollapsedForms({});
+        setCollapsedPreviewSections({});
+    };
+
+    // Collapse all sections
+    const collapseAllSections = () => {
+        const allSections: Record<string, boolean> = {};
+        const allForms: Record<string, boolean> = {};
+        const allPreviewSections: Record<string, boolean> = {};
+
+        if (workflowData?.sections) {
+            workflowData.sections.forEach(section => {
+                allSections[section.id] = true;
+                allPreviewSections[section.id] = true;
+                section.forms.forEach(form => {
+                    allForms[form.id] = true;
+                });
+            });
+        }
+
+        setCollapsedSections(allSections);
+        setCollapsedForms(allForms);
+        setCollapsedPreviewSections(allPreviewSections);
+    };
+
+    // Check if field type is a map field
+    const isMapField = (fieldType: string) => {
+        return ['map-area', 'gps-coordinates', 'boundary-mapper', 'location-picker'].includes(fieldType);
+    };
+
+    // Update field value
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateFieldValue = (fieldId: string, value: any) => {
+        setFormValues(prev => ({
+            ...prev,
+            [fieldId]: value
+        }));
+
+        // Clear validation error for this field
+        setValidationErrors(prev =>
+            prev.filter(error => error.fieldId !== fieldId)
+        );
+    };
+
+    // Validate form
+    const validateForm = (): FormValidationError[] => {
+        const errors: FormValidationError[] = [];
+
+        // Validate advanced form (sections/forms)
+        if (workflowData?.sections)
+            workflowData.sections.forEach(section => {
+                section.forms.forEach(form => {
+                    if (form.isRequired) {
+                        const hasAnyValue = form.fields.some(field =>
+                            formValues[field.id] && formValues[field.id] !== ''
+                        );
+
+                        if (!hasAnyValue) {
+                            errors.push({
+                                fieldId: form.fields[0]?.id || '',
+                                sectionId: section.id,
+                                formId: form.id,
+                                message: `${form.name} section is required`
+                            });
+                        }
+                    }
+
+                    form.fields.forEach(field => {
+                        if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
+                            errors.push({
+                                fieldId: field.id,
+                                sectionId: section.id,
+                                formId: form.id,
+                                message: `${field.label} is required`
+                            });
+                        }
+                    });
+                });
+            });
+
+        return errors;
+    };
+
+    // Test form submission
+    const handleTestSubmission = async () => {
+        setIsSubmitting(true);
+        setShowValidation(true);
+
+        const errors = validateForm();
+        setValidationErrors(errors);
+
+        if (errors.length > 0) {
+            toast.error(`Form validation failed with ${errors.length} errors`);
+            setIsSubmitting(false);
+            return;
+        }
+
+        // Simulate form submission delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const submissionResult = {
+            success: true,
+            submissionId: `test-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            data: formValues,
+            fieldCount: Object.keys(formValues).length,
+            validationPassed: true
+        };
+
+        setTestSubmissionResult(submissionResult);
+        setIsSubmitting(false);
+        toast.success('Form test submission successful!');
+    };
+
+    // Reset test data
+    const handleResetTest = () => {
+        setFormValues({});
+        setValidationErrors([]);
+        setTestSubmissionResult(null);
+        setShowValidation(false);
+        toast.info('Form test data reset');
+    };
+
+    // Toggle fullscreen
+    const toggleFullscreen = () => {
+        setIsFullscreen(!isFullscreen);
+    };
+
+    // Render a single field component
+    // const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; formId?: string }) => {
+    const renderFieldComponent = (field: FormField) => {
+        const fieldValue = formValues[field.id];
+        const hasError = validationErrors.some(error => error.fieldId === field.id);
+        const fieldError = validationErrors.find(error => error.fieldId === field.id);
+
+        if (isMapField(field.type)) {
+            return (
+                <div key={field.id} className="space-y-2">
+                    <MapFieldRenderer
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        type={field.type as any}
+                        value={fieldValue}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onChange={(value: any) => updateFieldValue(field.id, value)}
+                        label={field.label}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        helpText={field.helpText}
+                    />
+                    {hasError && showValidation && (
+                        <Alert className="border-destructive bg-destructive/10">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-destructive">
+                                {fieldError?.message}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </div>
+            );
+        }
+
+        // Regular form fields
+        return (
+            <div key={field.id} className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <Label className="flex items-center gap-2">
+                        {field.label}
+                        {field.required && <span className="text-destructive">*</span>}
+                    </Label>
+                </div>
+
+                {field.type === 'text' && (
+                    <Input
+                        placeholder={field.placeholder || 'Enter text...'}
+                        value={fieldValue || ''}
+                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                    />
+                )}
+                {field.type === 'email' && (
+                    <Input
+                        type="email"
+                        placeholder={field.placeholder || 'Enter email...'}
+                        value={fieldValue || ''}
+                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                    />
+                )}
+                {field.type === 'number' && (
+                    <Input
+                        type="number"
+                        placeholder={field.placeholder || 'Enter number...'}
+                        value={fieldValue || ''}
+                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                    />
+                )}
+                {field.type === 'textarea' && (
+                    <Textarea
+                        placeholder={field.placeholder || 'Enter text...'}
+                        value={fieldValue || ''}
+                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                        rows={3}
+                    />
+                )}
+                {field.type === 'select' && (
+                    <Select
+                        value={fieldValue || ''}
+                        onValueChange={(value) => updateFieldValue(field.id, value)}
+                    >
+                        <SelectTrigger className={hasError && showValidation ? 'border-destructive' : ''}>
+                            <SelectValue placeholder={field.placeholder || 'Select option...'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {field.options?.map((option, index) => (
+                                <SelectItem key={index} value={option}>
+                                    {option}
+                                </SelectItem>
+                            )) || (
+                                    <>
+                                        <SelectItem value="option1">Option 1</SelectItem>
+                                        <SelectItem value="option2">Option 2</SelectItem>
+                                        <SelectItem value="option3">Option 3</SelectItem>
+                                    </>
+                                )}
+                        </SelectContent>
+                    </Select>
+                )}
+                {field.type === 'checkbox' && (
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            checked={fieldValue || false}
+                            onCheckedChange={(checked) => updateFieldValue(field.id, checked)}
+                        />
+                        <Label>{field.placeholder || 'Check this option'}</Label>
+                    </div>
+                )}
+                {field.type === 'radio' && (
+                    <RadioGroup
+                        value={fieldValue || ''}
+                        onValueChange={(value) => updateFieldValue(field.id, value)}
+                    >
+                        {field.options?.map((option, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <RadioGroupItem value={option} id={`${field.id}-${index}`} />
+                                <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
+                            </div>
+                        )) || (
+                                <>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="option1" id={`${field.id}-1`} />
+                                        <Label htmlFor={`${field.id}-1`}>Option 1</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="option2" id={`${field.id}-2`} />
+                                        <Label htmlFor={`${field.id}-2`}>Option 2</Label>
+                                    </div>
+                                </>
+                            )}
+                    </RadioGroup>
+                )}
+                {field.type === 'date' && (
+                    <Input
+                        type="date"
+                        value={fieldValue || ''}
+                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                    />
+                )}
+                {field.type === 'file' && (
+                    <Input
+                        type="file"
+                        onChange={(e) => updateFieldValue(field.id, e.target.files?.[0]?.name || '')}
+                        className={hasError && showValidation ? 'border-destructive' : ''}
+                    />
+                )}
+                {field.type === 'switch' && (
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            checked={fieldValue || false}
+                            onCheckedChange={(checked) => updateFieldValue(field.id, checked)}
+                        />
+                        <Label>{field.placeholder || 'Toggle this option'}</Label>
+                    </div>
+                )}
+
+                {field.helpText && (
+                    <p className="text-sm text-muted-foreground">{field.helpText}</p>
+                )}
+
+                {hasError && showValidation && (
+                    <Alert className="border-destructive bg-destructive/10">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-destructive">
+                            {fieldError?.message}
+                        </AlertDescription>
+                    </Alert>
+                )}
+            </div>
+        );
+    };
+
+    // Render form preview (read-only structure)
+    const renderFormPreview = () => (
+        <div className="space-y-6">
+            <div className="text-center space-y-2">
+                <h2 className="text-lg md:text-2xl font-semibold">{workflowData.name}</h2>
+                {workflowData.description && (
+                    <p className="text-muted-foreground">{workflowData.description}</p>
+                )}
+                <div className="flex items-center justify-center gap-2">
+                    {/* <Badge variant="outline" className='capitalize'>{workflowData.type}</Badge> */}
+                    <Badge variant="outline">{workflowData.module}</Badge>
+                </div>
+            </div>
+
+            {/* Section Controls */}
+            <div className="flex items-center justify-between border-b pb-4">
+                <div className="flex flex-col md:flex-row items-center gap-2">
+                    <h3 className="font-medium text-base md:text-lg">Form Structure</h3>
+                    <Badge variant="outline" className="text-xs">
+                        {workflowData?.sections ? `${workflowData.sections.length} sections` : null}
+                    </Badge>
+                </div>
+                <div className="flex flex-col md:flex-row items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={expandAllSections} className="gap-1">
+                        <ChevronDown className="h-3 w-3" />
+                        Expand All
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={collapseAllSections} className="gap-1">
+                        <ChevronUp className="h-3 w-3" />
+                        Collapse All
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={toggleFullscreen} className="gap-1">
+                        {isFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+                        {isFullscreen ? 'Exit' : 'Fullscreen'}
+                    </Button>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                {workflowData?.sections && workflowData.sections.map((section, sectionIndex) => (
+                    <Card key={section.id}>
+                        <Collapsible
+                            open={!collapsedPreviewSections[section.id]}
+                            onOpenChange={() => toggleSectionCollapse(section.id, true)}
+                        >
+                            <CollapsibleTrigger asChild>
+                                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                                <Layers className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-base">
+                                                    Section {sectionIndex + 1}: {section.name}
+                                                </CardTitle>
+                                                {section.description && (
+                                                    <CardDescription>{section.description}</CardDescription>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="text-xs">
+                                                {section.forms.length} forms
+                                            </Badge>
+                                            <Badge variant="outline" className="text-xs">
+                                                {section.forms.reduce((count, form) => count + form.fields.length, 0)} fields
+                                            </Badge>
+                                            {collapsedPreviewSections[section.id] ? (
+                                                <ChevronRight className="h-4 w-4" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4" />
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                            </CollapsibleTrigger>
+
+                            <CollapsibleContent>
+                                <CardContent className="space-y-6 pt-0">
+                                    {/* {section.forms.map((form, formIndex) => ( */}
+                                    {section.forms.map((form) => (
+                                        <Collapsible
+                                            key={form.id}
+                                            open={!collapsedForms[form.id]}
+                                            onOpenChange={() => toggleFormCollapse(form.id)}
+                                        >
+                                            <CollapsibleTrigger asChild>
+                                                <div className="border rounded-lg p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
+                                                                <FolderOpen className="h-3 w-3" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-medium flex items-center gap-2">
+                                                                    {form.name}
+                                                                    {form.isRequired && <Badge variant="outline" className="text-xs">Required</Badge>}
+                                                                </h4>
+                                                                {form.description && (
+                                                                    <p className="text-sm text-muted-foreground">{form.description}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className="text-xs">
+                                                                {form.fields.length} fields
+                                                            </Badge>
+                                                            {collapsedForms[form.id] ? (
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            ) : (
+                                                                <ChevronDown className="h-4 w-4" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </CollapsibleTrigger>
+
+                                            <CollapsibleContent>
+                                                <div className="mt-3 grid gap-3 pl-9">
+                                                    {form.fields.map((field) => (
+                                                        <div key={field.id} className="flex items-center gap-2 text-sm p-2 bg-background rounded border">
+                                                            <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+                                                            <span>{field.label}</span>
+                                                            <Badge variant="outline" className="text-xs">
+                                                                {field.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            </Badge>
+                                                            {field.required && <span className="text-destructive">*</span>}
+                                                            {isMapField(field.type) && (
+                                                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary">
+                                                                    Interactive Map
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    ))}
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
+
+    // Render interactive form test
+    const renderFormTest = () => (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-base md:text-xl font-semibold">{workflowData.name}</h2>
+                    {workflowData.description && (
+                        <p className="text-muted-foreground">{workflowData.description}</p>
+                    )}
+                </div>
+                <div className='flex gap-2'>
+                    <div className="flex flex-col md:flex-row items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={expandAllSections} className="gap-1">
+                            <ChevronDown className="h-3 w-3" />
+                            Expand All
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={collapseAllSections} className="gap-1">
+                            <ChevronUp className="h-3 w-3" />
+                            Collapse All
+                        </Button>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={handleResetTest} className="gap-2">
+                            <RefreshCw className="h-4 w-4" />
+                            Reset
+                        </Button>
+                        <Button
+                            onClick={handleTestSubmission}
+                            disabled={isSubmitting}
+                            className="gap-2"
+                            size="sm"
+                        >
+                            {isSubmitting ? (
+                                <RefreshCw className="h-2 w-2 animate-spin" />
+                            ) : (
+                                <Send className="h-2 w-2" />
+                            )}
+                            <span className='hidden md:block'>Test</span> Submit
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {testSubmissionResult && (
+                <Alert className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-600" />
+                    <AlertTitle className="text-green-800">Form Test Successful</AlertTitle>
+                    <AlertDescription className="text-green-700">
+                        Submission ID: {testSubmissionResult.submissionId} •
+                        Fields submitted: {testSubmissionResult.fieldCount}
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {validationErrors.length > 0 && showValidation && (
+                <Alert className="border-destructive bg-destructive/10">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <AlertTitle>Validation Errors ({validationErrors.length})</AlertTitle>
+                    <AlertDescription>
+                        Please fix the following errors before submitting:
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                            {validationErrors.map((error, index) => (
+                                <li key={index} className="text-sm">{error.message}</li>
+                            ))}
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            <div className="space-y-6">
+                {workflowData?.sections && workflowData.sections.map((section) => (
+                    <Card key={section.id}>
+                        <Collapsible
+                            open={!collapsedSections[section.id]}
+                            onOpenChange={() => toggleSectionCollapse(section.id)}
+                        >
+                            <CollapsibleTrigger asChild>
+                                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                                <Layers className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-base">{section.name}</CardTitle>
+                                                {section.description && (
+                                                    <CardDescription>{section.description}</CardDescription>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="text-xs">
+                                                {section.forms.length} forms
+                                            </Badge>
+                                            {collapsedSections[section.id] ? (
+                                                <ChevronRight className="h-4 w-4" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4" />
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                            </CollapsibleTrigger>
+
+                            <CollapsibleContent>
+                                <CardContent className="space-y-6 pt-0">
+                                    {section.forms.map((form) => (
+                                        <Collapsible
+                                            key={form.id}
+                                            open={!collapsedForms[form.id]}
+                                            onOpenChange={() => toggleFormCollapse(form.id)}
+                                        >
+                                            <CollapsibleTrigger asChild>
+                                                <div className="border rounded-lg p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
+                                                                <FolderOpen className="h-3 w-3" />
+                                                            </div>
+                                                            <h4 className="font-medium">{form.name}</h4>
+                                                            {form.isRequired && (
+                                                                <Badge variant="outline" className="text-xs">Required</Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className="text-xs">
+                                                                {form.fields.length} fields
+                                                            </Badge>
+                                                            {collapsedForms[form.id] ? (
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            ) : (
+                                                                <ChevronDown className="h-4 w-4" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {form.description && (
+                                                        <p className="text-sm text-muted-foreground mt-2">{form.description}</p>
+                                                    )}
+                                                </div>
+                                            </CollapsibleTrigger>
+
+                                            <CollapsibleContent>
+                                                <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
+                                                    {form.fields.map((field) =>
+                                                        // renderFieldComponent(field, { sectionId: section.id, formId: form.id })
+                                                        renderFieldComponent(field)
+                                                    )}
+                                                </div>
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    ))}
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
+
+    // Render form data view
+    const renderWorkflowData = () => (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Form Structure & Test Data</h3>
+                {/* <Button variant="outline" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export JSON
+                </Button> */}
+            </div>
+
+            <Tabs defaultValue="structure">
+                <TabsList className="grid w-full grid-cols-3 rounded-full">
+                    <TabsTrigger value="structure" className='rounded-full cursor-pointer'><span className='hidden sm:block'>Form</span> Structure</TabsTrigger>
+                    <TabsTrigger value="test-data" className='rounded-full cursor-pointer'>Test <span className='hidden sm:block'>Data</span></TabsTrigger>
+                    <TabsTrigger value="submission" className='rounded-full cursor-pointer'>Submission <span className='hidden sm:block'>Result</span></TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="structure" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm">Form Metadata</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-96">
+                                {JSON.stringify(workflowData, null, 2) || 'No workflow data available'}
+                            </pre>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="test-data" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm">Current Forms Values</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-96">
+                                {JSON.stringify(formValues, null, 2) || 'No test data yet'}
+                            </pre>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="submission" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm">Submission Result</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-96">
+                                {testSubmissionResult
+                                    ? JSON.stringify(testSubmissionResult, null, 2)
+                                    : 'No submission test performed yet'
+                                }
+                            </pre>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+
+    return (
+        <div className={`${isFullscreen ? 'fixed inset-0 z-[9999] overflow-y-auto bg-background' : 'min-h-screen'}`}>
+            <div className="max-w-6xl mx-auto p-6 space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-lg md:text-2xl font-semibold">Workflow Preview & Testing</h1>
+                        <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
+                            Preview your form workflow structure and test its functionality before saving
+                        </p>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={onEdit} className="gap-2">
+                            <Edit className="h-4 w-4" />
+                            Edit Workflow
+                        </Button>
+                        <Button size="sm" onClick={() => onSave(workflowData)} className="gap-2">
+                            <Save className="h-4 w-4" />
+                            Save Form
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Form Stats */}
+                <Card>
+                    <CardContent className="px-0 md:py-6">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                            <div className="text-center">
+                                <div className="text-lg lg:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                    <FileText className="h-5 w-5" />
+                                    {workflowData.name}
+                                </div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Form Name</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg lg:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                    <BarChart3 className="h-5 w-5" />
+                                    {workflowData?.sections && workflowData.sections.reduce((count, section) =>
+                                        count + section.forms.reduce((subCount, form) =>
+                                            subCount + form.fields.length, 0
+                                        ), 0
+                                    )
+                                    }
+                                </div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Total Fields</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                    <Layers className="h-5 w-5" />
+                                    {workflowData?.sections ? workflowData.sections.length : 0}
+                                </div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Sections</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    {Object.keys(formValues).length}
+                                </div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Fields Tested</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
+                                    <Clock className="h-5 w-5" />
+                                    {Math.round((Object.keys(formValues).length / (workflowData.sections!.reduce((count, section) =>
+                                        count + section.forms.reduce((subCount, form) =>
+                                            subCount + form.fields.length, 0
+                                        ), 0
+                                    ))) * 100) || 0}%
+                                </div>
+                                <div className="text-xs md:text-sm text-muted-foreground">Completion</div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Tabs */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as any)}>
+                    <TabsList className="grid h-fit w-full grid-cols-3 rounded-full mb-3">
+                        <TabsTrigger value="preview" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
+                            <Eye className="h-4 w-4 hidden md:block" />
+                            Preview
+                        </TabsTrigger>
+                        <TabsTrigger value="test" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
+                            <TestTube className="h-4 w-4 hidden md:block" />
+                            Test Form
+                        </TabsTrigger>
+                        <TabsTrigger value="data" className="text-xs md:text-base gap-2 rounded-full cursor-pointer">
+                            <Settings className="h-4 w-4 hidden md:block" />
+                            Data & Export
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="preview" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Eye className="h-5 w-5" />
+                                    Form Structure Preview
+                                </CardTitle>
+                                <CardDescription className='text-xs md:text-sm'>
+                                    This is how your form structure will appear to end users
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {renderFormPreview()}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="test" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <TestTube className="h-5 w-5" />
+                                    Interactive Form Testing
+                                </CardTitle>
+                                <CardDescription>
+                                    Fill out the form to test functionality, validation, and submission
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {renderFormTest()}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="data" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Settings className="h-5 w-5" />
+                                    Form Data & Configuration
+                                </CardTitle>
+                                <CardDescription>
+                                    View form structure, test data, and export options
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {renderWorkflowData()}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </div>
+    );
+}

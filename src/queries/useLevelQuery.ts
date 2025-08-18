@@ -26,7 +26,7 @@ export const useLevelsQuery = (
     queryFn: () =>
       api
         .get(
-          `/form-management/levels/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}`
+          `/form-management/module/levels/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}`
         )
         .then((res) => res.data),
   });

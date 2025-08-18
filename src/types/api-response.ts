@@ -3,10 +3,3 @@ export interface APIResponse {
   next: string | null;
   previous: string | null;
 }
-
-// "results": [
-//   {
-//     "slug": "WTGSKb5B",
-//     "name": "string"
-//   }
-// ]

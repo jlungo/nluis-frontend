@@ -24,8 +24,8 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: { slug?: string; data: { name: string; module: string } }) => {
-            if (e?.slug) return api.put(`/form-management/levels/${e.slug}/`, e.data)
-            return api.post(`/form-management/levels/create/`, e.data)
+            if (e?.slug) return api.put(`/form-management/module/levels/${e.slug}/`, e.data)
+            return api.post(`/form-management/module/levels/create/`, e.data)
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
