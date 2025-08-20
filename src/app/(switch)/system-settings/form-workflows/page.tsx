@@ -19,6 +19,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useWorkflowsQuery } from "@/queries/useWorkflowQuery";
 import { Link } from "react-router";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { workflowCategoryTypes } from "@/types/constants";
 
 export default function Page() {
     const { setPage: PageData } = usePageStore()
@@ -34,7 +36,7 @@ export default function Page() {
         PageData({
             module: 'system-settings',
             title: "Form Workflows",
-            backButton: 'Modules'
+            backButton: 'Back to Modules'
         })
     }, [PageData])
 
@@ -50,7 +52,7 @@ export default function Page() {
                     <h1 className="text-xl lg:text-2xl font-semibold">Form Workflows Management</h1>
                     <p className="text-muted-foreground">Create, edit, and manage all your forms</p>
                 </div>
-                <Link to="/system-settings/form-management/workflow-builder" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
+                <Link to="/system-settings/form-workflows/workflow-builder" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
                     <Plus className="h-4 w-4" />
                     Create<span className="hidden sm:inline"> Workflow</span>
                 </Link>
@@ -163,7 +165,7 @@ export default function Page() {
                                         {keyword || filterLevel.length > 0 || filterModule.length > 0 ? 'Try adjusting your search criteria' : 'Get started by creating your first workflow'}
                                     </p>
                                     <Link
-                                        to="/system-settings/form-management/workflow-builder"
+                                        to="/system-settings/form-workflows/workflow-builder"
                                         className={cn(buttonVariants(), "gap-2")}
                                     >
                                         <Plus className="h-4 w-4" />
@@ -172,59 +174,54 @@ export default function Page() {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2 lg:space-y-3">
                                 {workflows?.results && workflows.results.map((workflow) => (
-                                    <Card key={workflow.slug} className="hover:shadow-md transition-shadow">
+                                    <Card key={workflow.slug} className="hover:shadow-md transition-shadow py-2 md:py-4 lg:py-6">
                                         <CardContent className="p-4">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-start lg:items-center justify-between">
                                                 <div className="flex items-center gap-4 flex-1">
-                                                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                                    <div className="hidden w-10 h-10 bg-primary/10 text-primary rounded-lg md:flex items-center justify-center">
                                                         <FileText className="h-6 w-6" />
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-1">
                                                             <h3 className="font-medium">{workflow.name}</h3>
-                                                            {/* <Badge
-                                                                    variant="outline"
-                                                                    className={`text-xs ${getStatusColor(workflow.)}`}
-                                                                >
-                                                                    {workflow.status}
-                                                                </Badge>
-                                                                <Badge variant="outline" className="text-xs">
-                                                                    {workflow.type === 'advanced' ? 'Advanced' : 'Simple'}
-                                                                </Badge> */}
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={cn(`text-xs capitalize border`, {
+                                                                    'bg-primary/20 text-primary dark:text-primary border-primary': workflow.category !== 1,
+                                                                    'bg-green-500/20 dark:bg-green-500/10 text-green-500 dark:text-green-700 border-green-500 dark:border-green-700': workflow.category === 2,
+                                                                    'bg-yellow-500/20 dark:bg-yellow-500/10 text-yellow-500 dark:text-yellow-700 border-yellow-500 dark:border-yellow-700': workflow.category === 3,
+                                                                    'bg-red-500/20 dark:bg-red-500/10 text-red-500 dark:text-red-700/60 border-red-500 dark:border-red-700/60': workflow.category === 4,
+                                                                    'bg-fuchsia-500/20 dark:bg-fuchsia-500/10 text-fuchsia-500 dark:text-fuchsia-700 border-fuchsia-500 dark:border-fuchsia-700': workflow.category === 5,
+                                                                    'bg-violet-500/20 dark:bg-violet-500/10 text-violet-500 dark:text-violet-700 border-violet-500 dark:border-violet-700': workflow.category !== 6,
+                                                                })}
+                                                            >
+                                                                {workflowCategoryTypes[workflow.category]}
+                                                            </Badge>
                                                         </div>
                                                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                             <span>{workflow.module_name}</span>
                                                             <span>•</span>
                                                             <span>{workflow.sections_count} sections</span>
-                                                            <span>•</span>
-                                                            <span className="flex items-center gap-1">
-                                                                {/* <Clock className="h-3 w-3" />
-                                                                    {new Date(workflow.lastModified).toLocaleDateString()} */}
-                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        // onClick={() => handleViewForm(form.id)}
-                                                        className="gap-2"
+                                                <div className="flex flex-col lg:flex-row items-end lg:items-center gap-2">
+                                                    <Link
+                                                        to={`/system-settings/form-workflows/${workflow.slug}`}
+                                                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "gap-2")}
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                         Preview
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        // onClick={() => handleEditForm(form.id)}
-                                                        className="gap-2"
+                                                    </Link>
+                                                    <Link
+                                                        to={`/system-settings/form-workflows/${workflow.slug}/edit`}
+                                                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "gap-2")}
                                                     >
                                                         <Edit className="h-4 w-4" />
                                                         Edit
-                                                    </Button>
+                                                    </Link>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"

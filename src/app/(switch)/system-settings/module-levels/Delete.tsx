@@ -1,27 +1,28 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
-import { sectionQueryKey, type SectionProps } from "@/queries/useSectionQuery";
+import { levelQueryKey, type LevelProps } from "@/queries/useLevelQuery";
+import { AlertDialogDescription } from "@radix-ui/react-alert-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface Props {
-    section: SectionProps;
+    level: LevelProps;
 }
 
-export default function Delete({ section }: Props) {
+export default function Delete({ level }: Props) {
     const [open, setOpen] = useState(false)
 
     const queryClient = useQueryClient();
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: () => api.delete(`/form-management/sections/${section.slug}/delete/`),
+        mutationFn: () => api.delete(`/form-management/levels/${level.slug}/delete/`),
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [sectionQueryKey],
+                queryKey: [levelQueryKey],
             }),
         onError: (e) => {
             console.log(e);
@@ -35,18 +36,18 @@ export default function Delete({ section }: Props) {
                 loading: "Deleting...",
                 success: () => {
                     setOpen(false);
-                    return `Module Section deleted successfully!`;
+                    return `Module Level deleted successfully!`;
                 },
                 error: (e: AxiosError) => `${e?.response?.data || "Network error!"}`,
             });
         } catch (error) {
             console.log(error)
-            toast.error("Failed to delete section!");
+            toast.error("Failed to delete module level!");
         }
     };
 
     return (
-        <AlertDialog open={open && section?.slug === section.slug} onOpenChange={setOpen}>
+        <AlertDialog open={open && level?.slug === level.slug} onOpenChange={setOpen}>
             <AlertDialogTrigger asChild>
                 <Button
                     size="sm"
@@ -56,14 +57,14 @@ export default function Delete({ section }: Props) {
                     Delete
                 </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent aria-describedby={undefined}>
+            <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>
-                        Delete <span className="font-semibold">{section?.name}</span>?
+                        Delete <span className="font-semibold">{level?.name}</span>
                     </AlertDialogTitle>
                 </AlertDialogHeader>
                 <AlertDialogDescription>
-                    Are you sure you want to delete <span className="font-semibold">{section?.name}</span> level section?
+                    Are you sure you want to delete <span className="font-semibold">{level?.name}</span> module level?
                 </AlertDialogDescription>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setOpen(false)}>

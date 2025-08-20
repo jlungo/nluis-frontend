@@ -10,7 +10,6 @@ export default function Page() {
             module: 'system-settings',
             title: "Form Workflow Builder",
             backButton: 'Modules',
-            isFormPage: true
         })
     }, [setPage])
 

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import FormPreviewTester from './FormPreviewTester';
+import { FormPreviewTester } from './FormPreviewTester';
 import {
     ArrowLeft,
     ArrowRight,
@@ -33,6 +33,7 @@ import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
 import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
+import { workflowCategoryTypes } from '@/types/constants';
 
 export default function WorkflowBuilder({ previousData }: { previousData?: WorkflowProps & { sections: FormSection[] } }) {
     const queryClient = useQueryClient();
@@ -44,12 +45,12 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
     const [formDetails, setFormDetails] = useState<{
         name: string;
         description: string | null;
-        category: string | null;
+        category: number | null;
         version: number
     }>({
         name: '',
         description: null,
-        category: '',
+        category: null,
         version: 1.0
     });
     const [formSections, setFormSections] = useState<FormSection[]>([]);
@@ -58,7 +59,6 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
 
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
-
 
     const fieldTypes: { value: InputType, label: string }[] = [
         { value: 'text', label: 'Text Input' },
@@ -293,6 +293,11 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
             return;
         }
 
+        if (!formDetails.category) {
+            toast.error('Please select a category');
+            return;
+        }
+
         if (!formDetails.name) {
             toast.error('Please provide a workflow name');
             return;
@@ -307,7 +312,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
             name: formDetails.name,
             description: formDetails.description,
             module_level: selectedLevel.slug,
-            category: formDetails?.category !== '' ? formDetails.category : null,
+            category: formDetails.category,
             version: `${formDetails.version}`,
             sections: formSections.map(section => ({
                 name: section.name,
@@ -332,7 +337,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
             toast.promise(mutateAsync(workflowData), {
                 loading: previousData ? "Updating worflow..." : "Creating workflow...",
                 success: () => {
-                    navigate('/system-settings/form-management/form-workflows', { replace: true });
+                    navigate('/system-settings/form-workflows', { replace: true });
                     if (previousData) return `Form workflow updated successfully!`;
                     return `Form workflow created successfully!`
                 },
@@ -381,9 +386,8 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
         });
         setFormDetails({
             name: previousData.name,
-            description: previousData.description || '',
-            category: '',
-            // category: previousData.category || '',
+            description: previousData?.description || '',
+            category: previousData.category,
             version: parseFloat(previousData.version)
         });
         setFormSections(previousData.sections);
@@ -494,7 +498,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                         {isLoadingLevels ? (
                                             <Spinner />
                                         ) :
-                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/form-management/module-levels" className="text-blue-800">here</Link>.</p>
+                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/module-levels" className="text-blue-800">here</Link>.</p>
                                         }
                                     </div>
                                 }
@@ -555,20 +559,15 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                 <div className="space-y-2">
                                     <Label htmlFor="formCategory">Workflow Category</Label>
                                     <Select
-                                        value={formDetails?.category || ''}
-                                        onValueChange={(value) => setFormDetails({ ...formDetails, category: value })}
+                                        value={`${formDetails?.category}` || ''}
+                                        onValueChange={(value) => setFormDetails({ ...formDetails, category: parseInt(value) })}
                                         required
                                     >
                                         <SelectTrigger className='w-full'>
                                             <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="registration">Registration</SelectItem>
-                                            <SelectItem value="assessment">Assessment</SelectItem>
-                                            <SelectItem value="approval">Approval</SelectItem>
-                                            <SelectItem value="monitoring">Monitoring</SelectItem>
-                                            <SelectItem value="reporting">Reporting</SelectItem>
-                                            <SelectItem value="workflow">Workflow</SelectItem>
+                                            {Object.entries(workflowCategoryTypes).map(([key, value]) => <SelectItem key={key} value={key} className='capitalize'>{value}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -945,7 +944,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                     (currentStep === 1 && !selectedModule) ||
                                     (currentStep === 2 && !selectedLevel) ||
                                     (currentStep === 3 && !formDetails.name) ||
-                                    (currentStep === 3 && (formDetails?.category === '' || !formDetails?.category)) ||
+                                    (currentStep === 3 && !formDetails?.category) ||
                                     (currentStep === 4 && formSections.length === 0)
                                 }
                                 className="gap-2"

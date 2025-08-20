@@ -5,6 +5,7 @@ import type { APIResponse } from "@/types/api-response";
 export interface WorkflowProps {
   slug: string;
   name: string;
+  category: number;
   description: string;
   version: string;
   is_active: boolean;

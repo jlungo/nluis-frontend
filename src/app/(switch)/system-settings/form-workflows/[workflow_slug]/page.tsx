@@ -15,8 +15,7 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: "Form Workflow",
-            backButton: 'Modules',
-            isFormPage: true
+            backButton: 'Modules'
         })
     }, [setPage])
 

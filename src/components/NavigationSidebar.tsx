@@ -23,12 +23,8 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
-  ClipboardPenLine,
-  LayoutTemplate,
   List,
-  ClipboardPlus,
   LayoutDashboard,
-  User
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
@@ -182,58 +178,14 @@ export function NavigationSidebar({
         case "system-settings":
           return [
             {
-              id: "form-management",
-              label: "Form Management",
-              icon: <ClipboardPenLine className="h-4 w-4" />,
-              items: [
-                {
-                  id: "form-workflows",
-                  label: "Form Workflows",
-                  icon: <LayoutDashboard className="h-4 w-4" />
-                },
-                {
-                  id: "workflow-builder",
-                  label: "Workflow Builder",
-                  icon: <ClipboardPlus className="h-4 w-4" />
-                },
-                {
-                  id: "module-levels",
-                  label: "Module Levels",
-                  icon: <List className="h-4 w-4" />
-                },
-                {
-                  id: "level-sections",
-                  label: "Level Sections",
-                  icon: <LayoutTemplate className="h-4 w-4" />
-                },
-              ],
+              id: "form-workflows",
+              label: "Form Workflows",
+              icon: <LayoutDashboard className="h-4 w-4" />
             },
             {
-              id: "user-management",
-              label: "User Management",
-              icon: <User className="h-4 w-4" />,
-              items: [
-                {
-                  id: "users-dashboard",
-                  label: "Users Dashboard",
-                  icon: <LayoutDashboard className="h-4 w-4" />
-                },
-                // {
-                //   id: "form-builder",
-                //   label: "Form Builder",
-                //   icon: <ClipboardPlus className="h-4 w-4" />
-                // },
-                // {
-                //   id: "module-levels",
-                //   label: "Module Levels",
-                //   icon: <List className="h-4 w-4" />
-                // },
-                // {
-                //   id: "level-sections",
-                //   label: "Level Sections",
-                //   icon: <LayoutTemplate className="h-4 w-4" />
-                // },
-              ],
+              id: "module-levels",
+              label: "Module Levels",
+              icon: <List className="h-4 w-4" />
             },
           ];
         default:
@@ -246,7 +198,7 @@ export function NavigationSidebar({
   const navigationItems = getNavigationItems();
 
   const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isActive = pathname.endsWith(item.id);
+    const isActive = pathname.includes(item.id);
 
     const buttonContent = (
       <Link

@@ -1,6 +1,6 @@
 import { useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
-import WorkflowBuilder from '../../../WorkflowBuilder';
+import WorkflowBuilder from '../../WorkflowBuilder';
 
 export default function Page() {
     const { setPage } = usePageStore();
@@ -9,8 +9,7 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: "Form Workflow",
-            backButton: 'Modules',
-            isFormPage: true
+            backButton: 'Modules'
         })
     }, [setPage])
 
