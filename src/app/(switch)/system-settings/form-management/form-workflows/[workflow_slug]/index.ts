@@ -1,16 +1,16 @@
 import Layout from "./layout";
 import Page from "./page";
-import WorkflowSlugPage from "./[workflow_slug]";
+import Edit from "./edit";
 
 const Index = {
-  path: "form-workflows",
+  path: ":workflow_slug",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    WorkflowSlugPage,
+    Edit,
   ],
 };
 

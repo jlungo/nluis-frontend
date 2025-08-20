@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,6 @@ import {
     Component
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { usePageStore } from '@/store/pageStore';
 import { useModulesQuery, type ModuleProps } from '@/queries/useModuleQuery';
 import { useLevelsQuery, type LevelProps } from '@/queries/useLevelQuery';
 import { Link, useNavigate } from 'react-router';
@@ -32,22 +31,12 @@ import type { InputType } from '@/types/input-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
-import { workflowQueryKey } from '@/queries/useWorkflowQuery';
+import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
 
-export default function WorkflowBuilder({ }: { edit?: boolean }) {
-    const { setPage } = usePageStore();
+export default function WorkflowBuilder({ previousData }: { previousData?: WorkflowProps & { sections: FormSection[] } }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
-
-    useLayoutEffect(() => {
-        setPage({
-            module: 'system-settings',
-            title: "Form Builder",
-            backButton: 'Modules',
-            isFormPage: true
-        })
-    }, [setPage])
 
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedModule, setSelectedModule] = useState<ModuleProps | null>(null);
@@ -341,9 +330,10 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
 
         try {
             toast.promise(mutateAsync(workflowData), {
-                loading: "Creating workflow...",
+                loading: previousData ? "Updating worflow..." : "Creating workflow...",
                 success: () => {
-                    navigate('/system-settings/form-management/forms-dashboard', { replace: true });
+                    navigate('/system-settings/form-management/form-workflows', { replace: true });
+                    if (previousData) return `Form workflow updated successfully!`;
                     return `Form workflow created successfully!`
                 },
                 error: (e: AxiosError) => {
@@ -377,9 +367,28 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
         };
     };
 
-    const handlePreviewEdit = () => {
+    useEffect(() => {
+        if (!previousData) return;
+        setSelectedModule({
+            slug: previousData.module_slug,
+            name: previousData.module_name,
+        });
+        setSelectedLevel({
+            slug: previousData.module_level_slug,
+            name: previousData.module_level_name,
+            module_slug: previousData.module_slug,
+            module_name: previousData.module_name,
+        });
+        setFormDetails({
+            name: previousData.name,
+            description: previousData.description || '',
+            category: '',
+            // category: previousData.category || '',
+            version: parseFloat(previousData.version)
+        });
+        setFormSections(previousData.sections);
         setCurrentStep(4);
-    };
+    }, [previousData])
 
     const renderStepContent = () => {
         switch (currentStep) {
@@ -842,7 +851,7 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
                         <FormPreviewTester
                             workflowData={createFormForPreview()}
                             onSave={handleComplete}
-                            onEdit={handlePreviewEdit}
+                            onEdit={() => setCurrentStep(4)}
                         />
                     </div>
                 );

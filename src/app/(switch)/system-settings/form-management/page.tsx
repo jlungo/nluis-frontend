@@ -40,7 +40,7 @@ export default function Page() {
         })
     }, [PageData])
 
-    const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, filterLevel, activeTab)
+    const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, filterLevel)
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', '')
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery()
 

@@ -8,8 +8,8 @@ export interface WorkflowProps {
   description: string;
   version: string;
   is_active: boolean;
-  module_workflow_slug: string;
-  module_workflow_name: string;
+  module_level_slug: string;
+  module_level_name: string;
   module_slug: string;
   module_name: string;
   sections_count: number;
@@ -26,19 +26,25 @@ export const useWorkflowsQuery = (
   offset: number,
   keyword: string,
   module: string,
-  level: string,
-  is_active: string
+  level: string
 ) => {
   return useQuery<DataProps>({
-    queryKey: [
-      workflowQueryKey,
-      { limit, offset, keyword, module, level, is_active },
-    ],
+    queryKey: [workflowQueryKey, { limit, offset, keyword, module, level }],
     queryFn: () =>
       api
         .get(
-          `/form-management/workflows/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}&level=${level}&is_active=${is_active}`
+          `/form-management/workflows/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}&module_level=${level}`
         )
+        .then((res) => res.data),
+  });
+};
+
+export const useWorkflowQuery = (workflow_slug: string) => {
+  return useQuery({
+    queryKey: [workflowQueryKey, { workflow_slug }],
+    queryFn: () =>
+      api
+        .get(`/form-management/submission/${workflow_slug}/`)
         .then((res) => res.data),
   });
 };

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Plus,
@@ -24,7 +23,6 @@ import { cn } from "@/lib/utils";
 export default function Page() {
     const { setPage: PageData } = usePageStore()
 
-    const [activeTab, setActiveTab] = useState('');
     const [keyword, setKeyword] = useState('');
     const [filterModule, setFilterModule] = useState('');
     const [filterLevel, setFilterLevel] = useState('');
@@ -40,7 +38,7 @@ export default function Page() {
         })
     }, [PageData])
 
-    const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, filterLevel, activeTab)
+    const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, filterLevel)
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', '')
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery()
 
@@ -145,55 +143,48 @@ export default function Page() {
                 </CardContent>
             </Card>
 
-            {/* Form Tabs and List */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3 rounded-full mb-4">
-                    <TabsTrigger value="" className="rounded-full cursor-pointer">All Forms</TabsTrigger>
-                    <TabsTrigger value="1" className="rounded-full cursor-pointer">Active</TabsTrigger>
-                    <TabsTrigger value="0" className="rounded-full cursor-pointer">Inactive</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value={activeTab} className="space-y-4">
-                    {isLoadingWorkflows ? (
-                        <Card>
-                            <CardContent className="h-68 text-center flex flex-col items-center justify-center">
-                                <Spinner />
-                                <p className="text-muted-foreground mt-4">Loading workflows...</p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <>
-                            {workflows && workflows?.results && workflows.results.length === 0 ? (
-                                <Card>
-                                    <CardContent className="p-12 text-center">
-                                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-medium mb-2">No form workflows found</h3>
-                                        <p className="text-muted-foreground mb-4">
-                                            {keyword || filterLevel.length > 0 || filterModule.length > 0 ? 'Try adjusting your search criteria' : 'Get started by creating your first workflow'}
-                                        </p>
-                                        <Link
-                                            to="/system-settings/form-management/workflow-builder"
-                                            className={cn(buttonVariants(), "gap-2")}
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Create Your First Form
-                                        </Link>
-                                    </CardContent>
-                                </Card>
-                            ) : (
-                                <div className="space-y-3">
-                                    {workflows?.results && workflows.results.map((workflow) => (
-                                        <Card key={workflow.slug} className="hover:shadow-md transition-shadow">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4 flex-1">
-                                                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                                                            <FileText className="h-6 w-6" />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-1">
-                                                                <h3 className="font-medium">{workflow.name}</h3>
-                                                                {/* <Badge
+            {/* Form List */}
+            <div className="space-y-4">
+                {isLoadingWorkflows ? (
+                    <Card>
+                        <CardContent className="h-68 text-center flex flex-col items-center justify-center">
+                            <Spinner />
+                            <p className="text-muted-foreground mt-4">Loading workflows...</p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <>
+                        {workflows && workflows?.results && workflows.results.length === 0 ? (
+                            <Card>
+                                <CardContent className="p-12 text-center">
+                                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium mb-2">No form workflows found</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        {keyword || filterLevel.length > 0 || filterModule.length > 0 ? 'Try adjusting your search criteria' : 'Get started by creating your first workflow'}
+                                    </p>
+                                    <Link
+                                        to="/system-settings/form-management/workflow-builder"
+                                        className={cn(buttonVariants(), "gap-2")}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Create Your First Form
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="space-y-3">
+                                {workflows?.results && workflows.results.map((workflow) => (
+                                    <Card key={workflow.slug} className="hover:shadow-md transition-shadow">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4 flex-1">
+                                                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                                                        <FileText className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <h3 className="font-medium">{workflow.name}</h3>
+                                                            {/* <Badge
                                                                     variant="outline"
                                                                     className={`text-xs ${getStatusColor(workflow.)}`}
                                                                 >
@@ -202,58 +193,57 @@ export default function Page() {
                                                                 <Badge variant="outline" className="text-xs">
                                                                     {workflow.type === 'advanced' ? 'Advanced' : 'Simple'}
                                                                 </Badge> */}
-                                                            </div>
-                                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                                <span>{workflow.module_name}</span>
-                                                                <span>•</span>
-                                                                <span>{workflow.sections_count} sections</span>
-                                                                <span>•</span>
-                                                                <span className="flex items-center gap-1">
-                                                                    {/* <Clock className="h-3 w-3" />
+                                                        </div>
+                                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                            <span>{workflow.module_name}</span>
+                                                            <span>•</span>
+                                                            <span>{workflow.sections_count} sections</span>
+                                                            <span>•</span>
+                                                            <span className="flex items-center gap-1">
+                                                                {/* <Clock className="h-3 w-3" />
                                                                     {new Date(workflow.lastModified).toLocaleDateString()} */}
-                                                                </span>
-                                                            </div>
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            // onClick={() => handleViewForm(form.id)}
-                                                            className="gap-2"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                            Preview
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            // onClick={() => handleEditForm(form.id)}
-                                                            className="gap-2"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                            Edit
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            // onClick={() => handleEditForm(form.id)}
-                                                            className="gap-2"
-                                                        >
-                                                            <Delete className="h-4 w-4" />
-                                                            Delete
-                                                        </Button>
-                                                    </div>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        // onClick={() => handleViewForm(form.id)}
+                                                        className="gap-2"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                        Preview
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        // onClick={() => handleEditForm(form.id)}
+                                                        className="gap-2"
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        // onClick={() => handleEditForm(form.id)}
+                                                        className="gap-2"
+                                                    >
+                                                        <Delete className="h-4 w-4" />
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 }
