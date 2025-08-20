@@ -53,7 +53,7 @@ export function LogoutButton() {
                 </Tooltip>
             </TooltipProvider>
 
-            <AlertDialogContent aria-describedby={undefined}>
+            <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
                     <AlertDialogDescription>
