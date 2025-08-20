@@ -54,7 +54,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // Helper function for badge styling
 function getBadgeClass(landUse: string): string {
   const base = "text-xs";
-  switch(landUse) {
+  switch (landUse) {
     case 'Makazi': return `${base} bg-blue-50 text-blue-700 border-blue-200`;
     case 'Biashara': return `${base} bg-green-50 text-green-700 border-green-200`;
     case 'Kilimo': return `${base} bg-yellow-50 text-yellow-700 border-yellow-200`;
@@ -82,7 +82,7 @@ export default function LandUsesOverviewPage() {
     setPage({
       module: 'land-uses',
       title: "Land Use Overview",
-      backButton: '',
+      backButton: 'Modules'
     });
   }, [setPage]);
 
@@ -119,7 +119,7 @@ export default function LandUsesOverviewPage() {
 
   // Filter data based on search and selection
   const filteredData = landUseData.filter(item => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.uses.toLowerCase().includes(searchQuery.toLowerCase());
@@ -194,7 +194,7 @@ export default function LandUsesOverviewPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Select 
+              <Select
                 value={selectedLandUse}
                 onValueChange={setSelectedLandUse}
               >
@@ -208,12 +208,12 @@ export default function LandUsesOverviewPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   // MOCK: Remove this alert when API is ready
                   alert('Export functionality will be available when connected to real API');
-                  
+
                   // REAL DATA: Uncomment this when API is ready
                   // window.open('/api/land-use/export/?format=csv', '_blank');
                 }}
@@ -239,8 +239,8 @@ export default function LandUsesOverviewPage() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="value" 
+                <Bar
+                  dataKey="value"
                   fill="#2563eb"
                   radius={[4, 4, 0, 0]}
                 />
@@ -282,8 +282,8 @@ export default function LandUsesOverviewPage() {
                 </tbody>
               </table>
               {filteredData.length > 3 && (
-                <button 
-                  onClick={() => alert('Full table view will be implemented')} 
+                <button
+                  onClick={() => alert('Full table view will be implemented')}
                   className="w-full text-sm text-blue-600 hover:text-blue-800 text-center mt-4 py-2 border-t"
                 >
                   View all {filteredData.length} records →

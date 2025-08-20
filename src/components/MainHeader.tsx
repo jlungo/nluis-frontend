@@ -67,7 +67,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
 
         {/* Back Button */}
         {page && page?.backButton ? (
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/board', { replace: true })}>
             <ArrowLeft />
             <span>
               <span className="block lg:inline">
@@ -94,8 +94,6 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Page Actions */}
-        {page && page?.pageActions && <div className="flex items-center gap-2">{page.pageActions}</div>}
 
         <ThemeTogglePopover />
 

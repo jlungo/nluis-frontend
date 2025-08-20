@@ -17,6 +17,7 @@ import { usePageStore } from '@/store/pageStore';
 import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
+import DynamicBreadcrums from '@/components/DynamicBreadcrums';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -215,16 +216,17 @@ export default function Layout() {
                           className="gap-2 text-muted-foreground hover:text-foreground"
                         >
                           <ArrowLeft className="h-4 w-4" />
-                          All Modules
+                          Back
                         </Button>
                         <div className="h-4 w-px bg-border" />
+                        {page && page.pageActions !== false && <DynamicBreadcrums />}
                         {page ?
-                          <h1 className="text-lg font-semibold text-primary">
+                          <h1 className="text-base lg:text-lg font-semibold text-primary">
                             {page.title}
                           </h1>
                           : null}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground hidden xl:block">
                         Module Dashboard
                       </div>
                     </div>
