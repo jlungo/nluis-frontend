@@ -95,7 +95,7 @@ const useProjectForms = () => {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           setIs404(true);
@@ -104,7 +104,7 @@ const useProjectForms = () => {
         }
         throw new Error(`Failed to fetch project forms: ${response.status}`);
       }
-      
+
       setIs404(false);
       setData(await response.json());
     } catch (err) {
@@ -146,7 +146,7 @@ const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date';
-    
+
     return date.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: '2-digit',
@@ -164,10 +164,10 @@ const formatDate = (dateString: string): string => {
 const getRandomItem = <T,>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
 // Components
-const FilterDropdown = ({ 
-  value, 
-  onChange, 
-  options, 
+const FilterDropdown = ({
+  value,
+  onChange,
+  options,
   className = "",
   id
 }: {
@@ -196,12 +196,12 @@ const ProjectStatusBadge = ({ status }: { status: ProjectStatus }) => (
   </Badge>
 );
 
-const PaginationControls = ({ 
-  currentPage, 
-  totalPages, 
-  hasNext, 
-  hasPrevious, 
-  onPageChange 
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  onPageChange
 }: {
   currentPage: number;
   totalPages: number;
@@ -283,7 +283,7 @@ export default function DistrictLandUsePage() {
   const navigate = useNavigate();
   const { data, isLoading, error, is404, setIs404, fetchProjectForms } = useProjectForms();
   const { getFiltersFromUrl, updateFiltersInUrl } = useUrlFilters();
-  
+
   const [filters, setFilters] = useState<ProjectFilters>(getFiltersFromUrl);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [currentError, setCurrentError] = useState<string | null>(null);
@@ -294,7 +294,7 @@ export default function DistrictLandUsePage() {
     setPage({
       module: 'land-uses',
       title: "District Land Use Projects",
-      backButton: ''
+      backButton: 'Modules'
     });
   }, [setPage]);
 
@@ -329,8 +329,8 @@ export default function DistrictLandUsePage() {
 
   // Handlers
   const handleFilterChange = useCallback((key: keyof ProjectFilters, value: string | number) => {
-    setFilters(prev => ({ 
-      ...prev, 
+    setFilters(prev => ({
+      ...prev,
       [key]: value,
       page: key !== 'page' ? 1 : Number(value)
     }));
@@ -382,7 +382,7 @@ export default function DistrictLandUsePage() {
               {is404 ? "No Projects Found" : "Error Loading Projects"}
             </DialogTitle>
             <DialogDescription className="pt-4 dark:text-gray-400">
-              {is404 
+              {is404
                 ? "No project forms have been found. This could be due to connection issues or the resource may not exist."
                 : currentError
               }
@@ -429,7 +429,7 @@ export default function DistrictLandUsePage() {
               onKeyDown={handleKeyPress}
               className="flex-1 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-900 dark:text-gray-100"
             />
-            <Button 
+            <Button
               onClick={() => handleFilterChange('projectName', searchInput)}
               className="bg-primary hover:bg-primary/90"
             >
@@ -461,7 +461,7 @@ export default function DistrictLandUsePage() {
                     <TableCell className="text-center font-medium">{project.rowNumber}</TableCell>
                     <TableCell className="text-sm">{formatDate(project.created_at)}</TableCell>
                     <TableCell>
-                      <Link 
+                      <Link
                         to={`/forms/${project.slug}`}
                         className="text-teal-600 hover:text-teal-800 font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 rounded"
                       >
@@ -480,10 +480,10 @@ export default function DistrictLandUsePage() {
                 ))}
               </TableBody>
             </Table>
-            
+
             {enhancedProjects.length === 0 && <EmptyState hasFilters={hasActiveFilters} />}
           </div>
-          
+
           {data.count > 0 && (
             <PaginationControls
               currentPage={currentPage}

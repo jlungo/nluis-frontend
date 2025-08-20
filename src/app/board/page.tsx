@@ -149,13 +149,6 @@ export default function Page() {
     );
 
     const onModuleSelect = (moduleId: string) => {
-        // Special handling for land-uses module
-        if (moduleId === 'land-uses') {
-            navigate('/land-uses-dashboard');
-            return;
-        }
-
-        // Default navigation for other modules
         navigate(`/${moduleId}`);
     };
 

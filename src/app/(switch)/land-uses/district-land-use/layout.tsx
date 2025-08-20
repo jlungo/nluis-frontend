@@ -1,9 +1,13 @@
-import { Outlet } from "react-router";
+import { Outlet, useNavigation } from "react-router";
 
 export default function Layout() {
+    const navigation = useNavigation();
+    const isNavigating = Boolean(navigation.location);
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center p-4">
+        <>
+            {isNavigating && <div className="m-auto w-fit h-fit">Loading...</div>}
             <Outlet />
-        </div>
+        </>
     )
 }

@@ -36,7 +36,79 @@ import {
     Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { FormField, WorkflowTemplate } from './page';
+import type { InputType } from '@/types/input-types';
+
+export interface FormField {
+    id: string;
+    name: string;
+    label: string;
+    type: string;
+    required: boolean;
+    placeholder?: string;
+    helpText?: string;
+    options?: string[];
+    order: number;
+}
+
+export interface SectionForm {
+    id: string;
+    name: string;
+    description: string;
+    fields: FormField[];
+    isRequired: boolean;
+    order: number;
+}
+
+export interface FormSection {
+    id: string;
+    name: string;
+    description: string;
+    forms: SectionForm[];
+    order: number;
+}
+
+export interface WorkflowTemplate {
+    id: string;
+    name: string;
+    description: string | null;
+    module: string;
+    module_level: string;
+    isActive: boolean;
+    isTemplate: boolean;
+    sections?: FormSection[];
+    version: number;
+}
+
+interface FieldsSubmissionStructure {
+    label: string,
+    type: InputType,
+    placeholder: string | null,
+    name: string,
+    required: boolean,
+    position: number
+}
+
+interface FormsSubmissionStructure {
+    name: string,
+    description: string | null,
+    fields: FieldsSubmissionStructure[]
+}
+
+interface SectionSubmissionStructure {
+    name: string,
+    description: string,
+    position: number,
+    forms: FormsSubmissionStructure[]
+}
+
+export interface WorkflowSubmisionStructure {
+    name: string;
+    description: string | null;
+    module_level: string;
+    category: string | null;
+    version: string;
+    sections: SectionSubmissionStructure[];
+}
 
 interface WorkflowPreviewTesterProps {
     workflowData: WorkflowTemplate;
