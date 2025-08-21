@@ -402,7 +402,15 @@ export default function NationalLandUsePage() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Project List</h2>
-        <Button onClick={() => navigate('/create-project')} className="bg-primary hover:bg-primary/90">
+        <Button 
+          onClick={() => navigate('/land-uses/create-project', { 
+            state: { 
+              type: 'National Land Use Plans',
+              from: location.pathname 
+            }
+          })} 
+          className="bg-primary hover:bg-primary/90"
+        >
           <Plus className="h-4 w-4 mr-2" /> Create New Project
         </Button>
       </div>

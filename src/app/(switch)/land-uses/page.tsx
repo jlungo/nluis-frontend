@@ -1,5 +1,5 @@
 import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,39 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface ProjectStats {
-  total: number;
-  approved: number;
-  ongoing: number;
-  active: number;
-  expiry: number;
-  funders: Array<{ name: string; count: number }>;
-  toExpire: Array<{ project: string; expiryDate: string }>;
-}
-
-interface DashboardData {
-  projectStats: ProjectStats;
-  ccroCount: number;
-  loading: boolean;
-}
+import { useProjectStats } from "@/queries/useProjectQuery";
 
 export default function DashboardPage() {
   const { setPage } = usePageStore();
-  const [dashboardData, setDashboardData] = useState<DashboardData>({
-    projectStats: {
-      total: 0,
-      approved: 0,
-      ongoing: 0,
-      active: 0,
-      expiry: 0,
-      funders: [],
-      toExpire: [],
-    },
-    ccroCount: 0,
-    loading: true,
-  });
-  const [selectedProjectType, setSelectedProjectType] = useState<string>("5");
+  const { data: projectStats, isLoading, error } = useProjectStats();
 
   useLayoutEffect(() => {
     setPage({
@@ -51,80 +23,7 @@ export default function DashboardPage() {
     });
   }, [setPage]);
 
-  useEffect(() => {
-    fetchProjectStats();
-    fetchCcroStats();
-  }, [selectedProjectType]);
-
-  const fetchProjectStats = async () => {
-    try {
-      // TODO: Replace with actual API call
-      // const response = await ProjectsService.fetchProjectStats()
-      const mockData: ProjectStats = {
-        total: 156,
-        approved: 89,
-        ongoing: 45,
-        active: 134,
-        expiry: 12,
-        funders: [
-          { name: "World Bank", count: 45 },
-          { name: "USAID", count: 32 },
-          { name: "EU", count: 28 },
-          { name: "Local Government", count: 51 },
-        ],
-        toExpire: [
-          {
-            project: "Northern Region Land Use Plan",
-            expiryDate: "2024-03-15",
-          },
-          { project: "Eastern District Planning", expiryDate: "2024-04-20" },
-          { project: "Western Zone Development", expiryDate: "2024-05-10" },
-        ],
-      };
-
-      setDashboardData((prev) => ({
-        ...prev,
-        projectStats: mockData,
-        loading: false,
-      }));
-    } catch (error) {
-      console.error("Error fetching project stats:", error);
-      setDashboardData((prev) => ({ ...prev, loading: false }));
-    }
-  };
-
-  const fetchCcroStats = async () => {
-    try {
-      // TODO: Replace with actual API call
-      // const response = await CollectService.fetchCcroCounter()
-      const ccroCount = 2347;
-      setDashboardData((prev) => ({
-        ...prev,
-        ccroCount,
-      }));
-    } catch (error) {
-      console.error("Error fetching CCRO stats:", error);
-    }
-  };
-
-  //   const getStatusColor = (type: string) => {
-  //     switch (type) {
-  //       case "total":
-  //         return "bg-blue-500";
-  //       case "approved":
-  //         return "bg-green-500";
-  //       case "ongoing":
-  //         return "bg-yellow-500";
-  //       case "active":
-  //         return "bg-cyan-500";
-  //       case "expiry":
-  //         return "bg-red-500";
-  //       default:
-  //         return "bg-gray-500";
-  //     }
-  //   };
-
-  if (dashboardData.loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -132,164 +31,104 @@ export default function DashboardPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-destructive">Error Loading Dashboard</h3>
+          <p className="text-sm text-muted-foreground">
+            Failed to load project statistics. Please try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mock data for funders and expiring projects (to be replaced with real data when available)
+  const fundersData = [
+    { name: "World Bank", count: 45 },
+    { name: "USAID", count: 32 },
+    { name: "EU", count: 28 },
+    { name: "Local Government", count: 51 },
+  ];
+
+  const expiringProjects = [
+    {
+      project: "Northern Region Land Use Plan",
+      expiryDate: "2024-03-15",
+    },
+    { project: "Eastern District Planning", expiryDate: "2024-04-20" },
+  ];
+
   return (
     <div className="space-y-6 p-6">
-      {/* Project Type Selector */}
-      <div className="flex items-center space-x-4">
-        <label className="text-sm font-medium">Project Type:</label>
-        <Select
-          value={selectedProjectType}
-          onValueChange={setSelectedProjectType}
-        >
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select Project Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="5">All Projects</SelectItem>
-            <SelectItem value="1">Land Use Plans</SelectItem>
-            <SelectItem value="2">Spatial Planning</SelectItem>
-            <SelectItem value="3">Development Projects</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Land Use Plans
-            </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData.projectStats.total}
-            </div>
+            <div className="text-2xl font-bold">{projectStats?.total_projects || 0}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Approved Plans
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData.projectStats.approved}
-            </div>
+            <div className="text-2xl font-bold">{projectStats?.active_projects || 0}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ongoing Plans
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData.projectStats.ongoing}
-            </div>
+            <div className="text-2xl font-bold">{projectStats?.completed_projects || 0}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-cyan-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active Plans
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Draft Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData.projectStats.active}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Expired/Expiring
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData.projectStats.expiry}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              CCRO Counter
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.ccroCount}</div>
+            <div className="text-2xl font-bold">{projectStats?.draft_projects || 0}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts and Additional Data */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Funders Chart */}
-        <Card className="lg:col-span-2">
+      {/* Additional dashboard content can be added here */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Projects by Funder</CardTitle>
+            <CardTitle>Top Funders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {dashboardData.projectStats.funders.map((funder, index) => (
+            <div className="space-y-4">
+              {fundersData.map((funder, index) => (
                 <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{funder.name}</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{
-                          width: `${(funder.count /
-                            Math.max(
-                              ...dashboardData.projectStats.funders.map(
-                                (f) => f.count
-                              )
-                            )) *
-                            100
-                            }%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {funder.count}
-                    </span>
-                  </div>
+                  <span className="text-sm">{funder.name}</span>
+                  <Badge variant="secondary">{funder.count} projects</Badge>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Expiring Projects */}
         <Card>
           <CardHeader>
-            <CardTitle>Expiring Soon</CardTitle>
+            <CardTitle>Expiring Projects</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {dashboardData.projectStats.toExpire.map((project, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-red-50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{project.project}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Expires:{" "}
-                      {new Date(project.expiryDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Badge variant="destructive">Expiring</Badge>
+              {expiringProjects.map((project, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm">{project.project}</span>
+                  <Badge variant="outline">{project.expiryDate}</Badge>
                 </div>
               ))}
             </div>
@@ -299,4 +138,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

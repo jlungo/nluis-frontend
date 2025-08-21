@@ -1,691 +1,260 @@
-import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useNavigate } from 'react-router';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Building,
+  Building2,
   Users,
-  MapPin,
-  FileText,
   Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Filter,
-  Search,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  TrendingUp,
-  DollarSign,
-  Target,
-} from "lucide-react";
+  MapPin,
+  MoreVertical,
+  Globe,
+  Loader2,
+  RefreshCw
+} from 'lucide-react';
+import { useOrganizations, useOrganizationStats } from '@/queries/useOrganizationQuery';
+import type { Organization } from '@/types/organizations';
+import { toast } from 'sonner';
 
-interface Project {
-  id: string;
-  name: string;
-  type:
-    | "village-lu"
-    | "district-lu"
-    | "regional-lu"
-    | "zonal-lu"
-    | "national-lu"
-    | "ccro"
-    | "management";
-  status: "draft" | "active" | "completed" | "suspended";
-  description: string;
-  startDate: string;
-  endDate: string;
-  budget: number;
-  spent: number;
-  progress: number;
-  region: string;
-  district: string;
-  village: string;
-  manager: string;
-  teamSize: number;
-  stakeholders: number;
-}
-
-interface ProjectState {
-  projects: Project[];
-  selectedProjects: string[];
-  loading: boolean;
-  searchTerm: string;
-  statusFilter: string;
-  typeFilter: string;
-  regionFilter: string;
-  viewMode: "list" | "grid" | "kanban";
-  showAddProject: boolean;
-  editingProject: Project | null;
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-}
-
-export default function OrganizationsPage() {
-  const { setPage } = usePageStore();
-  const [state, setState] = useState<ProjectState>({
-    projects: [],
-    selectedProjects: [],
-    loading: true,
-    searchTerm: "",
-    statusFilter: "",
-    typeFilter: "",
-    regionFilter: "",
-    viewMode: "list",
-    showAddProject: false,
-    editingProject: null,
-    currentPage: 1,
-    totalPages: 1,
-    pageSize: 10,
+export default function OrganizationsModuleDashboard() {
+  const navigate = useNavigate();
+  
+  // Use React Query hooks instead of direct service calls
+  const { data: organizations = [], isLoading, refetch, isRefetching } = useOrganizations({ 
+    limit: 5,
+    sort: '-created_at'
   });
+  
+  const { data: stats } = useOrganizationStats();
 
-  useLayoutEffect(() => {
-    setPage({
-      module: "organizations",
-      title: "Project Management",
-      backButton: "Back to Dashboard",
-    });
-  }, [setPage]);
-
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
+  const handleRefresh = async () => {
     try {
-      // TODO: Replace with actual API calls
-      const mockProjects: Project[] = [
-        {
-          id: "1",
-          name: "Village Land Use Planning - Mwanza",
-          type: "village-lu",
-          status: "active",
-          description: "Comprehensive land use planning for Mwanza village",
-          startDate: "2024-01-15",
-          endDate: "2024-06-30",
-          budget: 50000000,
-          spent: 25000000,
-          progress: 65,
-          region: "Mwanza",
-          district: "Ilemela",
-          village: "Mwanza",
-          manager: "John Mwita",
-          teamSize: 8,
-          stakeholders: 45,
-        },
-        {
-          id: "2",
-          name: "District Land Use Strategy - Dar es Salaam",
-          type: "district-lu",
-          status: "completed",
-          description: "Strategic land use planning for Dar es Salaam district",
-          startDate: "2023-07-01",
-          endDate: "2024-01-31",
-          budget: 75000000,
-          spent: 75000000,
-          progress: 100,
-          region: "Dar es Salaam",
-          district: "Ilala",
-          village: "Dar es Salaam",
-          manager: "Sarah Kimambo",
-          teamSize: 12,
-          stakeholders: 120,
-        },
-        {
-          id: "3",
-          name: "CCRO Registration Program - Arusha",
-          type: "ccro",
-          status: "active",
-          description:
-            "Certificate of Customary Right of Occupancy registration",
-          startDate: "2024-02-01",
-          endDate: "2024-12-31",
-          budget: 30000000,
-          spent: 8000000,
-          progress: 35,
-          region: "Arusha",
-          district: "Arusha",
-          village: "Arusha",
-          manager: "Michael Nyerere",
-          teamSize: 6,
-          stakeholders: 85,
-        },
-        {
-          id: "4",
-          name: "Regional Land Use Assessment - Kilimanjaro",
-          type: "regional-lu",
-          status: "draft",
-          description: "Regional land use assessment and planning",
-          startDate: "2024-03-01",
-          endDate: "2024-08-31",
-          budget: 40000000,
-          spent: 0,
-          progress: 0,
-          region: "Kilimanjaro",
-          district: "Moshi",
-          village: "Moshi",
-          manager: "Grace Mwambene",
-          teamSize: 10,
-          stakeholders: 95,
-        },
-      ];
-
-      setState((prev) => ({
-        ...prev,
-        projects: mockProjects,
-        loading: false,
-        totalPages: Math.ceil(mockProjects.length / prev.pageSize),
-      }));
+      await refetch();
+      toast.success('Organizations data refreshed');
     } catch (error) {
-      console.error("Error loading projects:", error);
-      setState((prev) => ({ ...prev, loading: false }));
+      console.error('Error refreshing organizations:', error);
+      toast.error('Failed to refresh organizations data');
     }
   };
 
-  const handleProjectSelection = (projectId: string) => {
-    setState((prev) => {
-      const isSelected = prev.selectedProjects.includes(projectId);
-      const newSelected = isSelected
-        ? prev.selectedProjects.filter((id) => id !== projectId)
-        : [...prev.selectedProjects, projectId];
+  // Compute stats cards data based on API response with fallbacks
+  const activeOrgsCount = organizations.filter(org => org.status === 'active').length;
+  const totalMembersFromOrgs = organizations.reduce((sum, org) => sum + (org.members_count || 0), 0);
+  const uniqueTypes = [...new Set(organizations.map(org => org.type?.name).filter(Boolean))];
+  const uniqueRegions = [...new Set(organizations.map(org => org.region).filter(Boolean))];
 
-      return {
-        ...prev,
-        selectedProjects: newSelected,
-      };
-    });
-  };
-
-  const handleAddProject = () => {
-    setState((prev) => ({ ...prev, showAddProject: true }));
-  };
-
-  const handleEditProject = (project: Project) => {
-    setState((prev) => ({ ...prev, editingProject: project }));
-  };
-
-  const handleDeleteProject = (projectId: string) => {
-    // TODO: Implement delete functionality
-    console.log("Deleting project:", projectId);
-  };
-
-  const getProjectTypeIcon = (type: string) => {
-    switch (type) {
-      case "village-lu":
-        return <MapPin className="h-4 w-4" />;
-      case "district-lu":
-        return <Building className="h-4 w-4" />;
-      case "regional-lu":
-        return <Target className="h-4 w-4" />;
-      case "zonal-lu":
-        return <TrendingUp className="h-4 w-4" />;
-      case "national-lu":
-        return <Building className="h-4 w-4" />;
-      case "ccro":
-        return <FileText className="h-4 w-4" />;
-      case "management":
-        return <Users className="h-4 w-4" />;
-      default:
-        return <Building className="h-4 w-4" />;
+  const organizationStats = [
+    {
+      title: 'Total Organizations',
+      value: stats?.total_organizations?.toString() ?? organizations.length.toString(),
+      change: `${activeOrgsCount} active`,
+      icon: <Building className="h-5 w-5" />,
+      color: 'text-primary'
+    },
+    {
+      title: 'Active Members',
+      value: stats?.total_members?.toString() ?? totalMembersFromOrgs.toString(),
+      change: 'Across all organizations',
+      icon: <Users className="h-5 w-5" />,
+      color: 'text-chart-2'
+    },
+    {
+      title: 'Organization Types',
+      value: (stats?.organizations_by_type?.length ?? uniqueTypes.length).toString(),
+      change: stats?.organizations_by_type?.map(t => t.type_name).join(', ') ?? uniqueTypes.join(', ') ?? 'Various types',
+      icon: <Building2 className="h-5 w-5" />,
+      color: 'text-chart-3'
+    },
+    {
+      title: 'Coverage Areas',
+      value: (stats?.coverage_areas?.length ?? uniqueRegions.length).toString(),
+      change: 'Regional coverage',
+      icon: <Globe className="h-5 w-5" />,
+      color: 'text-chart-4'
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "draft":
-        return <Badge variant="secondary">Draft</Badge>;
-      case "active":
-        return <Badge variant="default">Active</Badge>;
-      case "completed":
-        return <Badge variant="default">Completed</Badge>;
-      case "suspended":
-        return <Badge variant="destructive">Suspended</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "draft":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "active":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      case "suspended":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-TZ", {
-      style: "currency",
-      currency: "TZS",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  if (state.loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Project Management</h1>
-          <p className="text-muted-foreground">
-            Manage land use planning projects and organizational activities
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              setState((prev) => ({
-                ...prev,
-                viewMode: prev.viewMode === "list" ? "grid" : "list",
-              }))
-            }
-          >
-            {state.viewMode === "list" ? "Grid View" : "List View"}
-          </Button>
-          <Button onClick={handleAddProject}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Project Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search projects..."
-                value={state.searchTerm}
-                onChange={(e) =>
-                  setState((prev) => ({ ...prev, searchTerm: e.target.value }))
-                }
-                className="pl-10"
-              />
-            </div>
-            <Select
-              value={state.statusFilter}
-              onValueChange={(value) =>
-                setState((prev) => ({ ...prev, statusFilter: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* <SelectItem value="">All Status</SelectItem> */}
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={state.typeFilter}
-              onValueChange={(value) =>
-                setState((prev) => ({ ...prev, typeFilter: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* <SelectItem value="">All Types</SelectItem> */}
-                <SelectItem value="village-lu">Village Land Use</SelectItem>
-                <SelectItem value="district-lu">District Land Use</SelectItem>
-                <SelectItem value="regional-lu">Regional Land Use</SelectItem>
-                <SelectItem value="zonal-lu">Zonal Land Use</SelectItem>
-                <SelectItem value="national-lu">National Land Use</SelectItem>
-                <SelectItem value="ccro">CCRO</SelectItem>
-                <SelectItem value="management">Management</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Filter by region"
-              value={state.regionFilter}
-              onChange={(e) =>
-                setState((prev) => ({ ...prev, regionFilter: e.target.value }))
-              }
-            />
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Module Header - Fixed */}
+      <div className="flex-none p-6 bg-background border-b">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Organizations Management</h2>
+            <p className="text-muted-foreground">
+              Manage organizational structure, memberships, and institutional relationships within the NLUIS system
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Projects</p>
-                <p className="text-2xl font-bold">{state.projects.length}</p>
-              </div>
-              <Building className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Projects</p>
-                <p className="text-2xl font-bold">
-                  {state.projects.filter((p) => p.status === "active").length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Budget</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(
-                    state.projects.reduce((sum, p) => sum + p.budget, 0)
-                  )}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Progress</p>
-                <p className="text-2xl font-bold">
-                  {Math.round(
-                    state.projects.reduce((sum, p) => sum + p.progress, 0) /
-                      state.projects.length
-                  )}
-                  %
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
+          <Button
+            onClick={() => navigate('registration')}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Register Organization
+          </Button>
+        </div>
       </div>
-
-      {/* Projects List */}
-      {state.viewMode === "list" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Projects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">
-                      <Checkbox
-                        checked={
-                          state.selectedProjects.length ===
-                          state.projects.length
-                        }
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setState((prev) => ({
-                              ...prev,
-                              selectedProjects: state.projects.map((p) => p.id),
-                            }));
-                          } else {
-                            setState((prev) => ({
-                              ...prev,
-                              selectedProjects: [],
-                            }));
-                          }
-                        }}
-                      />
-                    </th>
-                    <th className="text-left p-2">Project Name</th>
-                    <th className="text-left p-2">Type</th>
-                    <th className="text-left p-2">Status</th>
-                    <th className="text-left p-2">Progress</th>
-                    <th className="text-left p-2">Budget</th>
-                    <th className="text-left p-2">Manager</th>
-                    <th className="text-left p-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {state.projects.map((project) => (
-                    <tr key={project.id} className="border-b hover:bg-muted/50">
-                      <td className="p-2">
-                        <Checkbox
-                          checked={state.selectedProjects.includes(project.id)}
-                          onCheckedChange={() =>
-                            handleProjectSelection(project.id)
-                          }
-                        />
-                      </td>
-                      <td className="p-2">
-                        <div>
-                          <div className="font-medium">{project.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {project.description}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center gap-2">
-                          {getProjectTypeIcon(project.type)}
-                          <span className="text-sm capitalize">
-                            {project.type.replace("-", " ")}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(project.status)}
-                          {getStatusBadge(project.status)}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full"
-                            style={{ width: `${project.progress}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {project.progress}%
-                        </span>
-                      </td>
-                      <td className="p-2">
-                        <div className="text-sm">
-                          <div>{formatCurrency(project.budget)}</div>
-                          <div className="text-muted-foreground">
-                            Spent: {formatCurrency(project.spent)}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="text-sm">
-                          <div>{project.manager}</div>
-                          <div className="text-muted-foreground">
-                            {project.teamSize} members
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center gap-1">
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditProject(project)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteProject(project.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Grid View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {state.projects.map((project) => (
-            <Card
-              key={project.id}
-              className="hover:shadow-md transition-shadow"
-            >
-              <CardHeader className="pb-2">
+      
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {organizationStats.map((stat) => (
+            <Card key={stat.title}>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getProjectTypeIcon(project.type)}
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <div className={stat.color}>
+                    {stat.icon}
                   </div>
-                  {getStatusBadge(project.status)}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    {project.description}
-                  </p>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Progress</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Budget</p>
-                      <p className="font-medium">
-                        {formatCurrency(project.budget)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Spent</p>
-                      <p className="font-medium">
-                        {formatCurrency(project.spent)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Manager</p>
-                      <p className="font-medium">{project.manager}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Team Size</p>
-                      <p className="font-medium">{project.teamSize}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleEditProject(project)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
+              <CardContent className="pt-0">
+                <div className="text-2xl font-semibold text-foreground mb-1">
+                  {stat.value}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {stat.change}
+                </p>
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
 
-      {/* Selected Actions */}
-      {state.selectedProjects.length > 0 && (
+        {/* Recent Organizations */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {state.selectedProjects.length} project(s) selected
-              </span>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Organizations</CardTitle>
+              <CardDescription>
+                Recently registered organizations in the system
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isRefetching}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+                  Refresh
                 </Button>
-                <Button size="sm" variant="outline">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Bulk Edit
+                <Button 
+                  variant="default" 
+                  onClick={() => navigate('/organizations/directory')}
+                  className="flex items-center gap-2"
+                >
+                  View All Organizations
                 </Button>
-                <Button size="sm" variant="destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/organizations/registration')}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Register New
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : organizations.length === 0 ? (
+              <div className="text-center p-8">
+                <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No organizations found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Get started by registering your first organization
+                </p>
+                <Button 
+                  onClick={() => navigate('/organizations/registration')}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Register Organization
+                </Button>
+              </div>
+            ) : organizations.map((org, index) => (
+              <div 
+                key={org.id}
+                className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => org.id && navigate(`/organizations/${org.id}`)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                    {index + 1}
+                  </div>
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <Building className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-foreground">{org.name || 'Unnamed Organization'}</h4>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="text-sm text-muted-foreground">{org.type?.name || 'Unknown Type'}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {org.type?.name || 'Unknown'}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {`${org.district || 'Unknown'}, ${org.region || 'Unknown'}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{org.members_count || 0}</div>
+                    <div className="text-xs">Members</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{org.projects_count || 0}</div>
+                    <div className="text-xs">Projects</div>
+                  </div>
+                  <div className="text-center">
+                    <Badge 
+                      className={
+                        org.status === 'active' 
+                          ? 'bg-progress-completed/10 text-progress-completed border-progress-completed/20'
+                          : org.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                          : 'bg-red-100 text-red-800 border-red-200'
+                      }
+                    >
+                      {org.status ? org.status.charAt(0).toUpperCase() + org.status.slice(1) : 'Unknown'}
+                    </Badge>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-6 text-center">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('directory')}
+            >
+              View All Organizations
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      </div>
     </div>
   );
 }

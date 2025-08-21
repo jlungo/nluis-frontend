@@ -9,31 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, ChevronLeft, ChevronRight, AlertCircle, FileSearch } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useVillageLandUseProjects } from '@/queries/useProjectQuery';
+import type { Project } from '@/types/projects';
 
 // Types
 type ProjectStatus = 'draft' | 'in-progress' | 'approved' | 'rejected' | 'completed';
-
-interface ProjectForm {
-  slug: string;
-  name: string;
-  description: string;
-  version: string;
-  project_name: string;
-  section_name: string;
-  level_name: string;
-  module_name: string;
-  created_at: string;
-  status: ProjectStatus;
-  current_task: string;
-  localities_count: number;
-}
-
-interface ApiResponse {
-  results: ProjectForm[];
-  count: number;
-  next: string | null;
-  previous: string | null;
-}
 
 interface ProjectFilters {
   projectStatus: string;
@@ -67,56 +47,6 @@ const CURRENT_TASKS = [
   'Final Output',
   'Approval Process'
 ];
-
-// Custom Hooks
-const useProjectForms = () => {
-  const [data, setData] = useState<ApiResponse>({
-    results: [],
-    count: 0,
-    next: null,
-    previous: null
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [is404, setIs404] = useState(false);
-
-  const fetchProjectForms = useCallback(async (filters: ProjectFilters) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (filters.projectStatus) params.append('status', filters.projectStatus);
-      if (filters.projectName) params.append('search', filters.projectName);
-      params.append('page', filters.page.toString());
-
-      const response = await fetch(`/api/project-forms/?${params.toString()}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setIs404(true);
-          setData({ results: [], count: 0, next: null, previous: null });
-          return;
-        }
-        throw new Error(`Failed to fetch project forms: ${response.status}`);
-      }
-
-      setIs404(false);
-      setData(await response.json());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch project forms');
-      console.error('Project forms fetch error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { data, isLoading, error, is404, setIs404, fetchProjectForms };
-};
 
 const useUrlFilters = () => {
   const searchParams = useSearchParams()[0];
@@ -281,13 +211,19 @@ const EmptyState = ({ hasFilters }: { hasFilters: boolean; }) => (
 export default function VillageLandUsePage() {
   const { setPage } = usePageStore();
   const navigate = useNavigate();
-  const { data, isLoading, error, is404, setIs404, fetchProjectForms } = useProjectForms();
+  const location = useLocation();
   const { getFiltersFromUrl, updateFiltersInUrl } = useUrlFilters();
 
   const [filters, setFilters] = useState<ProjectFilters>(getFiltersFromUrl);
+  const [searchInput, setSearchInput] = useState(getFiltersFromUrl().projectName);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [currentError, setCurrentError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState(getFiltersFromUrl().projectName);
+
+  // Use React Query hook for village land use projects
+  const { data: projects = [], isLoading, error, refetch } = useVillageLandUseProjects({
+    status: filters.projectStatus || undefined,
+    search: filters.projectName || undefined
+  });
 
   // Initialize page
   useLayoutEffect(() => {
@@ -304,11 +240,6 @@ export default function VillageLandUsePage() {
     setFilters(urlFilters);
   }, [getFiltersFromUrl]);
 
-  // Fetch data when filters change
-  useEffect(() => {
-    fetchProjectForms(filters);
-  }, [fetchProjectForms, filters]);
-
   // Update URL when filters change
   useEffect(() => {
     updateFiltersInUrl(filters);
@@ -317,15 +248,17 @@ export default function VillageLandUsePage() {
   // Handle errors by showing modal
   useEffect(() => {
     if (error) {
-      setCurrentError(error);
+      setCurrentError(error instanceof Error ? error.message : 'Failed to fetch projects');
       setShowErrorModal(true);
     }
   }, [error]);
 
   // Derived values
-  const totalPages = Math.ceil(data.count / 10);
-  const currentPage = filters.page;
   const hasActiveFilters = Boolean(filters.projectStatus);
+  const currentPage = filters.page;
+  const pageSize = 10;
+  const totalPages = Math.ceil(projects.length / pageSize);
+  const paginatedProjects = projects.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Handlers
   const handleFilterChange = useCallback((key: keyof ProjectFilters, value: string | number) => {
@@ -347,46 +280,41 @@ export default function VillageLandUsePage() {
     }
   }, [searchInput, handleFilterChange]);
 
-
   const handleRetry = useCallback(() => {
     setShowErrorModal(false);
-    fetchProjectForms(filters);
-  }, [fetchProjectForms, filters]);
+    refetch();
+  }, [refetch]);
 
   const handleCancel = useCallback(() => {
     setShowErrorModal(false);
     setCurrentError(null);
-    setIs404(false);
-  }, [setIs404]);
+  }, []);
 
   // Enhanced projects data
-  const enhancedProjects = useMemo(() => data.results.map((project, i) => ({
+  const enhancedProjects = useMemo(() => paginatedProjects.map((project: Project, i: number) => ({
     ...project,
-    status: project.status || getRandomItem<ProjectStatus>(['draft', 'in-progress', 'approved', 'rejected', 'completed']),
-    current_task: project.current_task || getRandomItem(CURRENT_TASKS),
-    localities_count: project.localities_count || Math.floor(Math.random() * 5) + 1,
+    slug: project.id,
+    name: project.name || 'Unnamed Project',
+    section_name: 'Village Land Use',
+    status: (project.status || getRandomItem<ProjectStatus>(['draft', 'in-progress', 'approved', 'rejected', 'completed'])) as ProjectStatus,
+    current_task: getRandomItem(CURRENT_TASKS),
+    localities_count: Math.floor(Math.random() * 5) + 1,
     created_at: project.created_at || new Date().toISOString(),
-    rowNumber: (currentPage - 1) * 10 + i + 1
-  })), [data.results, currentPage]);
+    rowNumber: (currentPage - 1) * pageSize + i + 1
+  })), [paginatedProjects, currentPage]);
 
   return (
     <div className="space-y-6 p-6">
       {/* Error Modal */}
-      <Dialog open={showErrorModal || is404} onOpenChange={(open) => {
-        setShowErrorModal(open);
-        if (!open) setIs404(false);
-      }}>
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
         <DialogContent className="sm:max-w-[425px] dark:border-gray-800 dark:bg-gray-950">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 dark:text-gray-100">
               <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
-              {is404 ? "No Projects Found" : "Error Loading Projects"}
+              Error Loading Projects
             </DialogTitle>
             <DialogDescription className="pt-4 dark:text-gray-400">
-              {is404
-                ? "No project forms have been found. This could be due to connection issues or the resource may not exist."
-                : currentError
-              }
+              {currentError}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 flex justify-end gap-3">
@@ -403,7 +331,15 @@ export default function VillageLandUsePage() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Project List</h2>
-        <Button onClick={() => navigate('/create-project')} className="bg-primary hover:bg-primary/90">
+        <Button 
+          onClick={() => navigate('/land-uses/create-project', { 
+            state: { 
+              type: 'Village Land Use',
+              from: location.pathname 
+            }
+          })} 
+          className="bg-primary hover:bg-primary/90"
+        >
           <Plus className="h-4 w-4 mr-2" /> Create New Project
         </Button>
       </div>
@@ -485,12 +421,12 @@ export default function VillageLandUsePage() {
             {enhancedProjects.length === 0 && <EmptyState hasFilters={hasActiveFilters} />}
           </div>
 
-          {data.count > 0 && (
+          {projects.length > 0 && (
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
-              hasNext={!!data.next}
-              hasPrevious={!!data.previous}
+              hasNext={currentPage < totalPages}
+              hasPrevious={currentPage > 1}
               onPageChange={(page) => handleFilterChange('page', page)}
             />
           )}
@@ -498,9 +434,9 @@ export default function VillageLandUsePage() {
       )}
 
       {/* Results Summary */}
-      {data.count > 0 && (
+      {projects.length > 0 && (
         <div className="text-sm text-gray-600 text-center">
-          Showing {enhancedProjects.length} of {data.count} project forms
+          Showing {enhancedProjects.length} of {projects.length} project forms
         </div>
       )}
     </div>
