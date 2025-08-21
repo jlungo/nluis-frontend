@@ -861,7 +861,7 @@ export function FormPreviewTester({
                         </Button>
                         <Button size="sm" onClick={() => onSave(workflowData)} className="gap-2">
                             <Save className="h-4 w-4" />
-                            Save Form
+                            Save Workflow
                         </Button>
                     </div>
                 </div>

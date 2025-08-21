@@ -35,7 +35,7 @@ import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
 import { workflowCategoryTypes } from '@/types/constants';
 
-export default function WorkflowBuilder({ previousData }: { previousData?: WorkflowProps & { sections: FormSection[] } }) {
+export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections: FormSection[] }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
@@ -109,7 +109,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
         const defaultSections: FormSection[] = [
             {
                 id: `section-default-UI-${Date.now()}-1`,
-                name: `Section 1`,
+                name: ``,
                 description: '',
                 forms: [],
                 order: 1
@@ -122,7 +122,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
     const addSection = () => {
         const newSection: FormSection = {
             id: `section-default-UI-${Date.now()}`,
-            name: `Section ${formSections.length + 1}`,
+            name: ``,
             description: '',
             forms: [],
             order: formSections.length + 1
@@ -150,7 +150,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
         const section = formSections.find(s => s.id === sectionId);
         const newForm: SectionForm = {
             id: `form-${Date.now()}`,
-            name: `Form ${(section?.forms.length || 0) + 1}`,
+            name: ``,
             description: '',
             fields: [],
             isRequired: false,
@@ -208,7 +208,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
         const newField: FormField = {
             id: `field-${Date.now()}`,
             name: '',
-            label: `Field ${(form?.fields.length || 0) + 1}`,
+            label: ``,
             type: 'text',
             required: false,
             order: (form?.fields.length || 0) + 1
@@ -276,7 +276,10 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
     };
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: WorkflowSubmisionStructure) => api.post(`/form-management/submission/`, e),
+        mutationFn: (e: WorkflowSubmisionStructure) => {
+            if (previousData) return api.put(`/form-management/submission/${previousData.slug}/`, e);
+            return api.post(`/form-management/submission/`, e)
+        },
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
@@ -379,7 +382,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
             name: previousData.module_name,
         });
         setSelectedLevel({
-            slug: previousData.module_level_slug,
+            slug: previousData.module_level,
             name: previousData.module_level_name,
             module_slug: previousData.module_slug,
             module_name: previousData.module_name,
@@ -390,9 +393,9 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
             category: previousData.category,
             version: parseFloat(previousData.version)
         });
-        setFormSections(previousData.sections);
+        setFormSections(sections);
         setCurrentStep(4);
-    }, [previousData])
+    }, [previousData, sections])
 
     const renderStepContent = () => {
         switch (currentStep) {
@@ -781,7 +784,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                                                 {form.fields.length > 0 && (
                                                                     <div className="space-y-2 pl-4 border-l-2 border-border">
                                                                         {form.fields.map((field, fieldIndex) => (
-                                                                            <div key={field.id} className="flex flex-col md:flex-row items-center gap-3 p-3 bg-background rounded border">
+                                                                            <div key={field.id} className="flex flex-col lg:flex-row items-center gap-3 p-3 bg-background rounded border">
                                                                                 <span className="text-xs text-muted-foreground w-6">
                                                                                     {fieldIndex + 1}
                                                                                 </span>
@@ -790,15 +793,21 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                                                                     value={field.label}
                                                                                     onChange={(e) => updateField(section.id, form.id, field.id, {
                                                                                         label: e.target.value,
-                                                                                        name: e.target.value.toLowerCase().replace(/\s+/g, '')
+                                                                                        name: e.target.value
                                                                                     })}
+                                                                                    className="flex-1"
+                                                                                />
+                                                                                <Input
+                                                                                    placeholder="Placeholder"
+                                                                                    value={field.placeholder}
+                                                                                    onChange={(e) => updateField(section.id, form.id, field.id, { placeholder: e.target.value })}
                                                                                     className="flex-1"
                                                                                 />
                                                                                 <Select
                                                                                     value={field.type}
                                                                                     onValueChange={(value) => updateField(section.id, form.id, field.id, { type: value })}
                                                                                 >
-                                                                                    <SelectTrigger className="w-full md:w-40">
+                                                                                    <SelectTrigger className="w-full lg:w-40">
                                                                                         <SelectValue />
                                                                                     </SelectTrigger>
                                                                                     <SelectContent>
@@ -809,7 +818,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                                                                         ))}
                                                                                     </SelectContent>
                                                                                 </Select>
-                                                                                <div className='flex justify-between gap-3 w-full md:w-fit'>
+                                                                                <div className='flex justify-between gap-3 w-full lg:w-fit'>
                                                                                     <Button
                                                                                         variant="outline"
                                                                                         size="sm"
@@ -968,7 +977,7 @@ export default function WorkflowBuilder({ previousData }: { previousData?: Workf
                                 className="gap-2"
                             >
                                 <Check className="h-4 w-4" />
-                                Create Form Workflow
+                                {previousData ? 'Edit' : 'Create'} Form Workflow
                             </Button>
                         )}
                     </div>
