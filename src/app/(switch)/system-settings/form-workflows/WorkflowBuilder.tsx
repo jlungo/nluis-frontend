@@ -35,7 +35,7 @@ import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
 import { workflowCategoryTypes } from '@/types/constants';
 
-export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections: FormSection[] }) {
+export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
@@ -393,7 +393,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             category: previousData.category,
             version: parseFloat(previousData.version)
         });
-        setFormSections(sections);
+        if (sections) setFormSections(sections);
         setCurrentStep(4);
     }, [previousData, sections])
 
