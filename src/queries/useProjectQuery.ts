@@ -29,7 +29,8 @@ import type {
 export const createLandUseFilters = (level?: string, additionalFilters?: Partial<ProjectFilters>): ProjectFilters => {
   const filters: ProjectFilters = {
     ...additionalFilters,
-    type: 'land-use' // Filter by land-use category
+    // The API doesn't support direct type filtering in getProjects
+    // We'll need to filter client-side or use a different approach
   };
 
   if (level) {
@@ -365,7 +366,16 @@ export const useFilteredProjects = (projectTypeId: string, statusId: string, des
 // Land-use specific project queries
 export const useLandUseProjects = (level?: string, additionalFilters?: Partial<ProjectFilters>) => {
   const filters = createLandUseFilters(level, additionalFilters);
-  return useProjects(filters);
+  return useQuery({
+    queryKey: ['land-use-projects', level, filters],
+    queryFn: async () => {
+      const allProjects = await projectService.getProjects(filters);
+      // Filter client-side for land-use projects
+      return allProjects.filter(project => 
+        project.type.category === 'land-use'
+      );
+    },
+  });
 };
 
 export const useVillageLandUseProjects = (additionalFilters?: Partial<ProjectFilters>) => {
