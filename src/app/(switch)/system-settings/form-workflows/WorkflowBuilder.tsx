@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import FormPreviewTester from './FormPreviewTester';
+import { FormPreviewTester } from './FormPreviewTester';
 import {
     ArrowLeft,
     ArrowRight,
@@ -23,7 +23,6 @@ import {
     Component
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { usePageStore } from '@/store/pageStore';
 import { useModulesQuery, type ModuleProps } from '@/queries/useModuleQuery';
 import { useLevelsQuery, type LevelProps } from '@/queries/useLevelQuery';
 import { Link, useNavigate } from 'react-router';
@@ -32,22 +31,13 @@ import type { InputType } from '@/types/input-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
-import { workflowQueryKey } from '@/queries/useWorkflowQuery';
+import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
+import { workflowCategoryTypes } from '@/types/constants';
 
-export default function WorkflowBuilder({ }: { edit?: boolean }) {
-    const { setPage } = usePageStore();
+export default function WorkflowBuilder({ previousData }: { previousData?: WorkflowProps & { sections: FormSection[] } }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
-
-    useLayoutEffect(() => {
-        setPage({
-            module: 'system-settings',
-            title: "Form Builder",
-            backButton: 'Modules',
-            isFormPage: true
-        })
-    }, [setPage])
 
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedModule, setSelectedModule] = useState<ModuleProps | null>(null);
@@ -55,12 +45,12 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
     const [formDetails, setFormDetails] = useState<{
         name: string;
         description: string | null;
-        category: string | null;
+        category: number | null;
         version: number
     }>({
         name: '',
         description: null,
-        category: '',
+        category: null,
         version: 1.0
     });
     const [formSections, setFormSections] = useState<FormSection[]>([]);
@@ -69,7 +59,6 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
 
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
-
 
     const fieldTypes: { value: InputType, label: string }[] = [
         { value: 'text', label: 'Text Input' },
@@ -304,6 +293,11 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
             return;
         }
 
+        if (!formDetails.category) {
+            toast.error('Please select a category');
+            return;
+        }
+
         if (!formDetails.name) {
             toast.error('Please provide a workflow name');
             return;
@@ -318,7 +312,7 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
             name: formDetails.name,
             description: formDetails.description,
             module_level: selectedLevel.slug,
-            category: formDetails?.category !== '' ? formDetails.category : null,
+            category: formDetails.category,
             version: `${formDetails.version}`,
             sections: formSections.map(section => ({
                 name: section.name,
@@ -341,9 +335,10 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
 
         try {
             toast.promise(mutateAsync(workflowData), {
-                loading: "Creating workflow...",
+                loading: previousData ? "Updating worflow..." : "Creating workflow...",
                 success: () => {
-                    navigate('/system-settings/form-management/forms-dashboard', { replace: true });
+                    navigate('/system-settings/form-workflows', { replace: true });
+                    if (previousData) return `Form workflow updated successfully!`;
                     return `Form workflow created successfully!`
                 },
                 error: (e: AxiosError) => {
@@ -377,9 +372,27 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
         };
     };
 
-    const handlePreviewEdit = () => {
+    useEffect(() => {
+        if (!previousData) return;
+        setSelectedModule({
+            slug: previousData.module_slug,
+            name: previousData.module_name,
+        });
+        setSelectedLevel({
+            slug: previousData.module_level_slug,
+            name: previousData.module_level_name,
+            module_slug: previousData.module_slug,
+            module_name: previousData.module_name,
+        });
+        setFormDetails({
+            name: previousData.name,
+            description: previousData?.description || '',
+            category: previousData.category,
+            version: parseFloat(previousData.version)
+        });
+        setFormSections(previousData.sections);
         setCurrentStep(4);
-    };
+    }, [previousData])
 
     const renderStepContent = () => {
         switch (currentStep) {
@@ -485,7 +498,7 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
                                         {isLoadingLevels ? (
                                             <Spinner />
                                         ) :
-                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/form-management/module-levels" className="text-blue-800">here</Link>.</p>
+                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/module-levels" className="text-blue-800">here</Link>.</p>
                                         }
                                     </div>
                                 }
@@ -546,20 +559,15 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
                                 <div className="space-y-2">
                                     <Label htmlFor="formCategory">Workflow Category</Label>
                                     <Select
-                                        value={formDetails?.category || ''}
-                                        onValueChange={(value) => setFormDetails({ ...formDetails, category: value })}
+                                        value={`${formDetails?.category}` || ''}
+                                        onValueChange={(value) => setFormDetails({ ...formDetails, category: parseInt(value) })}
                                         required
                                     >
                                         <SelectTrigger className='w-full'>
                                             <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="registration">Registration</SelectItem>
-                                            <SelectItem value="assessment">Assessment</SelectItem>
-                                            <SelectItem value="approval">Approval</SelectItem>
-                                            <SelectItem value="monitoring">Monitoring</SelectItem>
-                                            <SelectItem value="reporting">Reporting</SelectItem>
-                                            <SelectItem value="workflow">Workflow</SelectItem>
+                                            {Object.entries(workflowCategoryTypes).map(([key, value]) => <SelectItem key={key} value={key} className='capitalize'>{value}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -842,7 +850,7 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
                         <FormPreviewTester
                             workflowData={createFormForPreview()}
                             onSave={handleComplete}
-                            onEdit={handlePreviewEdit}
+                            onEdit={() => setCurrentStep(4)}
                         />
                     </div>
                 );
@@ -936,7 +944,7 @@ export default function WorkflowBuilder({ }: { edit?: boolean }) {
                                     (currentStep === 1 && !selectedModule) ||
                                     (currentStep === 2 && !selectedLevel) ||
                                     (currentStep === 3 && !formDetails.name) ||
-                                    (currentStep === 3 && (formDetails?.category === '' || !formDetails?.category)) ||
+                                    (currentStep === 3 && !formDetails?.category) ||
                                     (currentStep === 4 && formSections.length === 0)
                                 }
                                 className="gap-2"

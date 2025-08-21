@@ -3,39 +3,34 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import api from "@/lib/axios";
-import { sectionQueryKey, type SectionProps } from "@/queries/useSectionQuery";
+import { levelQueryKey, type LevelProps } from "@/queries/useLevelQuery";
 import type { ModuleProps } from "@/queries/useModuleQuery";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
-import type { LevelProps } from "@/queries/useLevelQuery";
-import { useState } from "react";
 
 interface Props {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    form: SectionProps | null;
-    setForm: React.Dispatch<React.SetStateAction<SectionProps | null>>;
-    editing: SectionProps | null;
-    setEditing: React.Dispatch<React.SetStateAction<SectionProps | null>>;
-    modules: ModuleProps[];
-    levels: LevelProps[]
+    form: LevelProps | null;
+    setForm: React.Dispatch<React.SetStateAction<LevelProps | null>>;
+    editing: LevelProps | null;
+    setEditing: React.Dispatch<React.SetStateAction<LevelProps | null>>;
+    modules: ModuleProps[]
 }
 
-export default function AddForm({ open, setOpen, form, setForm, editing, setEditing, modules, levels }: Props) {
+export default function AddForm({ open, setOpen, form, setForm, editing, setEditing, modules }: Props) {
     const queryClient = useQueryClient();
 
-    const [filterModule, setFilterModule] = useState<string>("");
-
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: { slug?: string; data: { name: string; level: string } }) => {
-            if (e?.slug) return api.put(`/form-management/sections/${e.slug}/`, e.data)
-            return api.post(`/form-management/sections/create/`, e.data)
+        mutationFn: (e: { slug?: string; data: { name: string; module: string } }) => {
+            if (e?.slug) return api.put(`/form-management/module/levels/${e.slug}/`, e.data)
+            return api.post(`/form-management/module/levels/create/`, e.data)
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [sectionQueryKey],
+                queryKey: [levelQueryKey],
             }),
         onError: (e) => {
             console.log(e);
@@ -45,15 +40,15 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries()) as { name: string; level: string };
-        if (!data || !data?.level || !data?.name || !form) return;
+        const data = Object.fromEntries(formData.entries()) as { name: string; module: string };
+        if (!data || !data?.module || !data?.name || !form) return;
         if (editing) {
             try {
                 toast.promise(mutateAsync({ slug: form.slug, data }), {
-                    loading: "Editing section...",
+                    loading: "Editing level...",
                     success: () => {
                         setOpen(false);
-                        return `Section edited successfully!`;
+                        return `Module Level edited successfully!`;
                     },
                     error: (e: AxiosError) => {
                         const detail =
@@ -67,7 +62,7 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                 });
             } catch (error) {
                 console.log(error)
-                toast.error("Failed to edit section!");
+                toast.error("Failed to edit module level!");
             } finally {
                 setEditing(null);
                 setOpen(false);
@@ -76,10 +71,10 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
         } else {
             try {
                 toast.promise(mutateAsync({ data }), {
-                    loading: "Adding section...",
+                    loading: "Adding level...",
                     success: () => {
                         setOpen(false);
-                        return `Section added successfully!`;
+                        return `Level added successfully!`;
                     },
                     error: (e: AxiosError) => {
                         const detail =
@@ -93,7 +88,7 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
                 });
             } catch (error) {
                 console.log(error)
-                toast.error("Failed to add section!");
+                toast.error("Failed to add level!");
             } finally {
                 setEditing(null);
                 setOpen(false);
@@ -111,49 +106,32 @@ export default function AddForm({ open, setOpen, form, setForm, editing, setEdit
             }
         }}>
             <DialogTrigger asChild>
-                <Button onClick={() => { setEditing(null); setForm({ slug: "", name: "", module_slug: "", module_name: "", level_name: "", level_slug: "" }); }}>
-                    Add Section
+                <Button onClick={() => { setEditing(null); setForm({ slug: "", name: "", module_slug: "", module_name: "" }); }}>
+                    Add Level
                 </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined}>
                 <DialogHeader>
-                    <DialogTitle>{editing ? "Edit Section" : "Add Section"}</DialogTitle>
+                    <DialogTitle>{editing ? "Edit Level" : "Add Level"}</DialogTitle>
                 </DialogHeader>
                 <form
                     onSubmit={handleSubmit}
                     className="flex flex-col gap-4"
                 >
                     <Input
-                        placeholder="Section name"
+                        placeholder="Level name"
                         defaultValue={form?.name}
                         name="name"
                     />
                     <Select
                         defaultValue={form?.module_slug}
-                        value={filterModule}
-                        onValueChange={setFilterModule}
+                        name="module"
                     >
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select module" />
                         </SelectTrigger>
                         <SelectContent>
-                            {modules.map(m => (
-                                <SelectItem key={m.slug} value={m.slug}>
-                                    {m.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select
-                        defaultValue={form?.level_slug}
-                        name="level"
-                        disabled={!filterModule || filterModule === "all"}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {levels.filter(m => m.module_slug === filterModule).map(m => (
+                            {modules.filter(m => m.slug !== "all").map(m => (
                                 <SelectItem key={m.slug} value={m.slug}>
                                     {m.name}
                                 </SelectItem>

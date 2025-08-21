@@ -105,7 +105,7 @@ export interface WorkflowSubmisionStructure {
     name: string;
     description: string | null;
     module_level: string;
-    category: string | null;
+    category: number;
     version: string;
     sections: SectionSubmissionStructure[];
 }
@@ -123,7 +123,7 @@ interface FormValidationError {
     message: string;
 }
 
-export default function FormPreviewTester({
+export function FormPreviewTester({
     workflowData,
     onSave,
     onEdit,

@@ -3,7 +3,7 @@ export type Submission = {
   description: string | null;
   module_level: string;
   version: string;
-  category: string;
+  category: number;
   sections: {
     name: string;
     description: string;
