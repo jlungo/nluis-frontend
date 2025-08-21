@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AlertCircle, Building2, Users, MapPin, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { organizationService } from '@/services/organizations';
-import { locationService } from '@/services/locations';
+// import { locationService } from '@/services/locations';
 import type { OrganizationType } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 
@@ -52,7 +52,7 @@ const tempRegions = [
   { id: '10', name: 'Tabora' }
 ];
 
-const tempDistricts = {
+const tempDistricts: Record<string, Array<{ id: string; name: string; region_id: string }>> = {
   '1': [ // Dodoma
     { id: '1-1', name: 'Dodoma Urban', region_id: '1' },
     { id: '1-2', name: 'Dodoma Rural', region_id: '1' },

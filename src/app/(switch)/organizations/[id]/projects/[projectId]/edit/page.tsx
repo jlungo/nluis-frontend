@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2, Edit, Building2, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Edit, Building2, MapPin, Calendar, } from 'lucide-react';
 
 interface FormData {
   name: string;
@@ -44,7 +44,13 @@ const tempRegions = [
   { id: '10', name: 'Tabora' }
 ];
 
-const tempDistricts = {
+interface DistrictData {
+  id: string;
+  name: string;
+  region_id: string;
+}
+
+const tempDistricts: Record<string, DistrictData[]> = {
   '1': [
     { id: '1-1', name: 'Dodoma Urban', region_id: '1' },
     { id: '1-2', name: 'Dodoma Rural', region_id: '1' },
@@ -138,12 +144,12 @@ export default function EditProjectPage() {
         setRegions(tempRegions);
 
         // Find region and district IDs from names
-        const regionId = tempRegions.find(r => r.name === projectData.location?.region)?.id || '';
+        const regionId = tempRegions.find((r: Region) => r.name === projectData.location?.region)?.id || '';
         let districtId = '';
         
         if (regionId && projectData.location?.district) {
           const regionDistricts = tempDistricts[regionId] || [];
-          districtId = regionDistricts.find(d => d.name === projectData.location?.district)?.id || '';
+          districtId = regionDistricts.find((d: DistrictData) => d.name === projectData.location?.district)?.id || '';
           setDistricts(regionDistricts);
         }
 
@@ -191,7 +197,7 @@ export default function EditProjectPage() {
           setDistricts(districtsData);
           
           // Clear district selection if it's not valid for the new region
-          if (formData.district && !districtsData.find(d => d.id === formData.district)) {
+          if (formData.district && !districtsData.find((d: DistrictData) => d.id === formData.district)) {
             setFormData(prev => ({ ...prev, district: '', ward: '', village: '' }));
           }
         } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { organizationService } from '@/services/organizations';
 import type { Organization } from '@/types/organizations';
 import { Input } from '@/components/ui/input';
