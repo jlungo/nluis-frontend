@@ -29,3 +29,5 @@ export const workflowCategoryTypes: Record<number, workflowCategoryTypeProps> =
     5: "reporting",
     6: "workflow",
   };
+
+export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;

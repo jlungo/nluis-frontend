@@ -2,7 +2,7 @@ import { usePageStore } from "@/store/pageStore"
 import { useLayoutEffect } from "react"
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -11,7 +11,6 @@ import {
     Edit,
     FileText,
     Eye,
-    Delete
 } from 'lucide-react';
 import { useLevelsQuery } from "@/queries/useLevelQuery";
 import { useModulesQuery } from "@/queries/useModuleQuery";
@@ -21,6 +20,7 @@ import { Link } from "react-router";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { workflowCategoryTypes } from "@/types/constants";
+import Delete from "./Delete";
 
 export default function Page() {
     const { setPage: PageData } = usePageStore()
@@ -156,7 +156,7 @@ export default function Page() {
                     </Card>
                 ) : (
                     <>
-                        {workflows && workflows?.results && workflows.results.length === 0 ? (
+                        {!workflows || !workflows?.results || workflows?.results.length === 0 ? (
                             <Card>
                                 <CardContent className="p-12 text-center">
                                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -189,12 +189,12 @@ export default function Page() {
                                                             <Badge
                                                                 variant="outline"
                                                                 className={cn(`text-xs capitalize border`, {
-                                                                    'bg-primary/20 text-primary dark:text-primary border-primary': workflow.category !== 1,
+                                                                    'bg-primary/20 text-primary dark:text-primary border-primary': workflow.category === 1,
                                                                     'bg-green-500/20 dark:bg-green-500/10 text-green-500 dark:text-green-700 border-green-500 dark:border-green-700': workflow.category === 2,
                                                                     'bg-yellow-500/20 dark:bg-yellow-500/10 text-yellow-500 dark:text-yellow-700 border-yellow-500 dark:border-yellow-700': workflow.category === 3,
                                                                     'bg-red-500/20 dark:bg-red-500/10 text-red-500 dark:text-red-700/60 border-red-500 dark:border-red-700/60': workflow.category === 4,
                                                                     'bg-fuchsia-500/20 dark:bg-fuchsia-500/10 text-fuchsia-500 dark:text-fuchsia-700 border-fuchsia-500 dark:border-fuchsia-700': workflow.category === 5,
-                                                                    'bg-violet-500/20 dark:bg-violet-500/10 text-violet-500 dark:text-violet-700 border-violet-500 dark:border-violet-700': workflow.category !== 6,
+                                                                    'bg-violet-500/20 dark:bg-violet-500/10 text-violet-500 dark:text-violet-700 border-violet-500 dark:border-violet-700': workflow.category === 6,
                                                                 })}
                                                             >
                                                                 {workflowCategoryTypes[workflow.category]}
@@ -222,15 +222,7 @@ export default function Page() {
                                                         <Edit className="h-4 w-4" />
                                                         Edit
                                                     </Link>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        // onClick={() => handleEditForm(form.id)}
-                                                        className="gap-2"
-                                                    >
-                                                        <Delete className="h-4 w-4" />
-                                                        Delete
-                                                    </Button>
+                                                    <Delete workflow={workflow} />
                                                 </div>
                                             </div>
                                         </CardContent>
