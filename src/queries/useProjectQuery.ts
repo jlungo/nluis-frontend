@@ -1,28 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/projects';
 import type { 
-  Project, 
-  ProjectType, 
-  CreateProjectRequest, 
+
   UpdateProjectRequest, 
-  ProjectStats, 
+
   ProjectFilters,
   ProjectUser,
-  Document,
+
   CreateDocumentRequest,
   UpdateDocumentRequest,
   PatchedDocument,
-  Parcel,
-  ParcelParty,
-  ParcelInfo,
-  Signatory,
+
   CreateSignatoryRequest,
-  TeamMember,
+
   CreateTeamMemberRequest,
   AddTeamMemberRequest,
-  MonitoringRecord,
-  Locality,
-  TaskMenuItem
+
 } from '@/types/projects';
 
 // Helper function to create land-use specific filters

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
@@ -105,7 +105,7 @@ export default function OrganizationProjectsPage() {
           console.error('Error loading stats (non-critical):', statsError);
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading data:', error);
         toast.error('Failed to load organization projects');
         navigate('/organizations/directory');
@@ -134,7 +134,7 @@ export default function OrganizationProjectsPage() {
       setStats(statsData);
       
       toast.success('Projects data refreshed');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refreshing projects:', error);
       toast.error('Failed to refresh projects data');
     } finally {
@@ -160,7 +160,7 @@ export default function OrganizationProjectsPage() {
         await projectService.deleteProject(project.id);
         toast.success('Project deleted successfully');
         handleRefresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting project:', error);
         toast.error('Failed to delete project');
       }

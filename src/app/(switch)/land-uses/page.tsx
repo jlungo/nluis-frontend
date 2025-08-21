@@ -2,13 +2,6 @@ import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useProjectStats } from "@/queries/useProjectQuery";
 
 export default function DashboardPage() {

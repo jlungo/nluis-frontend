@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { organizationService } from '@/services/organizations';
 import type { Organization } from '@/types/organizations';
@@ -58,7 +58,7 @@ export default function OrganizationDirectory() {
         console.log('✅ Organizations fetched successfully:', orgs);
         console.log('📊 First organization structure:', orgs[0]);
         setOrganizations(orgs);
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error loading organizations:', error);
         console.error('Error details:', {
           message: error.message,
@@ -111,7 +111,7 @@ export default function OrganizationDirectory() {
           sort: `${sortConfig.order === 'desc' ? '-' : ''}${sortConfig.field}`
         });
         setOrganizations(orgs);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting organization:', error);
         toast.error('Failed to delete organization');
       }

@@ -19,8 +19,7 @@ import {
   User,
   Save,
   ArrowLeft,
-  Loader2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
 
 interface FormData {
@@ -124,7 +123,7 @@ export default function EditOrganization() {
           district: orgData.district || '',
           region: orgData.region || '',
           primaryEmail: orgData.primary_email || '',
-          phoneNumber: orgData.phone_number || '',
+          phoneNumber: '', // phone_number doesn't exist on Organization type
           focalPersonName: orgData.focal_person_name || '',
           focalPersonJobTitle: orgData.focal_person_job_title || '',
           focalPersonEmail: orgData.focal_person_email || '',
@@ -133,7 +132,7 @@ export default function EditOrganization() {
 
         // Filter districts based on current region (only if districts API works)
         if (orgData.region && districtsData.length > 0) {
-          const filtered = districtsData.filter(d => d.region === orgData.region);
+          const filtered = districtsData.filter(d => d.region_id === orgData.region);
           setFilteredDistricts(filtered);
         }
 
@@ -152,7 +151,7 @@ export default function EditOrganization() {
   // Handle region change
   const handleRegionChange = (regionName: string) => {
     setFormData(prev => ({ ...prev, region: regionName, district: '' }));
-    const filtered = districts.filter(d => d.region === regionName);
+    const filtered = districts.filter(d => d.region_id === regionName);
     setFilteredDistricts(filtered);
   };
 

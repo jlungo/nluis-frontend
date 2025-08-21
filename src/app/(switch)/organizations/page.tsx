@@ -14,7 +14,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useOrganizations, useOrganizationStats } from '@/queries/useOrganizationQuery';
-import type { Organization } from '@/types/organizations';
+// import type { Organization } from '@/types/organizations';
 import { toast } from 'sonner';
 
 export default function OrganizationsModuleDashboard() {

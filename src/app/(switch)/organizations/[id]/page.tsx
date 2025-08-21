@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { organizationService } from '@/services/organizations';
 import type { Organization } from '@/types/organizations';
@@ -16,9 +16,6 @@ import {
   Edit,
   ArrowLeft,
   Loader2,
-  Phone,
-  Globe,
-  Calendar,
   User
 } from 'lucide-react';
 
@@ -49,7 +46,7 @@ export default function OrganizationDetail() {
         }
         
         setOrganization(org);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading organization:', error);
         
         // More specific error handling
@@ -191,7 +188,7 @@ export default function OrganizationDetail() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
-                  <p className="text-foreground">{organization.phone_number || 'N/A'}</p>
+                  <p className="text-foreground">N/A</p>
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium text-muted-foreground">Physical Address</label>

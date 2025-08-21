@@ -22,9 +22,9 @@ import type {
   MonitoringRecord,
   Locality,
   TaskMenuItem,
-  ApiListResponse,
+ 
   ProjectApprovalResponse,
-  DocumentListResponse,
+
   ParcelSearchResponse,
   TeamMemberHistory
 } from '@/types/projects';
