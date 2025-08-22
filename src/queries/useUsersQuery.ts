@@ -1,9 +1,7 @@
-// src/queries/useUsersQuery.ts
-
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import type { Organization } from '@/queries/useOrganizationQuery';
 import type { APIResponse } from '@/types/api-response';
+import type { Organization } from '@/types/organizations';
 
 export interface ApiUser {
   id: string;
