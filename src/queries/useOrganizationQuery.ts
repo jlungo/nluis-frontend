@@ -18,7 +18,7 @@ export const useOrganizationsQuery = () => {
     queryKey: [organizationsQueryKey],
     queryFn: async () => {
       try {
-        const response = await api.get<Organization[]>(`/organization/organizations`);
+        const response = await api.get<Organization[]>(`/organization`);
         return response.data;
       } catch (error) {
         return [];
