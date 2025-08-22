@@ -23,20 +23,15 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
-  ClipboardPenLine,
-  LayoutTemplate,
   List,
-  ClipboardPlus,
   LayoutDashboard,
-  User
 } from "lucide-react";
-import type { Page } from "@/types/page";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
 import { cn } from "@/lib/utils";
 
 interface NavigationItem {
-  id: Page;
+  id: string;
   label: string;
   icon: React.ReactNode;
   badge?: string;
@@ -61,7 +56,6 @@ export function NavigationSidebar({
   );
 
   const { page } = usePageStore();
-
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -184,62 +178,16 @@ export function NavigationSidebar({
         case "system-settings":
           return [
             {
-              id: "form-management",
-              label: "Form Management",
-              icon: <ClipboardPenLine className="h-4 w-4" />,
-              items: [
-                {
-                  id: "forms-dashboard",
-                  label: "Forms Dashboard",
-                  icon: <LayoutDashboard className="h-4 w-4" />
-                },
-                {
-                  id: "form-builder",
-                  label: "Form Builder",
-                  icon: <ClipboardPlus className="h-4 w-4" />
-                },
-                {
-                  id: "module-levels",
-                  label: "Module Levels",
-                  icon: <List className="h-4 w-4" />
-                },
-                {
-                  id: "level-sections",
-                  label: "Level Sections",
-                  icon: <LayoutTemplate className="h-4 w-4" />
-                },
-              ],
+              id: "form-workflows",
+              label: "Form Workflows",
+              icon: <LayoutDashboard className="h-4 w-4" />
             },
             {
-              id: "user-management",
-              label: "User Management",
-              icon: <User className="h-4 w-4" />,
-              items: [
-                {
-                  id: "users-dashboard",
-                  label: "Users Dashboard",
-                  icon: <LayoutDashboard className="h-4 w-4" />
-                },
-                // {
-                //   id: "form-builder",
-                //   label: "Form Builder",
-                //   icon: <ClipboardPlus className="h-4 w-4" />
-                // },
-                // {
-                //   id: "module-levels",
-                //   label: "Module Levels",
-                //   icon: <List className="h-4 w-4" />
-                // },
-                // {
-                //   id: "level-sections",
-                //   label: "Level Sections",
-                //   icon: <LayoutTemplate className="h-4 w-4" />
-                // },
-              ],
+              id: "module-levels",
+              label: "Module Levels",
+              icon: <List className="h-4 w-4" />
             },
           ];
-        case "audit-trail":
-          return [];
         default:
           return [];
       }
@@ -250,11 +198,12 @@ export function NavigationSidebar({
   const navigationItems = getNavigationItems();
 
   const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isActive = pathname.endsWith(item.id);
+    const isActive = pathname.includes(item.id);
 
     const buttonContent = (
       <Link
         key={item.id}
+        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
         className={cn(
           buttonVariants({ variant: isActive ? "default" : "ghost" }),
           `w-full ${collapsed
@@ -267,7 +216,7 @@ export function NavigationSidebar({
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
-        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
+
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>
@@ -332,7 +281,6 @@ export function NavigationSidebar({
     );
 
     if (collapsed) {
-      // In collapsed mode, show group icon with tooltip containing all items
       return (
         <TooltipProvider key={group.id}>
           <Tooltip>
@@ -377,7 +325,7 @@ export function NavigationSidebar({
                             : "ghost",
                           size: "sm",
                         }),
-                        `w-full justify-start h-8 ${pathname.includes(item.id)
+                        `w-full justify-start h-8 ${(pathname.includes(item.id) || (pathname === '/land-uses' && item.id === 'land-uses-dashboard'))
                           ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
                           : "hover:bg-accent"
                         }`
@@ -406,7 +354,6 @@ export function NavigationSidebar({
       );
     }
 
-    // Full width mode with collapsible groups
     return (
       <Collapsible
         key={group.id}

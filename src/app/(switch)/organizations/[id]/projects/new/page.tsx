@@ -1,0 +1,539 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router';
+import { usePageStore } from "@/store/pageStore";
+import { projectService } from '@/services/projects';
+import { organizationService } from '@/services/organizations';
+// import { locationService } from '@/services/locations';
+import type { ProjectType, CreateProjectRequest } from '@/types/projects';
+import type { Organization } from '@/types/organizations';
+import type { Region, District } from '@/types/locations';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Save, Loader2, FolderPlus, Building2, MapPin, Calendar} from 'lucide-react';
+
+interface FormData {
+  name: string;
+  description: string;
+  type_id: string;
+  start_date: string;
+  end_date: string;
+  budget: string;
+  region: string;
+  district: string;
+  ward: string;
+  village: string;
+}
+
+// Temporary regions data (same as in registration)
+const tempRegions = [
+  { id: '1', name: 'Dodoma' },
+  { id: '2', name: 'Arusha' },
+  { id: '3', name: 'Dar es Salaam' },
+  { id: '4', name: 'Mwanza' },
+  { id: '5', name: 'Mbeya' },
+  { id: '6', name: 'Morogoro' },
+  { id: '7', name: 'Tanga' },
+  { id: '8', name: 'Iringa' },
+  { id: '9', name: 'Kigoma' },
+  { id: '10', name: 'Tabora' }
+];
+
+interface DistrictData {
+  id: string;
+  name: string;
+  region_id: string;
+}
+
+const tempDistricts: Record<string, DistrictData[]> = {
+  '1': [
+    { id: '1-1', name: 'Dodoma Urban', region_id: '1' },
+    { id: '1-2', name: 'Dodoma Rural', region_id: '1' },
+    { id: '1-3', name: 'Kondoa', region_id: '1' },
+    { id: '1-4', name: 'Mpwapwa', region_id: '1' }
+  ],
+  '2': [
+    { id: '2-1', name: 'Arusha City', region_id: '2' },
+    { id: '2-2', name: 'Arusha Rural', region_id: '2' },
+    { id: '2-3', name: 'Karatu', region_id: '2' },
+    { id: '2-4', name: 'Ngorongoro', region_id: '2' }
+  ],
+  '3': [
+    { id: '3-1', name: 'Kinondoni', region_id: '3' },
+    { id: '3-2', name: 'Ilala', region_id: '3' },
+    { id: '3-3', name: 'Temeke', region_id: '3' },
+    { id: '3-4', name: 'Ubungo', region_id: '3' },
+    { id: '3-5', name: 'Kigamboni', region_id: '3' }
+  ]
+};
+
+export default function NewProjectPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { setPage } = usePageStore();
+  
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+    type_id: '',
+    start_date: '',
+    end_date: '',
+    budget: '',
+    region: '',
+    district: '',
+    ward: '',
+    village: ''
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set page metadata
+  useEffect(() => {
+    setPage({
+      module: 'organizations',
+      title: 'Create New Project',
+      isFormPage: true
+    });
+  }, [setPage]);
+
+  // Load initial data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (!id) {
+        toast.error('Organization ID is required');
+        navigate('/organizations/directory');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log('Loading initial data...');
+        
+        // Load organization details
+        const orgData = await organizationService.getOrganization(id);
+        console.log('Organization loaded:', orgData);
+        setOrganization(orgData);
+
+        // Load project types
+        const types = await projectService.getProjectTypes();
+        console.log('Project types loaded:', types);
+        setProjectTypes(types);
+
+        // Use temporary regions for testing
+        setRegions(tempRegions);
+
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        toast.error('Failed to load form data');
+        navigate('/organizations/directory');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [id, navigate]);
+
+  // Load districts when region changes
+  useEffect(() => {
+    const loadDistricts = () => {
+      if (!formData.region) {
+        setDistricts([]);
+        return;
+      }
+
+      setLoadingDistricts(true);
+      
+      setTimeout(() => {
+        try {
+          const districtsData = tempDistricts[formData.region] || [];
+          setDistricts(districtsData);
+          
+          // Clear district selection if it's not valid for the new region
+          if (formData.district && !districtsData.find((d: DistrictData) => d.id === formData.district)) {
+            setFormData(prev => ({ ...prev, district: '', ward: '', village: '' }));
+          }
+        } catch (error) {
+          console.error('Error loading districts:', error);
+          toast.error('Failed to load districts');
+          setDistricts([]);
+        } finally {
+          setLoadingDistricts(false);
+        }
+      }, 300);
+    };
+
+    loadDistricts();
+  }, [formData.region]);
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateForm = (): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Project name is required';
+    }
+    
+    if (!formData.type_id) {
+      newErrors.type_id = 'Project type is required';
+    }
+    
+    if (!formData.description.trim()) {
+      newErrors.description = 'Project description is required';
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description = 'Description must be at least 10 characters';
+    }
+
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      if (endDate <= startDate) {
+        newErrors.end_date = 'End date must be after start date';
+      }
+    }
+
+    if (formData.budget && isNaN(Number(formData.budget))) {
+      newErrors.budget = 'Budget must be a valid number';
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!id || !organization) {
+      toast.error('Organization information is missing');
+      return;
+    }
+
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const selectedRegion = regions.find(r => r.id === formData.region);
+      const selectedDistrict = districts.find(d => d.id === formData.district);
+
+      const projectData: CreateProjectRequest = {
+        name: formData.name,
+        description: formData.description || undefined,
+        type_id: formData.type_id,
+        organization_id: id,
+        start_date: formData.start_date || undefined,
+        end_date: formData.end_date || undefined,
+        budget: formData.budget ? Number(formData.budget) : undefined,
+        location: {
+          region: selectedRegion?.name,
+          district: selectedDistrict?.name,
+          ward: formData.ward || undefined,
+          village: formData.village || undefined,
+        }
+      };
+
+      console.log('Creating project:', projectData);
+      const createdProject = await projectService.createProject(projectData);
+      console.log('Project created:', createdProject);
+      
+      toast.success('Project created successfully!');
+      navigate(`/organizations/${id}/projects`);
+    } catch (error) {
+      console.error('Project creation error:', error);
+      toast.error('Failed to create project. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-xl font-semibold mb-2">Organization Not Found</h2>
+        <p className="text-muted-foreground mb-4">The organization you're looking for doesn't exist.</p>
+        <Button onClick={() => navigate('/organizations/directory')}>
+          Back to Directory
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <form onSubmit={handleSubmit} className="h-full flex flex-col">
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-6 space-y-8">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/organizations/${id}/projects`)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Projects
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Create New Project</h1>
+                <p className="text-muted-foreground">for {organization.name}</p>
+              </div>
+            </div>
+
+            {/* Organization Context */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-blue-600" />
+                  Organization Context
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Organization</Label>
+                  <p className="text-foreground font-medium">{organization.name}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Type</Label>
+                  <p className="text-foreground">{organization.type?.name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Location</Label>
+                  <p className="text-foreground">{organization.district}, {organization.region}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Project Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderPlus className="h-5 w-5 text-blue-600" />
+                  Project Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Project Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      placeholder="Enter project name"
+                      className={errors.name ? 'border-red-500' : ''}
+                    />
+                    {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="type_id">Project Type *</Label>
+                    <Select value={formData.type_id} onValueChange={(value) => handleInputChange('type_id', value)}>
+                      <SelectTrigger className={errors.type_id ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select project type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projectTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.type_id && <p className="text-sm text-red-500 mt-1">{errors.type_id}</p>}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Project Description *</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Describe the project objectives, scope, and expected outcomes..."
+                    rows={4}
+                    className={errors.description ? 'border-red-500' : ''}
+                  />
+                  {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timeline and Budget */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  Timeline and Budget
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="start_date">Start Date</Label>
+                    <Input
+                      id="start_date"
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => handleInputChange('start_date', e.target.value)}
+                      className={errors.start_date ? 'border-red-500' : ''}
+                    />
+                    {errors.start_date && <p className="text-sm text-red-500 mt-1">{errors.start_date}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="end_date">End Date</Label>
+                    <Input
+                      id="end_date"
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => handleInputChange('end_date', e.target.value)}
+                      className={errors.end_date ? 'border-red-500' : ''}
+                    />
+                    {errors.end_date && <p className="text-sm text-red-500 mt-1">{errors.end_date}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="budget">Budget (TZS)</Label>
+                    <Input
+                      id="budget"
+                      type="number"
+                      value={formData.budget}
+                      onChange={(e) => handleInputChange('budget', e.target.value)}
+                      placeholder="0"
+                      className={errors.budget ? 'border-red-500' : ''}
+                    />
+                    {errors.budget && <p className="text-sm text-red-500 mt-1">{errors.budget}</p>}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Location Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  Project Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="region">Region</Label>
+                    <Select value={formData.region} onValueChange={(value) => handleInputChange('region', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((region) => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {region.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="district">District</Label>
+                    <Select 
+                      value={formData.district} 
+                      onValueChange={(value) => handleInputChange('district', value)}
+                      disabled={!formData.region || loadingDistricts}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={loadingDistricts ? "Loading..." : "Select district"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((district) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="ward">Ward (Optional)</Label>
+                    <Input
+                      id="ward"
+                      value={formData.ward}
+                      onChange={(e) => handleInputChange('ward', e.target.value)}
+                      placeholder="Enter ward name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="village">Village (Optional)</Label>
+                    <Input
+                      id="village"
+                      value={formData.village}
+                      onChange={(e) => handleInputChange('village', e.target.value)}
+                      placeholder="Enter village name"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="flex-none border-t bg-background p-6">
+          <div className="max-w-4xl mx-auto flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate(`/organizations/${id}/projects`)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isSubmitting ? 'Creating...' : 'Create Project'}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

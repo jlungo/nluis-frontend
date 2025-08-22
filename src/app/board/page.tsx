@@ -149,9 +149,6 @@ export default function Page() {
     );
 
     const onModuleSelect = (moduleId: string) => {
-
-        // TODO: Implement module selection logic based on roles
-
         navigate(`/${moduleId}`);
     };
 

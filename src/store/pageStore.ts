@@ -6,7 +6,7 @@ export interface PageMetadata {
   title: string;
   isFormPage?: boolean;
   showPageHeader?: boolean;
-  pageActions?: React.ReactNode;
+  pageActions?: boolean;
   backButton?: string;
 }
 

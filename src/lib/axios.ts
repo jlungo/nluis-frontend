@@ -1,83 +1,49 @@
 import axios from "axios";
-import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// In development, we use the proxy configured in vite.config.ts
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  timeout: 15000, // 15 seconds
+});
+// hello again
+// Attach access token to requests
+api.interceptors.request.use((config) => {
+  const accessToken = localStorage.getItem("accessToken");
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
 });
 
-// Request interceptor for API calls
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const accessToken = localStorage.getItem("accessToken");
-    if (accessToken && config.headers) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for API calls
+// Auto-refresh on 401 error
 api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Handle 401 - Unauthorized error
+  (res) => res,
+  async (err) => {
+    const originalRequest = err.config;
     if (
-      error.response?.status === 401 && 
+      err.response?.status === 401 &&
       !originalRequest._retry &&
       localStorage.getItem("refreshToken")
     ) {
       originalRequest._retry = true;
       try {
-        // Try to refresh the token
-        const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
+        const res = await axios.post(`${API_URL}/auth/token/refresh/`, {
           refresh: localStorage.getItem("refreshToken"),
         });
 
-        const newAccessToken = response.data.access;
-        localStorage.setItem("accessToken", newAccessToken);
+        const newAccess = res.data.access;
+        localStorage.setItem("accessToken", newAccess);
 
-        // Retry the original request with new token
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        }
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         return api(originalRequest);
-      } catch (refreshError) {
-        // If refresh fails, clear everything and redirect to login
+      } catch {
         localStorage.clear();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
+        window.location.href = "/";
+        return Promise.reject(err);
       }
     }
 
-    // Handle network errors
-    if (!error.response) {
-      console.error('Network Error:', error.message);
-      return Promise.reject({
-        ...error,
-        response: {
-          data: {
-            detail: 'Network error. Please check your internet connection.'
-          }
-        }
-      });
-    }
-
-    // Return other errors as is
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 

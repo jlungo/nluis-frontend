@@ -16,10 +16,14 @@ build:
   services:
     - docker:25.0.3-dind
   script:
-    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker build 
+        --build-arg VITE_API_URL=$VITE_API_URL 
+        --build-arg VITE_TEST_API_URL=$VITE_TEST_API_URL 
+        --build-arg VITE_DODOSO_DOC_TYPE_ID=$VITE_DODOSO_DOC_TYPE_ID 
+        --build-arg VITE_APP_PORT=$VITE_APP_PORT 
+        -t $IMAGE_TAG -t $LATEST_TAG .
     - docker push $IMAGE_TAG
     - docker push $LATEST_TAG
   only:
     - main
     - master
-

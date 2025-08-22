@@ -13,7 +13,9 @@ export type Page =
   | "organizations"
   | "user-management"
   | "system-settings"
-  | "audit-trail"
+  | "billing"
+  | "document-management"
+  | "equipment-management"
 
   // Dashboard pages
 
