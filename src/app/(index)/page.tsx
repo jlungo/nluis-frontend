@@ -104,7 +104,7 @@ export default function Page() {
             <div className="text-center">
               <div className="font-bold text-2xl text-primary">169</div>
               <div className="text-sm text-muted-foreground">
-                Districts Active
+                Districts Covered
               </div>
             </div>
             <div className="text-center">
