@@ -53,7 +53,11 @@ export default function ResetPassword() {
       }
     };
 
-    verifyToken();
+    const timeoutId = setTimeout(() => {
+      verifyToken();
+    }, 2500); // 2.5 seconds delay for visualization
+
+    return () => clearTimeout(timeoutId);
   }, [uidb64, token, verifyPasswordResetToken]);
 
   const validateForm = () => {
