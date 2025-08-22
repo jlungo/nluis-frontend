@@ -24,7 +24,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Search,
-  Filter,
   UserPlus,
   Edit,
   Trash2,
@@ -49,6 +48,10 @@ import {
 import { toast } from 'sonner';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
+import { useUsersQuery } from '@/queries/useUsersQuery';
+import { genderTypes } from '@/types/constants';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
 
 interface User {
   id: string;
@@ -57,7 +60,7 @@ interface User {
   email: string;
   phone: string;
   role: string;
-  organization: string;
+  organization: string | null;
   status: 'active' | 'inactive' | 'pending' | 'suspended';
   emailVerified: boolean;
   lastLogin: string;
@@ -72,11 +75,23 @@ interface NewUser {
   phone: string;
   roleId: string;
   organization: string;
-  location: string;
+  gender: number;
 }
 
 interface UserManagementProps {
   onInvitationSent?: (email: string, role: string, invitingAdmin: string) => void;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string;
+      email?: string[];
+      phone?: string[];
+      [key: string]: any;
+    };
+  };
+  message?: string;
 }
 
 export default function UserManagement({ onInvitationSent }: UserManagementProps = {}) {
@@ -89,7 +104,11 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+  const { data: roles = [] } = useRolesQuery();
+  const { data: organizations = [] } = useOrganizationsQuery();
 
   const [newUser, setNewUser] = useState<NewUser>({
     firstName: '',
@@ -98,29 +117,150 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     phone: '',
     roleId: '',
     organization: '',
-    location: ''
+    gender: 0,
   });
 
-  const { data: roles = []  } = useRolesQuery();
-  const { data: organizations = [] } = useOrganizationsQuery();
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: NewUser) => {
 
-  // Mock user data
-  const mockUsers: User[] = [
-    {
-      id: 'user-001',
-      firstName: 'John',
-      lastName: 'Mwangi',
-      email: 'john.mwangi@nluis.go.tz',
-      phone: '+255 754 123 456',
-      role: 'Land Use Planner',
-      organization: 'National Land Use Planning Commission',
-      status: 'active',
-      emailVerified: true,
-      lastLogin: '2025-01-10 14:30',
-      createdAt: '2024-06-15',
-      location: 'Dar es Salaam'
+      const data = {
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        role_id: userData.roleId,
+        organization: userData.organization,
+        gender: userData.gender,
+      }
+      const response = await api.post('/auth/users/create/', data);
+      return response.data;
+    },
+    onSuccess: (variables) => {
+      
+      // Close dialog and reset form
+      setIsCreateUserOpen(false);
+      setNewUser({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        roleId: '',
+        organization: '',
+        gender: 0,
+      });
+
+      // Show success message
+      setSuccessMessage(`User account created successfully! An email invitation has been sent to ${variables.email} to verify their account.`);
+      setShowSuccessAlert(true);
+      setCreateError(null);
+      
+      toast.success('User created and invitation email sent!');
+      
+      // Invalidate users query to refetch data
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Auto-hide success alert after 10 seconds
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 10000);
+    },
+    onError: (error: ApiError) => {
+      console.error('Error creating user:', error);
+      
+      let errorMessage = 'Failed to create user. Please try again.';
+      
+      if (error.response?.data) {
+        if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.email) {
+          errorMessage = `${error.response.data.email[0]}`;
+        } else if (error.response.data.phone) {
+          errorMessage = `${error.response.data.phone[0]}`;
+        } else if (typeof error.response.data === 'object') {
+          // errorMessage = 'Unexpected error occurred';
+          const firstError = Object.values(error.response.data)[0];
+          if (Array.isArray(firstError)) {
+            errorMessage = `${firstError[0]}`;
+          }
+        }
+      }
+      
+      setCreateError(errorMessage);
+      toast.error(errorMessage);
     }
-  ];
+  });
+
+  const editUserMutation = useMutation({
+    mutationFn: async (userData: User) => {
+      const data = {
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        role: userData.role, // TODO: Implement role update UUID
+        organization: userData.organization,
+        status: userData.status,
+      };
+      const response = await api.put(`/auth/users/${userData.id}/`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      setIsEditUserOpen(false);
+      setEditingUser(null);
+      setSuccessMessage('User updated successfully!');
+      setShowSuccessAlert(true);
+      toast.success('User updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 10000);
+    },
+    onError: (error: ApiError) => {
+      console.error('Error updating user:', error);
+      let errorMessage = 'Failed to update user. Please try again.';
+      
+      if (error.response?.data) {
+        if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.email) {
+          errorMessage = `${error.response.data.email[0]}`;
+        } else if (error.response.data.phone) {
+          errorMessage = `${error.response.data.phone[0]}`;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await api.delete(`/auth/users/${userId}/`);
+      return response.data;
+    },
+    onSuccess: () => {
+      setSuccessMessage('User deleted successfully!');
+      setShowSuccessAlert(true);
+      toast.success('User deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 10000);
+    },
+    onError: (error: ApiError) => {
+      console.error('Error deleting user:', error);
+      let errorMessage = 'Failed to delete user. Please try again.';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
+      
+      toast.error(errorMessage);
+    }
+  });
 
   const regions = [
     'Dar es Salaam',
@@ -135,7 +275,10 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     'Tabora'
   ];
 
-  const filteredUsers = mockUsers.filter(user => {
+  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useUsersQuery({ organizations });
+
+  // Update the filteredUsers function to use the fetched data
+  const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,86 +293,13 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     return matchesSearch && matchesOrganization && matchesRole && matchesTab;
   });
 
-  const handleCreateUser = async () => {
-    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.roleId) {
+  const handleCreateUser = () => {
+    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.roleId || !newUser.gender || !newUser.organization) {
       toast.error('Please fill in all required fields');
       return;
     }
     
-
-    setIsCreatingUser(true);
-    
-    try {
-      // TODO: Replace with actual API endpoint
-      const userData = {
-        first_name: newUser.firstName,
-        last_name: newUser.lastName,
-        email: newUser.email,
-        phone: newUser.phone,
-        role_id: newUser.roleId,
-        organization: newUser.organization,
-        location: newUser.location
-      };
-
-      // Structure for API call (commented out until endpoint is ready)
-      // await api.post('/auth/users/', userData);
-      
-      // Simulate API call for now
-      console.log('Creating user:', userData);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Find role name from the selected role ID
-      const selectedRole = roles.find(role => role.id === newUser.roleId);
-      const roleName = selectedRole ? selectedRole.name : 'Unknown Role';
-      
-      // Close dialog and reset form
-      setIsCreateUserOpen(false);
-      setNewUser({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        roleId: '',
-        organization: '',
-        location: ''
-      });
-
-      // Show success message
-      setSuccessMessage(`User account created successfully! An email invitation has been sent to ${newUser.email} to verify their account.`);
-      setShowSuccessAlert(true);
-      
-      toast.success('User created and invitation email sent!');
-      
-      // Trigger invitation flow if callback provided
-      if (onInvitationSent) {
-        // For demo purposes, show a notification with a link to test the invitation flow
-        setTimeout(() => {
-          toast.success(
-            <div className="space-y-2">
-              <p>Invitation email sent to {newUser.email}</p>
-              <button 
-                onClick={() => onInvitationSent(newUser.email, roleName, 'System Administrator')}
-                className="text-primary underline text-sm"
-              >
-                Click here to simulate user clicking invitation link
-              </button>
-            </div>, 
-            { duration: 10000 }
-          );
-        }, 1000);
-      }
-      
-      // Auto-hide success alert after 10 seconds
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 10000);
-
-    } catch (error) {
-      console.error('Error creating user:', error);
-      toast.error('Failed to create user. Please try again.');
-    } finally {
-      setIsCreatingUser(false);
-    }
+    createUserMutation.mutate(newUser);
   };
 
   const handleEditUser = (user: User) => {
@@ -239,31 +309,35 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
 
   const handleSaveEdit = () => {
     if (editingUser) {
-      console.log('Updating user:', editingUser);
-      setIsEditUserOpen(false);
-      setEditingUser(null);
-      toast.success('User updated successfully!');
+      editUserMutation.mutate(editingUser);
     }
   };
 
   const handleDeleteUser = (userId: string) => {
-    console.log('Deleting user:', userId);
-    toast.success('User deleted successfully');
+    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      deleteUserMutation.mutate(userId);
+    }
   };
 
-  const handleResendInvitation = (user: User) => {
+  const handleSuspendUser = (userId: string) => { // TODO: Implement this
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      const updatedUser = { ...user, status: 'suspended' as const };
+      editUserMutation.mutate(updatedUser);
+    }
+  };
+
+  const handleActivateUser = (userId: string) => { // TODO: Implement this
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      const updatedUser = { ...user, status: 'active' as const };
+      editUserMutation.mutate(updatedUser);
+    }
+  };
+
+  const handleResendInvitation = (user: User) => { // TODO: Implement this
     console.log('Resending invitation to:', user.email);
     toast.success(`Invitation email resent to ${user.email}`);
-  };
-
-  const handleSuspendUser = (userId: string) => {
-    console.log('Suspending user:', userId);
-    toast.success('User account suspended');
-  };
-
-  const handleActivateUser = (userId: string) => {
-    console.log('Activating user:', userId);
-    toast.success('User account activated');
   };
 
   const getStatusColor = (status: string) => {
@@ -327,36 +401,45 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                 </DialogDescription>
               </DialogHeader>
               
+              {/* Error Alert */}
+              {createError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{createError}</AlertDescription>
+                </Alert>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="firstName"
                     className="w-full"
                     value={newUser.firstName}
                     onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
                     placeholder="Enter first name"
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   />
                 </div>
 
                 {/* Last Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="lastName"
                     className="w-full"
                     value={newUser.lastName}
                     onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
                     placeholder="Enter last name"
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   />
                 </div>
 
                 {/* Email */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
                   <Input
                     id="email"
                     type="email"
@@ -364,7 +447,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                     placeholder="user@nluis.go.tz"
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   />
                 </div>
 
@@ -377,17 +460,17 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                     value={newUser.phone}
                     onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
                     placeholder="+255 7XX XXX XXX"
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   />
                 </div>
 
                 {/* Role */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="role">Role *</Label>
+                  <Label htmlFor="role">Role <span className="text-red-500">*</span></Label>
                   <Select
                     value={newUser.roleId}
                     onValueChange={(value) => setNewUser({ ...newUser, roleId: value })}
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select role" />
@@ -408,13 +491,34 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   </Select>
                 </div>
 
-                {/* Organization */}
+                {/* Gender */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="organization">Organization</Label>
+                  <Label htmlFor="gender">Gender <span className="text-red-500">*</span></Label>
+                  <Select
+                    value={newUser.gender.toString()}
+                    onValueChange={(value) => setNewUser({ ...newUser, gender: parseInt(value) })}
+                    disabled={createUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(genderTypes).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Organization */}
+                <div className="col-span-2 space-y-2 min-w-0">
+                  <Label htmlFor="organization">Organization <span className="text-red-500">*</span></Label>
                   <Select
                     value={newUser.organization}
                     onValueChange={(value) => setNewUser({ ...newUser, organization: value })}
-                    disabled={isCreatingUser}
+                    disabled={createUserMutation.isPending}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Organization" />
@@ -428,44 +532,25 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Location (full width) */}
-                <div className="col-span-2 space-y-2 min-w-0">
-                  <Label htmlFor="location">Location/Region</Label>
-                  <Select
-                    value={newUser.location}
-                    onValueChange={(value) => setNewUser({ ...newUser, location: value })}
-                    disabled={isCreatingUser}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {regions.map((region) => (
-                        <SelectItem key={region} value={region}>
-                          {region}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-
 
               <div className="flex items-center justify-end gap-3 pt-4">
                 <Button 
                   variant="outline" 
-                  onClick={() => setIsCreateUserOpen(false)}
-                  disabled={isCreatingUser}
+                  onClick={() => {
+                    setIsCreateUserOpen(false);
+                    setCreateError(null);
+                  }}
+                  disabled={createUserMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleCreateUser} 
                   className="gap-2"
-                  disabled={isCreatingUser}
+                  disabled={createUserMutation.isPending}
                 >
-                  {isCreatingUser ? (
+                  {createUserMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Creating...
@@ -517,6 +602,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         </Alert>
       )}
 
+      {/* Rest of the component remains the same */}
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -561,13 +647,6 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                 </SelectContent>
               </Select>
             </div>
-
-            {/* More Filters Button
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              More Filters
-            </Button>
-            */}
           </div>
         </CardContent>
       </Card>
@@ -576,21 +655,36 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         {/* Responsive TabsList */}
         <TabsList className="flex flex-wrap w-full gap-2">
           <TabsTrigger value="all" className="flex-1 min-w-32">
-            All Users ({mockUsers.length})
+            All Users ({users.length})
           </TabsTrigger>
           <TabsTrigger value="active" className="flex-1 min-w-32">
-            Active ({mockUsers.filter(u => u.status === 'active').length})
+            Active ({users.filter(u => u.status === 'active').length})
           </TabsTrigger>
           <TabsTrigger value="pending" className="flex-1 min-w-32">
-            Pending ({mockUsers.filter(u => u.status === 'pending').length})
+            Pending ({users.filter(u => u.status === 'pending').length})
           </TabsTrigger>
           <TabsTrigger value="inactive" className="flex-1 min-w-32">
-            Inactive ({mockUsers.filter(u => u.status === 'inactive').length})
+            Inactive ({users.filter(u => u.status === 'inactive').length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
-          {filteredUsers.length === 0 ? (
+          {isLoadingUsers ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                <h3 className="text-lg font-medium mb-2">Loading users...</h3>
+              </CardContent>
+            </Card>
+          ) : usersError ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Error loading users</h3>
+                <p className="text-muted-foreground">Failed to fetch user data. Please try again.</p>
+              </CardContent>
+            </Card>
+          ) : filteredUsers.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -676,192 +770,239 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                         )}
                         <Button
                           variant="outline"
-                          size="sm"
-                          onClick={() => handleEditUser(user)}
-                          className="gap-2"
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            {user.status === 'active' ? (
-                              <DropdownMenuItem onClick={() => handleSuspendUser(user.id)}>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Suspend User
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                            className="gap-2"
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
                               </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem onClick={() => handleActivateUser(user.id)}>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activate User
+                              {user.status === 'active' ? (
+                                <DropdownMenuItem onClick={() => handleSuspendUser(user.id)}>
+                                  <UserX className="h-4 w-4 mr-2" />
+                                  Suspend User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleActivateUser(user.id)}>
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Activate User
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem>
+                                <Settings className="h-4 w-4 mr-2" />
+                                Reset Password
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem>
-                              <Settings className="h-4 w-4 mr-2" />
-                              Reset Password
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Edit User Account
+              </DialogTitle>
+              <DialogDescription>
+                Update user account information and permissions.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {editingUser && (
+              <div className="grid grid-cols-2 gap-4">
+                {/* First Name */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editFirstName">First Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="editFirstName"
+                    className="w-full"
+                    value={editingUser.firstName}
+                    onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
+                    disabled={editUserMutation.isPending}
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editLastName">Last Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="editLastName"
+                    className="w-full"
+                    value={editingUser.lastName}
+                    onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
+                    disabled={editUserMutation.isPending}
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editEmail">Email Address <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="editEmail"
+                    type="email"
+                    className="w-full"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                    disabled={editUserMutation.isPending}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editPhone">Phone Number</Label>
+                  <Input
+                    id="editPhone"
+                    className="w-full"
+                    value={editingUser.phone}
+                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                    disabled={editUserMutation.isPending}
+                  />
+                </div>
+
+                {/* Role */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editRole">Role <span className="text-red-500">*</span></Label>
+                  <Select
+                    value={editingUser.role}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
+                    disabled={editUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editStatus">Status</Label>
+                  <Select
+                    value={editingUser.status}
+                    onValueChange={(value) => setEditingUser({ 
+                      ...editingUser, 
+                      status: value as 'active' | 'inactive' | 'pending' | 'suspended' 
+                    })}
+                    disabled={editUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="suspended">Suspended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Organization */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editorganization">Organization</Label>
+                  <Select
+                    value={editingUser.organization || ''}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, organization: value })}
+                    disabled={editUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select organization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {organizations.map((org) => (
+                        <SelectItem key={org.id} value={org.id}>
+                          {org.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Location/Region */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="editLocation">Location/Region</Label>
+                  <Select
+                    value={editingUser.location}
+                    onValueChange={(value) => setEditingUser({ ...editingUser, location: value })}
+                    disabled={editUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map((region) => (
+                        <SelectItem key={region} value={region}>
+                          {region}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditUserOpen(false)}
+                disabled={editUserMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveEdit} 
+                className="gap-2"
+                disabled={editUserMutation.isPending}
+              >
+                {editUserMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Edit User Dialog */}
-      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5" />
-              Edit User Account
-            </DialogTitle>
-            <DialogDescription>
-              Update user account information and permissions.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editingUser && (
-            <div className="grid grid-cols-2 gap-4">
-              {/* First Name */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editFirstName">First Name</Label>
-                <Input
-                  id="editFirstName"
-                  className="w-full"
-                  value={editingUser.firstName}
-                  onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
-                />
-              </div>
-
-              {/* Last Name */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editLastName">Last Name</Label>
-                <Input
-                  id="editLastName"
-                  className="w-full"
-                  value={editingUser.lastName}
-                  onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editEmail">Email Address</Label>
-                <Input
-                  id="editEmail"
-                  type="email"
-                  className="w-full"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                />
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editPhone">Phone Number</Label>
-                <Input
-                  id="editPhone"
-                  className="w-full"
-                  value={editingUser.phone}
-                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                />
-              </div>
-
-              {/* Role */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editRole">Role</Label>
-                <Select
-                  value={editingUser.role}
-                  onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.name}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Organization */}
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="editorganization">Organization</Label>
-                <Select
-                  value={editingUser.organization}
-                  onValueChange={(value) => setEditingUser({ ...editingUser, organization: value })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select organization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {organizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id}>
-                        {org.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Location/Region */}
-              <div className="col-span-2 space-y-2 min-w-0">
-                <Label htmlFor="editLocation">Location/Region</Label>
-                <Select
-                  value={editingUser.location}
-                  onValueChange={(value) => setEditingUser({ ...editingUser, location: value })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regions.map((region) => (
-                      <SelectItem key={region} value={region}>
-                        {region}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit} className="gap-2">
-              <CheckCircle className="h-4 w-4" />
-              Save Changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
