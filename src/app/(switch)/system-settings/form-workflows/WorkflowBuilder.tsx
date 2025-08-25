@@ -34,6 +34,7 @@ import type { AxiosError } from 'axios';
 import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
 import { workflowCategoryTypes } from '@/types/constants';
+import { slugify } from '@/lib/utils';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
@@ -153,7 +154,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             name: ``,
             description: '',
             fields: [],
-            isRequired: false,
             order: (section?.forms.length || 0) + 1
         };
 
@@ -324,6 +324,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 forms: section.forms.map(form => ({
                     name: form.name,
                     description: form.description,
+                    position: form.order,
                     fields: form.fields.map(field => ({
                         label: field.label,
                         type: field.type as InputType,
@@ -631,7 +632,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             <div className="space-y-6">
                                 {formSections.map((section, sectionIndex) => (
                                     <Card key={section.id} className="relative">
-                                        <CardHeader className="pb-4">
+                                        <CardHeader className="pb-2">
                                             <div className="flex flex-col md:flex-row items-start gap-4">
                                                 <div className='flex justify-between w-full md:w-fit md:hidden'>
                                                     <div className="flex items-center gap-2 text-muted-foreground">
@@ -761,14 +762,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        onClick={() => updateForm(section.id, form.id, { isRequired: !form.isRequired })}
-                                                                        className={form.isRequired ? 'bg-destructive/10 text-destructive border-destructive/20' : ''}
-                                                                    >
-                                                                        {form.isRequired ? 'Required' : 'Optional'}
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
                                                                         onClick={() => addField(section.id, form.id)}
                                                                         className="gap-2"
                                                                     >
@@ -793,7 +786,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                     value={field.label}
                                                                                     onChange={(e) => updateField(section.id, form.id, field.id, {
                                                                                         label: e.target.value,
-                                                                                        name: e.target.value
+                                                                                        name: slugify(e.target.value)
                                                                                     })}
                                                                                     className="flex-1"
                                                                                 />

@@ -16,7 +16,7 @@ export interface UserProps {
     id: string;
     name: string;
   } | null;
-  modules: ModuleTypes[] | null;
+  modules: { name: string; slug: ModuleTypes }[] | null;
   company: string | null;
   phone_number: string | null;
 }
@@ -51,7 +51,10 @@ interface AuthState {
   refreshAccessToken: () => Promise<void>;
   verifyEmailTokenToken: (token: string) => Promise<VerifyEmailResponse>;
   requestPasswordReset: (email: string) => Promise<void>;
-  verifyPasswordResetToken: (uidb64: string, token: string) => Promise<{
+  verifyPasswordResetToken: (
+    uidb64: string,
+    token: string
+  ) => Promise<{
     success: boolean;
     message: string;
     uid64: string;
@@ -146,6 +149,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       const res = await api.post("/auth/login/", { email, password });
       const { access, refresh, ...userData } = res.data;
 
+      console.log(res);
+
       localStorage.setItem("accessToken", access);
       localStorage.setItem("refreshToken", refresh);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -210,7 +215,11 @@ export const useAuth = create<AuthState>((set, get) => ({
       if (error.response?.status === 404) {
         throw { detail: "Email not found. Please check your email address." };
       }
-      throw error.response?.data || { detail: "Failed to send reset email. Please try again." };
+      throw (
+        error.response?.data || {
+          detail: "Failed to send reset email. Please try again.",
+        }
+      );
     } finally {
       set({ loading: false });
     }
@@ -235,18 +244,31 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   verifyPasswordResetToken: async (uidb64: string, token: string) => {
     try {
-      const response = await api.get(`/auth/password-reset/${uidb64}/${token}/`);
+      const response = await api.get(
+        `/auth/password-reset/${uidb64}/${token}/`
+      );
       return response.data;
     } catch (error: any) {
       console.error("Token verification failed:", error);
       if (error.response?.status === 400) {
-        throw { detail: "Invalid or expired token. Please request a new password reset link." };
+        throw {
+          detail:
+            "Invalid or expired token. Please request a new password reset link.",
+        };
       }
-      throw error.response?.data || { detail: "Failed to verify token. Please try again." };
+      throw (
+        error.response?.data || {
+          detail: "Failed to verify token. Please try again.",
+        }
+      );
     }
   },
 
-  completePasswordReset: async (uidb64: string, token: string, password: string) => {
+  completePasswordReset: async (
+    uidb64: string,
+    token: string,
+    password: string
+  ) => {
     set({ loading: true });
     try {
       await api.patch("/auth/password-reset-complete", {
@@ -256,7 +278,11 @@ export const useAuth = create<AuthState>((set, get) => ({
       });
     } catch (error: any) {
       console.error("Password reset failed:", error);
-      throw error.response?.data || { detail: "Failed to reset password. Please try again." };
+      throw (
+        error.response?.data || {
+          detail: "Failed to reset password. Please try again.",
+        }
+      );
     } finally {
       set({ loading: false });
     }

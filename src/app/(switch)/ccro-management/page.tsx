@@ -93,10 +93,10 @@ export default function CCROManagementPage() {
     itemsPerPage: 10,
   });
 
-    useLayoutEffect(() => {
-        setPage({
+  useLayoutEffect(() => {
+    setPage({
       module: "ccro-management",
-            title: "CCRO Management",
+      title: "CCRO Management",
       backButton: "Back to Modules",
     });
   }, [setPage]);
