@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useWorkflowQuery, type SectionProps } from '@/queries/useWorkflowQuery';
@@ -9,9 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, ChevronRight, ChevronDown, Edit } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import FormField from '@/components/form-field';
 
 export default function Page() {
     const { workflow_slug } = useParams<{ workflow_slug: string }>();
@@ -27,7 +26,6 @@ export default function Page() {
             backButton: 'Modules'
         })
     }, [setPage, data])
-
 
     const [expandedSections, setExpandedSections] = useState<string[]>([]);
     const [activeForm, setActiveForm] = useState<string>('');
@@ -57,7 +55,7 @@ export default function Page() {
 
         return (
             <div className="h-full flex flex-col">
-                <div className="bg-primary/5 border-b border-border p-6 mb-6">
+                <div className="bg-primary/5 border-b border-border p-4 md:p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Button variant="ghost" size="sm" onClick={() => setActiveForm('')}>
@@ -65,7 +63,7 @@ export default function Page() {
                                 Sections
                             </Button>
                             <div>
-                                <h2 className="text-lg font-semibold text-foreground">{form.name}</h2>
+                                <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground">{form.name}</h2>
                                 <p className="text-sm text-muted-foreground">{form?.description || null}</p>
                             </div>
                         </div>
@@ -76,18 +74,7 @@ export default function Page() {
                     <Card>
                         <CardContent>
                             <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                {form.fields.map((field) => (
-                                    <div key={field.id} className='w-full md:w-[48%] xl:w-[49%]'>
-                                        <Label htmlFor={`${field.id}`}>{field.name}</Label>
-                                        <Input
-                                            id={`${field.id}`}
-                                            type={field.type}
-                                            placeholder={field.placeholder || ''}
-                                            disabled
-                                            className="bg-muted"
-                                        />
-                                    </div>
-                                ))}
+                                {form.fields.slice().sort((a, b) => a.position - b.position).map((field) => <FormField key={field.id} {...field} />)}
                             </div>
                         </CardContent>
                     </Card>
@@ -96,11 +83,17 @@ export default function Page() {
         );
     };
 
-    // useEffect(() => {
-    //     if (data.sections.length == 1 && data.sections.every(section => section.forms.length == 1)) {
-    //         setActiveForm(data.sections[0].forms[0].slug);
-    //     }
-    // }, [])
+    useEffect(() => {
+        if (!data) return
+        if (data.sections.length == 1 && data.sections.every(section => section.forms.length == 1))
+            setActiveForm(data.sections[0].forms[0].slug);
+        if (data?.sections.length > 0) {
+            const lowest = [...data.sections].sort(
+                (a, b) => (a.position ?? Infinity) - (b.position ?? Infinity)
+            )[0]
+            if (lowest) setExpandedSections([lowest.slug])
+        }
+    }, [data])
 
     if (!data && !isLoading)
         return <div className='flex flex-col items-center justify-center h-60'>
@@ -125,7 +118,7 @@ export default function Page() {
     return (
         <div className="h-full flex flex-col">
             {/* Header */}
-            <div className="bg-primary/5 border-b border-border p-6 mb-6">
+            <div className="bg-primary/5 border-b border-border p-4 md:p-6 mb-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -133,7 +126,7 @@ export default function Page() {
                             Back
                         </Button>
                         <div>
-                            <h1 className="text-xl font-semibold text-foreground">{data.name}</h1>
+                            <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground">{data.name}</h1>
                             <p className="text-sm text-muted-foreground">
                                 {data?.description || ''}
                             </p>
@@ -145,7 +138,7 @@ export default function Page() {
                             className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
                         >
                             <Edit className="h-4 w-4" />
-                            Edit Workflow
+                            Edit<span className='hidden md:inline'>Workflow</span>
                         </Link>
                     </div>
                 </div>
@@ -154,14 +147,14 @@ export default function Page() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
                 <div className="space-y-4">
-                    {data.sections.map((section, _sectionIndex) => (
+                    {data.sections.slice().sort((a, b) => a.position - b.position).slice().sort((a, b) => a.position - b.position).map((section) => (
                         <Card key={section.slug} className="overflow-hidden">
                             <Collapsible
                                 open={expandedSections.includes(section.slug)}
                                 onOpenChange={() => toggleSection(section.slug)}
                             >
                                 <CollapsibleTrigger asChild>
-                                    <div className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer">
+                                    <div className="flex items-center justify-between p-4 bg-muted/60 dark:bg-muted/20 hover:bg-muted/90 dark:hover:bg-muted/40 cursor-pointer">
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center gap-2">
                                                 {/* {section.icon} */}
@@ -195,7 +188,7 @@ export default function Page() {
                                     <div className="p-4 space-y-3">
                                         <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
                                         <div className="grid gap-3">
-                                            {section.forms.map((form) => (
+                                            {section.forms.slice().sort((a, b) => a.position - b.position).map((form) => (
                                                 <div
                                                     key={form.slug}
                                                     // className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${form.isAccessible

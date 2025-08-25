@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
 import type { WorkflowCategoryKey } from "@/types/constants";
+import type { InputType } from "@/types/input-types";
 
 export interface FieldsProps {
   id: 0;
   label: string;
-  type: string;
+  type: InputType;
   type_display: string;
   placeholder: string;
   name: string;
@@ -38,6 +39,7 @@ export interface FormProps {
   module_level_name: string;
   module_slug: string;
   module_name: string;
+  position: number;
   fields: FieldsProps[];
 }
 

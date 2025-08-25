@@ -3,11 +3,11 @@ export type InputType =
   | "email"
   | "number"
   | "textarea"
-  | "select"
   | "checkbox"
-  | "radio"
   | "date"
-  | "file";
+  | "file"
+  | "select"
+  | "radio";
 //   | "switch"
 //   | "map-area"
 //   | "gps-coordinates"

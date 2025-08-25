@@ -55,7 +55,6 @@ export interface SectionForm {
     name: string;
     description: string;
     fields: FormField[];
-    isRequired: boolean;
     order: number;
 }
 
@@ -91,6 +90,7 @@ interface FieldsSubmissionStructure {
 interface FormsSubmissionStructure {
     name: string,
     description: string | null,
+    position: number,
     fields: FieldsSubmissionStructure[]
 }
 
@@ -221,20 +221,20 @@ export function FormPreviewTester({
         if (workflowData?.sections)
             workflowData.sections.forEach(section => {
                 section.forms.forEach(form => {
-                    if (form.isRequired) {
-                        const hasAnyValue = form.fields.some(field =>
-                            formValues[field.id] && formValues[field.id] !== ''
-                        );
+                    // if (form.isRequired) {
+                    //     const hasAnyValue = form.fields.some(field =>
+                    //         formValues[field.id] && formValues[field.id] !== ''
+                    //     );
 
-                        if (!hasAnyValue) {
-                            errors.push({
-                                fieldId: form.fields[0]?.id || '',
-                                sectionId: section.id,
-                                formId: form.id,
-                                message: `${form.name} section is required`
-                            });
-                        }
-                    }
+                    //     if (!hasAnyValue) {
+                    //         errors.push({
+                    //             fieldId: form.fields[0]?.id || '',
+                    //             sectionId: section.id,
+                    //             formId: form.id,
+                    //             message: `${form.name} section is required`
+                    //         });
+                    //     }
+                    // }
 
                     form.fields.forEach(field => {
                         if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
@@ -569,7 +569,6 @@ export function FormPreviewTester({
                                                             <div>
                                                                 <h4 className="font-medium flex items-center gap-2">
                                                                     {form.name}
-                                                                    {form.isRequired && <Badge variant="outline" className="text-xs">Required</Badge>}
                                                                 </h4>
                                                                 {form.description && (
                                                                     <p className="text-sm text-muted-foreground">{form.description}</p>
@@ -740,9 +739,6 @@ export function FormPreviewTester({
                                                                 <FolderOpen className="h-3 w-3" />
                                                             </div>
                                                             <h4 className="font-medium">{form.name}</h4>
-                                                            {form.isRequired && (
-                                                                <Badge variant="outline" className="text-xs">Required</Badge>
-                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Badge variant="outline" className="text-xs">

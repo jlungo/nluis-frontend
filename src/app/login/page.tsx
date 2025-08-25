@@ -51,10 +51,11 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user) {
-      if (user?.modules && Array.isArray(user.modules) && user.modules.length >= 1)
+      if (user?.modules && Array.isArray(user.modules) && user.modules.length > 1)
         navigate("/board", { replace: true });
+      // else if (user?.modules && Array.isArray(user.modules) && user.modules.length === 1)
+      //   navigate(`/${user.modules[0].slug}`, { replace: true });
       else
-        // TODO Go to a specific moddule
         navigate(`/portal`, { replace: true });
     }
   }, [navigate, user])

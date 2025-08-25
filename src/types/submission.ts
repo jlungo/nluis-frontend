@@ -11,6 +11,7 @@ export type Submission = {
     forms: {
       name: string;
       description: string | null;
+      position: number;
       fields: {
         label: string;
         type: string;

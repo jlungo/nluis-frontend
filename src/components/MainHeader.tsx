@@ -10,7 +10,7 @@ import { ThemeTogglePopover } from "./ToggleTheme";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { usePageStore } from "@/store/pageStore";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/store/auth";
 import { LogoutButton } from "./LogoutButton";
 import logo from "@/assets/nluis.png"
@@ -23,12 +23,21 @@ interface MainHeaderProps {
 
 export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: MainHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation()
   const { page } = usePageStore();
   const { user } = useAuth()
 
   return (
     <header className="sticky top-0 flex-shrink-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-20">
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Back to Home */}
+        {location.pathname === "/board" ? (
+          <Button variant="outline" size="sm" onClick={() => navigate('/', { replace: true })}>
+            <ArrowLeft />
+            Home
+          </Button>
+        ) : null}
+
         {/* Logo - Switch Board */}
         {showLogo ? (
           <div className="flex items-center gap-3">
@@ -67,7 +76,10 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
 
         {/* Back Button */}
         {page && page?.backButton ? (
-          <Button variant="outline" size="sm" onClick={() => navigate('/board', { replace: true })}>
+          <Button variant="outline" size="sm" onClick={() => {
+            if (user?.modules && user.modules.length === 1) navigate('/', { replace: true })
+            else navigate('/board', { replace: true })
+          }}>
             <ArrowLeft />
             <span>
               <span className="block lg:inline">
