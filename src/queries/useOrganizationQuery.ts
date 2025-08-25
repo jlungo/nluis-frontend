@@ -9,14 +9,14 @@ import type {
 } from '@/types/organizations';
 
 // Organization queries
-export const useOrganizations = (filters?: OrganizationFilters) => {
+export const useOrganizationsQuery = (filters?: OrganizationFilters) => {
   return useQuery({
     queryKey: ['organizations', filters],
     queryFn: () => organizationService.getOrganizations(filters),
   });
 };
 
-export const useOrganization = (id: string) => {
+export const useOrganizationQuery = (id: string) => {
   return useQuery({
     queryKey: ['organization', id],
     queryFn: () => organizationService.getOrganization(id),
@@ -24,7 +24,7 @@ export const useOrganization = (id: string) => {
   });
 };
 
-export const useOrganizationStats = () => {
+export const useOrganizationStatsQuery = () => {
   return useQuery({
     queryKey: ['organization-stats'],
     queryFn: () => organizationService.getStats(),
@@ -32,14 +32,14 @@ export const useOrganizationStats = () => {
 };
 
 // Organization Type queries
-export const useOrganizationTypes = () => {
+export const useOrganizationTypesQuery = () => {
   return useQuery({
     queryKey: ['organization-types'],
     queryFn: () => organizationService.getOrganizationTypes(),
   });
 };
 
-export const useOrganizationType = (id: string) => {
+export const useOrganizationTypeQuery = (id: string) => {
   return useQuery({
     queryKey: ['organization-type', id],
     queryFn: () => organizationService.getOrganizationType(id),

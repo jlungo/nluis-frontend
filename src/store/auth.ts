@@ -32,6 +32,14 @@ export interface RegisterDataState {
   confirmPassword: string;
 }
 
+export interface VerifyEmailResponse {
+  message: string;
+  uid64: string;
+  token: string;
+  email: string;
+}
+
+
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
@@ -41,6 +49,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
+  verifyEmailTokenToken: (token: string) => Promise<VerifyEmailResponse>;
   requestPasswordReset: (email: string) => Promise<void>;
   verifyPasswordResetToken: (
     uidb64: string,
@@ -216,18 +225,22 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  // verifyEmailTokenToken: async (token: string) => {
-  //   try {
-  //     const response = await api.get(`/auth/email-verify/${token}/`);
-  //     return response.data;
-  //   } catch (error: any) {
-  //     console.error("Email verification failed:", error);
-  //     if (error.response?.status === 400) {
-  //       throw { detail: "Invalid or expired token. Please verify your email again." };
-  //     }
-  //     throw error.response?.data || { detail: "Failed to verify token. Please try again." };
-  //   }
-  // },
+  verifyEmailTokenToken: async (token: string): Promise<VerifyEmailResponse> => {
+    try {
+      const response = await api.post(`/auth/email-verify/`, { token });
+      return response.data;
+    } catch (error: any) {
+      console.error("Email verification failed:", error);
+
+      if (error.response?.status === 400) {
+        throw { detail: "Invalid or expired token. Please verify your email again." };
+      }
+
+      throw error.response?.data || {
+        detail: "Failed to verify token. Please try again.",
+      };
+    }
+  },
 
   verifyPasswordResetToken: async (uidb64: string, token: string) => {
     try {

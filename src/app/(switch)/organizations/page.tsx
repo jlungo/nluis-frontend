@@ -13,7 +13,7 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
-import { useOrganizations, useOrganizationStats } from '@/queries/useOrganizationQuery';
+import { useOrganizationsQuery, useOrganizationStatsQuery } from '@/queries/useOrganizationQuery';
 // import type { Organization } from '@/types/organizations';
 import { toast } from 'sonner';
 
@@ -21,12 +21,12 @@ export default function OrganizationsModuleDashboard() {
   const navigate = useNavigate();
   
   // Use React Query hooks instead of direct service calls
-  const { data: organizations = [], isLoading, refetch, isRefetching } = useOrganizations({ 
+  const { data: organizations = [], isLoading, refetch, isRefetching } = useOrganizationsQuery({ 
     limit: 5,
     sort: '-created_at'
   });
   
-  const { data: stats } = useOrganizationStats();
+  const { data: stats } = useOrganizationStatsQuery();
 
   const handleRefresh = async () => {
     try {
