@@ -49,7 +49,7 @@ import { toast } from 'sonner';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
 import { useUsersQuery } from '@/queries/useUsersQuery';
-import { genderTypes } from '@/types/constants';
+import { genderTypes, userTypes } from '@/types/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
@@ -120,7 +120,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     roleId: '',
     organization: '',
     gender: 0,
-    user_type: '',
+    user_type: 0,
   });
 
   // Create user mutation
@@ -152,7 +152,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         roleId: '',
         organization: '',
         gender: 0,
-        user_type: '',
+        user_type: 0,
       });
 
       // Show success message
@@ -518,8 +518,29 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   </Select>
                 </div>
 
+                {/* Use Type */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="useType">Use Type <span className="text-red-500">*</span></Label>
+                  <Select
+                    value={newUser.user_type.toString()}
+                    onValueChange={(value) => setNewUser({ ...newUser, user_type: parseInt(value) })}
+                    disabled={createUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select use type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(userTypes).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Organization */}
-                <div className="col-span-2 space-y-2 min-w-0">
+                <div className="space-y-2 min-w-0">
                   <Label htmlFor="organization">Organization <span className="text-red-500">*</span></Label>
                   <Select
                     value={newUser.organization}
