@@ -53,13 +53,14 @@ import { genderTypes } from '@/types/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
-interface User {
+interface UserType {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   role: string;
+  user_type: number | string;
   organization: string | null;
   status: 'active' | 'inactive' | 'pending' | 'suspended';
   emailVerified: boolean;
@@ -76,6 +77,7 @@ interface NewUser {
   roleId: string;
   organization: string;
   gender: number;
+  user_type: number | string;
 }
 
 interface UserManagementProps {
@@ -101,7 +103,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const [selectedRole, setSelectedRole] = useState('all');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
@@ -118,6 +120,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     roleId: '',
     organization: '',
     gender: 0,
+    user_type: '',
   });
 
   // Create user mutation
@@ -132,6 +135,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         role_id: userData.roleId,
         organization: userData.organization,
         gender: userData.gender,
+        user_type: userData.user_type,
       }
       const response = await api.post('/auth/users/create/', data);
       return response.data;
@@ -148,6 +152,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         roleId: '',
         organization: '',
         gender: 0,
+        user_type: '',
       });
 
       // Show success message
@@ -192,7 +197,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   });
 
   const editUserMutation = useMutation({
-    mutationFn: async (userData: User) => {
+    mutationFn: async (userData: UserType) => {
       const data = {
         first_name: userData.firstName,
         last_name: userData.lastName,
@@ -200,6 +205,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         phone: userData.phone,
         role: userData.role, // TODO: Implement role update UUID
         organization: userData.organization,
+        user_type: userData.user_type,
         status: userData.status,
       };
       const response = await api.put(`/auth/users/${userData.id}/`, data);
@@ -302,7 +308,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     createUserMutation.mutate(newUser);
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserType) => {
     setEditingUser(user);
     setIsEditUserOpen(true);
   };
@@ -335,7 +341,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     }
   };
 
-  const handleResendInvitation = (user: User) => { // TODO: Implement this
+  const handleResendInvitation = (user: UserType) => { // TODO: Implement this
     console.log('Resending invitation to:', user.email);
     toast.success(`Invitation email resent to ${user.email}`);
   };
