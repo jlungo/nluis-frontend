@@ -41,27 +41,32 @@ export default function Page() {
     const sections: FormSection[] = data.sections.map(section => ({
         id: section.slug,
         name: section.name,
+        approval_roles: section.approval_roles || [],
         description: section.description,
         order: section.position,
-        forms: section.forms.map((form, index) => ({
+        forms: section.forms.map(form => ({
             id: form.slug,
             name: form.name,
+            editor_roles: form.editor_roles || [],
             description: form.description,
-            isRequired: true,
-            order: index + 1,
-            fields: form.fields.map((field, i) => ({
+            order: form.position,
+            fields: form.fields.map(field => ({
                 id: `${field.id}`,
-                label: field.label,
                 name: field.name,
+                label: field.label,
                 type: field.type,
                 required: field.required,
                 placeholder: field.placeholder,
-                order: i + 1
+                order: field.position,
+                options: field.select_options.map(option => ({
+                    id: option.value,
+                    label: option.text_label,
+                    name: option.value,
+                    order: option.position
+                }))
             }))
         }))
     }));
-
-    console.log(data)
 
     return <WorkflowBuilder previousData={data} sections={sections} />
 }

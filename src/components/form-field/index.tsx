@@ -4,6 +4,7 @@ import FormTextArea from "./form-textarea";
 import DatePicker from "./form-date-picker";
 import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
+import FormSelect from "./form-select";
 
 export default function Index(data: FieldsProps & { disabled?: boolean }) {
     switch (data.type) {
@@ -15,6 +16,8 @@ export default function Index(data: FieldsProps & { disabled?: boolean }) {
             return <FormCheckbox data={data} disabled={data.disabled} />
         case ('file'):
             return <FormFileInput data={data} disabled={data.disabled} />
+        case ('select'):
+            return <FormSelect data={data} disabled={data.disabled} />
         default:
             return <FormInput data={data} disabled={data.disabled} />
     }

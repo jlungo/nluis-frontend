@@ -1,5 +1,3 @@
-// 'use client';
-
 import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router';
@@ -304,7 +302,7 @@ export default function VillageLandUsePage() {
   })), [paginatedProjects, currentPage]);
 
   return (
-    <div className="space-y-6 p-6">
+    <>
       {/* Error Modal */}
       <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
         <DialogContent className="sm:max-w-[425px] dark:border-gray-800 dark:bg-gray-950">
@@ -331,16 +329,17 @@ export default function VillageLandUsePage() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Project List</h2>
-        <Button 
-          onClick={() => navigate('/land-uses/create-project', { 
-            state: { 
+        <Button
+          onClick={() => navigate('/land-uses/create-project', {
+            state: {
               type: 'Village Land Use',
-              from: location.pathname 
+              from: location.pathname
             }
-          })} 
+          })}
+          size="sm"
           className="bg-primary hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4 mr-2" /> Create New Project
+          <Plus className="h-4 w-4 mr-2" /><span className="hidden md:block">Create </span>New Project
         </Button>
       </div>
 
@@ -439,6 +438,6 @@ export default function VillageLandUsePage() {
           Showing {enhancedProjects.length} of {projects.length} project forms
         </div>
       )}
-    </div>
+    </>
   );
 }
