@@ -4,3 +4,13 @@ export interface APIResponse<T = unknown> {
   previous: string | null;
   results?: T[];
 }
+
+export interface ApiError {
+  response?: {
+    data?: {
+      detail?: string;
+      [key: string]: any;
+    };
+  };
+  message?: string;
+}
