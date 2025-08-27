@@ -27,6 +27,7 @@ export interface User {
   email: string;
   phone: string;
   role: string;
+  user_type: number | string;
   organization: string | null;
   organizationName?: string;
   status: 'active' | 'inactive' | 'pending' | 'suspended';
@@ -57,6 +58,7 @@ export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) =
         phone: user.phone || 'Not provided',
         role: user.role || 'No role assigned',
         organization: user.organization,
+        user_type: user.user_type,
         organizationName: organizations.find(org => org.id === user.organization)?.name,
         status: user.status ?? 'active',
         emailVerified: user.is_verified ?? false,
