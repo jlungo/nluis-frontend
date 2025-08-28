@@ -361,7 +361,7 @@ export default function VillageLandUsePage() {
       {/* Results Summary */}
       {projectsList.length > 0 && (
         <div className="text-sm text-muted-foreground text-center">
-          Showing {projectsList.length} of {pagination.total_count} project forms
+          Showing {projectsList.length} of {pagination.total_count} Projects
         </div>
       )}
     </div>
