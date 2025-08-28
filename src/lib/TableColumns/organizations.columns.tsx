@@ -1,6 +1,6 @@
-import { OrganizationStatusE, type OrganizationI } from '@/types/organizations';
-import { ColumnDef } from '@tanstack/react-table';
-import { Badge, Building2, Mail, MapPin, Users } from 'lucide-react';
+import { OrganizationStatusE, type OrganizationI } from "@/types/organizations";
+import { ColumnDef } from "@tanstack/react-table";
+import { Badge, Building2, Mail, MapPin, Users } from "lucide-react";
 
 export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
   {
@@ -34,7 +34,9 @@ export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
         <Building2 className="h-4 w-4 text-primary" /> Type
       </div>
     ),
-    cell: ({ getValue }) => <span className="whitespace-nowrap">{String(getValue() ?? "-")}</span>,
+    cell: ({ getValue }) => (
+      <span className="whitespace-nowrap">{String(getValue() ?? "-")}</span>
+    ),
     enableSorting: true,
   },
   {
@@ -47,7 +49,9 @@ export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="truncate max-w-[320px]">{row.original.address || "-"}</span>
+        <span className="truncate max-w-[320px]">
+          {row.original.address || "-"}
+        </span>
       </div>
     ),
     sortingFn: (a, b) => {
@@ -63,14 +67,18 @@ export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
         <Users className="h-4 w-4 text-primary" /> Members
       </div>
     ),
-    cell: ({ getValue }) => <div className="text-center w-full">{Number(getValue() ?? 0)}</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{Number(getValue() ?? 0)}</div>
+    ),
     enableSorting: true,
     size: 90,
   },
   {
     accessorKey: "projects_count",
     header: () => <div className="text-center w-full">Projects</div>,
-    cell: ({ getValue }) => <div className="text-center w-full">{Number(getValue() ?? 0)}</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{Number(getValue() ?? 0)}</div>
+    ),
     enableSorting: true,
     size: 90,
   },
@@ -85,10 +93,14 @@ export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
           : s === OrganizationStatusE.PENDING
           ? "bg-yellow-100 text-yellow-800 border-yellow-200"
           : "bg-red-100 text-red-800 border-red-200";
-      const text = s === OrganizationStatusE.ACTIVE ? "Active" : s === OrganizationStatusE.PENDING ? "Pending" : "Inactive";
+      const text =
+        s === OrganizationStatusE.ACTIVE
+          ? "Active"
+          : s === OrganizationStatusE.PENDING
+          ? "Pending"
+          : "Inactive";
       return <Badge className={cls}>{text}</Badge>;
     },
     enableSorting: true,
   },
 ];
-

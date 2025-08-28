@@ -64,7 +64,6 @@ export default function OrganizationDirectory() {
           sort: `${sortConfig.order === "desc" ? "-" : ""}${sortConfig.field}`,
         });
         console.log("Fetched organizations:", orgs);
-        setOrganizations(orgs);
       } catch (error) {
         console.error("Error loading organizations:", error);
       } finally {

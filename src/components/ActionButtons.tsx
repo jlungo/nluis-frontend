@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 import { EllipsisVertical, Pencil, Eye, Trash2, Loader2 } from "lucide-react";
 
-type IdLike = string | number | undefined ;
+type IdLike = string | number | undefined;
 
 type ActionButtonsProps<T> = {
   entity: T;
@@ -36,7 +36,7 @@ type ActionButtonsProps<T> = {
   onEdit?: (entity: T) => void;
 
   // Optional custom id extractor. Default tries id/_id/uuid.
-  getId?: (entity: T) => IdLike;
+  getId?: (entity: any) => IdLike;
 
   // Disable all actions (e.g., while parent is busy).
   disabled?: boolean;

@@ -178,9 +178,8 @@ export default function RegistrationPage() {
       });
 
       toast.success("Organization registered successfully!");
-      navigate("/organizations");
+      navigate("/organizations/organizations-list");
     } catch (error) {
-      console.error("Registration error:", error);
       toast.error("Failed to register organization. Please try again.");
     } finally {
       setIsSubmitting(false);

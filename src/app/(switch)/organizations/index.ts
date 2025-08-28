@@ -18,19 +18,13 @@ const Index: RouteObject = {
       }
     },
     {
-      path: "registration",
+      path: "organizations-list/registration",
       async lazy() {
         const { default: Component } = await import("./registration/page");
         return { Component };
       }
     },
-    {
-      path: "directory",
-      async lazy() {
-        const { default: Component } = await import("./directory/page");
-        return { Component };
-      }
-    },
+   
     {
       path: "projects",
       async lazy() {

@@ -7,7 +7,6 @@ import { usePageStore } from "@/store/pageStore";
 import { DataTable } from "@/components/DataTable";
 import { ListOrganizationsColumns } from "@/lib/TableColumns/organizations.columns";
 import ActionButtons from "@/components/ActionButtons";
-import api from "@/lib/axios";
 
 type SortField =
   | "name"
@@ -18,7 +17,7 @@ type SortField =
   | "projects_count";
 type SortOrder = "asc" | "desc";
 
-export default function OrganizationDirectory() {
+export default function OrganizationList() {
   const [organizations, setOrganizations] = useState<OrganizationI[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm] = useState("");
@@ -49,7 +48,8 @@ export default function OrganizationDirectory() {
           sort: `${sortConfig.order === "desc" ? "-" : ""}${sortConfig.field}`,
         });
         console.log("Fetched organizations:", orgs);
-        setOrganizations(orgs);
+
+        setOrganizations(orgs.results);
       } catch (error) {
         console.error("Error loading organizations:", error);
       } finally {
@@ -61,6 +61,8 @@ export default function OrganizationDirectory() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, sortConfig]);
 
+
+  console.log("Organizations to display:", organizations);
   // Sorting handler
 
   return (
@@ -87,9 +89,7 @@ export default function OrganizationDirectory() {
               entityName="Organization"
               onView={(e) => navigate(`/organizations/${(e as any).id}`)}
               onEdit={(e) => navigate(`/organizations/${(e as any).id}/edit`)}
-              deleteFunction={(idOrEntity) =>
-                api.organizations.delete(idOrEntity)
-              }
+              deleteFunction={undefined}
             />
           )}
         />
