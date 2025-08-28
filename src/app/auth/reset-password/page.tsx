@@ -32,7 +32,7 @@ export default function ResetPassword() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
-  const { verifyPasswordResetToken, completePasswordReset } = useAuth();
+  const { user, verifyPasswordResetToken, completePasswordReset } = useAuth();
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -89,7 +89,7 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !uidb64 || !token) return;
 
     setIsResetting(true);
@@ -127,7 +127,7 @@ export default function ResetPassword() {
     );
   }
 
-  if (!isValidToken) {
+  if (!isValidToken && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-6">
@@ -136,14 +136,14 @@ export default function ResetPassword() {
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
           </div>
-          
+
           <div className="flex justify-center">
             <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200 px-3 py-1">
               <Lock className="h-3 w-3 mr-1" />
               Invalid Reset Link
             </Badge>
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-red-800">Password Reset Failed</h1>
             <p className="text-base text-muted-foreground">
@@ -152,7 +152,7 @@ export default function ResetPassword() {
           </div>
         </div>
 
-        <Card className="shadow-lg border-0 bg-white">
+        <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
           <CardContent className="px-8 py-8">
             <Alert className="border-red-200 bg-red-50 mb-6">
               <AlertCircle className="h-4 w-4 text-red-600" />
@@ -181,6 +181,7 @@ export default function ResetPassword() {
     );
   }
 
+  if (user) return null
   return (
     <div className="max-w-md w-full space-y-8">
       <div className="text-center space-y-6">
@@ -191,14 +192,14 @@ export default function ResetPassword() {
             className="h-32 w-32 object-contain"
           />
         </div>
-        
+
         <div className="flex justify-center">
           <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
             <Key className="h-3 w-3 mr-1" />
             Create New Password
           </Badge>
         </div>
-        
+
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-foreground">Set a New Password</h1>
           <p className="text-base text-muted-foreground">
@@ -207,7 +208,7 @@ export default function ResetPassword() {
         </div>
       </div>
 
-      <Card className="shadow-lg border-0 bg-white">
+      <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
         <CardHeader className="text-center pb-6 pt-8">
           <CardTitle className="flex items-center justify-center gap-2 text-lg">
             <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
@@ -339,7 +340,7 @@ export default function ResetPassword() {
           </div>
           <span>United Republic of Tanzania</span>
         </div>
-        
+
         <p className="text-xs text-muted-foreground">
           Ministry of Lands, Housing and Human Settlements Development
         </p>

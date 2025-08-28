@@ -17,7 +17,7 @@ import {
     Package,
     CreditCard,
 } from 'lucide-react';
-import { redirect, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
 import { useAuth } from '@/store/auth';
@@ -154,11 +154,13 @@ export default function Page() {
     });
 
     if (!user) {
-        redirect('/')
+        navigate('/', { replace: true })
         return null
     }
-
-    if (!user.modules || !Array.isArray(user?.modules) || user?.modules?.length < 1) redirect('/mapshop')
+    if (!user.modules || !Array.isArray(user?.modules) || user?.modules?.length < 1) {
+        navigate('/mapshop', { replace: true })
+        return null
+    }
     return (
         <div className="space-y-8">
             {/* Module Tiles Grid */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,14 +9,12 @@ import {
   Mail,
   Key,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useAuth } from "@/store/auth";
 
 export default function MapShopLoginForm() {
   const [error, setError] = useState("");
-
-  const navigate = useNavigate();
-  const { login, loading, user } = useAuth()
+  const { login, loading } = useAuth()
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,15 +33,6 @@ export default function MapShopLoginForm() {
     }
   };
 
-  const onForgotPassword = () => {
-    navigate('/auth/forgot-password', { replace: true })
-  }
-
-  useEffect(() => {
-    if (user) navigate(`/portal`, { replace: true });
-  }, [navigate, user])
-
-  if (user) return null
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       {error && (
@@ -87,19 +76,15 @@ export default function MapShopLoginForm() {
       </div>
 
       {/* Forgot Password Link */}
-      {onForgotPassword && (
-        <div className="text-right">
-          <button
-            type="button"
-            onClick={onForgotPassword}
-            className="text-sm text-primary hover:underline flex items-center gap-1 ml-auto cursor-pointer"
-            disabled={loading}
-          >
-            <Key className="h-3 w-3" />
-            Forgot your password?
-          </button>
-        </div>
-      )}
+      <div className="flex justify-end">
+        <Link
+          to='/auth/forgot-password'
+          className="text-sm text-primary hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          <Key className="h-3 w-3" />
+          Forgot your password?
+        </Link>
+      </div>
 
       <Button
         type="submit"

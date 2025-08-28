@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ export default function MapShopLoginForm() {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { signup, loading, user } = useAuth()
+  const { signup, loading } = useAuth()
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,25 +20,20 @@ export default function MapShopLoginForm() {
     const formData = new FormData(e.currentTarget);
     const rawData = Object.fromEntries(formData.entries());
 
-    // Manually assign user_type = 4 (Stakeholder) as Default
     const data: RegisterDataState = {
       ...rawData,
-      user_type: 4, // Stakeholder
+      user_type: 4,  // Manually assign user_type = 4 (Stakeholder) as Default
     } as RegisterDataState;
 
     try {
       await signup(data)
+      navigate(`/auth/email-sent`)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err?.detail || "Something went wrong");
     }
   };
 
-  useEffect(() => {
-    if (user) navigate(`/portal`, { replace: true });
-  }, [navigate, user])
-
-  if (user) return null
   return (
     <form onSubmit={handleRegister} className="space-y-4">
       {error && (

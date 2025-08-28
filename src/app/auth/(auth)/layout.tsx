@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
     Card,
@@ -23,10 +22,6 @@ export default function Layout() {
     const onCancel = () => {
         navigate('/', { replace: true })
     };
-
-    useEffect(() => {
-        if (user) navigate(`/portal`, { replace: true });
-    }, [navigate, user])
 
     if (user) return null
     return (
@@ -99,7 +94,7 @@ export default function Layout() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="space-y-3 mt-6 pt-4 border-t border-border">
+                    <div className="space-y-3 mt-4 pt-4 border-t border-border">
                         <Button
                             onClick={onCancel}
                             variant="outline"

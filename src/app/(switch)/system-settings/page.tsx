@@ -9,7 +9,6 @@ export default function Page() {
             module: 'system-settings',
             title: "System Settings",
             backButton: 'Back to Modules',
-            isFormPage: true
         })
     }, [setPage])
 

@@ -9,16 +9,17 @@ import {
   Key,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import nlupcLogo from "@/assets/nluis.png";
 import tanzaniaCoatOfArms from "@/assets/bibi_na_bwana.png";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@radix-ui/react-label';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/store/auth';
+import { cn } from '@/lib/utils';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function ForgotPassword() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { requestPasswordReset } = useAuth();
+  const { user, requestPasswordReset } = useAuth();
 
   const handleRequestReset = async () => {
     if (!email) {
@@ -71,7 +72,7 @@ export default function ForgotPassword() {
     navigate('/auth/signin', { replace: true });
   };
 
-  if (showSuccess) {
+  if (showSuccess && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
         {/* Success Header */}
@@ -81,14 +82,14 @@ export default function ForgotPassword() {
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </div>
-          
+
           <div className="flex justify-center">
             <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
               <Mail className="h-3 w-3 mr-1" />
               Reset Email Sent
             </Badge>
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-green-800">Password Reset Requested!</h1>
             <p className="text-base text-muted-foreground">
@@ -98,7 +99,7 @@ export default function ForgotPassword() {
         </div>
 
         {/* Success Card */}
-        <Card className="shadow-lg border-0 bg-white">
+        <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
           <CardContent className="px-8 py-8">
             <Alert className="border-green-200 bg-green-50 mb-6">
               <Mail className="h-4 w-4 text-green-600" />
@@ -113,9 +114,9 @@ export default function ForgotPassword() {
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 onClick={handleResendReset}
                 disabled={isLoading}
                 className="w-full h-12 gap-2"
@@ -152,6 +153,7 @@ export default function ForgotPassword() {
     );
   }
 
+  if (user) return null
   return (
     <div className="max-w-md w-full space-y-8">
       {/* Header */}
@@ -163,14 +165,14 @@ export default function ForgotPassword() {
             className="h-32 w-32 object-contain"
           />
         </div>
-        
+
         <div className="flex justify-center">
           <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
             <Key className="h-3 w-3 mr-1" />
             Password Recovery
           </Badge>
         </div>
-        
+
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-foreground">Reset Your Password</h1>
           <p className="text-base text-muted-foreground">
@@ -183,7 +185,7 @@ export default function ForgotPassword() {
       </div>
 
       {/* Reset Form Card */}
-      <Card className="shadow-lg border-0 bg-white">
+      <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
         <CardHeader className="text-center pb-6 pt-8">
           <CardTitle className="flex items-center justify-center gap-2 text-lg">
             <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
@@ -234,8 +236,8 @@ export default function ForgotPassword() {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button 
-                onClick={handleRequestReset} 
+              <Button
+                onClick={handleRequestReset}
                 disabled={isLoading || !email}
                 className="w-full h-12 gap-2 bg-primary hover:bg-primary/90"
               >
@@ -253,15 +255,13 @@ export default function ForgotPassword() {
               </Button>
 
               <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={onBackToLogin}
-                  disabled={isLoading}
-                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors"
+                <Link
+                  to="/auth/signin"
+                  className={cn(buttonVariants({ variant: 'ghost' }), "text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors")}
                 >
                   <ArrowLeft className="h-3 w-3" />
                   Back to Login
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -276,17 +276,17 @@ export default function ForgotPassword() {
           </div>
           <span>United Republic of Tanzania</span>
         </div>
-        
+
         <p className="text-xs text-muted-foreground">
           Ministry of Lands, Housing and Human Settlements Development
         </p>
-        
+
         <p className="text-xs text-muted-foreground">
           © 2025 National Land Use Planning Commission. All rights reserved.
         </p>
-        
+
         <p className="text-xs text-muted-foreground">
-          Remember your password? <button onClick={onBackToLogin} className="text-primary hover:underline">Sign in here</button>
+          Remember your password? <Link to="/auth/signin" className="font-semibold text-base md:text-lg text-primary hover:underline">Sign in here</Link>
         </p>
       </div>
     </div>

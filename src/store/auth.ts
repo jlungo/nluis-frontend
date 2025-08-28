@@ -43,12 +43,15 @@ interface AuthState {
   refreshToken: string | null;
   user: UserProps | null;
   loading: boolean;
+  tempId?: string;
+  tempEmail?: string;
   signup: (data: RegisterDataState) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   verifyEmailTokenToken: (token: string) => Promise<VerifyEmailResponse>;
   requestPasswordReset: (email: string) => Promise<void>;
+  requestEmailReset: (id: string) => Promise<void>;
   verifyPasswordResetToken: (
     uidb64: string,
     token: string
@@ -107,17 +110,16 @@ export const useAuth = create<AuthState>((set, get) => ({
         user_type: 4,
       });
 
-      // auto-login after signup
-      const { access, refresh, ...userData } = res.data;
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("user", JSON.stringify(userData));
-
       set({
-        accessToken: access,
-        refreshToken: refresh,
-        user: userData,
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        tempId: res.data.id,
+        tempEmail: res.data.email,
       });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);
@@ -201,6 +203,25 @@ export const useAuth = create<AuthState>((set, get) => ({
       throw (
         error.response?.data || {
           detail: "Failed to send reset email. Please try again.",
+        }
+      );
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  requestEmailReset: async (user: string) => {
+    set({ loading: true });
+    try {
+      await api.post("/auth/resend-account-verify-email/", { user });
+    } catch (error: any) {
+      console.error("Email resend request failed:", error);
+      if (error.response?.status === 404) {
+        throw { detail: "User not found!" };
+      }
+      throw (
+        error.response?.data || {
+          detail: "Failed to resend verification email. Please try again.",
         }
       );
     } finally {
