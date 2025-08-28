@@ -7,13 +7,14 @@ import type {
   PatchedOrganization,
   PatchedOrganizationType 
 } from "@/types/organizations";
+import { PaginatedResponseI } from "@/types/pagination";
 
 const Modal = "/organization";
 
 export const organizationService = {
   // List organizations with optional filters
   getOrganizations: async (filters?: OrganizationFilters) => {
-    const response = await api.get<OrganizationI[]>(Modal, { params: filters });
+    const response = await api.get<PaginatedResponseI<OrganizationI>>(Modal, { params: filters });
     return response.data;
   },
 
@@ -25,7 +26,7 @@ export const organizationService = {
 
   // Get a single organization by ID
   getOrganization: async (id: string) => {
-    const response = await api.get<OrganizationI>(`${Modal}/${id}/`);
+    const response = await api.get<OrganizationI>(`${Modal}/${id}/detail/`);
     return response.data;
   },
 

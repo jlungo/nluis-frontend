@@ -1,23 +1,43 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { organizationService } from '@/services/organizations';
-import { OrganizationStatusE, type OrganizationI } from '@/types/organizations';
-import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { useState, useEffect, JSX } from "react";
+import { useUsersQuery } from "@/queries/useUsersQuery";
+import { useParams, useNavigate } from "react-router";
+import { organizationService } from "@/services/organizations";
+import { OrganizationStatusE, type OrganizationI } from "@/types/organizations";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Building2,
   MapPin,
-  Mail, 
+  Mail,
   Users,
   FolderOpen,
-  Edit, 
-  ArrowLeft,
+  Edit,
   Loader2,
-  User
-} from 'lucide-react';
+  User,
+  Plus,
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+// Lightweight shapes in case the service doesn't return embedded lists
+// Adjust to your actual API types if available
+interface ProjectI {
+  id: string | number;
+  name: string;
+  status?: string;
+  start_date?: string | Date;
+}
+// Remove MemberI, use User from useUsersQuery
 
 export default function OrganizationDetail() {
   const { id } = useParams();
@@ -25,40 +45,37 @@ export default function OrganizationDetail() {
   const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [projects, setProjects] = useState<ProjectI[] | null>(null);
+  // Remove local members state
+  const [listsLoading, setListsLoading] = useState(false);
+
   useEffect(() => {
     const loadOrganization = async () => {
       if (!id) {
-        toast.error('Organization ID is required');
-        navigate('/organizations/directory');
+        toast.error("Organization ID is required");
+        // Removed back button per request; keep silent redirect for safety
+        navigate("/organizations/");
         return;
       }
 
       try {
         setLoading(true);
-        console.log('Loading organization:', id);
         const org = await organizationService.getOrganization(id);
-        console.log('Organization loaded:', org);
-        
         if (!org) {
-          toast.error('Organization not found');
+          toast.error("Organization not found");
           setOrganization(null);
           return;
         }
-        
         setOrganization(org);
       } catch (error: any) {
-        console.error('Error loading organization:', error);
-        
-        // More specific error handling
+        console.error("Error loading organization:", error);
         if (error.response?.status === 404) {
-          toast.error('Organization not found');
+          toast.error("Organization not found");
         } else if (error.response?.status === 500) {
-          toast.error('Server error. Please try again later.');
+          toast.error("Server error. Please try again later.");
         } else {
-          toast.error('Failed to load organization details');
+          toast.error("Failed to load organization details");
         }
-        
-        // Don't redirect immediately, let user see the error
         setOrganization(null);
       } finally {
         setLoading(false);
@@ -67,6 +84,8 @@ export default function OrganizationDetail() {
 
     loadOrganization();
   }, [id, navigate]);
+
+  // Only keep mock projects for now
 
   if (loading) {
     return (
@@ -80,243 +99,208 @@ export default function OrganizationDetail() {
     return (
       <div className="text-center p-8">
         <h2 className="text-xl font-semibold mb-2">Organization Not Found</h2>
-        <p className="text-muted-foreground mb-4">The organization you're looking for doesn't exist.</p>
-        <Button onClick={() => navigate('/organizations/directory')}>
-          Back to Directory
-        </Button>
+        <p className="text-muted-foreground mb-4">
+          The organization you're looking for doesn't exist.
+        </p>
+        {/* Back button removed per request */}
       </div>
     );
   }
 
+  const Stat = ({ label, value, icon }: { label: string; value: string | number | undefined; icon?: JSX.Element }) => (
+    <div className="flex items-center gap-3">
+      {icon}
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-semibold">{value ?? "-"}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/organizations/directory')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Directory
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {organization.name || 'Unnamed Organization'}
-            </h1>
-            <p className="text-muted-foreground">Organization Details</p>
-          </div>
-        </div>
-        <Button
-          onClick={() => navigate(`/organizations/${id}/edit`)}
-          className="flex items-center gap-2"
-        >
-          <Edit className="h-4 w-4" />
-          Edit Organization
-        </Button>
-      </div>
+      {/* TOP: compact basic + contact details banner (merged) */}
+      <Card className="border-dashed">
+        <CardContent className="pt-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Left: Name + status + type */}
+            <div className="flex items-start gap-4">
+              <div className="p-2 rounded-xl bg-muted/60">
+                <Building2 className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-xl font-bold leading-none">{organization.name}</h1>
+                  <Badge
+                    className={
+                      organization.status === OrganizationStatusE.ACTIVE
+                        ? "bg-progress-completed/10 text-progress-completed border-progress-completed/20"
+                        : organization.status === OrganizationStatusE.PENDING
+                        ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        : "bg-red-100 text-red-800 border-red-200"
+                    }
+                  >
+                    {organization.status === OrganizationStatusE.ACTIVE
+                      ? "Active"
+                      : organization.status === OrganizationStatusE.PENDING
+                      ? "Pending"
+                      : "Inactive"}
+                  </Badge>
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
+                  <span>Type: {organization.type instanceof Object ? (organization.type as any).name : organization.type}</span>
+                  <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                  <span>Registered: {organization.created_at ? new Date(organization.created_at).toLocaleDateString() : "-"}</span>
+                </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Information */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Organization Name</label>
-                  <p className="text-foreground font-medium">{organization.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Organization Type</label>
-                  <p className="text-foreground">{organization.type instanceof  Object ?organization.type.name : organization.type}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <div>
-                    <Badge 
-                      className={
-                        organization.status === OrganizationStatusE.ACTIVE
-                          ? 'bg-progress-completed/10 text-progress-completed border-progress-completed/20'
-                          : organization.status === OrganizationStatusE.PENDING
-                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                          : 'bg-red-100 text-red-800 border-red-200'
-                      }
-                    >
-                      {organization.status === OrganizationStatusE.ACTIVE? 'Active': organization.status === OrganizationStatusE.PENDING? 'Pending': 'Inactive'}
-                    </Badge>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Registration Date</label>
-                  <p className="text-foreground">
-                    {organization.created_at ? new Date(organization.created_at).toLocaleDateString() : 'N/A'}
-                  </p>
+                {/* Merged Contact Details */}
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4"/> {organization.primary_email || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><User className="h-4 w-4"/> {organization.phone || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4"/> {organization.address || "-"}</div>
                 </div>
               </div>
-              
-              {organization.description && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Description</label>
-                  <p className="text-foreground mt-1">{organization.description}</p>
+            </div>
+
+            {/* Right: compact stats + edit (back/Manage Projects removed) */}
+            <div className="flex items-center gap-6">
+              <Stat label="Members" value={organization.members_count || 0} icon={<Users className="h-4 w-4" />} />
+              <Stat label="Projects" value={organization.projects_count || 0} icon={<FolderOpen className="h-4 w-4" />} />
+              <div className="hidden md:block">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/organizations/${id}/edit`)}>
+                    <Edit className="h-4 w-4 mr-2"/>
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* MAIN: switch between Projects and Members */}
+      <Tabs defaultValue="projects" className="w-full">
+        <div className="flex items-center justify-between mb-3">
+          <TabsList>
+            <TabsTrigger value="projects" className="px-4">Projects</TabsTrigger>
+            <TabsTrigger value="members" className="px-4">Members</TabsTrigger>
+          </TabsList>
+          {/* Top-right actions intentionally minimal per requests */}
+        </div>
+
+        {/* Projects Tab (Data Table) */}
+        <TabsContent value="projects">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><FolderOpen className="h-5 w-5"/> Projects</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {listsLoading ? (
+                <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>
+              ) : (
+                <div className="w-full overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[240px]">Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead className="w-[1%] whitespace-nowrap text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(projects ?? []).map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="font-medium">{p.name}</TableCell>
+                          <TableCell>{p.status || "-"}</TableCell>
+                          <TableCell>{p.start_date ? new Date(p.start_date).toLocaleDateString() : "-"}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/organizations/${id}/projects`)}>View</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {(projects ?? []).length === 0 && (
+                    <p className="text-sm text-muted-foreground py-6">No projects to display.</p>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Contact Information */}
+        {/* Members Tab (Data Table) */}
+        <TabsContent value="members">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Primary Email</label>
-                  <p className="text-foreground">{organization.primary_email || 'N/A'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
-                  <p className="text-foreground">N/A</p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-muted-foreground">Physical Address</label>
-                  <p className="text-foreground">{organization.address || 'N/A'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Location Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Location Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Description</label>
-                  <p className="text-foreground">{organization.description|| '-'}</p>
-                </div>
-                
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Focal Person Information */}
-          {(organization.first_name ||  organization.last_name) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Focal Person
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-foreground">{organization.first_name + ' ' + organization.last_name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                    <p className="text-foreground">{organization.phone || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <p className="text-foreground">{organization.focal_person_email || '-'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Members</span>
-                </div>
-                <span className="font-semibold">{organization.members_count || 0}</span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Projects</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{organization.projects_count || 0}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/organizations/${id}/projects`)}
-                    className="h-6 px-2 text-xs"
-                  >
-                    View
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-         
-
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate(`/organizations/${id}/projects`)}
-              >
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Manage Projects
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Members</CardTitle>
+              <Button size="sm" onClick={() => navigate(`/organizations/${id}/members/new`)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Member
               </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate(`/organizations/${id}/edit`)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Organization
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate('/organizations/directory')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Directory
-              </Button>
+            </CardHeader>
+            <CardContent>
+              {/* Use useUsersQuery to fetch members */}
+              {organization ? (
+                (() => {
+                  const {
+                    data: users,
+                    isLoading: membersLoading,
+                    isError: membersError,
+                  } = useUsersQuery({ organizations: [organization] });
+                  if (membersLoading) {
+                    return <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>;
+                  }
+                  if (membersError) {
+                    return <div className="text-destructive">Failed to load members.</div>;
+                  }
+                  if (!users || users.length === 0) {
+                    return <p className="text-sm text-muted-foreground py-6">No members found.</p>;
+                  }
+                  return (
+                    <div className="w-full overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[220px]">Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead className="w-[1%] whitespace-nowrap text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((m) => (
+                            <TableRow key={m.id}>
+                              <TableCell className="font-medium">{m.firstName} {m.lastName}</TableCell>
+                              <TableCell>{m.email || "-"}</TableCell>
+                              <TableCell>{m.role || "-"}</TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" onClick={() => navigate(`/organizations/${id}/members/${m.id}`)}>View</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="text-muted-foreground">No organization loaded.</div>
+              )}
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
+      </Tabs>
+
+
+
+      {/* Bottom actions for small screens (Back removed) */}
+      <div className="md:hidden">
+        <Button variant="outline" className="w-full" onClick={() => navigate(`/organizations/${id}/edit`)}>
+          <Edit className="h-4 w-4 mr-2"/> Edit
+        </Button>
       </div>
     </div>
   );

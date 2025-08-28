@@ -1,7 +1,7 @@
 export interface OrganizationI {
   id: string;
   name: string;
-  type: OrganizationType;
+  type: OrganizationType |string;
   type_name?: string; // For easier access to type name
   url: string;
   level?: OrganizationLevelE;
