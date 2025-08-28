@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,13 +32,13 @@ const PROJECT_STATUSES = [
   { value: 'completed', label: 'Completed' }
 ];
 
-const STATUS_COLORS = {
-  draft: 'bg-gray-100 text-gray-800',
-  'in-progress': 'bg-blue-100 text-blue-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  completed: 'bg-purple-100 text-purple-800'
-};
+// const STATUS_COLORS = {
+//   draft: 'bg-gray-100 text-gray-800',
+//   'in-progress': 'bg-blue-100 text-blue-800',
+//   approved: 'bg-green-100 text-green-800',
+//   rejected: 'bg-red-100 text-red-800',
+//   completed: 'bg-purple-100 text-purple-800'
+// };
 
 export default function VillageLandUsePage() {
   const { setPage } = usePageStore();
@@ -177,11 +176,11 @@ export default function VillageLandUsePage() {
     </div>
   );
 
-  const ProjectStatusBadge = ({ status }: { status: string }) => (
-    <Badge className={`${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'} font-medium`}>
-      {status}
-    </Badge>
-  );
+  // const ProjectStatusBadge = ({ status }: { status: string }) => (
+  //   <Badge className={`${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'} font-medium`}>
+  //     {status}
+  //   </Badge>
+  // );
 
   const PaginationControls = () => (
     <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">

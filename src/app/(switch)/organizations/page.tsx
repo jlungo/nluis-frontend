@@ -35,7 +35,7 @@ type SortOrder = "asc" | "desc";
 export default function OrganizationDirectory() {
   const { setPage } = usePageStore();
 
-  const [organizations, setOrganizations] = useState<OrganizationI[]>([]);
+  const [organizations] = useState<OrganizationI[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
@@ -244,15 +244,15 @@ export default function OrganizationDirectory() {
                         org.status === OrganizationStatusE.ACTIVE
                           ? "bg-progress-completed/10 text-progress-completed border-progress-completed/20"
                           : org.status === OrganizationStatusE.PENDING
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                          : "bg-red-100 text-red-800 border-red-200"
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            : "bg-red-100 text-red-800 border-red-200"
                       }
                     >
                       {org.status === OrganizationStatusE.ACTIVE
                         ? "Active"
                         : org.status === OrganizationStatusE.PENDING
-                        ? "Pending"
-                        : "Inactive"}
+                          ? "Pending"
+                          : "Inactive"}
                     </Badge>
                   </TableCell>
                 </TableRow>
