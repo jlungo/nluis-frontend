@@ -193,27 +193,6 @@ export default function LoginForm() {
               </Button>
             </div>
           </form>
-
-          {/* Demo Credentials */}
-          {/* <div className="mt-6 pt-4 border-t border-border">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Demo Credentials
-                </div>
-                <div className="text-xs text-blue-600 space-y-1">
-                  <div>
-                    <strong>Admin:</strong> admin@nlupc.go.tz / admin123
-                  </div>
-                  <div>
-                    <strong>Planner:</strong> planner@nlupc.go.tz / plan123
-                  </div>
-                  <div>
-                    <strong>Officer:</strong> officer@nlupc.go.tz / off123
-                  </div>
-                </div>
-              </div>
-            </div> */}
         </CardContent>
       </Card>
 

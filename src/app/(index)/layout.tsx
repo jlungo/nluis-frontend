@@ -82,9 +82,8 @@ export default function Layout() {
                                     }
                                 </>
                                 :
-                                <Link to="/login" className={cn(buttonVariants(), "gap-2")}>
-                                    <Shield className="h-4 w-4 hidden lg:block" />
-                                    <span className="sr-only lg:not-sr-only">Official</span> Login
+                                <Link to="/auth/signin" className={cn(buttonVariants(), "gap-2")}>
+                                    <Shield className="h-4 w-4 hidden lg:block" /> Login
                                 </Link>
                             }
                         </div>

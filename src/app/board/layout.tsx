@@ -8,7 +8,7 @@ export default function Layout() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        if (!user) navigate(`/login`, { replace: true })
+        if (!user) navigate(`/auth/signin`, { replace: true })
         else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
     }, [navigate, user])
 

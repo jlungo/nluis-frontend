@@ -29,8 +29,6 @@ export interface RegisterDataState {
   company: string | null;
   gender?: number;
   user_type: number;
-  password: string;
-  confirmPassword: string;
 }
 
 export interface VerifyEmailResponse {
@@ -86,8 +84,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       if (!data?.email) missingFields.push("Email");
       if (!data?.phone) missingFields.push("Phone Number");
       if (!data?.gender) missingFields.push("Gender");
-      if (!data?.password) missingFields.push("Password");
-      if (!data?.confirmPassword) missingFields.push("Confirm Password");
 
       if (missingFields.length > 0) {
         const formattedFields =
@@ -101,16 +97,6 @@ export const useAuth = create<AuthState>((set, get) => ({
         } required!`;
       }
 
-      if (data?.password !== data?.confirmPassword)
-        throw "Passwords do not match.";
-
-      // Strong password regex: at least 8 chars, one uppercase, one lowercase, one number, one special char
-      const strongPasswordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
-
-      if (!strongPasswordRegex.test(data.password))
-        throw "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
-
       const res = await api.post("/auth/register/", {
         first_name: data.firstName,
         last_name: data.lastName,
@@ -118,7 +104,6 @@ export const useAuth = create<AuthState>((set, get) => ({
         phone: data.phone,
         company: data?.company || null,
         gender: Number(data.gender),
-        password: data.password,
         user_type: 4,
       });
 
