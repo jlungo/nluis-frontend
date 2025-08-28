@@ -340,9 +340,9 @@ export default function VillageLandUsePage() {
                     </TableCell>
                     <TableCell className="text-sm">{project.current_task}</TableCell>
                     <TableCell>
-                      {project.status_info.map((status, index) => (
+                      {/* {project.status_info.map((status, index) => (
                         <ProjectStatusBadge key={index} status={status} />
-                      ))}
+                      ))} */}
                     </TableCell>
                   </TableRow>
                 ))}
