@@ -95,7 +95,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const queryClient = useQueryClient();
   const { data: roles = [] } = useRolesQuery();
   const { data: organizations = [] } = useOrganizationsQuery();
-  //  const organizations = org?.results || [];
+  // const organizations = organizationsList?.results;
 
   const [newUser, setNewUser] = useState<NewUser>({
     first_name: '',
