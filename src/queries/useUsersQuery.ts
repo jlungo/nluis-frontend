@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { APIResponse } from '@/types/api-response';
+import type { OrganizationI } from '@/types/organizations';
 
 export interface UserType {
   id: string;
@@ -19,7 +20,11 @@ export interface UserType {
   location: string;
 }
 
-export const useUsersQuery = () => {
+interface UseUsersQueryProps {
+  organizations?: OrganizationI[];
+}
+
+export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async (): Promise<UserType[]> => {
