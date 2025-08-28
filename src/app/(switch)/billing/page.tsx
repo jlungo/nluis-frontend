@@ -3,11 +3,10 @@ import { useLayoutEffect } from "react"
 
 export default function Page() {
     const { setPage } = usePageStore()
-
     useLayoutEffect(() => {
         setPage({
-            module: 'system-settings',
-            title: "System Settings",
+            module: 'billing',
+            title: "Billing & Payments",
             backButton: 'Back to Modules',
         })
     }, [setPage])

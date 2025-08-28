@@ -89,8 +89,8 @@ export default function VillageLandUsePage() {
     if (error) {
       const apiError = error as ApiError;
       setCurrentError(
-        apiError.response?.data?.detail || 
-        apiError.message || 
+        apiError.response?.data?.detail ||
+        apiError.message ||
         'Failed to fetch projects'
       );
       setShowErrorModal(true);
@@ -98,14 +98,14 @@ export default function VillageLandUsePage() {
   }, [error]);
 
   const hasActiveFilters = Boolean(filters.projectStatus || filters.projectName);
-  
+
   // List of projects
-  const projectsList = useMemo(() => 
+  const projectsList = useMemo(() =>
     projects.map((project, index) => ({
       ...project,
       rowNumber: ((filters.page - 1) * 50) + index + 1
     }))
-  , [projects, filters.page]);
+    , [projects, filters.page]);
 
   // Handlers
   const handleFilterChange = useCallback((key: keyof ProjectFiltersType, value: string | number) => {
@@ -214,7 +214,7 @@ export default function VillageLandUsePage() {
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <>
       {/* Error Modal */}
       <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
         <DialogContent className="sm:max-w-[425px]">
@@ -244,13 +244,13 @@ export default function VillageLandUsePage() {
           <h1 className="text-2xl font-semibold">Village Land Use Projects</h1>
           <p className="text-muted-foreground">Manage and track village land use planning projects</p>
         </div>
-        <Button 
-          onClick={() => navigate('/land-uses/create-project', { 
-            state: { 
+        <Button
+          onClick={() => navigate('/land-uses/create-project', {
+            state: {
               type: 'Village Land Use',
-              from: location.pathname 
+              from: location.pathname
             }
-          })} 
+          })}
           className="gap-2"
         >
           <Plus className="h-4 w-4" /> Create New Project
@@ -275,8 +275,8 @@ export default function VillageLandUsePage() {
 
             {/* Status Select */}
             <div className="flex-1 min-w-0">
-              <Select 
-                value={filters.projectStatus} 
+              <Select
+                value={filters.projectStatus}
                 onValueChange={(value) => handleFilterChange('projectStatus', value)}
               >
                 <SelectTrigger className="w-full">
@@ -364,6 +364,6 @@ export default function VillageLandUsePage() {
           Showing {projectsList.length} of {pagination.total_count} Projects
         </div>
       )}
-    </div>
+    </>
   );
 }

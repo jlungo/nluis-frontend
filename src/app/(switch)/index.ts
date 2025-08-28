@@ -9,7 +9,9 @@ import Reports from "./reports";
 import Organizations from "./organizations";
 import UserManagement from "./user-management";
 import SystemSettings from "./system-settings";
-import AuditTrail from "./audit-trail";
+import DocumentManagement from "./document-management";
+import EquipementManagement from "./equipment-management";
+import Billing from "./billing";
 import DataManagement from "./data-management";
 import type { RouteObject } from "react-router";
 
@@ -26,7 +28,9 @@ const Index: RouteObject = {
     Organizations,
     UserManagement,
     SystemSettings,
-    AuditTrail,
+    DocumentManagement,
+    EquipementManagement,
+    Billing,
     DataManagement,
   ],
 };

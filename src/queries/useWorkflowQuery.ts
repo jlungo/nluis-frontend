@@ -4,6 +4,12 @@ import type { APIResponse } from "@/types/api-response";
 import type { WorkflowCategoryKey } from "@/types/constants";
 import type { InputType } from "@/types/input-types";
 
+export interface SelectOptionProps {
+  text_label: string;
+  value: string;
+  position: number;
+}
+
 export interface FieldsProps {
   id: 0;
   label: string;
@@ -24,6 +30,7 @@ export interface FieldsProps {
   module_level_name: string;
   module_slug: string;
   module_name: string;
+  select_options: SelectOptionProps[];
 }
 
 export interface FormProps {
@@ -40,6 +47,7 @@ export interface FormProps {
   module_slug: string;
   module_name: string;
   position: number;
+  editor_roles: string[];
   fields: FieldsProps[];
 }
 
@@ -48,6 +56,7 @@ export interface SectionProps {
   name: string;
   description: string;
   position: number;
+  approval_roles: string[];
   is_active: boolean;
   workflow_slug: string;
   workflow_name: string;

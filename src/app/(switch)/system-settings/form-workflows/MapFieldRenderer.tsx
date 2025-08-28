@@ -43,7 +43,6 @@ interface MapFieldRendererProps {
     label: string;
     placeholder?: string;
     required?: boolean;
-    helpText?: string;
 }
 
 interface GPSCoordinate {
@@ -77,9 +76,8 @@ export default function MapFieldRenderer({
     value,
     onChange,
     label,
-    //   placeholder,
+    placeholder,
     required = false,
-    helpText
 }: MapFieldRendererProps) {
     //   const [activeTab, setActiveTab] = useState<'map' | 'coordinates' | 'import'>('map');
     const [manualCoordinates, setManualCoordinates] = useState('');
@@ -1032,8 +1030,8 @@ export default function MapFieldRenderer({
                             {label}
                             {required && <span className="text-destructive">*</span>}
                         </CardTitle>
-                        {helpText && (
-                            <CardDescription className="mt-1">{helpText}</CardDescription>
+                        {placeholder && (
+                            <CardDescription className="mt-1">{placeholder}</CardDescription>
                         )}
                     </div>
                     <div className="flex items-center gap-2">

@@ -29,8 +29,6 @@ export interface RegisterDataState {
   company: string | null;
   gender?: number;
   user_type: number;
-  password: string;
-  confirmPassword: string;
 }
 
 export interface VerifyEmailResponse {
@@ -40,18 +38,20 @@ export interface VerifyEmailResponse {
   email: string;
 }
 
-
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   user: UserProps | null;
   loading: boolean;
+  tempId?: string;
+  tempEmail?: string;
   signup: (data: RegisterDataState) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   verifyEmailTokenToken: (token: string) => Promise<VerifyEmailResponse>;
   requestPasswordReset: (email: string) => Promise<void>;
+  requestEmailReset: (id: string) => Promise<void>;
   verifyPasswordResetToken: (
     uidb64: string,
     token: string
@@ -87,8 +87,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       if (!data?.email) missingFields.push("Email");
       if (!data?.phone) missingFields.push("Phone Number");
       if (!data?.gender) missingFields.push("Gender");
-      if (!data?.password) missingFields.push("Password");
-      if (!data?.confirmPassword) missingFields.push("Confirm Password");
 
       if (missingFields.length > 0) {
         const formattedFields =
@@ -102,16 +100,6 @@ export const useAuth = create<AuthState>((set, get) => ({
         } required!`;
       }
 
-      if (data?.password !== data?.confirmPassword)
-        throw "Passwords do not match.";
-
-      // Strong password regex: at least 8 chars, one uppercase, one lowercase, one number, one special char
-      const strongPasswordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
-
-      if (!strongPasswordRegex.test(data.password))
-        throw "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.";
-
       const res = await api.post("/auth/register/", {
         first_name: data.firstName,
         last_name: data.lastName,
@@ -119,21 +107,19 @@ export const useAuth = create<AuthState>((set, get) => ({
         phone: data.phone,
         company: data?.company || null,
         gender: Number(data.gender),
-        password: data.password,
         user_type: 4,
       });
 
-      // auto-login after signup
-      const { access, refresh, ...userData } = res.data;
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("user", JSON.stringify(userData));
-
       set({
-        accessToken: access,
-        refreshToken: refresh,
-        user: userData,
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        tempId: res.data.id,
+        tempEmail: res.data.email,
       });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);
@@ -149,8 +135,6 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const res = await api.post("/auth/login/", { email, password });
       const { access, refresh, ...userData } = res.data;
-
-      console.log(res);
 
       localStorage.setItem("accessToken", access);
       localStorage.setItem("refreshToken", refresh);
@@ -226,7 +210,28 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  verifyEmailTokenToken: async (token: string): Promise<VerifyEmailResponse> => {
+  requestEmailReset: async (user: string) => {
+    set({ loading: true });
+    try {
+      await api.post("/auth/resend-account-verify-email/", { user });
+    } catch (error: any) {
+      console.error("Email resend request failed:", error);
+      if (error.response?.status === 404) {
+        throw { detail: "User not found!" };
+      }
+      throw (
+        error.response?.data || {
+          detail: "Failed to resend verification email. Please try again.",
+        }
+      );
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  verifyEmailTokenToken: async (
+    token: string
+  ): Promise<VerifyEmailResponse> => {
     try {
       const response = await api.post(`/auth/email-verify/`, { token });
       return response.data;
@@ -234,12 +239,16 @@ export const useAuth = create<AuthState>((set, get) => ({
       console.error("Email verification failed:", error);
 
       if (error.response?.status === 400) {
-        throw { detail: "Invalid or expired token. Please verify your email again." };
+        throw {
+          detail: "Invalid or expired token. Please verify your email again.",
+        };
       }
 
-      throw error.response?.data || {
-        detail: "Failed to verify token. Please try again.",
-      };
+      throw (
+        error.response?.data || {
+          detail: "Failed to verify token. Please try again.",
+        }
+      );
     }
   },
 

@@ -15,7 +15,7 @@ export default function VerifyEmail() {
   const [isValidToken, setIsValidToken] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { verifyEmailTokenToken } = useAuth();
+  const { user, verifyEmailTokenToken } = useAuth();
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -54,7 +54,7 @@ export default function VerifyEmail() {
     navigate('/auth/signin', { replace: true });
   };
 
-  if (isLoading) {
+  if (isLoading && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-6">
@@ -72,7 +72,7 @@ export default function VerifyEmail() {
     );
   }
 
-  if (!isValidToken) {
+  if (!isValidToken && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-6">
@@ -97,7 +97,7 @@ export default function VerifyEmail() {
           </div>
         </div>
 
-        <Card className="shadow-lg border-0 bg-white">
+        <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
           <CardContent className="px-8 py-8">
             <Alert className="border-red-200 bg-red-50 mb-6">
               <AlertCircle className="h-4 w-4 text-red-600" />
