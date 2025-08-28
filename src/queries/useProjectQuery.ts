@@ -3,14 +3,27 @@ import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
 
 export interface Project {
-  id: string;
+  id: number;
   name: string;
-  section_name: string;
-  status: 'draft' | 'in-progress' | 'approved' | 'rejected' | 'completed';
+  reg_date: string;
+  auth_date: string;
+  published_date: string;
+  action: string;
+  remarks: string;
+  datetime: string;
+  project_type_info: {
+    id: number;
+    name: string;
+    duration: number;
+  };
+  status_info: string[];
+  total_locality: number;
+  age: number;
+  station_info: {
+    id: number;
+    name: string;
+  };
   current_task: string;
-  localities_count: number;
-  created_at: string;
-  slug: string;
 }
 
 export interface ProjectStats {
@@ -43,18 +56,18 @@ export const useProjectsQuery = (options: ProjectQueryParams) => {
       : ["projects", options],
     queryFn: async (): Promise<APIResponse<Project>> => {
       if (options.id) {
-          // Fetch a single project by ID
-          const response = await api.get<APIResponse<Project>>(`/projects/${options.id}`);
-          return response.data;
-        } else {
-          // Fetch multiple projects with optional params
-          const response = await api.get<APIResponse<Project>>(`/projects/list`, {
-            params: options,
-          });
-          return response.data;
-        }
+        // Fetch a single project by ID
+        const response = await api.get<APIResponse<Project>>(`/projects/${options.id}`);
+        return response.data;
+      } else {
+        // Fetch multiple projects with optional params
+        const response = await api.get<APIResponse<Project>>(`/projects/list`, {
+          params: options,
+        });
+        return response.data;
+      }
     },
-    enabled: !!options.id || !!options, // Avoid fetching if no valid input
+    enabled: !!options.id || !!options,
   });
 };
 

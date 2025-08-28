@@ -146,7 +146,7 @@ export default function VillageLandUsePage() {
         <Table>
           <TableHeader>
             <TableRow>
-              {['No.', 'Created Date', 'Land Use', 'Land Use Planning', 'Localities', 'Current Task', 'Status'].map((header) => (
+              {['No.', 'Registration Date', 'Project Name', 'Project Type', 'Station', 'Total Villages', 'Current Task', 'Status'].map((header) => (
                 <TableHead key={header}>{header}</TableHead>
               ))}
             </TableRow>
@@ -154,7 +154,7 @@ export default function VillageLandUsePage() {
           <TableBody>
             {Array(5).fill(0).map((_, i) => (
               <TableRow key={`loading-${i}`}>
-                {Array(7).fill(0).map((_, j) => (
+                {Array(8).fill(0).map((_, j) => (
                   <TableCell key={`loading-cell-${i}-${j}`}>
                     <div className="h-4 rounded animate-pulse" />
                   </TableCell>
@@ -177,9 +177,9 @@ export default function VillageLandUsePage() {
     </div>
   );
 
-  const ProjectStatusBadge = ({ status }: { status: ProjectStatus }) => (
-    <Badge className={`${STATUS_COLORS[status]} font-medium`}>
-      {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+  const ProjectStatusBadge = ({ status }: { status: string }) => (
+    <Badge className={`${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'} font-medium`}>
+      {status}
     </Badge>
   );
 
@@ -310,8 +310,8 @@ export default function VillageLandUsePage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  {['No:', 'Created Date', 'Land Use', 'Land Use Planning', 'Localities', 'Current Task', 'Status'].map((header) => (
-                    <TableHead key={header} className={header === 'Localities' ? 'text-center' : ''}>
+                  {['No:', 'Registration Date', 'Project Name', 'Project Type', 'Station', 'Total Villages', 'Current Task', 'Status'].map((header) => (
+                    <TableHead key={header} className={header === 'Total Villages' ? 'text-center' : ''}>
                       {header}
                     </TableHead>
                   ))}
@@ -321,24 +321,29 @@ export default function VillageLandUsePage() {
                 {projectsList.map((project) => (
                   <TableRow key={project.id} className="hover:bg-gray-50">
                     <TableCell className="text-center font-medium">{project.rowNumber}</TableCell>
-                    <TableCell className="text-sm">{formatDate(project.created_at)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(project.reg_date)}</TableCell>
                     <TableCell>
                       <Button
                         variant="link"
-                        onClick={() => navigate(`/forms/${project.slug}`)}
+                        onClick={() => navigate(`/projects/${project.id}`)}
                         className="text-teal-600 hover:text-teal-800 font-medium p-0 h-auto"
                       >
                         {project.name}
                       </Button>
                     </TableCell>
-                    <TableCell className="text-sm">{project.section_name}</TableCell>
+                    <TableCell className="text-sm">{project.project_type_info.name}</TableCell>
+                    <TableCell className="text-sm">{project.station_info.name}</TableCell>
                     <TableCell className="text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 bg-teal-100 text-teal-800 text-sm font-medium rounded">
-                        {project.localities_count}
+                        {project.total_locality}
                       </span>
                     </TableCell>
                     <TableCell className="text-sm">{project.current_task}</TableCell>
-                    <TableCell><ProjectStatusBadge status={project.status} /></TableCell>
+                    <TableCell>
+                      {project.status_info.map((status, index) => (
+                        <ProjectStatusBadge key={index} status={status} />
+                      ))}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
