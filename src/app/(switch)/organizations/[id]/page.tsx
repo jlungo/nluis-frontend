@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { organizationService } from '@/services/organizations';
-import type { Organization } from '@/types/organizations';
+import { OrganizationStatusE, type OrganizationI } from '@/types/organizations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import {
   Building2,
   MapPin,
-  Mail,
+  Mail, 
   Users,
   FolderOpen,
-  Edit,
+  Edit, 
   ArrowLeft,
   Loader2,
   User
@@ -22,7 +22,7 @@ import {
 export default function OrganizationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -137,21 +137,21 @@ export default function OrganizationDetail() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Organization Type</label>
-                  <p className="text-foreground">{organization.type?.name || 'Unknown Type'}</p>
+                  <p className="text-foreground">{organization.type instanceof  Object ?organization.type.name : organization.type}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <div>
                     <Badge 
                       className={
-                        organization.status === 'active' 
+                        organization.status === OrganizationStatusE.ACTIVE
                           ? 'bg-progress-completed/10 text-progress-completed border-progress-completed/20'
-                          : organization.status === 'pending'
+                          : organization.status === OrganizationStatusE.PENDING
                           ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
                           : 'bg-red-100 text-red-800 border-red-200'
                       }
                     >
-                      {organization.status ? organization.status.charAt(0).toUpperCase() + organization.status.slice(1) : 'Unknown'}
+                      {organization.status === OrganizationStatusE.ACTIVE? 'Active': organization.status === OrganizationStatusE.PENDING? 'Pending': 'Inactive'}
                     </Badge>
                   </div>
                 </div>
@@ -192,7 +192,7 @@ export default function OrganizationDetail() {
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium text-muted-foreground">Physical Address</label>
-                  <p className="text-foreground">{organization.physical_address || 'N/A'}</p>
+                  <p className="text-foreground">{organization.address || 'N/A'}</p>
                 </div>
               </div>
             </CardContent>
@@ -209,19 +209,16 @@ export default function OrganizationDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Region</label>
-                  <p className="text-foreground">{organization.region || 'N/A'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Description</label>
+                  <p className="text-foreground">{organization.description|| '-'}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">District</label>
-                  <p className="text-foreground">{organization.district || 'N/A'}</p>
-                </div>
+                
               </div>
             </CardContent>
           </Card>
 
           {/* Focal Person Information */}
-          {(organization.focal_person_name || organization.focal_person_email || organization.focal_person_job_title) && (
+          {(organization.first_name ||  organization.last_name) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -233,15 +230,15 @@ export default function OrganizationDetail() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-foreground">{organization.focal_person_name || 'N/A'}</p>
+                    <p className="text-foreground">{organization.first_name + ' ' + organization.last_name}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Job Title</label>
-                    <p className="text-foreground">{organization.focal_person_job_title || 'N/A'}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                    <p className="text-foreground">{organization.phone || '-'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <p className="text-foreground">{organization.focal_person_email || 'N/A'}</p>
+                    <p className="text-foreground">{organization.focal_person_email || '-'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -285,23 +282,7 @@ export default function OrganizationDetail() {
             </CardContent>
           </Card>
 
-          {/* Focus Areas */}
-          {organization.focus_areas && organization.focus_areas.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Focus Areas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {organization.focus_areas.map((area, index) => (
-                    <Badge key={index} variant="outline">
-                      {area}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+         
 
           {/* Actions */}
           <Card>
