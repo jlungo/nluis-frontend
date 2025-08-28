@@ -1,5 +1,5 @@
 import Layout from "./layout";
-import Page from "./page";
+import Page from "./dashboard/page";
 import type { RouteObject } from "react-router";
 
 const Index: RouteObject = {
@@ -9,6 +9,13 @@ const Index: RouteObject = {
     {
       index: true,
       Component: Page,
+    },
+    {
+      path: "organizations-list",
+      async lazy() {
+        const { default: Component } = await import("./list/page");
+        return { Component };
+      }
     },
     {
       path: "registration",

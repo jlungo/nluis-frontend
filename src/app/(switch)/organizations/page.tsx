@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { organizationService } from "@/services/organizations";
 import { OrganizationStatusE, type OrganizationI } from "@/types/organizations";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Search, MapPin, ArrowUpDown, Loader2, Plus } from "lucide-react";
+import {
+  Building2,
+  Search,
+  MapPin,
+  ArrowUpDown,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import { usePageStore } from "@/store/pageStore";
 
 type SortField =
   | "name"
@@ -25,6 +33,8 @@ type SortField =
 type SortOrder = "asc" | "desc";
 
 export default function OrganizationDirectory() {
+  const { setPage } = usePageStore();
+
   const [organizations, setOrganizations] = useState<OrganizationI[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,7 +45,15 @@ export default function OrganizationDirectory() {
     field: "name",
     order: "asc",
   });
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
+  useLayoutEffect(() => {
+    setPage({
+      module: "organizations",
+      title: "Organizations",
+      backButton: "Back to Modules",
+    });
+  }, [setPage]);
   // Load organizations
   useEffect(() => {
     const loadData = async () => {
@@ -81,24 +99,19 @@ const navigate = useNavigate();
           />
         </div>
       </div>
-       <div className="flex-none p-6 bg-background border-b">
+      <div className="flex-none p-6 bg-background border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">Organizations Management</h2>
-            <p className="text-muted-foreground">
-              Manage organizational structure, memberships, and institutional relationships within the NLUIS system
-            </p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Organizations Management
+            </h2>
           </div>
-          <Button
-            onClick={() => navigate('registration')}
-            className="gap-2"
-          >
+          <Button onClick={() => navigate("registration")} className="gap-2">
             <Plus className="h-4 w-4" />
             Register Organization
           </Button>
-        </div> 
+        </div>
       </div>
-
 
       {/* Organizations Table */}
       <div className="rounded-md border">
@@ -236,7 +249,11 @@ const navigate = useNavigate();
                           : "bg-red-100 text-red-800 border-red-200"
                       }
                     >
-                     {org.status === OrganizationStatusE.ACTIVE? 'Active': org.status === OrganizationStatusE.PENDING? 'Pending': 'Inactive'}
+                      {org.status === OrganizationStatusE.ACTIVE
+                        ? "Active"
+                        : org.status === OrganizationStatusE.PENDING
+                        ? "Pending"
+                        : "Inactive"}
                     </Badge>
                   </TableCell>
                 </TableRow>
