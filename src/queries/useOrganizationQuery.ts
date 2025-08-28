@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationService } from '@/services/organizations';
 import type { 
-  Organization, 
+  OrganizationI, 
   OrganizationType, 
   OrganizationFilters,
   PatchedOrganization,
@@ -64,7 +64,7 @@ export const useUpdateOrganization = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Organization> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<OrganizationI> }) =>
       organizationService.updateOrganization(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
