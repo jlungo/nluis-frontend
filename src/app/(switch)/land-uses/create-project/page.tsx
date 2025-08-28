@@ -8,139 +8,205 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useProjectTypes, useFunders, useLocalities, useCreateProject } from '@/queries/useProjectQuery';
 
-interface VillageInfo {
-  village_name: string;
-  village_code: string;
-  district: string;
+interface LocationSelection {
   region: string;
+  district: string;
   ward: string;
-  population: number;
-  shapefile?: string;
+  village: string;
 }
 
 type FormData = {
   project_type: string;
-  project_name: string;
-  project_description: string;
-  registration_date: string;
-  authorization_date: string;
-  status: string;
-  funders: string[];
-  village_info: VillageInfo;
+  name: string;
+  description: string;
+  reg_date: string;
+  auth_date: string;
+  budget: string;
+  funders: number[];
+  locations: LocationSelection[];
 };
 
 export default function CreateProjectPage() {
   const { setPage } = usePageStore();
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // Project types from backend
-  const [projectTypes, setProjectTypes] = useState<string[]>([]);
-  // Location data from backend
-  const [locations, setLocations] = useState({
-    regions: [] as Array<{ id: string; name: string }>,
-    districts: [] as Array<{ id: string; region_id: string; name: string }>,
-    wards: [] as Array<{ id: string; district_id: string; name: string }>,
-    villages: [] as Array<{ id: string; ward_id: string; name: string; code: string; population: number }>
-  });
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [selectedProjectType, setSelectedProjectType] = useState<string>('');
+
+  // React Query hooks
+  const { data: projectTypesData, isLoading: loadingProjectTypes } = useProjectTypes();
+  const { data: funders, isLoading: loadingFunders } = useFunders();
+  const { data: localitiesData, isLoading: loadingLocalities } = useLocalities();
+  const createProjectMutation = useCreateProject();
+
+  const projectTypes = projectTypesData?.results || [];
+  const localities = localitiesData?.results || [];
 
   const [formData, setFormData] = useState<FormData>({
-    project_type: 'Village',
-    project_name: '',
-    project_description: '',
-    registration_date: new Date().toISOString().split('T')[0],
-    authorization_date: '',
-    status: 'Pending',
+    project_type: '',
+    name: '',
+    description: '',
+    reg_date: new Date().toISOString().split('T')[0],
+    auth_date: '',
+    budget: '',
     funders: [],
-    village_info: {
-      village_name: '',
-      village_code: '',
-      district: '',
-      region: '',
-      ward: '',
-      population: 0,
-      shapefile: ''
-    }
+    locations: [{ region: '', district: '', ward: '', village: '' }]
   });
 
   const navigateBack = () => window.location.href = '/land-uses';
-
-  // Fetch initial data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch project types
-        const typesResponse = await fetch(`${import.meta.env.VITE_API_URL}/projects/types/`);
-        const types = await typesResponse.json();
-        setProjectTypes(types);
-
-        // Fetch locations data
-        const locationsResponse = await fetch(`${import.meta.env.VITE_API_URL}/locations/`);
-        const locationData = await locationsResponse.json();
-        setLocations(locationData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // Update page title
   useEffect(() => {
     setPage({
       module: 'land-uses',
-      title: 'Create New Village Land Use Plan'
+      title: 'Create New Project'
     });
   }, [setPage]);
 
-  // Handle village selection
-  const handleVillageSelect = (villageId: string) => {
-    const village = locations.villages.find(v => v.id === villageId);
-    if (village) {
+  // Update selected level when project type changes
+  useEffect(() => {
+    if (selectedProjectType) {
+      const projectType = projectTypes.find(pt => pt.id.toString() === selectedProjectType);
+      if (projectType) {
+        setSelectedLevel(projectType.level_id);
+        
+        // Reset locations if level is National
+        if (projectType.level_id === 1) {
+          setFormData(prev => ({
+            ...prev,
+            locations: [{ region: '', district: '', ward: '', village: '' }]
+          }));
+        }
+      }
+    }
+  }, [selectedProjectType, projectTypes]);
+
+  const handleInputChange = (key: keyof Omit<FormData, 'funders' | 'locations'>, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleProjectTypeChange = (value: string) => {
+    setSelectedProjectType(value);
+    setFormData(prev => ({ ...prev, project_type: value }));
+  };
+
+  const handleFunderChange = (funderId: number, checked: boolean) => {
+    setFormData(prev => {
+      if (checked) {
+        return { ...prev, funders: [...prev.funders, funderId] };
+      } else {
+        return { ...prev, funders: prev.funders.filter(id => id !== funderId) };
+      }
+    });
+  };
+
+  const handleLocationChange = (index: number, field: keyof LocationSelection, value: string) => {
+    setFormData(prev => {
+      const newLocations = [...prev.locations];
+      newLocations[index] = { ...newLocations[index], [field]: value };
+      
+      // Reset dependent fields when a parent field changes
+      if (field === 'region') {
+        newLocations[index].district = '';
+        newLocations[index].ward = '';
+        newLocations[index].village = '';
+      } else if (field === 'district') {
+        newLocations[index].ward = '';
+        newLocations[index].village = '';
+      } else if (field === 'ward') {
+        newLocations[index].village = '';
+      }
+      
+      return { ...prev, locations: newLocations };
+    });
+  };
+
+  const addLocationRow = () => {
+    setFormData(prev => ({
+      ...prev,
+      locations: [...prev.locations, { region: '', district: '', ward: '', village: '' }]
+    }));
+  };
+
+  const removeLocationRow = (index: number) => {
+    if (formData.locations.length > 1) {
       setFormData(prev => ({
         ...prev,
-        village_info: {
-          ...prev.village_info,
-          village_name: village.name,
-          village_code: village.code,
-          population: village.population
-        }
+        locations: prev.locations.filter((_, i) => i !== index)
       }));
     }
   };
 
-  const handleInputChange = (key: keyof FormData, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
-
   const isFormValid = () => {
-    return formData.project_name && 
-           formData.project_description && 
-           formData.registration_date && 
-           formData.authorization_date && 
-           formData.funders.length > 0 &&
-           formData.village_info.village_name &&
-           formData.village_info.village_code &&
-           formData.village_info.district &&
-           formData.village_info.region &&
-           formData.village_info.ward;
+    // Basic validation
+    if (!formData.name || !formData.description || !formData.reg_date || 
+        !formData.auth_date || !formData.budget || !formData.project_type || 
+        formData.funders.length === 0) {
+      return false;
+    }
+    
+    // Location validation based on level
+    if (selectedLevel && selectedLevel > 1) {
+      for (const location of formData.locations) {
+        if (selectedLevel >= 2 && !location.region) return false;
+        if (selectedLevel >= 3 && !location.district) return false;
+        if (selectedLevel >= 4 && !location.ward) return false;
+        if (selectedLevel >= 5 && !location.village) return false;
+      }
+    }
+    
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to create project
-      // await createProject(formData);
+      // Prepare data for API
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        reg_date: formData.reg_date,
+        auth_date: formData.auth_date,
+        budget: parseFloat(formData.budget),
+        project_type: parseInt(formData.project_type),
+        funders: formData.funders,
+        // For national level, set locations to empty
+        localities: selectedLevel === 1 ? [] : formData.locations.map(loc => ({
+          region: loc.region ? parseInt(loc.region) : null,
+          district: loc.district ? parseInt(loc.district) : null,
+          ward: loc.ward ? parseInt(loc.ward) : null,
+          village: loc.village ? parseInt(loc.village) : null
+        }))
+      };
+
+      // Use React Query mutation to create project
+      await createProjectMutation.mutateAsync(submitData);
+      
       navigateBack();
     } catch (error) {
       console.error('Failed to create project:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
+
+  // Helper functions to filter localities
+  const getRegions = () => localities.filter(l => l.level === 2);
+  const getDistricts = (regionId: string) => localities.filter(l => l.level === 3 && l.parent === parseInt(regionId));
+  const getWards = (districtId: string) => localities.filter(l => l.level === 4 && l.parent === parseInt(districtId));
+  const getVillages = (wardId: string) => localities.filter(l => l.level === 5 && l.parent === parseInt(wardId));
+
+  // Show loading states
+  if (loadingProjectTypes || loadingFunders || loadingLocalities) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <p>Loading form...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-4xl mx-auto p-6">
@@ -151,46 +217,46 @@ export default function CreateProjectPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="project_name">Project Name *</Label>
+              <Label htmlFor="name">Project Name *</Label>
               <Input
-                id="project_name"
+                id="name"
                 placeholder="Enter project name"
-                value={formData.project_name}
-                onChange={(e) => handleInputChange('project_name', e.target.value)}
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="project_description">Description *</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
-                id="project_description"
+                id="description"
                 placeholder="Project description"
-                value={formData.project_description}
-                onChange={(e) => handleInputChange('project_description', e.target.value)}
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="registration_date">Registration Date *</Label>
+                <Label htmlFor="reg_date">Registration Date *</Label>
                 <Input
-                  id="registration_date"
+                  id="reg_date"
                   type="date"
-                  value={formData.registration_date}
-                  onChange={(e) => handleInputChange('registration_date', e.target.value)}
+                  value={formData.reg_date}
+                  onChange={(e) => handleInputChange('reg_date', e.target.value)}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="authorization_date">Authorization Date *</Label>
+                <Label htmlFor="auth_date">Authorization Date *</Label>
                 <Input
-                  id="authorization_date"
+                  id="auth_date"
                   type="date"
-                  value={formData.authorization_date}
-                  onChange={(e) => handleInputChange('authorization_date', e.target.value)}
+                  value={formData.auth_date}
+                  onChange={(e) => handleInputChange('auth_date', e.target.value)}
                   required
                 />
               </div>
@@ -201,249 +267,203 @@ export default function CreateProjectPage() {
                 <Label htmlFor="project_type">Project Type *</Label>
                 <Select
                   value={formData.project_type}
-                  onValueChange={(value) => handleInputChange('project_type', value)}
+                  onValueChange={handleProjectTypeChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select project type" />
                   </SelectTrigger>
                   <SelectContent>
                     {projectTypes.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value="Pending" disabled>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="budget">Budget *</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  placeholder="Enter budget"
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange('budget', e.target.value)}
+                  required
+                />
               </div>
             </div>
 
             <div>
               <Label htmlFor="funders">Project Funders *</Label>
-              <Input
-                id="funders"
-                placeholder="Enter funders (comma-separated)"
-                value={formData.funders.join(', ')}
-                onChange={(e) => {
-                  const funders = e.target.value.split(',').map(f => f.trim()).filter(Boolean);
-                  handleInputChange('funders', funders);
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="funders">Project Funders</Label>
-              <Input
-                id="funders"
-                value={formData.funders.join(', ')}
-                onChange={(e) => handleInputChange('funders', e.target.value.split(',').map(str => str.trim()))}
-                placeholder="Enter funders (comma-separated)"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold">Village Information</h2>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="region">Region *</Label>
-                <Select
-                  value={formData.village_info.region}
-                  onValueChange={(value) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      village_info: {
-                        ...prev.village_info,
-                        region: value,
-                        district: '',
-                        ward: '',
-                        village_name: '',
-                        village_code: ''
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {funders?.map(funder => (
+                  <div key={funder.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`funder-${funder.id}`}
+                      checked={formData.funders.includes(funder.id)}
+                      onCheckedChange={(checked) => 
+                        handleFunderChange(funder.id, checked as boolean)
                       }
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.regions.map(region => (
-                      <SelectItem key={region.id} value={region.id}>
-                        {region.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="district">District *</Label>
-                <Select
-                  value={formData.village_info.district}
-                  onValueChange={(value) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      village_info: {
-                        ...prev.village_info,
-                        district: value,
-                        ward: '',
-                        village_name: '',
-                        village_code: ''
-                      }
-                    }));
-                  }}
-                  disabled={!formData.village_info.region}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select district" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.districts
-                      .filter(d => d.region_id === formData.village_info.region)
-                      .map(district => (
-                        <SelectItem key={district.id} value={district.id}>
-                          {district.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="ward">Ward *</Label>
-                <Select
-                  value={formData.village_info.ward}
-                  onValueChange={(value) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      village_info: {
-                        ...prev.village_info,
-                        ward: value,
-                        village_name: '',
-                        village_code: ''
-                      }
-                    }));
-                  }}
-                  disabled={!formData.village_info.district}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select ward" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.wards
-                      .filter(w => w.district_id === formData.village_info.district)
-                      .map(ward => (
-                        <SelectItem key={ward.id} value={ward.id}>
-                          {ward.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                    />
+                    <label
+                      htmlFor={`funder-${funder.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {funder.name}
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
+        </CardContent>
+      </Card>
 
-            <div>
-              <Label htmlFor="village">Village *</Label>
-              <Select
-                value={formData.village_info.village_name}
-                onValueChange={handleVillageSelect}
-                disabled={!formData.village_info.ward}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select village" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.villages
-                    .filter(v => v.ward_id === formData.village_info.ward)
-                    .map(village => (
-                      <SelectItem key={village.id} value={village.id}>
-                        {village.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {selectedLevel && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold">
+                {selectedLevel === 1 ? 'Coverage Area' : 'Select Coverage Areas'}
+              </h2>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedLevel === 1 ? (
+                <p className="text-muted-foreground">
+                  This project will cover the entire nation of Tanzania.
+                </p>
+              ) : (
+                <>
+                  {formData.locations.map((location, index) => (
+                    <div key={index} className="space-y-4 border p-4 rounded-md">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">Location {index + 1}</h3>
+                        {formData.locations.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeLocationRow(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedLevel >= 2 && (
+                          <div>
+                            <Label htmlFor={`region-${index}`}>Region *</Label>
+                            <Select
+                              value={location.region}
+                              onValueChange={(value) => handleLocationChange(index, 'region', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select region" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getRegions().map(region => (
+                                  <SelectItem key={region.id} value={region.id.toString()}>
+                                    {region.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
 
-            <div>
-              <Label htmlFor="village_code">Village Code</Label>
-              <Input
-                id="village_code"
-                value={formData.village_info.village_code}
-                disabled
-                readOnly
-              />
-            </div>
+                        {selectedLevel >= 3 && (
+                          <div>
+                            <Label htmlFor={`district-${index}`}>District *</Label>
+                            <Select
+                              value={location.district}
+                              onValueChange={(value) => handleLocationChange(index, 'district', value)}
+                              disabled={!location.region}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select district" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getDistricts(location.region).map(district => (
+                                  <SelectItem key={district.id} value={district.id.toString()}>
+                                    {district.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
 
-            <div>
-              <Label htmlFor="population">Population</Label>
-              <Input
-                id="population"
-                type="number"
-                placeholder="Enter village population"
-                value={formData.village_info.population || ''}
-                onChange={(e) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    village_info: {
-                      ...prev.village_info,
-                      population: parseInt(e.target.value) || 0
-                    }
-                  }));
-                }}
-              />
-            </div>
+                        {selectedLevel >= 4 && (
+                          <div>
+                            <Label htmlFor={`ward-${index}`}>Ward *</Label>
+                            <Select
+                              value={location.ward}
+                              onValueChange={(value) => handleLocationChange(index, 'ward', value)}
+                              disabled={!location.district}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select ward" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getWards(location.district).map(ward => (
+                                  <SelectItem key={ward.id} value={ward.id.toString()}>
+                                    {ward.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
 
-            <div>
-              <Label htmlFor="shapefile">Shapefile (.zip) *</Label>
-              <Input
-                id="shapefile"
-                type="file"
-                accept=".zip"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    setFormData(prev => ({
-                      ...prev,
-                      village_info: {
-                        ...prev.village_info,
-                        shapefile: e.target.files![0].name
-                      }
-                    }));
-                  }
-                }}
-                required
-              />
-            </div>
-          </CardContent>
-        </Card>
+                        {selectedLevel >= 5 && (
+                          <div>
+                            <Label htmlFor={`village-${index}`}>Village *</Label>
+                            <Select
+                              value={location.village}
+                              onValueChange={(value) => handleLocationChange(index, 'village', value)}
+                              disabled={!location.ward}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select village" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getVillages(location.ward).map(village => (
+                                  <SelectItem key={village.id} value={village.id.toString()}>
+                                    {village.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button type="button" variant="outline" onClick={addLocationRow}>
+                    Add Another Location
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end gap-4 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={navigateBack}
-            disabled={isSubmitting}
+            disabled={createProjectMutation.isPending}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            disabled={!isFormValid() || isSubmitting}
+            disabled={!isFormValid() || createProjectMutation.isPending}
           >
-            {isSubmitting ? 'Creating...' : 'Create Project'}
+            {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
           </Button>
         </div>
       </form>

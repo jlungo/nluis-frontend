@@ -95,6 +95,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const queryClient = useQueryClient();
   const { data: roles = [] } = useRolesQuery();
   const { data: organizations = [] } = useOrganizationsQuery();
+  //  const organizations = org?.results || [];
 
   const [newUser, setNewUser] = useState<NewUser>({
     first_name: '',
@@ -265,7 +266,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     'Tabora'
   ];
 
-  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useUsersQuery({ organizations });
+  const { data: users = [], isLoading: isLoadingUsers, error: usersError } = useUsersQuery();
 
   // Update the filteredUsers function to use the fetched data
   const filteredUsers = users.filter(user => {

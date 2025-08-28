@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { APIResponse } from '@/types/api-response';
-import type { Organization } from '@/types/organizations';
+import type { OrganizationI } from '@/types/organizations';
 
 export interface UserType {
   id: string;
@@ -21,7 +21,7 @@ export interface UserType {
 }
 
 interface UseUsersQueryProps {
-  organizations?: Organization[];
+  organizations?: OrganizationI[];
 }
 
 export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) => {
@@ -33,7 +33,6 @@ export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) =
 
       return users.map((user) => ({
         ...user,
-        organization_name: organizations.find(org => org.id === user.organization)?.name,
       }));
     }
   });

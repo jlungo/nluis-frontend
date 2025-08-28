@@ -77,6 +77,7 @@ export function NavigationSidebar({
     return `/${page.module}/${id}`
   };
 
+  console.log("Current page:", page);
   // Get module-specific navigation or default navigation
   const getNavigationItems = (): (
     | NavigationItem
@@ -275,6 +276,19 @@ export function NavigationSidebar({
                   icon: <ClipboardPlus className="h-4 w-4" />
                 }
               ]
+            },
+          ];
+        case "organizations":
+          return [
+            {
+              id: "",
+              label: "Dashboard",
+              icon: <LayoutDashboard className="h-4 w-4" />
+            },
+            {
+              id: "organizations-list",
+              label: "Organizations",
+              icon: <List className="h-4 w-4" />
             },
           ];
         default:
