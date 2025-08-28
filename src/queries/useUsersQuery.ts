@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/axios';
-import type { APIResponse } from '@/types/api-response';
-import type { OrganizationI } from '@/types/organizations';
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import type { APIResponse } from "@/types/api-response";
 
 export interface UserType {
   id: string;
@@ -16,24 +15,25 @@ export interface UserType {
   last_login?: string;
   created_at: string;
   is_verified: boolean;
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
+  status: "active" | "inactive" | "pending" | "suspended";
   location: string;
 }
 
-interface UseUsersQueryProps {
-  organizations?: OrganizationI[];
-}
+// interface UseUsersQueryProps {
+//   organizations?: OrganizationI[];
+// }
 
-export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) => {
+// export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) => {
+export const useUsersQuery = () => {
   return useQuery({
-    queryKey: ['users'],
+    queryKey: ["users"],
     queryFn: async (): Promise<UserType[]> => {
-      const response = await api.get<APIResponse<UserType>>('/auth/users/');
+      const response = await api.get<APIResponse<UserType>>("/auth/users/");
       const users = response.data.results ?? [];
 
       return users.map((user) => ({
         ...user,
       }));
-    }
+    },
   });
 };

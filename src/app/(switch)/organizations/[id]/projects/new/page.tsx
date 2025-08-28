@@ -5,7 +5,7 @@ import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
 // import { locationService } from '@/services/locations';
 import type { ProjectType, CreateProjectRequest } from '@/types/projects';
-import type { Organization } from '@/types/organizations';
+import type { OrganizationI } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2, FolderPlus, Building2, MapPin, Calendar} from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FolderPlus, Building2, MapPin, Calendar } from 'lucide-react';
 
 interface FormData {
   name: string;
@@ -75,8 +75,8 @@ export default function NewProjectPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { setPage } = usePageStore();
-  
-  const [organization, setOrganization] = useState<Organization | null>(null);
+
+  const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -120,7 +120,7 @@ export default function NewProjectPage() {
       try {
         setLoading(true);
         console.log('Loading initial data...');
-        
+
         // Load organization details
         const orgData = await organizationService.getOrganization(id);
         console.log('Organization loaded:', orgData);
@@ -155,12 +155,12 @@ export default function NewProjectPage() {
       }
 
       setLoadingDistricts(true);
-      
+
       setTimeout(() => {
         try {
           const districtsData = tempDistricts[formData.region] || [];
           setDistricts(districtsData);
-          
+
           // Clear district selection if it's not valid for the new region
           if (formData.district && !districtsData.find((d: DistrictData) => d.id === formData.district)) {
             setFormData(prev => ({ ...prev, district: '', ward: '', village: '' }));
@@ -188,15 +188,15 @@ export default function NewProjectPage() {
 
   const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Project name is required';
     }
-    
+
     if (!formData.type_id) {
       newErrors.type_id = 'Project type is required';
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = 'Project description is required';
     } else if (formData.description.trim().length < 10) {
@@ -220,7 +220,7 @@ export default function NewProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!id || !organization) {
       toast.error('Organization information is missing');
       return;
@@ -235,7 +235,7 @@ export default function NewProjectPage() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const selectedRegion = regions.find(r => r.id === formData.region);
       const selectedDistrict = districts.find(d => d.id === formData.district);
@@ -259,7 +259,7 @@ export default function NewProjectPage() {
       console.log('Creating project:', projectData);
       const createdProject = await projectService.createProject(projectData);
       console.log('Project created:', createdProject);
-      
+
       toast.success('Project created successfully!');
       navigate(`/organizations/${id}/projects`);
     } catch (error) {
@@ -329,12 +329,12 @@ export default function NewProjectPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Type</Label>
-                  <p className="text-foreground">{organization.type?.name || 'Unknown'}</p>
+                  <p className="text-foreground">{organization.type_name || 'Unknown'}</p>
                 </div>
-                <div>
+                {/* <div>
                   <Label className="text-sm font-medium text-muted-foreground">Location</Label>
                   <p className="text-foreground">{organization.district}, {organization.region}</p>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -376,7 +376,7 @@ export default function NewProjectPage() {
                     {errors.type_id && <p className="text-sm text-red-500 mt-1">{errors.type_id}</p>}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="description">Project Description *</Label>
                   <Textarea
@@ -467,8 +467,8 @@ export default function NewProjectPage() {
                   </div>
                   <div>
                     <Label htmlFor="district">District</Label>
-                    <Select 
-                      value={formData.district} 
+                    <Select
+                      value={formData.district}
                       onValueChange={(value) => handleInputChange('district', value)}
                       disabled={!formData.region || loadingDistricts}
                     >

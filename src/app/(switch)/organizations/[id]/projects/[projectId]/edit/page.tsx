@@ -4,7 +4,7 @@ import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
 import type { Project, ProjectType, UpdateProjectRequest } from '@/types/projects';
-import type { Organization } from '@/types/organizations';
+import type { OrganizationI } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,9 +76,9 @@ export default function EditProjectPage() {
   const { id, projectId } = useParams();
   const navigate = useNavigate();
   const { setPage } = usePageStore();
-  
+
   const [project, setProject] = useState<Project | null>(null);
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -124,7 +124,7 @@ export default function EditProjectPage() {
       try {
         setLoading(true);
         console.log('Loading project and form data...');
-        
+
         // Load project details
         const projectData = await projectService.getProject(projectId);
         console.log('Project loaded:', projectData);
@@ -146,7 +146,7 @@ export default function EditProjectPage() {
         // Find region and district IDs from names
         const regionId = tempRegions.find((r: Region) => r.name === projectData.location?.region)?.id || '';
         let districtId = '';
-        
+
         if (regionId && projectData.location?.district) {
           const regionDistricts = tempDistricts[regionId] || [];
           districtId = regionDistricts.find((d: DistrictData) => d.name === projectData.location?.district)?.id || '';
@@ -190,12 +190,12 @@ export default function EditProjectPage() {
       }
 
       setLoadingDistricts(true);
-      
+
       setTimeout(() => {
         try {
           const districtsData = tempDistricts[formData.region] || [];
           setDistricts(districtsData);
-          
+
           // Clear district selection if it's not valid for the new region
           if (formData.district && !districtsData.find((d: DistrictData) => d.id === formData.district)) {
             setFormData(prev => ({ ...prev, district: '', ward: '', village: '' }));
@@ -223,15 +223,15 @@ export default function EditProjectPage() {
 
   const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Project name is required';
     }
-    
+
     if (!formData.type_id) {
       newErrors.type_id = 'Project type is required';
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = 'Project description is required';
     } else if (formData.description.trim().length < 10) {
@@ -262,7 +262,7 @@ export default function EditProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!id || !projectId || !project || !organization) {
       toast.error('Project information is missing');
       return;
@@ -277,7 +277,7 @@ export default function EditProjectPage() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const selectedRegion = regions.find(r => r.id === formData.region);
       const selectedDistrict = districts.find(d => d.id === formData.district);
@@ -302,7 +302,7 @@ export default function EditProjectPage() {
       console.log('Updating project:', updateData);
       const updatedProject = await projectService.updateProject(projectId, updateData);
       console.log('Project updated:', updatedProject);
-      
+
       toast.success('Project updated successfully!');
       navigate(`/organizations/${id}/projects/${projectId}`);
     } catch (error) {
@@ -372,12 +372,12 @@ export default function EditProjectPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Type</Label>
-                  <p className="text-foreground">{organization.type?.name || 'Unknown'}</p>
+                  <p className="text-foreground">{organization.type_name || 'Unknown'}</p>
                 </div>
-                <div>
+                {/* <div>
                   <Label className="text-sm font-medium text-muted-foreground">Location</Label>
                   <p className="text-foreground">{organization.district}, {organization.region}</p>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -448,7 +448,7 @@ export default function EditProjectPage() {
                     {errors.progress_percentage && <p className="text-sm text-red-500 mt-1">{errors.progress_percentage}</p>}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="description">Project Description *</Label>
                   <Textarea
@@ -539,8 +539,8 @@ export default function EditProjectPage() {
                   </div>
                   <div>
                     <Label htmlFor="district">District</Label>
-                    <Select 
-                      value={formData.district} 
+                    <Select
+                      value={formData.district}
                       onValueChange={(value) => handleInputChange('district', value)}
                       disabled={!formData.region || loadingDistricts}
                     >

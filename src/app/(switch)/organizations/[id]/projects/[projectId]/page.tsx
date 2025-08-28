@@ -1,11 +1,10 @@
-import 
-{ useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
 import type { Project, ProjectUser } from '@/types/projects';
-import type { Organization } from '@/types/organizations';
+import type { OrganizationI } from '@/types/organizations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,9 +31,9 @@ export default function ProjectDetailPage() {
   const { id, projectId } = useParams();
   const navigate = useNavigate();
   const { setPage } = usePageStore();
-  
+
   const [project, setProject] = useState<Project | null>(null);
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +56,7 @@ export default function ProjectDetailPage() {
       try {
         setLoading(true);
         console.log('Loading project and organization data...');
-        
+
         // Load project details
         const projectData = await projectService.getProject(projectId);
         console.log('Project loaded:', projectData);
@@ -235,7 +234,7 @@ export default function ProjectDetailPage() {
                   </p>
                 </div>
               </div>
-              
+
               {project.description && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Description</label>
@@ -389,12 +388,12 @@ export default function ProjectDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Type</label>
-                <p className="text-foreground">{organization.type?.name || 'Unknown'}</p>
+                <p className="text-foreground">{organization.type_name || 'Unknown'}</p>
               </div>
-              <div>
+              {/* <div>
                 <label className="text-sm font-medium text-muted-foreground">Location</label>
                 <p className="text-foreground">{organization.district}, {organization.region}</p>
-              </div>
+              </div> */}
               <Separator />
               <Button
                 variant="outline"
@@ -479,7 +478,7 @@ export default function ProjectDetailPage() {
                       {daysRemaining < 0 ? 'Project Overdue' : 'Deadline Approaching'}
                     </h4>
                     <p className="text-sm text-yellow-700 mt-1">
-                      {daysRemaining < 0 
+                      {daysRemaining < 0
                         ? `This project is ${Math.abs(daysRemaining)} days overdue.`
                         : `This project is due in ${daysRemaining} days.`
                       }
