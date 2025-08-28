@@ -29,12 +29,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+// Lightweight shapes in case the service doesn't return embedded lists
+// Adjust to your actual API types if available
 interface ProjectI {
   id: string | number;
   name: string;
   status?: string;
   start_date?: string | Date;
 }
+// Remove MemberI, use User from useUsersQuery
 
 export default function OrganizationDetail() {
   const { id } = useParams();
@@ -43,15 +46,18 @@ export default function OrganizationDetail() {
   const [loading, setLoading] = useState(true);
 
   const [projects, setProjects] = useState<ProjectI[] | null>(null);
+  // Remove local members state
   const [listsLoading, setListsLoading] = useState(false);
 
   useEffect(() => {
     const loadOrganization = async () => {
       if (!id) {
         toast.error("Organization ID is required");
+        // Removed back button per request; keep silent redirect for safety
         navigate("/organizations/");
         return;
       }
+
       try {
         setLoading(true);
         const org = await organizationService.getOrganization(id);
@@ -75,19 +81,11 @@ export default function OrganizationDetail() {
         setLoading(false);
       }
     };
+
     loadOrganization();
   }, [id, navigate]);
 
-  // 🔽 Call the hook at the top level (NOT inside JSX)
-  // Assuming your hook is React Query-based and supports an `enabled` option.
-  const orgId = organization?.id ?? null;
-  const {
-    data: users,
-    isLoading: membersLoading,
-    isError: membersError,
-  } = useUsersQuery(
-    { organizations: organization ? organization.id : ''},  
-  );
+  // Only keep mock projects for now
 
   if (loading) {
     return (
@@ -104,19 +102,12 @@ export default function OrganizationDetail() {
         <p className="text-muted-foreground mb-4">
           The organization you're looking for doesn't exist.
         </p>
+        {/* Back button removed per request */}
       </div>
     );
   }
 
-  const Stat = ({
-    label,
-    value,
-    icon,
-  }: {
-    label: string;
-    value: string | number | undefined;
-    icon?: JSX.Element;
-  }) => (
+  const Stat = ({ label, value, icon }: { label: string; value: string | number | undefined; icon?: JSX.Element }) => (
     <div className="flex items-center gap-3">
       {icon}
       <div>
@@ -157,44 +148,28 @@ export default function OrganizationDetail() {
                   </Badge>
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
-                  <span>
-                    Type:{" "}
-                    {organization.type instanceof Object
-                      ? (organization.type as any).name
-                      : organization.type}
-                  </span>
+                  <span>Type: {organization.type instanceof Object ? (organization.type as any).name : organization.type}</span>
                   <Separator orientation="vertical" className="h-4 hidden sm:block" />
-                  <span>
-                    Registered:{" "}
-                    {organization.created_at
-                      ? new Date(organization.created_at).toLocaleDateString()
-                      : "-"}
-                  </span>
+                  <span>Registered: {organization.created_at ? new Date(organization.created_at).toLocaleDateString() : "-"}</span>
                 </div>
 
                 {/* Merged Contact Details */}
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4" /> {organization.primary_email || "-"}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4" /> {organization.phone || "-"}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4" /> {organization.address || "-"}
-                  </div>
+                  <div className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4"/> {organization.primary_email || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><User className="h-4 w-4"/> {organization.phone || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4"/> {organization.address || "-"}</div>
                 </div>
               </div>
             </div>
 
-            {/* Right: compact stats + edit */}
+            {/* Right: compact stats + edit (back/Manage Projects removed) */}
             <div className="flex items-center gap-6">
               <Stat label="Members" value={organization.members_count || 0} icon={<Users className="h-4 w-4" />} />
               <Stat label="Projects" value={organization.projects_count || 0} icon={<FolderOpen className="h-4 w-4" />} />
               <div className="hidden md:block">
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => navigate(`/organizations/${id}/edit`)}>
-                    <Edit className="h-4 w-4 mr-2" />
+                    <Edit className="h-4 w-4 mr-2"/>
                     Edit
                   </Button>
                 </div>
@@ -208,28 +183,21 @@ export default function OrganizationDetail() {
       <Tabs defaultValue="projects" className="w-full">
         <div className="flex items-center justify-between mb-3">
           <TabsList>
-            <TabsTrigger value="projects" className="px-4">
-              Projects
-            </TabsTrigger>
-            <TabsTrigger value="members" className="px-4">
-              Members
-            </TabsTrigger>
+            <TabsTrigger value="projects" className="px-4">Projects</TabsTrigger>
+            <TabsTrigger value="members" className="px-4">Members</TabsTrigger>
           </TabsList>
+          {/* Top-right actions intentionally minimal per requests */}
         </div>
 
         {/* Projects Tab (Data Table) */}
         <TabsContent value="projects">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderOpen className="h-5 w-5" /> Projects
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><FolderOpen className="h-5 w-5"/> Projects</CardTitle>
             </CardHeader>
             <CardContent>
               {listsLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+                <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>
               ) : (
                 <div className="w-full overflow-x-auto">
                   <Table>
@@ -248,9 +216,7 @@ export default function OrganizationDetail() {
                           <TableCell>{p.status || "-"}</TableCell>
                           <TableCell>{p.start_date ? new Date(p.start_date).toLocaleDateString() : "-"}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" onClick={() => navigate(`/organizations/${id}/projects`)}>
-                              View
-                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/organizations/${id}/projects`)}>View</Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -269,68 +235,71 @@ export default function OrganizationDetail() {
         <TabsContent value="members">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" /> Members
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Members</CardTitle>
               <Button size="sm" onClick={() => navigate(`/organizations/${id}/members/new`)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Member
               </Button>
             </CardHeader>
             <CardContent>
-              {!orgId ? (
-                <div className="text-muted-foreground">No organization loaded.</div>
-              ) : membersLoading ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
-              ) : membersError ? (
-                <div className="text-destructive">Failed to load members.</div>
-              ) : !users || users.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-6">No members found.</p>
+              {/* Use useUsersQuery to fetch members */}
+              {organization ? (
+                (() => {
+                  const {
+                    data: users,
+                    isLoading: membersLoading,
+                    isError: membersError,
+                  } = useUsersQuery({ organizations: [organization] });
+                  if (membersLoading) {
+                    return <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>;
+                  }
+                  if (membersError) {
+                    return <div className="text-destructive">Failed to load members.</div>;
+                  }
+                  if (!users || users.length === 0) {
+                    return <p className="text-sm text-muted-foreground py-6">No members found.</p>;
+                  }
+                  return (
+                    <div className="w-full overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[220px]">Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead className="w-[1%] whitespace-nowrap text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users.map((m) => (
+                            <TableRow key={m.id}>
+                              <TableCell className="font-medium">{m.firstName} {m.lastName}</TableCell>
+                              <TableCell>{m.email || "-"}</TableCell>
+                              <TableCell>{m.role || "-"}</TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" onClick={() => navigate(`/organizations/${id}/members/${m.id}`)}>View</Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })()
               ) : (
-                <div className="w-full overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[220px]">Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="w-[1%] whitespace-nowrap text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((m: any) => (
-                        <TableRow key={m.id}>
-                          <TableCell className="font-medium">
-                            {m.firstName} {m.lastName}
-                          </TableCell>
-                          <TableCell>{m.email || "-"}</TableCell>
-                          <TableCell>{m.role || "-"}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/organizations/${id}/members/${m.id}`)}
-                            >
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <div className="text-muted-foreground">No organization loaded.</div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
+
+
       {/* Bottom actions for small screens (Back removed) */}
       <div className="md:hidden">
         <Button variant="outline" className="w-full" onClick={() => navigate(`/organizations/${id}/edit`)}>
-          <Edit className="h-4 w-4 mr-2" /> Edit
+          <Edit className="h-4 w-4 mr-2"/> Edit
         </Button>
       </div>
     </div>
