@@ -28,6 +28,7 @@ export interface RegisterDataState {
   phone: string;
   company: string | null;
   gender?: number;
+  user_type: number;
   password: string;
   confirmPassword: string;
 }

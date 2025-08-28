@@ -55,7 +55,13 @@ export default function MapShopLoginForm() {
     e.preventDefault();
     setError("");
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries()) as unknown as RegisterDataState;
+    const rawData = Object.fromEntries(formData.entries());
+
+    // Manually assign user_type = 4 (Stakeholder) as Default
+    const data: RegisterDataState = {
+      ...rawData,
+      user_type: 4, // Stakeholder
+    } as RegisterDataState;
 
     try {
       await signup(data)

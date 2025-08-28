@@ -48,34 +48,20 @@ import {
 import { toast } from 'sonner';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
-import { useUsersQuery } from '@/queries/useUsersQuery';
-import { genderTypes } from '@/types/constants';
+import { useUsersQuery, type UserType } from '@/queries/useUsersQuery';
+import { genderTypes, userTypes } from '@/types/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: string;
-  organization: string | null;
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
-  emailVerified: boolean;
-  lastLogin: string;
-  createdAt: string;
-  location: string;
-}
-
 interface NewUser {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   roleId: string;
   organization: string;
   gender: number;
+  user_type: number | string;
 }
 
 interface UserManagementProps {
@@ -101,7 +87,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const [selectedRole, setSelectedRole] = useState('all');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
@@ -111,13 +97,14 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const { data: organizations = [] } = useOrganizationsQuery();
 
   const [newUser, setNewUser] = useState<NewUser>({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     roleId: '',
     organization: '',
     gender: 0,
+    user_type: 0,
   });
 
   // Create user mutation
@@ -125,13 +112,14 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     mutationFn: async (userData: NewUser) => {
 
       const data = {
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         phone: userData.phone,
         role_id: userData.roleId,
         organization: userData.organization,
         gender: userData.gender,
+        user_type: userData.user_type,
       }
       const response = await api.post('/auth/users/create/', data);
       return response.data;
@@ -141,13 +129,14 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       // Close dialog and reset form
       setIsCreateUserOpen(false);
       setNewUser({
-        firstName: '',
-        lastName: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
         roleId: '',
         organization: '',
         gender: 0,
+        user_type: 0,
       });
 
       // Show success message
@@ -192,14 +181,15 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   });
 
   const editUserMutation = useMutation({
-    mutationFn: async (userData: User) => {
+    mutationFn: async (userData: UserType) => {
       const data = {
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         phone: userData.phone,
         role: userData.role, // TODO: Implement role update UUID
         organization: userData.organization,
+        user_type: userData.user_type,
         status: userData.status,
       };
       const response = await api.put(`/auth/users/${userData.id}/`, data);
@@ -280,8 +270,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   // Update the filteredUsers function to use the fetched data
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
-      user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesOrganization = selectedOrganization === 'all' || user.organization === selectedOrganization;
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
@@ -294,7 +284,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   });
 
   const handleCreateUser = () => {
-    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.roleId || !newUser.gender || !newUser.organization) {
+    if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.roleId || !newUser.gender || !newUser.organization) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -302,7 +292,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     createUserMutation.mutate(newUser);
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserType) => {
     setEditingUser(user);
     setIsEditUserOpen(true);
   };
@@ -335,7 +325,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     }
   };
 
-  const handleResendInvitation = (user: User) => { // TODO: Implement this
+  const handleResendInvitation = (user: UserType) => { // TODO: Implement this
     console.log('Resending invitation to:', user.email);
     toast.success(`Invitation email resent to ${user.email}`);
   };
@@ -413,12 +403,12 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="first_name">First Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="firstName"
+                    id="first_name"
                     className="w-full"
-                    value={newUser.firstName}
-                    onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
+                    value={newUser.first_name}
+                    onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
                     placeholder="Enter first name"
                     disabled={createUserMutation.isPending}
                   />
@@ -426,12 +416,12 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
 
                 {/* Last Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="last_name">Last Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="lastName"
+                    id="last_name"
                     className="w-full"
-                    value={newUser.lastName}
-                    onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
+                    value={newUser.last_name}
+                    onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
                     placeholder="Enter last name"
                     disabled={createUserMutation.isPending}
                   />
@@ -512,8 +502,29 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   </Select>
                 </div>
 
+                {/* Use Type */}
+                <div className="space-y-2 min-w-0">
+                  <Label htmlFor="useType">Use Type <span className="text-red-500">*</span></Label>
+                  <Select
+                    value={newUser.user_type.toString()}
+                    onValueChange={(value) => setNewUser({ ...newUser, user_type: parseInt(value) })}
+                    disabled={createUserMutation.isPending}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select use type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(userTypes).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Organization */}
-                <div className="col-span-2 space-y-2 min-w-0">
+                <div className="space-y-2 min-w-0">
                   <Label htmlFor="organization">Organization <span className="text-red-500">*</span></Label>
                   <Select
                     value={newUser.organization}
@@ -602,7 +613,6 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         </Alert>
       )}
 
-      {/* Rest of the component remains the same */}
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -713,14 +723,14 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                         </div>
                         <div className="flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-medium">{user.firstName} {user.lastName}</h3>
+                            <h3 className="font-medium">{user.first_name} {user.last_name}</h3>
                             <Badge variant="outline" className={`text-xs ${getStatusColor(user.status)}`}>
                               <span className="flex items-center gap-1">
                                 {getStatusIcon(user.status)}
                                 {user.status}
                               </span>
                             </Badge>
-                            {!user.emailVerified && (
+                            {!user.is_verified && (
                               <Badge variant="outline" className="text-xs text-orange-700 bg-orange-50">
                                 <Mail className="h-3 w-3 mr-1" />
                                 Unverified
@@ -749,7 +759,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                             <span className="hidden sm:inline">•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Last login: {user.lastLogin}
+                              Last login: {user.last_login}
                             </span>
                           </div>
                         </div>
@@ -840,24 +850,24 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editFirstName">First Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="editFirst_name">First Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="editFirstName"
+                    id="editFirst_name"
                     className="w-full"
-                    value={editingUser.firstName}
-                    onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
+                    value={editingUser.first_name}
+                    onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
                     disabled={editUserMutation.isPending}
                   />
                 </div>
 
                 {/* Last Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editLastName">Last Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="editLast_name">Last Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="editLastName"
+                    id="editLast_name"
                     className="w-full"
-                    value={editingUser.lastName}
-                    onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
+                    value={editingUser.last_name}
+                    onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
                     disabled={editUserMutation.isPending}
                   />
                 </div>

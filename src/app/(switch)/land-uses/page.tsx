@@ -2,11 +2,11 @@ import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useProjectStats } from "@/queries/useProjectQuery";
+// import { useProjectStats } from "@/queries/useProjectQuery";
 
 export default function DashboardPage() {
   const { setPage } = usePageStore();
-  const { data: projectStats, isLoading, error } = useProjectStats();
+  // const { data: projectStats, isLoading, error } = useProjectStats();
 
   useLayoutEffect(() => {
     setPage({
@@ -16,26 +16,26 @@ export default function DashboardPage() {
     });
   }, [setPage]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  //     </div>
+  //   );
+  // }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-destructive">Error Loading Dashboard</h3>
-          <p className="text-sm text-muted-foreground">
-            Failed to load project statistics. Please try again.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64">
+  //       <div className="text-center">
+  //         <h3 className="text-lg font-medium text-destructive">Error Loading Dashboard</h3>
+  //         <p className="text-sm text-muted-foreground">
+  //           Failed to load project statistics. Please try again.
+  //         </p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Mock data for funders and expiring projects (to be replaced with real data when available)
   const fundersData = [
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projectStats?.total_projects || 0}</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
 
@@ -71,7 +71,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projectStats?.active_projects || 0}</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projectStats?.completed_projects || 0}</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
 
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">Draft Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projectStats?.draft_projects || 0}</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
       </div>
