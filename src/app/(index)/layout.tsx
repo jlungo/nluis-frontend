@@ -60,16 +60,25 @@ export default function Layout() {
                             </Link>
                             {user ?
                                 <>
-                                    {user?.modules && user.modules.length > 0 ?
+                                    {user?.modules && user.modules.length > 1 ?
                                         <Link to="/board" className={cn(buttonVariants(), "gap-2")}>
                                             <LayoutDashboard className="h-4 w-4 hidden lg:block" />
                                             <span className="sr-only lg:not-sr-only">All</span> Modules
                                         </Link>
                                         :
-                                        <Link to="/portal" className={cn(buttonVariants(), "gap-2")}>
-                                            <LayoutDashboard className="h-4 w-4 hidden lg:block" />
-                                            <span className="sr-only lg:not-sr-only">My</span> Account
-                                        </Link>
+                                        <>
+                                            {user.modules?.length === 1 ?
+                                                <Link to={`/${user.modules[0].slug}`} className={cn(buttonVariants(), "gap-2")}>
+                                                    <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                                    {user.modules[0].name}
+                                                </Link>
+                                                :
+                                                <Link to="/portal" className={cn(buttonVariants(), "gap-2")}>
+                                                    <LayoutDashboard className="h-4 w-4 hidden lg:block" />
+                                                    <span className="sr-only lg:not-sr-only">My</span> Account
+                                                </Link>
+                                            }
+                                        </>
                                     }
                                 </>
                                 :

@@ -41,13 +41,13 @@ export default function Page() {
     const sections: FormSection[] = data.sections.map(section => ({
         id: section.slug,
         name: section.name,
-        approval_roles: section.approval_roles || [],
+        approval_roles: section.approval_roles.map(role => ({ user_role: role })),
         description: section.description,
         order: section.position,
         forms: section.forms.map(form => ({
             id: form.slug,
             name: form.name,
-            editor_roles: form.editor_roles || [],
+            editor_roles: form.editor_roles.map(role => ({ user_role: role })),
             description: form.description,
             order: form.position,
             fields: form.fields.map(field => ({

@@ -53,8 +53,8 @@ export default function LoginForm() {
     if (user) {
       if (user?.modules && Array.isArray(user.modules) && user.modules.length > 1)
         navigate("/board", { replace: true });
-      // else if (user?.modules && Array.isArray(user.modules) && user.modules.length === 1)
-      //   navigate(`/${user.modules[0].slug}`, { replace: true });
+      else if (user?.modules && Array.isArray(user.modules) && user.modules.length === 1)
+        navigate(`/${user.modules[0].slug}`, { replace: true });
       else
         navigate(`/portal`, { replace: true });
     }

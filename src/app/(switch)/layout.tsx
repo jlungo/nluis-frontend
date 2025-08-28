@@ -47,7 +47,8 @@ export default function Layout() {
   useEffect(() => {
     if (!user) navigate(`/login`, { replace: true })
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
-    // else if (page?.module && !user.modules.includes(page.module as ModuleTypes)) navigate(`/board`, { replace: true })
+    else if (page?.module && !user.modules.some(m => m.slug === page.module)) navigate(`/board`, { replace: true })
+    console.log(user)
   }, [navigate, page?.module, user])
 
   if (!user) return null

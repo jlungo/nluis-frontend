@@ -60,7 +60,7 @@ export interface FormField {
 export interface SectionForm {
     id: string;
     name: string;
-    editor_roles: string[];
+    editor_roles: { user_role: string }[];
     description: string;
     order: number;
     fields: FormField[];
@@ -69,7 +69,7 @@ export interface SectionForm {
 export interface FormSection {
     id: string;
     name: string;
-    approval_roles: string[];
+    approval_roles: { user_role: string }[];
     description: string;
     order: number;
     forms: SectionForm[];
@@ -107,7 +107,7 @@ interface FormsSubmissionStructure {
     name: string,
     description: string | null,
     position: number,
-    editor_roles: string[];
+    editor_roles: { user_role: string }[]
     fields: FieldsSubmissionStructure[]
 }
 
@@ -115,7 +115,7 @@ interface SectionSubmissionStructure {
     name: string,
     description: string,
     position: number,
-    approval_roles: string[]
+    approval_roles: { user_role: string }[]
     forms: FormsSubmissionStructure[]
 }
 
@@ -301,7 +301,6 @@ export function FormPreviewTester({
     };
 
     // Render a single field component
-    // const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; formId?: string }) => {
     const renderFieldComponent = (field: FormField) => {
         const fieldValue = formValues[field.name];
         const hasError = validationErrors.some(error => error.fieldId === field.id);
@@ -758,7 +757,6 @@ export function FormPreviewTester({
                                             <CollapsibleContent>
                                                 <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
                                                     {form.fields.sort((a, b) => a.order - b.order).map((field) =>
-                                                        // renderFieldComponent(field, { sectionId: section.id, formId: form.id })
                                                         renderFieldComponent(field)
                                                     )}
                                                 </div>

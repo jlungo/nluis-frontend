@@ -380,7 +380,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: WorkflowSubmisionStructure) => {
-            if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
+            if (previousData) return api.put(`/form-management/submissions/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
         },
         onSuccess: () =>
@@ -446,6 +446,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 }))
             }))
         };
+
+        // console.log(workflowData)
 
         try {
             toast.promise(mutateAsync(workflowData), {
@@ -740,7 +742,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             </Card>
                         ) : (
                             <div className="space-y-6">
-                                {formSections.map((section, sectionIndex) => (
+                                {formSections.slice().sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
                                     <Card key={section.id} className="relative">
                                         <CardHeader className="pb-2">
                                             <div className="flex flex-col md:flex-row items-start gap-4">
@@ -776,8 +778,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                         <MultiSelect
                                                             title='users able to approve'
                                                             data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
-                                                            selected={section.approval_roles}
-                                                            setSelected={(e) => updateSection(section.id, { approval_roles: e })}
+                                                            selected={section.approval_roles.map(role => role.user_role)}
+                                                            setSelected={(e) => updateSection(section.id, { approval_roles: e.map(role => ({ user_role: role })) })}
                                                             isLoading={isLoadingRoles}
                                                         />
                                                     </div>
@@ -833,7 +835,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                 </div>
                                             ) : (
                                                 <div className="space-y-4">
-                                                    {section.forms.map((form, formIndex) => (
+                                                    {section.forms.slice().sort((a, b) => a.order - b.order).map((form, formIndex) => (
                                                         <div key={form.id} className="border rounded-lg p-4 bg-muted/30">
                                                             <div className="space-y-4">
                                                                 <div className="flex flex-col md:flex-row gap-3">
@@ -867,8 +869,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                         <MultiSelect
                                                                             title='users able to edit'
                                                                             data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
-                                                                            selected={form.editor_roles}
-                                                                            setSelected={(e) => updateForm(section.id, form.id, { editor_roles: e })}
+                                                                            selected={form.editor_roles.map(role => role.user_role)}
+                                                                            setSelected={(e) => updateForm(section.id, form.id, { editor_roles: e.map(role => ({ user_role: role })) })}
                                                                             isLoading={isLoadingRoles}
                                                                         />
                                                                     </div>
@@ -900,7 +902,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                 {/* Fields */}
                                                                 {form.fields.length > 0 && (
                                                                     <div className="space-y-2 pl-4 border-l-2 border-border">
-                                                                        {form.fields.map((field, fieldIndex) => (
+                                                                        {form.fields.slice().sort((a, b) => a.order - b.order).map((field, fieldIndex) => (
                                                                             <div key={field.id} className='bg-background rounded border'>
                                                                                 <div className="flex flex-col lg:flex-row items-center gap-3 p-3">
                                                                                     <span className="text-xs text-muted-foreground w-6">
@@ -976,7 +978,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                         </div>
                                                                                         {field.options.length > 0 ? (
                                                                                             <div className="space-y-2 ml-4 px-4 pb-4 border-l-2 border-border">
-                                                                                                {field.options.map(option => (
+                                                                                                {field.options.slice().sort((a, b) => a.order - b.order).map(option => (
                                                                                                     <div key={option.id} className='flex gap-1'>
                                                                                                         <Input
                                                                                                             placeholder="Enter Option"

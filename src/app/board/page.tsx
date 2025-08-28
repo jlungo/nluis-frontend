@@ -9,11 +9,13 @@ import {
     FileText,
     Users,
     Settings,
-    Activity,
     ArrowRight,
     Home,
     Building,
     Store,
+    FolderOpen,
+    Package,
+    CreditCard,
 } from 'lucide-react';
 import { redirect, useNavigate } from 'react-router';
 import { useLayoutEffect } from 'react';
@@ -25,7 +27,6 @@ interface ModuleTile {
     title: string;
     description: string;
     icon: React.ReactNode;
-    roles: string[];
     color: string;
     bgColor: string;
 }
@@ -39,15 +40,12 @@ export default function Page() {
         setPage(null)
     }, [setPage])
 
-    const userRole = "admin"
-
     const modules: ModuleTile[] = [
         {
             id: 'dashboard',
             title: 'System Dashboard',
             description: 'Overview and monitoring across all system modules',
             icon: <Home className="h-8 w-8" />,
-            roles: ['admin', 'manager', 'planner', 'land-officer', 'compliance-officer', 'legal-officer'],
             color: 'text-primary',
             bgColor: 'bg-primary/10'
         },
@@ -56,7 +54,6 @@ export default function Page() {
             title: 'Land Use Planning',
             description: 'Village, regional, and district land use management',
             icon: <MapIcon className="h-8 w-8" />,
-            roles: ['admin', 'planner', 'land-officer'],
             color: 'text-chart-2',
             bgColor: 'bg-chart-2/10'
         },
@@ -65,7 +62,6 @@ export default function Page() {
             title: 'CCRO Management',
             description: 'Certificate of Customary Right of Occupancy',
             icon: <Shield className="h-8 w-8" />,
-            roles: ['admin', 'legal-officer', 'land-officer'],
             color: 'text-chart-4',
             bgColor: 'bg-chart-4/10'
         },
@@ -74,7 +70,6 @@ export default function Page() {
             title: 'Compliance Monitoring',
             description: 'Environmental and regulatory compliance tracking',
             icon: <AlertTriangle className="h-8 w-8" />,
-            roles: ['admin', 'compliance-officer', 'environmental-officer'],
             color: 'text-orange-500',
             bgColor: 'bg-orange-500/10'
         },
@@ -83,7 +78,6 @@ export default function Page() {
             title: 'Management & Evaluation',
             description: 'Project monitoring, evaluation, and reporting',
             icon: <BarChart3 className="h-8 w-8" />,
-            roles: ['admin', 'manager', 'evaluator'],
             color: 'text-progress-completed',
             bgColor: 'bg-progress-completed/10'
         },
@@ -92,7 +86,6 @@ export default function Page() {
             title: 'MapShop Management',
             description: 'E-commerce operations, sales tracking, and billing management',
             icon: <Store className="h-8 w-8" />,
-            roles: ['admin', 'manager', 'sales-officer'],
             color: 'text-chart-1',
             bgColor: 'bg-chart-1/10'
         },
@@ -101,7 +94,6 @@ export default function Page() {
             title: 'Reports & Analytics',
             description: 'Comprehensive reporting and data analytics',
             icon: <FileText className="h-8 w-8" />,
-            roles: ['admin', 'manager', 'analyst'],
             color: 'text-chart-2',
             bgColor: 'bg-chart-2/10'
         },
@@ -110,7 +102,6 @@ export default function Page() {
             title: 'Organizations',
             description: 'Organizational structure and management',
             icon: <Building className="h-8 w-8" />,
-            roles: ['admin', 'manager', 'planner'],
             color: 'text-chart-3',
             bgColor: 'bg-chart-3/10'
         },
@@ -119,7 +110,6 @@ export default function Page() {
             title: 'User Management',
             description: 'User accounts, roles, and permissions',
             icon: <Users className="h-8 w-8" />,
-            roles: ['admin'],
             color: 'text-chart-4',
             bgColor: 'bg-chart-4/10'
         },
@@ -128,31 +118,47 @@ export default function Page() {
             title: 'System Administration',
             description: 'System configuration and maintenance',
             icon: <Settings className="h-8 w-8" />,
-            roles: ['admin', 'system-admin'],
             color: 'text-muted-foreground',
             bgColor: 'bg-muted/20'
         },
         {
-            id: 'audit-trail',
-            title: 'Audit & Activity',
-            description: 'System audit logs and user activity tracking',
-            icon: <Activity className="h-8 w-8" />,
-            roles: ['admin', 'auditor'],
-            color: 'text-chart-5',
-            bgColor: 'bg-chart-5/10'
+            id: 'document-management',
+            title: 'Document Management',
+            description: 'Document storage, version control, and collaboration',
+            icon: <FolderOpen className="h-8 w-8" />,
+            color: 'text-blue-500',
+            bgColor: 'bg-blue-500/10'
+        },
+        {
+            id: 'equipment-management',
+            title: 'Inventory Tracking',
+            description: 'Tool inventory management, checkout, and maintenance tracking',
+            icon: <Package className="h-8 w-8" />,
+            color: 'text-green-500',
+            bgColor: 'bg-green-500/10'
+        },
+        {
+            id: 'billing',
+            title: 'Billing & Payments',
+            description: 'Tool inventory management, checkout, and maintenance tracking',
+            icon: <CreditCard className="h-8 w-8" />,
+            color: 'text-purple-500',
+            bgColor: 'bg-purple-500/10'
         }
     ];
 
     // Filter modules based on user role
-    const visibleModules = modules.filter(module =>
-        module.roles.includes(userRole) || userRole === 'admin'
-    );
+    const visibleModules: ModuleTile[] = modules.filter(module => {
+        if (user?.modules) return user.modules.some(userModule => userModule.slug === module.id)
+        else return []
+    });
 
-    const onModuleSelect = (moduleId: string) => {
-        navigate(`/${moduleId}`);
-    };
+    if (!user) {
+        redirect('/')
+        return null
+    }
 
-    if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length < 1) redirect('/mapshop')
+    if (!user.modules || !Array.isArray(user?.modules) || user?.modules?.length < 1) redirect('/mapshop')
     return (
         <div className="space-y-8">
             {/* Module Tiles Grid */}
@@ -169,7 +175,7 @@ export default function Page() {
                                 <TooltipTrigger asChild>
                                     <Card
                                         className="border group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
-                                        onClick={() => onModuleSelect(module.id)}
+                                        onClick={() => navigate(`/${module.id}`)}
                                     >
                                         <CardHeader className="pb-3">
                                             <div className="flex items-start justify-between">
@@ -219,7 +225,7 @@ export default function Page() {
                 <p className="text-sm text-muted-foreground">
                     Logged in as: <span className="font-medium capitalize">
                         {user?.role?.name}
-                    </span> •
+                    </span> •{" "}
                     {user?.modules?.length} of {modules.length} modules available
                 </p>
             </footer>

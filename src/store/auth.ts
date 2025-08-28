@@ -28,6 +28,7 @@ export interface RegisterDataState {
   phone: string;
   company: string | null;
   gender?: number;
+  user_type?: number;
   password: string;
   confirmPassword: string;
 }
@@ -38,7 +39,6 @@ export interface VerifyEmailResponse {
   token: string;
   email: string;
 }
-
 
 interface AuthState {
   accessToken: string | null;
@@ -149,8 +149,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       const res = await api.post("/auth/login/", { email, password });
       const { access, refresh, ...userData } = res.data;
 
-      console.log(res);
-
       localStorage.setItem("accessToken", access);
       localStorage.setItem("refreshToken", refresh);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -225,7 +223,9 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  verifyEmailTokenToken: async (token: string): Promise<VerifyEmailResponse> => {
+  verifyEmailTokenToken: async (
+    token: string
+  ): Promise<VerifyEmailResponse> => {
     try {
       const response = await api.post(`/auth/email-verify/`, { token });
       return response.data;
@@ -233,12 +233,16 @@ export const useAuth = create<AuthState>((set, get) => ({
       console.error("Email verification failed:", error);
 
       if (error.response?.status === 400) {
-        throw { detail: "Invalid or expired token. Please verify your email again." };
+        throw {
+          detail: "Invalid or expired token. Please verify your email again.",
+        };
       }
 
-      throw error.response?.data || {
-        detail: "Failed to verify token. Please try again.",
-      };
+      throw (
+        error.response?.data || {
+          detail: "Failed to verify token. Please try again.",
+        }
+      );
     }
   },
 
