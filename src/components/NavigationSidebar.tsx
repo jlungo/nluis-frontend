@@ -25,8 +25,10 @@ import {
   ChevronRight,
   List,
   LayoutDashboard,
+  ClipboardPlus,
+  ClipboardList,
 } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +72,9 @@ export function NavigationSidebar({
 
   const navigateTo = (id: string) => {
     if (!page || !page?.module) return "";
-    return `/${page.module}/${id}`;
+    const parts = id.split("/");
+    if (parts[0] === page.module) return `/${parts.slice(0).join("/")}`;
+    return `/${page.module}/${id}`
   };
 
   console.log("Current page:", page);
@@ -92,6 +96,11 @@ export function NavigationSidebar({
           ];
         case "land-uses":
           return [
+            {
+              id: "land-uses",
+              label: "Land Uses Overview",
+              icon: <MapIcon className="h-4 w-4" />
+            },
             {
               id: "land-uses-overview",
               label: "Land Uses Overview",
@@ -179,14 +188,94 @@ export function NavigationSidebar({
         case "system-settings":
           return [
             {
-              id: "form-workflows",
-              label: "Form Workflows",
-              icon: <LayoutDashboard className="h-4 w-4" />
+              id: "system-settings",
+              label: "Dashboard",
+              icon: <LayoutDashboard className="h-4 w-4" />,
             },
             {
-              id: "module-levels",
-              label: "Module Levels",
-              icon: <List className="h-4 w-4" />
+              id: "form-workflows",
+              label: "Form Management",
+              icon: <ClipboardList className="h-4 w-4" />,
+              items: [
+                {
+                  id: "form-workflows",
+                  label: "Form Workflows",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
+                  id: "module-levels",
+                  label: "Module Levels",
+                  icon: <List className="h-4 w-4" />
+                }
+              ]
+            },
+            {
+              id: "locality-management",
+              label: "Locality Management",
+              icon: <ClipboardList className="h-4 w-4" />,
+              items: [
+                {
+                  id: "locality-management",
+                  label: "Localities",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
+                  id: "locality-levels",
+                  label: "Locality Levels",
+                  icon: <List className="h-4 w-4" />
+                }
+              ]
+            },
+            {
+              id: "user-management",
+              label: "User Management",
+              icon: <ClipboardList className="h-4 w-4" />,
+              items: [
+                {
+                  id: "user-management",
+                  label: "Users",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
+                  id: "user-roles",
+                  label: "User Roles",
+                  icon: <List className="h-4 w-4" />
+                },
+                {
+                  id: "permissions",
+                  label: "Permissions",
+                  icon: <List className="h-4 w-4" />
+                },
+                {
+                  id: "user-groups",
+                  label: "User Groups",
+                  icon: <List className="h-4 w-4" />
+                }
+              ]
+            },
+            {
+              id: "organization-management",
+              label: "Organization Management",
+              icon: <ClipboardList className="h-4 w-4" />,
+              items: [
+                {
+                  id: "organization-management",
+                  label: "Organization Types",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                }
+              ]
+            },
+            {
+              id: "land-use-management",
+              label: "Land Use Management",
+              icon: <ClipboardList className="h-4 w-4" />,
+              items: [
+                {
+                  id: "land-use-management",
+                  label: "Land Uses",
+                  icon: <ClipboardPlus className="h-4 w-4" />
+                }
+              ]
             },
           ];
         case "organizations":
@@ -212,25 +301,26 @@ export function NavigationSidebar({
   const navigationItems = getNavigationItems();
 
   const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isActive = pathname.includes(item.id);
+    const isPathnameActive = pathname.includes(item.id) && group
 
     const buttonContent = (
-      <Link
+      <NavLink
         key={item.id}
-        to={navigateTo(group ? `${group}/${item.id}` : item.id)}
-        className={cn(
-          buttonVariants({ variant: isActive ? "default" : "ghost" }),
+        to={navigateTo(group ? group === item.id ? group : `${group}/${item.id}` : item.id)}
+        end
+        className={({ isActive, isPending }) => cn(
+          buttonVariants({ variant: isActive || isPathnameActive ? "default" : "ghost" }),
+          `${isPending ? 'animate-pulse' : null}`,
           `w-full ${collapsed
             ? "px-2 justify-center"
             : group
               ? "justify-start px-4"
               : "justify-start px-3"
-          } h-8 ${isActive
+          } h-8 ${isActive || isPathnameActive
             ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
         )}
-
       >
         <div className="flex items-center gap-3 w-full">
           <div className="flex-shrink-0">{item.icon}</div>
@@ -242,8 +332,7 @@ export function NavigationSidebar({
               {item.badge && (
                 <Badge
                   variant="secondary"
-                  className={`ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs bg-sidebar-accent text-sidebar-accent-foreground ${isActive ? "text-white dark:text-white" : null
-                    }`}
+                  className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs bg-sidebar-accent text-sidebar-accent-foreground"
                 >
                   {item.badge}
                 </Badge>
@@ -259,7 +348,7 @@ export function NavigationSidebar({
             </Badge>
           )}
         </div>
-      </Link>
+      </NavLink>
     );
 
     if (collapsed) {
@@ -330,7 +419,7 @@ export function NavigationSidebar({
                 </div>
                 <div className="space-y-1">
                   {group.items.map((item) => (
-                    <Link
+                    <NavLink
                       key={item.id}
                       className={cn(
                         buttonVariants({
@@ -344,7 +433,7 @@ export function NavigationSidebar({
                           : "hover:bg-accent"
                         }`
                       )}
-                      to={navigateTo(`${group.id}/${item.id}`)}
+                      to={navigateTo(group.id === item.id ? group.id : `${group.id}/${item.id}`)}
                     >
                       <div className="flex items-center gap-2 w-full">
                         {item.icon}
@@ -358,7 +447,7 @@ export function NavigationSidebar({
                           </Badge>
                         )}
                       </div>
-                    </Link>
+                    </NavLink>
                   ))}
                 </div>
               </div>

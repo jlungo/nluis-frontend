@@ -63,7 +63,7 @@ export default function Page() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              to="/login"
+              to="/auth/signin"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "gap-3 px-8 py-6 text-lg"

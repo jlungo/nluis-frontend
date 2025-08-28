@@ -33,10 +33,18 @@ import {
     Minimize,
     BarChart3,
     Users,
-    Clock
+    Clock,
+    Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { InputType } from '@/types/input-types';
+
+export interface FieldOption {
+    id: string;
+    label: string;
+    name: string;
+    order: number;
+}
 
 export interface FormField {
     id: string;
@@ -45,25 +53,26 @@ export interface FormField {
     type: string;
     required: boolean;
     placeholder?: string;
-    helpText?: string;
-    options?: string[];
     order: number;
+    options: FieldOption[];
 }
 
 export interface SectionForm {
     id: string;
     name: string;
+    editor_roles: { user_role: string }[];
     description: string;
-    fields: FormField[];
     order: number;
+    fields: FormField[];
 }
 
 export interface FormSection {
     id: string;
     name: string;
+    approval_roles: { user_role: string }[];
     description: string;
-    forms: SectionForm[];
     order: number;
+    forms: SectionForm[];
 }
 
 export interface WorkflowTemplate {
@@ -78,19 +87,27 @@ export interface WorkflowTemplate {
     version: number;
 }
 
+interface OptionsSubmissionStructure {
+    text_label: string;
+    value: string;
+    position: number;
+}
+
 interface FieldsSubmissionStructure {
     label: string,
     type: InputType,
     placeholder: string | null,
     name: string,
     required: boolean,
-    position: number
+    position: number,
+    select_options: OptionsSubmissionStructure[];
 }
 
 interface FormsSubmissionStructure {
     name: string,
     description: string | null,
     position: number,
+    editor_roles: { user_role: string }[]
     fields: FieldsSubmissionStructure[]
 }
 
@@ -98,6 +115,7 @@ interface SectionSubmissionStructure {
     name: string,
     description: string,
     position: number,
+    approval_roles: { user_role: string }[]
     forms: FormsSubmissionStructure[]
 }
 
@@ -221,23 +239,8 @@ export function FormPreviewTester({
         if (workflowData?.sections)
             workflowData.sections.forEach(section => {
                 section.forms.forEach(form => {
-                    // if (form.isRequired) {
-                    //     const hasAnyValue = form.fields.some(field =>
-                    //         formValues[field.id] && formValues[field.id] !== ''
-                    //     );
-
-                    //     if (!hasAnyValue) {
-                    //         errors.push({
-                    //             fieldId: form.fields[0]?.id || '',
-                    //             sectionId: section.id,
-                    //             formId: form.id,
-                    //             message: `${form.name} section is required`
-                    //         });
-                    //     }
-                    // }
-
                     form.fields.forEach(field => {
-                        if (field.required && (!formValues[field.id] || formValues[field.id] === '')) {
+                        if (field.required && (!formValues[field.name] || formValues[field.name] === '')) {
                             errors.push({
                                 fieldId: field.id,
                                 sectionId: section.id,
@@ -267,7 +270,7 @@ export function FormPreviewTester({
         }
 
         // Simulate form submission delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         const submissionResult = {
             success: true,
@@ -298,9 +301,8 @@ export function FormPreviewTester({
     };
 
     // Render a single field component
-    // const renderFieldComponent = (field: FormField, sectionContext?: { sectionId: string; formId?: string }) => {
     const renderFieldComponent = (field: FormField) => {
-        const fieldValue = formValues[field.id];
+        const fieldValue = formValues[field.name];
         const hasError = validationErrors.some(error => error.fieldId === field.id);
         const fieldError = validationErrors.find(error => error.fieldId === field.id);
 
@@ -312,11 +314,10 @@ export function FormPreviewTester({
                         type={field.type as any}
                         value={fieldValue}
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onChange={(value: any) => updateFieldValue(field.id, value)}
+                        onChange={(value: any) => updateFieldValue(field.name, value)}
                         label={field.label}
                         placeholder={field.placeholder}
                         required={field.required}
-                        helpText={field.helpText}
                     />
                     {hasError && showValidation && (
                         <Alert className="border-destructive bg-destructive/10">
@@ -344,7 +345,7 @@ export function FormPreviewTester({
                     <Input
                         placeholder={field.placeholder || 'Enter text...'}
                         value={fieldValue || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        onChange={(e) => updateFieldValue(field.name, e.target.value)}
                         className={hasError && showValidation ? 'border-destructive' : ''}
                     />
                 )}
@@ -353,7 +354,7 @@ export function FormPreviewTester({
                         type="email"
                         placeholder={field.placeholder || 'Enter email...'}
                         value={fieldValue || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        onChange={(e) => updateFieldValue(field.name, e.target.value)}
                         className={hasError && showValidation ? 'border-destructive' : ''}
                     />
                 )}
@@ -362,7 +363,7 @@ export function FormPreviewTester({
                         type="number"
                         placeholder={field.placeholder || 'Enter number...'}
                         value={fieldValue || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        onChange={(e) => updateFieldValue(field.name, e.target.value)}
                         className={hasError && showValidation ? 'border-destructive' : ''}
                     />
                 )}
@@ -370,7 +371,7 @@ export function FormPreviewTester({
                     <Textarea
                         placeholder={field.placeholder || 'Enter text...'}
                         value={fieldValue || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        onChange={(e) => updateFieldValue(field.name, e.target.value)}
                         className={hasError && showValidation ? 'border-destructive' : ''}
                         rows={3}
                     />
@@ -378,23 +379,17 @@ export function FormPreviewTester({
                 {field.type === 'select' && (
                     <Select
                         value={fieldValue || ''}
-                        onValueChange={(value) => updateFieldValue(field.id, value)}
+                        onValueChange={(value) => updateFieldValue(field.name, value)}
                     >
-                        <SelectTrigger className={hasError && showValidation ? 'border-destructive' : ''}>
+                        <SelectTrigger className={hasError && showValidation ? 'border-destructive w-full' : 'w-full'}>
                             <SelectValue placeholder={field.placeholder || 'Select option...'} />
                         </SelectTrigger>
                         <SelectContent>
-                            {field.options?.map((option, index) => (
-                                <SelectItem key={index} value={option}>
-                                    {option}
+                            {field.options?.sort((a, b) => a.order - b.order).map((option, index) => (
+                                <SelectItem key={index} value={option.name}>
+                                    {option.label}
                                 </SelectItem>
-                            )) || (
-                                    <>
-                                        <SelectItem value="option1">Option 1</SelectItem>
-                                        <SelectItem value="option2">Option 2</SelectItem>
-                                        <SelectItem value="option3">Option 3</SelectItem>
-                                    </>
-                                )}
+                            ))}
                         </SelectContent>
                     </Select>
                 )}
@@ -402,7 +397,7 @@ export function FormPreviewTester({
                     <div className="flex items-center space-x-2">
                         <Checkbox
                             checked={fieldValue || false}
-                            onCheckedChange={(checked) => updateFieldValue(field.id, checked)}
+                            onCheckedChange={(checked) => updateFieldValue(field.name, checked)}
                         />
                         <Label>{field.placeholder || 'Check this option'}</Label>
                     </div>
@@ -410,56 +405,59 @@ export function FormPreviewTester({
                 {field.type === 'radio' && (
                     <RadioGroup
                         value={fieldValue || ''}
-                        onValueChange={(value) => updateFieldValue(field.id, value)}
+                        onValueChange={(value) => updateFieldValue(field.name, value)}
                     >
-                        {field.options?.map((option, index) => (
+                        {field.options?.sort((a, b) => a.order - b.order).map((option, index) => (
                             <div key={index} className="flex items-center space-x-2">
-                                <RadioGroupItem value={option} id={`${field.id}-${index}`} />
-                                <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
+                                <RadioGroupItem value={option.name} id={`${field.id}-${index}`} />
+                                <Label htmlFor={`${field.id}-${index}`}>{option.label}</Label>
                             </div>
-                        )) || (
-                                <>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="option1" id={`${field.id}-1`} />
-                                        <Label htmlFor={`${field.id}-1`}>Option 1</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="option2" id={`${field.id}-2`} />
-                                        <Label htmlFor={`${field.id}-2`}>Option 2</Label>
-                                    </div>
-                                </>
-                            )}
+                        ))}
                     </RadioGroup>
                 )}
                 {field.type === 'date' && (
                     <Input
                         type="date"
                         value={fieldValue || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
+                        onChange={(e) => updateFieldValue(field.name, e.target.value)}
                         className={hasError && showValidation ? 'border-destructive' : ''}
                     />
                 )}
                 {field.type === 'file' && (
-                    <Input
-                        type="file"
-                        onChange={(e) => updateFieldValue(field.id, e.target.files?.[0]?.name || '')}
-                        className={hasError && showValidation ? 'border-destructive' : ''}
-                    />
+                    <div className={`group relative border-2 border-dashed rounded-xl overflow-hidden ${hasError && showValidation ? 'border-destructive' : 'border-input hover:border-muted-foreground/50 transition'}`}>
+                        <input
+                            type="file"
+                            onChange={(e) => updateFieldValue(field.name, e.target.files?.[0]?.name || '')}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <div className='p-3 w-full flex items-center justify-between gap-3'>
+                            <div className="rounded-md bg-accent dark:bg-input p-2">
+                                <Upload className='h-5 w-5 text-muted-foreground' />
+                            </div>
+                            <div className='flex-grow flex flex-col gap-1'>
+                                <p className='text-sm'>{formValues[field.name] || field.label}</p>
+                                <p className='text-xs text-muted-foreground'>{field.placeholder}</p>
+                            </div>
+                            <Button
+                                type='button'
+                                size='sm'
+                                variant='outline'
+                                className='group-hover:bg-accent'
+                            >
+                                Browse
+                            </Button>
+                        </div>
+                    </div>
                 )}
                 {field.type === 'switch' && (
                     <div className="flex items-center space-x-2">
                         <Switch
                             checked={fieldValue || false}
-                            onCheckedChange={(checked) => updateFieldValue(field.id, checked)}
+                            onCheckedChange={(checked) => updateFieldValue(field.name, checked)}
                         />
                         <Label>{field.placeholder || 'Toggle this option'}</Label>
                     </div>
                 )}
-
-                {field.helpText && (
-                    <p className="text-sm text-muted-foreground">{field.helpText}</p>
-                )}
-
                 {hasError && showValidation && (
                     <Alert className="border-destructive bg-destructive/10">
                         <AlertCircle className="h-4 w-4" />
@@ -511,14 +509,14 @@ export function FormPreviewTester({
             </div>
 
             <div className="space-y-4">
-                {workflowData?.sections && workflowData.sections.map((section, sectionIndex) => (
+                {workflowData?.sections && workflowData.sections.sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
                     <Card key={section.id}>
                         <Collapsible
                             open={!collapsedPreviewSections[section.id]}
                             onOpenChange={() => toggleSectionCollapse(section.id, true)}
                         >
                             <CollapsibleTrigger asChild>
-                                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                                <CardHeader className="cursor-pointer bg-accent/50 dark:bg-muted/30 hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
@@ -552,8 +550,7 @@ export function FormPreviewTester({
 
                             <CollapsibleContent>
                                 <CardContent className="space-y-6 pt-0">
-                                    {/* {section.forms.map((form, formIndex) => ( */}
-                                    {section.forms.map((form) => (
+                                    {section.forms.sort((a, b) => a.order - b.order).map((form) => (
                                         <Collapsible
                                             key={form.id}
                                             open={!collapsedForms[form.id]}
@@ -591,7 +588,7 @@ export function FormPreviewTester({
 
                                             <CollapsibleContent>
                                                 <div className="mt-3 grid gap-3 pl-9">
-                                                    {form.fields.map((field) => (
+                                                    {form.fields.sort((a, b) => a.order - b.order).map((field) => (
                                                         <div key={field.id} className="flex items-center gap-2 text-sm p-2 bg-background rounded border">
                                                             <div className="w-2 h-2 bg-muted-foreground rounded-full" />
                                                             <span>{field.label}</span>
@@ -689,7 +686,7 @@ export function FormPreviewTester({
             )}
 
             <div className="space-y-6">
-                {workflowData?.sections && workflowData.sections.map((section) => (
+                {workflowData?.sections && workflowData.sections.sort((a, b) => a.order - b.order).map((section) => (
                     <Card key={section.id}>
                         <Collapsible
                             open={!collapsedSections[section.id]}
@@ -725,7 +722,7 @@ export function FormPreviewTester({
 
                             <CollapsibleContent>
                                 <CardContent className="space-y-6 pt-0">
-                                    {section.forms.map((form) => (
+                                    {section.forms.sort((a, b) => a.order - b.order).map((form) => (
                                         <Collapsible
                                             key={form.id}
                                             open={!collapsedForms[form.id]}
@@ -759,8 +756,7 @@ export function FormPreviewTester({
 
                                             <CollapsibleContent>
                                                 <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
-                                                    {form.fields.map((field) =>
-                                                        // renderFieldComponent(field, { sectionId: section.id, formId: form.id })
+                                                    {form.fields.sort((a, b) => a.order - b.order).map((field) =>
                                                         renderFieldComponent(field)
                                                     )}
                                                 </div>
@@ -813,6 +809,14 @@ export function FormPreviewTester({
                             <CardTitle className="text-sm">Current Forms Values</CardTitle>
                         </CardHeader>
                         <CardContent>
+
+
+
+
+
+
+
+
                             <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-96">
                                 {JSON.stringify(formValues, null, 2) || 'No test data yet'}
                             </pre>

@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRolesQuery } from '@/queries/useRolesQuery';
-import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
+// import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
 import { useUsersQuery, type UserType } from '@/queries/useUsersQuery';
 import { genderTypes, userTypes } from '@/types/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -94,8 +94,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
 
   const queryClient = useQueryClient();
   const { data: roles = [] } = useRolesQuery();
-  const { data: organizations = [] } = useOrganizationsQuery();
-  // const organizations = organizationsList?.results;
+  // const { data: organizations = [] } = useOrganizationsQuery();
+  //  const organizations = org?.results || [];
 
   const [newUser, setNewUser] = useState<NewUser>({
     first_name: '',
@@ -126,7 +126,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       return response.data;
     },
     onSuccess: (variables) => {
-      
+
       // Close dialog and reset form
       setIsCreateUserOpen(false);
       setNewUser({
@@ -144,12 +144,12 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       setSuccessMessage(`User account created successfully! An email invitation has been sent to ${variables.email} to verify their account.`);
       setShowSuccessAlert(true);
       setCreateError(null);
-      
+
       toast.success('User created and invitation email sent!');
-      
+
       // Invalidate users query to refetch data
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      
+
       // Auto-hide success alert after 10 seconds
       setTimeout(() => {
         setShowSuccessAlert(false);
@@ -157,9 +157,9 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     },
     onError: (error: ApiError) => {
       console.error('Error creating user:', error);
-      
+
       let errorMessage = 'Failed to create user. Please try again.';
-      
+
       if (error.response?.data) {
         if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
@@ -175,7 +175,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
           }
         }
       }
-      
+
       setCreateError(errorMessage);
       toast.error(errorMessage);
     }
@@ -203,7 +203,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       setShowSuccessAlert(true);
       toast.success('User updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      
+
       setTimeout(() => {
         setShowSuccessAlert(false);
       }, 10000);
@@ -211,7 +211,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     onError: (error: ApiError) => {
       console.error('Error updating user:', error);
       let errorMessage = 'Failed to update user. Please try again.';
-      
+
       if (error.response?.data) {
         if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
@@ -221,7 +221,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
           errorMessage = `${error.response.data.phone[0]}`;
         }
       }
-      
+
       toast.error(errorMessage);
     }
   });
@@ -236,7 +236,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       setShowSuccessAlert(true);
       toast.success('User deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      
+
       setTimeout(() => {
         setShowSuccessAlert(false);
       }, 10000);
@@ -244,11 +244,11 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     onError: (error: ApiError) => {
       console.error('Error deleting user:', error);
       let errorMessage = 'Failed to delete user. Please try again.';
-      
+
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       }
-      
+
       toast.error(errorMessage);
     }
   });
@@ -270,17 +270,17 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
 
   // Update the filteredUsers function to use the fetched data
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+    const matchesSearch =
       user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesOrganization = selectedOrganization === 'all' || user.organization === selectedOrganization;
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-    const matchesTab = activeTab === 'all' || 
-                      (activeTab === 'active' && user.status === 'active') ||
-                      (activeTab === 'pending' && user.status === 'pending') ||
-                      (activeTab === 'inactive' && user.status === 'inactive');
-    
+    const matchesTab = activeTab === 'all' ||
+      (activeTab === 'active' && user.status === 'active') ||
+      (activeTab === 'pending' && user.status === 'pending') ||
+      (activeTab === 'inactive' && user.status === 'inactive');
+
     return matchesSearch && matchesOrganization && matchesRole && matchesTab;
   });
 
@@ -289,7 +289,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       toast.error('Please fill in all required fields');
       return;
     }
-    
+
     createUserMutation.mutate(newUser);
   };
 
@@ -391,7 +391,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   Create a new user account. The user will receive an email invitation to verify their account.
                 </DialogDescription>
               </DialogHeader>
-              
+
               {/* Error Alert */}
               {createError && (
                 <Alert variant="destructive" className="mb-4">
@@ -400,7 +400,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   <AlertDescription>{createError}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
@@ -536,19 +536,19 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                       <SelectValue placeholder="Select Organization" />
                     </SelectTrigger>
                     <SelectContent>
-                      {organizations.map((org) => (
+                      {/* {organizations && organizations?.results.map((org) => (
                         <SelectItem key={org.id} value={org.id}>
                           {org.name}
                         </SelectItem>
-                      ))}
+                      ))} */}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setIsCreateUserOpen(false);
                     setCreateError(null);
@@ -557,8 +557,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                 >
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleCreateUser} 
+                <Button
+                  onClick={handleCreateUser}
                   className="gap-2"
                   disabled={createUserMutation.isPending}
                 >
@@ -637,9 +637,9 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Organizations</SelectItem>
-                  {organizations.map((org) => (
+                  {/* {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                  ))}
+                  ))} */}
                 </SelectContent>
               </Select>
             </div>
@@ -716,7 +716,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                   <CardContent className="p-4">
                     {/* Responsive user card layout */}
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                      
+
                       {/* User Info */}
                       <div className="flex flex-1 items-start gap-4">
                         <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
@@ -781,239 +781,239 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                         )}
                         <Button
                           variant="outline"
-                            size="sm"
-                            onClick={() => handleEditUser(user)}
-                            className="gap-2"
-                          >
-                            <Edit className="h-4 w-4" />
-                            Edit
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                          className="gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            {user.status === 'active' ? (
+                              <DropdownMenuItem onClick={() => handleSuspendUser(user.id)}>
+                                <UserX className="h-4 w-4 mr-2" />
+                                Suspend User
                               </DropdownMenuItem>
-                              {user.status === 'active' ? (
-                                <DropdownMenuItem onClick={() => handleSuspendUser(user.id)}>
-                                  <UserX className="h-4 w-4 mr-2" />
-                                  Suspend User
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onClick={() => handleActivateUser(user.id)}>
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Activate User
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem>
-                                <Settings className="h-4 w-4 mr-2" />
-                                Reset Password
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleActivateUser(user.id)}>
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Activate User
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => handleDeleteUser(user.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete User
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                            )}
+                            <DropdownMenuItem>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete User
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Edit User Account
+            </DialogTitle>
+            <DialogDescription>
+              Update user account information and permissions.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingUser && (
+            <div className="grid grid-cols-2 gap-4">
+              {/* First Name */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editFirst_name">First Name <span className="text-red-500">*</span></Label>
+                <Input
+                  id="editFirst_name"
+                  className="w-full"
+                  value={editingUser.first_name}
+                  onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
+                  disabled={editUserMutation.isPending}
+                />
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
 
-        {/* Edit User Dialog */}
-        <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5" />
-                Edit User Account
-              </DialogTitle>
-              <DialogDescription>
-                Update user account information and permissions.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {editingUser && (
-              <div className="grid grid-cols-2 gap-4">
-                {/* First Name */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editFirst_name">First Name <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="editFirst_name"
-                    className="w-full"
-                    value={editingUser.first_name}
-                    onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
-                    disabled={editUserMutation.isPending}
-                  />
-                </div>
+              {/* Last Name */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editLast_name">Last Name <span className="text-red-500">*</span></Label>
+                <Input
+                  id="editLast_name"
+                  className="w-full"
+                  value={editingUser.last_name}
+                  onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
+                  disabled={editUserMutation.isPending}
+                />
+              </div>
 
-                {/* Last Name */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editLast_name">Last Name <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="editLast_name"
-                    className="w-full"
-                    value={editingUser.last_name}
-                    onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
-                    disabled={editUserMutation.isPending}
-                  />
-                </div>
+              {/* Email */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editEmail">Email Address <span className="text-red-500">*</span></Label>
+                <Input
+                  id="editEmail"
+                  type="email"
+                  className="w-full"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  disabled={editUserMutation.isPending}
+                />
+              </div>
 
-                {/* Email */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editEmail">Email Address <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="editEmail"
-                    type="email"
-                    className="w-full"
-                    value={editingUser.email}
-                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                    disabled={editUserMutation.isPending}
-                  />
-                </div>
+              {/* Phone */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editPhone">Phone Number</Label>
+                <Input
+                  id="editPhone"
+                  className="w-full"
+                  value={editingUser.phone}
+                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                  disabled={editUserMutation.isPending}
+                />
+              </div>
 
-                {/* Phone */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editPhone">Phone Number</Label>
-                  <Input
-                    id="editPhone"
-                    className="w-full"
-                    value={editingUser.phone}
-                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                    disabled={editUserMutation.isPending}
-                  />
-                </div>
+              {/* Role */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editRole">Role <span className="text-red-500">*</span></Label>
+                <Select
+                  value={editingUser.role}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
+                  disabled={editUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Role */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editRole">Role <span className="text-red-500">*</span></Label>
-                  <Select
-                    value={editingUser.role}
-                    onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
-                    disabled={editUserMutation.isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Status */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editStatus">Status</Label>
+                <Select
+                  value={editingUser.status}
+                  onValueChange={(value) => setEditingUser({
+                    ...editingUser,
+                    status: value as 'active' | 'inactive' | 'pending' | 'suspended'
+                  })}
+                  disabled={editUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Status */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editStatus">Status</Label>
-                  <Select
-                    value={editingUser.status}
-                    onValueChange={(value) => setEditingUser({ 
-                      ...editingUser, 
-                      status: value as 'active' | 'inactive' | 'pending' | 'suspended' 
-                    })}
-                    disabled={editUserMutation.isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="suspended">Suspended</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Organization */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editorganization">Organization</Label>
-                  <Select
-                    value={editingUser.organization || ''}
-                    onValueChange={(value) => setEditingUser({ ...editingUser, organization: value })}
-                    disabled={editUserMutation.isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select organization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizations.map((org) => (
+              {/* Organization */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editorganization">Organization</Label>
+                <Select
+                  value={editingUser.organization || ''}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, organization: value })}
+                  disabled={editUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* {organizations.map((org) => (
                         <SelectItem key={org.id} value={org.id}>
                           {org.name}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Location/Region */}
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editLocation">Location/Region</Label>
-                  <Select
-                    value={editingUser.location}
-                    onValueChange={(value) => setEditingUser({ ...editingUser, location: value })}
-                    disabled={editUserMutation.isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {regions.map((region) => (
-                        <SelectItem key={region} value={region}>
-                          {region}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      ))} */}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
 
-            <div className="flex items-center justify-end gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditUserOpen(false)}
-                disabled={editUserMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSaveEdit} 
-                className="gap-2"
-                disabled={editUserMutation.isPending}
-              >
-                {editUserMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+              {/* Location/Region */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="editLocation">Location/Region</Label>
+                <Select
+                  value={editingUser.location}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, location: value })}
+                  disabled={editUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regions.map((region) => (
+                      <SelectItem key={region} value={region}>
+                        {region}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditUserOpen(false)}
+              disabled={editUserMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              className="gap-2"
+              disabled={editUserMutation.isPending}
+            >
+              {editUserMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

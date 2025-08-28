@@ -45,16 +45,16 @@ export default function Layout() {
   };
 
   useEffect(() => {
-    if (!user) navigate(`/login`, { replace: true })
+    if (!user) navigate(`/auth/signin`, { replace: true })
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
-    // else if (page?.module && !user.modules.includes(page.module as ModuleTypes)) navigate(`/board`, { replace: true })
+    else if (page?.module && !user.modules.some(m => m.slug === page.module)) navigate(`/board`, { replace: true })
   }, [navigate, page?.module, user])
 
   if (!user) return null
   return (
     <div className="h-screen bg-background flex overflow-hidden">
       {/* Main Sidebar - FIXED */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-60 sm:w-80 lg:w-52'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-60 sm:w-80 lg:w-54 2xl:w-60'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
         <div className="h-full bg-sidebar border-r border-sidebar-border flex flex-col">
           {/* Sidebar Header - FIXED */}
           <div className="flex-shrink-0 p-3 h-14 border-b border-sidebar-border">
@@ -200,13 +200,13 @@ export default function Layout() {
         {/* Page Content - SCROLLABLE */}
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <div className="px-4 md:px-6 py-6 space-y-6">
+            <div className="px-4 md:px-6 py-4 md:py-4 space-y-6">
               {page && page?.isFormPage !== undefined && page.isFormPage ? (
                 <Outlet />
               ) : (
                 <>
                   {/* Module Context Header */}
-                  <div className="border-b border-border pb-4">
+                  <div className="border-b border-border pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <Button

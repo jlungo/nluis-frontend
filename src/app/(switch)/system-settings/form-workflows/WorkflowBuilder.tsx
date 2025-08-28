@@ -32,9 +32,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
 import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
-import type { FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
+import type { FieldOption, FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
 import { workflowCategoryTypes } from '@/types/constants';
 import { slugify } from '@/lib/utils';
+import { useRolesQuery } from '@/queries/useRolesQuery';
+import { MultiSelect } from '@/components/multiselect';
+import { Switch } from '@/components/ui/switch';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
@@ -58,6 +61,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const [activeForm, setActiveForm] = useState<string | null>(null);
 
+    const { data: roles, isLoading: isLoadingRoles } = useRolesQuery();
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
 
@@ -113,6 +117,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 name: ``,
                 description: '',
                 forms: [],
+                approval_roles: [],
                 order: 1
             }
         ]
@@ -126,6 +131,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             name: ``,
             description: '',
             forms: [],
+            approval_roles: [],
             order: formSections.length + 1
         };
         setFormSections([...formSections, newSection]);
@@ -152,6 +158,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         const newForm: SectionForm = {
             id: `form-${Date.now()}`,
             name: ``,
+            editor_roles: [],
             description: '',
             fields: [],
             order: (section?.forms.length || 0) + 1
@@ -211,6 +218,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             label: ``,
             type: 'text',
             required: false,
+            options: [],
             order: (form?.fields.length || 0) + 1
         };
 
@@ -275,9 +283,104 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         );
     };
 
+    const addOption = (sectionId: string, formId: string, fieldId: string) => {
+        const section = formSections.find(s => s.id === sectionId);
+        if (!section) return
+        const form = section.forms.find(sf => sf.id === formId);
+        if (!form) return
+        const field = form.fields.find(sf => sf.id === fieldId);
+        const newOption: FieldOption = {
+            id: `option-${Date.now()}`,
+            label: '',
+            name: '',
+            order: (field?.options?.length || 0) + 1,
+        };
+
+        setFormSections(sections =>
+            sections.map(section =>
+                section.id === sectionId
+                    ? {
+                        ...section,
+                        forms: section.forms.map(form =>
+                            form.id === formId
+                                ? {
+                                    ...form,
+                                    fields: form.fields.map(field =>
+                                        field.id === fieldId
+                                            ? {
+                                                ...field,
+                                                options: [...field?.options, newOption]
+                                            }
+                                            : field
+                                    )
+                                }
+                                : form
+                        )
+                    }
+                    : section
+            )
+        );
+    };
+
+    const updateOption = (sectionId: string, formId: string, fieldId: string, optionId: string, updates: Partial<FormField>) => {
+        setFormSections(sections =>
+            sections.map(section =>
+                section.id === sectionId
+                    ? {
+                        ...section,
+                        forms: section.forms.map(form =>
+                            form.id === formId
+                                ? {
+                                    ...form,
+                                    fields: form.fields.map(field =>
+                                        field.id === fieldId
+                                            ? {
+                                                ...field,
+                                                options: field.options.map(option =>
+                                                    option.id === optionId ? { ...option, ...updates } : option
+                                                )
+                                            }
+                                            : field
+                                    )
+                                }
+                                : form
+                        )
+                    }
+                    : section
+            )
+        )
+    };
+
+    const removeOption = (sectionId: string, formId: string, fieldId: string, optionId: string) => {
+        setFormSections(sections =>
+            sections.map(section =>
+                section.id === sectionId
+                    ? {
+                        ...section,
+                        forms: section.forms.map(form =>
+                            form.id === formId
+                                ? {
+                                    ...form,
+                                    fields: form.fields.map(field =>
+                                        field.id === fieldId
+                                            ? {
+                                                ...field,
+                                                options: field.options.filter(option => option.id !== optionId)
+                                            }
+                                            : field
+                                    )
+                                }
+                                : form
+                        )
+                    }
+                    : section
+            )
+        );
+    };
+
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: WorkflowSubmisionStructure) => {
-            if (previousData) return api.put(`/form-management/submission/${previousData.slug}/`, e);
+            if (previousData) return api.put(`/form-management/submissions/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
         },
         onSuccess: () =>
@@ -321,21 +424,30 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 name: section.name,
                 description: section.description,
                 position: section.order,
+                approval_roles: section.approval_roles,
                 forms: section.forms.map(form => ({
                     name: form.name,
                     description: form.description,
                     position: form.order,
+                    editor_roles: form.editor_roles,
                     fields: form.fields.map(field => ({
                         label: field.label,
                         type: field.type as InputType,
                         placeholder: field.placeholder || null,
                         name: field.name,
                         required: field.required,
-                        position: field.order
+                        position: field.order,
+                        select_options: field.options.map(option => ({
+                            text_label: option.label,
+                            value: option.name,
+                            position: option.order,
+                        }))
                     }))
                 }))
             }))
         };
+
+        // console.log(workflowData)
 
         try {
             toast.promise(mutateAsync(workflowData), {
@@ -563,11 +675,11 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                 <div className="space-y-2">
                                     <Label htmlFor="formCategory">Workflow Category</Label>
                                     <Select
-                                        value={`${formDetails?.category}` || ''}
+                                        value={formDetails?.category ? `${formDetails?.category}` : ''}
                                         onValueChange={(value) => setFormDetails({ ...formDetails, category: parseInt(value) })}
                                         required
                                     >
-                                        <SelectTrigger className='w-full'>
+                                        <SelectTrigger className='w-full capitalize'>
                                             <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -630,7 +742,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             </Card>
                         ) : (
                             <div className="space-y-6">
-                                {formSections.map((section, sectionIndex) => (
+                                {formSections.slice().sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
                                     <Card key={section.id} className="relative">
                                         <CardHeader className="pb-2">
                                             <div className="flex flex-col md:flex-row items-start gap-4">
@@ -655,13 +767,20 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                                                         <Input
                                                             placeholder="Section name"
-                                                            value={section.id.includes("section-default-UI-") ? section.name : ''}
+                                                            value={section.name}
                                                             onChange={(e) => updateSection(section.id, { name: e.target.value })}
                                                         />
                                                         <Input
                                                             placeholder="Section description"
                                                             value={section.description}
                                                             onChange={(e) => updateSection(section.id, { description: e.target.value })}
+                                                        />
+                                                        <MultiSelect
+                                                            title='users able to approve'
+                                                            data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
+                                                            selected={section.approval_roles.map(role => role.user_role)}
+                                                            setSelected={(e) => updateSection(section.id, { approval_roles: e.map(role => ({ user_role: role })) })}
+                                                            isLoading={isLoadingRoles}
                                                         />
                                                     </div>
                                                 </div>
@@ -716,7 +835,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                 </div>
                                             ) : (
                                                 <div className="space-y-4">
-                                                    {section.forms.map((form, formIndex) => (
+                                                    {section.forms.slice().sort((a, b) => a.order - b.order).map((form, formIndex) => (
                                                         <div key={form.id} className="border rounded-lg p-4 bg-muted/30">
                                                             <div className="space-y-4">
                                                                 <div className="flex flex-col md:flex-row gap-3">
@@ -747,6 +866,13 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                             value={form.description}
                                                                             onChange={(e) => updateForm(section.id, form.id, { description: e.target.value })}
                                                                         />
+                                                                        <MultiSelect
+                                                                            title='users able to edit'
+                                                                            data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
+                                                                            selected={form.editor_roles.map(role => role.user_role)}
+                                                                            setSelected={(e) => updateForm(section.id, form.id, { editor_roles: e.map(role => ({ user_role: role })) })}
+                                                                            isLoading={isLoadingRoles}
+                                                                        />
                                                                     </div>
                                                                     <Button
                                                                         variant="ghost"
@@ -776,59 +902,104 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                 {/* Fields */}
                                                                 {form.fields.length > 0 && (
                                                                     <div className="space-y-2 pl-4 border-l-2 border-border">
-                                                                        {form.fields.map((field, fieldIndex) => (
-                                                                            <div key={field.id} className="flex flex-col lg:flex-row items-center gap-3 p-3 bg-background rounded border">
-                                                                                <span className="text-xs text-muted-foreground w-6">
-                                                                                    {fieldIndex + 1}
-                                                                                </span>
-                                                                                <Input
-                                                                                    placeholder="Field label"
-                                                                                    value={field.label}
-                                                                                    onChange={(e) => updateField(section.id, form.id, field.id, {
-                                                                                        label: e.target.value,
-                                                                                        name: slugify(e.target.value)
-                                                                                    })}
-                                                                                    className="flex-1"
-                                                                                />
-                                                                                <Input
-                                                                                    placeholder="Placeholder"
-                                                                                    value={field.placeholder}
-                                                                                    onChange={(e) => updateField(section.id, form.id, field.id, { placeholder: e.target.value })}
-                                                                                    className="flex-1"
-                                                                                />
-                                                                                <Select
-                                                                                    value={field.type}
-                                                                                    onValueChange={(value) => updateField(section.id, form.id, field.id, { type: value })}
-                                                                                >
-                                                                                    <SelectTrigger className="w-full lg:w-40">
-                                                                                        <SelectValue />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent>
-                                                                                        {fieldTypes.map((type) => (
-                                                                                            <SelectItem key={type.value} value={type.value}>
-                                                                                                {type.label}
-                                                                                            </SelectItem>
-                                                                                        ))}
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                                <div className='flex justify-between gap-3 w-full lg:w-fit'>
-                                                                                    <Button
-                                                                                        variant="outline"
-                                                                                        size="sm"
-                                                                                        onClick={() => updateField(section.id, form.id, field.id, { required: !field.required })}
-                                                                                        className={field.required ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                                                        {form.fields.slice().sort((a, b) => a.order - b.order).map((field, fieldIndex) => (
+                                                                            <div key={field.id} className='bg-background rounded border'>
+                                                                                <div className="flex flex-col lg:flex-row items-center gap-3 p-3">
+                                                                                    <span className="text-xs text-muted-foreground w-6">
+                                                                                        {fieldIndex + 1}
+                                                                                    </span>
+                                                                                    <Input
+                                                                                        placeholder="Field label"
+                                                                                        value={field.label}
+                                                                                        onChange={(e) => updateField(section.id, form.id, field.id, {
+                                                                                            label: e.target.value,
+                                                                                            name: slugify(e.target.value)
+                                                                                        })}
+                                                                                        className="flex-1"
+                                                                                    />
+                                                                                    <Input
+                                                                                        placeholder="Placeholder"
+                                                                                        value={field.placeholder}
+                                                                                        onChange={(e) => updateField(section.id, form.id, field.id, { placeholder: e.target.value })}
+                                                                                        className="flex-1"
+                                                                                    />
+                                                                                    <Select
+                                                                                        value={field.type}
+                                                                                        onValueChange={(value) => updateField(section.id, form.id, field.id, { type: value, options: [] })}
                                                                                     >
-                                                                                        {field.required ? 'Required' : 'Optional'}
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        variant="ghost"
-                                                                                        size="sm"
-                                                                                        onClick={() => removeField(section.id, form.id, field.id)}
-                                                                                        className="text-destructive hover:text-destructive"
-                                                                                    >
-                                                                                        <Trash2 className="h-3 w-3" />
-                                                                                    </Button>
+                                                                                        <SelectTrigger className="w-full lg:w-40">
+                                                                                            <SelectValue />
+                                                                                        </SelectTrigger>
+                                                                                        <SelectContent>
+                                                                                            {fieldTypes.map((type) => (
+                                                                                                <SelectItem key={type.value} value={type.value}>
+                                                                                                    {type.label}
+                                                                                                </SelectItem>
+                                                                                            ))}
+                                                                                        </SelectContent>
+                                                                                    </Select>
+                                                                                    <div className='flex justify-between gap-3 w-full lg:w-fit'>
+                                                                                        <div className='flex items-center space-x-2'>
+                                                                                            <Switch
+                                                                                                id={`${section.id}-${form.id}-${field.id}`}
+                                                                                                className='data-[state=checked]:bg-destructive'
+                                                                                                checked={field.required}
+                                                                                                onCheckedChange={(checked) =>
+                                                                                                    updateField(section.id, form.id, field.id, { required: checked })
+                                                                                                }
+                                                                                            />
+                                                                                            <Label htmlFor={`${section.id}-${form.id}-${field.id}`}>Required</Label>
+                                                                                        </div>
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            onClick={() => removeField(section.id, form.id, field.id)}
+                                                                                            className="text-destructive hover:text-destructive"
+                                                                                        >
+                                                                                            <Trash2 className="h-3 w-3" />
+                                                                                        </Button>
+                                                                                    </div>
                                                                                 </div>
+                                                                                {field.type === 'select' ? (
+                                                                                    <div className="space-y-2 pl-3">
+                                                                                        <div className="flex items-center gap-2 pl-4 pb-4">
+                                                                                            <Button
+                                                                                                variant="outline"
+                                                                                                size="sm"
+                                                                                                onClick={() => addOption(section.id, form.id, field.id)}
+                                                                                                className="gap-2"
+                                                                                            >
+                                                                                                <Plus className="h-3 w-3 hidden sm:block" />
+                                                                                                Add Option
+                                                                                            </Button>
+                                                                                            <Badge variant="outline" className="text-xs">
+                                                                                                {field.options.length} options
+                                                                                            </Badge>
+                                                                                        </div>
+                                                                                        {field.options.length > 0 ? (
+                                                                                            <div className="space-y-2 ml-4 px-4 pb-4 border-l-2 border-border">
+                                                                                                {field.options.slice().sort((a, b) => a.order - b.order).map(option => (
+                                                                                                    <div key={option.id} className='flex gap-1'>
+                                                                                                        <Input
+                                                                                                            placeholder="Enter Option"
+                                                                                                            value={option.label}
+                                                                                                            onChange={(e) => updateOption(section.id, form.id, field.id, option.id, { name: slugify(e.target.value), label: e.target.value })}
+                                                                                                            className="flex-1"
+                                                                                                        />
+                                                                                                        <Button
+                                                                                                            variant="ghost"
+                                                                                                            size="sm"
+                                                                                                            onClick={() => removeOption(section.id, form.id, field.id, option.id)}
+                                                                                                            className="text-destructive hover:text-destructive"
+                                                                                                        >
+                                                                                                            <Trash2 className="h-3 w-3" />
+                                                                                                        </Button>
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                            </div>
+                                                                                        ) : null}
+                                                                                    </div>
+                                                                                ) : null}
                                                                             </div>
                                                                         ))}
                                                                     </div>

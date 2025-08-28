@@ -45,9 +45,9 @@ export default function OrganizationDetail() {
   const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [projects, setProjects] = useState<ProjectI[] | null>(null);
+  const [projects] = useState<ProjectI[] | null>(null);
   // Remove local members state
-  const [listsLoading, setListsLoading] = useState(false);
+  const [listsLoading] = useState(false);
 
   useEffect(() => {
     const loadOrganization = async () => {
@@ -136,15 +136,15 @@ export default function OrganizationDetail() {
                       organization.status === OrganizationStatusE.ACTIVE
                         ? "bg-progress-completed/10 text-progress-completed border-progress-completed/20"
                         : organization.status === OrganizationStatusE.PENDING
-                        ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                        : "bg-red-100 text-red-800 border-red-200"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : "bg-red-100 text-red-800 border-red-200"
                     }
                   >
                     {organization.status === OrganizationStatusE.ACTIVE
                       ? "Active"
                       : organization.status === OrganizationStatusE.PENDING
-                      ? "Pending"
-                      : "Inactive"}
+                        ? "Pending"
+                        : "Inactive"}
                   </Badge>
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
@@ -155,9 +155,9 @@ export default function OrganizationDetail() {
 
                 {/* Merged Contact Details */}
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4"/> {organization.primary_email || "-"}</div>
-                  <div className="flex items-center gap-2 text-sm"><User className="h-4 w-4"/> {organization.phone || "-"}</div>
-                  <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4"/> {organization.address || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><Mail className="h-4 w-4" /> {organization.primary_email || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><User className="h-4 w-4" /> {organization.phone || "-"}</div>
+                  <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4" /> {organization.address || "-"}</div>
                 </div>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function OrganizationDetail() {
               <div className="hidden md:block">
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => navigate(`/organizations/${id}/edit`)}>
-                    <Edit className="h-4 w-4 mr-2"/>
+                    <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                 </div>
@@ -193,11 +193,11 @@ export default function OrganizationDetail() {
         <TabsContent value="projects">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><FolderOpen className="h-5 w-5"/> Projects</CardTitle>
+              <CardTitle className="flex items-center gap-2"><FolderOpen className="h-5 w-5" /> Projects</CardTitle>
             </CardHeader>
             <CardContent>
               {listsLoading ? (
-                <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>
+                <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
               ) : (
                 <div className="w-full overflow-x-auto">
                   <Table>
@@ -235,7 +235,7 @@ export default function OrganizationDetail() {
         <TabsContent value="members">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5"/> Members</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Members</CardTitle>
               <Button size="sm" onClick={() => navigate(`/organizations/${id}/members/new`)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Member
@@ -249,9 +249,14 @@ export default function OrganizationDetail() {
                     data: users,
                     isLoading: membersLoading,
                     isError: membersError,
-                  } = useUsersQuery({ organizations: [organization] });
+                  } = useUsersQuery();
+                  // const {
+                  //   data: users,
+                  //   isLoading: membersLoading,
+                  //   isError: membersError,
+                  // } = useUsersQuery({ organizations: [organization] });
                   if (membersLoading) {
-                    return <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin"/></div>;
+                    return <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>;
                   }
                   if (membersError) {
                     return <div className="text-destructive">Failed to load members.</div>;
@@ -273,7 +278,7 @@ export default function OrganizationDetail() {
                         <TableBody>
                           {users.map((m) => (
                             <TableRow key={m.id}>
-                              <TableCell className="font-medium">{m.firstName} {m.lastName}</TableCell>
+                              <TableCell className="font-medium">{m.first_name} {m.last_name}</TableCell>
                               <TableCell>{m.email || "-"}</TableCell>
                               <TableCell>{m.role || "-"}</TableCell>
                               <TableCell className="text-right">
@@ -299,7 +304,7 @@ export default function OrganizationDetail() {
       {/* Bottom actions for small screens (Back removed) */}
       <div className="md:hidden">
         <Button variant="outline" className="w-full" onClick={() => navigate(`/organizations/${id}/edit`)}>
-          <Edit className="h-4 w-4 mr-2"/> Edit
+          <Edit className="h-4 w-4 mr-2" /> Edit
         </Button>
       </div>
     </div>

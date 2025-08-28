@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { organizationService } from '@/services/organizations';
 import { locationService } from '@/services/locations';
-import type { Organization, OrganizationType } from '@/types/organizations';
+import type { OrganizationI, OrganizationType } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,11 +49,11 @@ const focusAreas = [
 export default function EditOrganization() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  
+  const [organization, setOrganization] = useState<OrganizationI | null>(null);
+
   // Form data
   const [formData, setFormData] = useState<FormData>({
     organizationName: '',
@@ -87,7 +87,7 @@ export default function EditOrganization() {
 
       try {
         setLoading(true);
-        
+
         // Load organization data and dropdown options
         const orgData = await organizationService.getOrganization(id);
         const typesData = await organizationService.getOrganizationTypes();
@@ -95,13 +95,13 @@ export default function EditOrganization() {
         // Try to load regions and districts, but handle gracefully if APIs don't exist
         let regionsData: Region[] = [];
         let districtsData: District[] = [];
-        
+
         try {
           regionsData = await locationService.getRegions();
         } catch (error) {
           console.warn('Regions API not available, using empty array');
         }
-        
+
         try {
           districtsData = await locationService.getDistricts();
         } catch (error) {
@@ -117,24 +117,24 @@ export default function EditOrganization() {
         // Populate form with existing data
         setFormData({
           organizationName: orgData.name || '',
-          organizationType: orgData.type?.id?.toString() || '',
+          organizationType: '',
           organizationDescription: orgData.description || '',
-          physicalAddress: orgData.physical_address || '',
-          district: orgData.district || '',
-          region: orgData.region || '',
+          physicalAddress: orgData.address || '',
+          district: '',
+          region: '',
           primaryEmail: orgData.primary_email || '',
           phoneNumber: '', // phone_number doesn't exist on Organization type
-          focalPersonName: orgData.focal_person_name || '',
-          focalPersonJobTitle: orgData.focal_person_job_title || '',
+          focalPersonName: orgData.first_name + "" + orgData.last_name || '',
+          focalPersonJobTitle: '',
           focalPersonEmail: orgData.focal_person_email || '',
-          focusAreas: orgData.focus_areas || []
+          focusAreas: []
         });
 
         // Filter districts based on current region (only if districts API works)
-        if (orgData.region && districtsData.length > 0) {
-          const filtered = districtsData.filter(d => d.region_id === orgData.region);
-          setFilteredDistricts(filtered);
-        }
+        // if (orgData.region && districtsData.length > 0) {
+        //   const filtered = districtsData.filter(d => d.region_id === orgData.region);
+        //   setFilteredDistricts(filtered);
+        // }
 
       } catch (error) {
         console.error('Error loading organization data:', error);
@@ -168,7 +168,7 @@ export default function EditOrganization() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!id) return;
 
     // Basic validation
@@ -201,12 +201,12 @@ export default function EditOrganization() {
       };
 
       console.log('Updating organization with data:', updateData);
-      
+
       await organizationService.updateOrganization(id, updateData);
-      
+
       toast.success('Organization updated successfully!');
       navigate(`/organizations/${id}`);
-      
+
     } catch (error) {
       console.error('Error updating organization:', error);
       toast.error('Failed to update organization. Please try again.');

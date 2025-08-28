@@ -81,14 +81,25 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
             else navigate('/board', { replace: true })
           }}>
             <ArrowLeft />
-            <span>
-              <span className="block lg:inline">
-                {page.backButton.split(" ")[0]}
+            {user?.modules && user.modules.length === 1 ? (
+              <span>
+                <span className="block lg:inline">
+                  Back to
+                </span>
+                <span className="hidden lg:inline">
+                  Home
+                </span>
               </span>
-              <span className="hidden lg:inline">
-                {" " + page.backButton.split(" ").slice(1).join(" ")}
+            ) : (
+              <span>
+                <span className="block lg:inline">
+                  {page.backButton.split(" ")[0] + " "}
+                </span>
+                <span className="hidden lg:inline">
+                  {page.backButton.split(" ").slice(1).join(" ")}
+                </span>
               </span>
-            </span>
+            )}
           </Button>
         ) : null}
 
