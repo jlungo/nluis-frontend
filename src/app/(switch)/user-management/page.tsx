@@ -48,30 +48,14 @@ import {
 import { toast } from 'sonner';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { useOrganizationsQuery } from '@/queries/useOrganizationQuery';
-import { useUsersQuery } from '@/queries/useUsersQuery';
+import { useUsersQuery, type UserType } from '@/queries/useUsersQuery';
 import { genderTypes, userTypes } from '@/types/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
-interface UserType {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: string;
-  user_type: number | string;
-  organization: string | null;
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
-  emailVerified: boolean;
-  lastLogin: string;
-  createdAt: string;
-  location: string;
-}
-
 interface NewUser {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   roleId: string;
@@ -113,8 +97,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const { data: organizations = [] } = useOrganizationsQuery();
 
   const [newUser, setNewUser] = useState<NewUser>({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     roleId: '',
@@ -128,8 +112,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
     mutationFn: async (userData: NewUser) => {
 
       const data = {
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         phone: userData.phone,
         role_id: userData.roleId,
@@ -145,8 +129,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
       // Close dialog and reset form
       setIsCreateUserOpen(false);
       setNewUser({
-        firstName: '',
-        lastName: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
         roleId: '',
@@ -199,8 +183,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   const editUserMutation = useMutation({
     mutationFn: async (userData: UserType) => {
       const data = {
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         phone: userData.phone,
         role: userData.role, // TODO: Implement role update UUID
@@ -286,8 +270,8 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   // Update the filteredUsers function to use the fetched data
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
-      user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesOrganization = selectedOrganization === 'all' || user.organization === selectedOrganization;
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
@@ -300,7 +284,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
   });
 
   const handleCreateUser = () => {
-    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.roleId || !newUser.gender || !newUser.organization) {
+    if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.roleId || !newUser.gender || !newUser.organization) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -419,12 +403,12 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="first_name">First Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="firstName"
+                    id="first_name"
                     className="w-full"
-                    value={newUser.firstName}
-                    onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
+                    value={newUser.first_name}
+                    onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
                     placeholder="Enter first name"
                     disabled={createUserMutation.isPending}
                   />
@@ -432,12 +416,12 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
 
                 {/* Last Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="last_name">Last Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="lastName"
+                    id="last_name"
                     className="w-full"
-                    value={newUser.lastName}
-                    onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
+                    value={newUser.last_name}
+                    onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
                     placeholder="Enter last name"
                     disabled={createUserMutation.isPending}
                   />
@@ -629,7 +613,6 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
         </Alert>
       )}
 
-      {/* Rest of the component remains the same */}
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -740,14 +723,14 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                         </div>
                         <div className="flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-medium">{user.firstName} {user.lastName}</h3>
+                            <h3 className="font-medium">{user.first_name} {user.last_name}</h3>
                             <Badge variant="outline" className={`text-xs ${getStatusColor(user.status)}`}>
                               <span className="flex items-center gap-1">
                                 {getStatusIcon(user.status)}
                                 {user.status}
                               </span>
                             </Badge>
-                            {!user.emailVerified && (
+                            {!user.is_verified && (
                               <Badge variant="outline" className="text-xs text-orange-700 bg-orange-50">
                                 <Mail className="h-3 w-3 mr-1" />
                                 Unverified
@@ -776,7 +759,7 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
                             <span className="hidden sm:inline">•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Last login: {user.lastLogin}
+                              Last login: {user.last_login}
                             </span>
                           </div>
                         </div>
@@ -867,24 +850,24 @@ export default function UserManagement({ onInvitationSent }: UserManagementProps
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editFirstName">First Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="editFirst_name">First Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="editFirstName"
+                    id="editFirst_name"
                     className="w-full"
-                    value={editingUser.firstName}
-                    onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
+                    value={editingUser.first_name}
+                    onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
                     disabled={editUserMutation.isPending}
                   />
                 </div>
 
                 {/* Last Name */}
                 <div className="space-y-2 min-w-0">
-                  <Label htmlFor="editLastName">Last Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="editLast_name">Last Name <span className="text-red-500">*</span></Label>
                   <Input
-                    id="editLastName"
+                    id="editLast_name"
                     className="w-full"
-                    value={editingUser.lastName}
-                    onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
+                    value={editingUser.last_name}
+                    onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
                     disabled={editUserMutation.isPending}
                   />
                 </div>
