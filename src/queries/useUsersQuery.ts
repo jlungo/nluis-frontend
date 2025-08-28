@@ -33,7 +33,6 @@ export const useUsersQuery = ({ organizations = [] }: UseUsersQueryProps = {}) =
 
       return users.map((user) => ({
         ...user,
-        organization_name: organizations.find(org => org.id === user.organization)?.name,
       }));
     }
   });
