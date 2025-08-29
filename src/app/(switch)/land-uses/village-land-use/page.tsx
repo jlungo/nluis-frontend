@@ -1,7 +1,5 @@
-'use client';
-
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,8 +10,9 @@ import { Plus, ChevronLeft, ChevronRight, AlertCircle, FileSearch, Search } from
 import { useProjectsQuery } from '@/queries/useProjectQuery';
 import { usePageStore } from '@/store/pageStore';
 import { useLayoutEffect, useEffect, useCallback, useMemo } from 'react';
-import { formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import type { ApiError } from '@/types/api-response';
+import { Badge, badgeVariants } from '@/components/ui/badge';
 
 type ProjectStatus = 'draft' | 'in-progress' | 'approved' | 'rejected' | 'completed';
 
@@ -32,15 +31,15 @@ const PROJECT_STATUSES = [
   { value: 'completed', label: 'Completed' }
 ];
 
-// const STATUS_COLORS = {
-//   draft: 'bg-gray-100 text-gray-800',
-//   'in-progress': 'bg-blue-100 text-blue-800',
-//   approved: 'bg-green-100 text-green-800',
-//   rejected: 'bg-red-100 text-red-800',
-//   completed: 'bg-purple-100 text-purple-800'
-// };
+const STATUS_COLORS = {
+  draft: 'bg-gray-100 text-gray-800',
+  'in-progress': 'bg-blue-100 text-blue-800',
+  approved: 'bg-green-100 text-green-800',
+  rejected: 'bg-red-100 text-red-800',
+  completed: 'bg-purple-100 text-purple-800'
+};
 
-export default function VillageLandUsePage() {
+export default function Page() {
   const { setPage } = usePageStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -176,11 +175,11 @@ export default function VillageLandUsePage() {
     </div>
   );
 
-  // const ProjectStatusBadge = ({ status }: { status: string }) => (
-  //   <Badge className={`${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'} font-medium`}>
-  //     {status}
-  //   </Badge>
-  // );
+  const ProjectStatusBadge = ({ status }: { status: string }) => (
+    <Badge className={`${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'} font-medium`}>
+      {status}
+    </Badge>
+  );
 
   const PaginationControls = () => (
     <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
@@ -309,7 +308,7 @@ export default function VillageLandUsePage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  {['No:', 'Registration Date', 'Project Name', 'Project Type', 'Station', 'Total Villages', 'Current Task', 'Status'].map((header) => (
+                  {['No:', 'Registration Date', 'Project Name', 'Project Type', 'Station', 'Total Villages', 'Current Task', 'Workflow', 'Status'].map((header) => (
                     <TableHead key={header} className={header === 'Total Villages' ? 'text-center' : ''}>
                       {header}
                     </TableHead>
@@ -324,7 +323,7 @@ export default function VillageLandUsePage() {
                     <TableCell>
                       <Button
                         variant="link"
-                        onClick={() => navigate(`/projects/${project.id}`)}
+                        onClick={() => navigate(`/land-uses/village-land-use/${project.id}`)}
                         className="text-teal-600 hover:text-teal-800 font-medium p-0 h-auto"
                       >
                         {project.name}
@@ -338,10 +337,16 @@ export default function VillageLandUsePage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-sm">{project.current_task}</TableCell>
+                    <TableCell className="text-sm">
+                      <Link
+                        to={`/land-uses/village-land-use/${project.id}/workflow`}
+                        className={cn(badgeVariants(), 'border-primary bg-primary/20 text-primary hover:bg-primary/20 active:bg-primary/20')}
+                      >
+                        Workflow
+                      </Link>
+                    </TableCell>
                     <TableCell>
-                      {/* {project.status_info.map((status, index) => (
-                        <ProjectStatusBadge key={index} status={status} />
-                      ))} */}
+                      <ProjectStatusBadge status={project.status_info} />
                     </TableCell>
                   </TableRow>
                 ))}

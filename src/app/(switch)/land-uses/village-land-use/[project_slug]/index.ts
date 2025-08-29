@@ -1,16 +1,16 @@
 import Layout from "./layout";
 import Page from "./page";
-import ProjectSlug from "./[project_slug]";
+import Workflow from "./workflow";
 
 const Index = {
-  path: "village-land-use",
+  path: ":project_slug",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    ProjectSlug,
+    Workflow,
   ],
 };
 

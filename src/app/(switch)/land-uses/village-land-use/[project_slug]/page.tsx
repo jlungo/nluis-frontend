@@ -1,0 +1,42 @@
+// import { Spinner } from "@/components/ui/spinner";
+import { usePageStore } from "@/store/pageStore";
+import { useLayoutEffect } from "react";
+import { useParams } from "react-router";
+
+export default function Page() {
+  const { project_slug } = useParams<{ project_slug: string }>();
+  const { setPage } = usePageStore();
+
+  // const { data, isLoading } = useProjectQuery(workflow_slug || "");
+  console.log(project_slug)
+
+  useLayoutEffect(() => {
+    setPage({
+      module: 'land-uses',
+      title: "Village Land Use Project",
+      backButton: 'Modules'
+    });
+  }, [setPage]);
+
+  // if (!data && !isLoading)
+  //       return <div className='flex flex-col items-center justify-center h-60'>
+  //           <p className='text-muted-foreground'>No workflow data found!</p>
+  //       </div>
+
+  //   if (!data || isLoading)
+  //       return (
+  //           <div className='flex flex-col items-center justify-center h-60'>
+  //               <Spinner />
+  //               <p className="text-muted-foreground mt-4">Loading workflow...</p>
+  //           </div>
+  //       )
+
+  //   if (isLoading) return <div className='flex flex-col items-center justify-center h-60'>
+  //       <Spinner />
+  //       <p className="text-muted-foreground mt-4">Loading workflow...</p>
+  //   </div>
+
+  return (
+    <></>
+  );
+}
