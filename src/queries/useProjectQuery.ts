@@ -34,7 +34,21 @@ export interface Locality {
   updated_at: string;
 }
 
-export interface Project {
+
+
+// interface Project {
+//   id: string;
+//   reg_date: string;
+//   name: string;
+//   project_type_info: { name: string };
+//   station_info: { name: string };
+//   total_locality: number;
+//   current_task: string;
+//   status_info: string;
+//   status: ProjectStatus;
+// }
+
+export interface ProjectInterface {
   id: number;
   name: string;
   description: string;
@@ -99,7 +113,7 @@ export interface CreateProjectData {
   description: string;
   reg_date: string;
   auth_date: string;
-  budget: number;
+  budget: string;
   project_type: number;
   funders: number[];
   localities: Array<{
@@ -115,14 +129,14 @@ export const useProjectsQuery = (options: ProjectQueryParams) => {
     queryKey: options.id
       ? ["project", options.id]
       : ["projects", options],
-    queryFn: async (): Promise<APIResponse<Project>> => {
+    queryFn: async (): Promise<APIResponse<ProjectInterface>> => {
       if (options.id) {
         // Fetch a single project by ID
-        const response = await api.get<APIResponse<Project>>(`/projects/${options.id}`);
+        const response = await api.get<APIResponse<ProjectInterface>>(`/projects/${options.id}`);
         return response.data;
       } else {
         // Fetch multiple projects with optional params
-        const response = await api.get<APIResponse<Project>>(`/projects/list`, {
+        const response = await api.get<APIResponse<ProjectInterface>>(`/projects/list`, {
           params: options,
         });
         return response.data;
@@ -146,10 +160,10 @@ export const useCreateProject = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (projectData: CreateProjectData): Promise<APIResponse<Project>> => {
+    mutationFn: async (projectData: CreateProjectData): Promise<APIResponse<ProjectInterface>> => {
       console.log('Creating project with data:', projectData);
 
-      const response = await api.post<APIResponse<Project>>('/projects/create/', projectData);
+      const response = await api.post<APIResponse<ProjectInterface>>('/projects/create/', projectData);
       return response.data;
     },
     onSuccess: () => {
@@ -163,7 +177,7 @@ export const useProjectTypes = () => {
   return useQuery({
     queryKey: ['projectTypes'],
     queryFn: async (): Promise<APIResponse<ProjectType>> => {
-      const response = await api.get('/projects/public/project-types');
+      const response = await api.get('/projects/public/project-types/');
       return response.data;
     },
   });
@@ -173,8 +187,7 @@ export const useFunders = () => {
   return useQuery({
     queryKey: ['funders'],
     queryFn: async (): Promise<Funder[]> => {
-      const response = await api.get('/setup/funders');
-      console.log('Funders response:', response);
+      const response = await api.get('/setup/funders/');
       return response.data;
     },
   });
@@ -184,7 +197,7 @@ export const useLevels = () => {
   return useQuery({
     queryKey: ['levels'],
     queryFn: async (): Promise<APIResponse<Level>> => {
-      const response = await api.get('/localities/levels');
+      const response = await api.get('/localities/levels/');
       return response.data;
     },
   });
@@ -193,8 +206,9 @@ export const useLevels = () => {
 export const useLocalities = () => {
   return useQuery({
     queryKey: ['localities'],
-    queryFn: async (): Promise<APIResponse<Locality>> => {
+    queryFn: async (): Promise<Locality[]> => {
       const response = await api.get('/localities/localities/');
+      console.log('Fetched localities:', response);
       return response.data;
     },
   });
