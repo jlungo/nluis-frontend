@@ -37,5 +37,5 @@ export default function Page() {
         <p className="text-muted-foreground mt-4">Loading workflow...</p>
     </div>
 
-    return <SectionedForm data={data} />
+    return <SectionedForm data={data} disabled />
 }

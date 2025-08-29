@@ -24,7 +24,7 @@ export function SectionedForm({ data, disabled, isSubmitting }: { data: Workflow
         );
     };
 
-    const openSubForm = (formId: string, _section: SectionProps) => {
+    const openForm = (formId: string, _section: SectionProps) => {
         // const subForm = section.forms.find(sf => sf.slug === formId);
         // if (subForm?.isAccessible) {
         setActiveForm(formId);
@@ -164,13 +164,15 @@ export function SectionedForm({ data, disabled, isSubmitting }: { data: Workflow
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link
-                            to={`/system-settings/form-workflows/${data.slug}/edit`}
-                            className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
-                        >
-                            <Edit className="h-4 w-4" />
-                            Edit<span className='hidden md:inline'>Workflow</span>
-                        </Link>
+                        {disabled ? (
+                            <Link
+                                to={`/system-settings/form-workflows/${data.slug}/edit`}
+                                className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
+                            >
+                                <Edit className="h-4 w-4" />
+                                Edit<span className='hidden md:inline'>Workflow</span>
+                            </Link>
+                        ) : null}
                     </div>
                 </div>
             </div>
@@ -228,7 +230,7 @@ export function SectionedForm({ data, disabled, isSubmitting }: { data: Workflow
                                                     //     }`}
                                                     className={`flex items-center justify-between p-3 rounded-lg border transition-colors bg-muted/20 cursor-pointer`}
                                                     // onClick={() => form.isAccessible && Sub(form.id, section)}
-                                                    onClick={() => openSubForm(form.slug, section)}
+                                                    onClick={() => openForm(form.slug, section)}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">

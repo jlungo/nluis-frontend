@@ -308,15 +308,15 @@ export function NavigationSidebar({
         key={item.id}
         to={navigateTo(link)}
         end
-        className={({ isPending }) => cn(
-          buttonVariants({ variant: isPathnameActive ? "default" : "ghost" }),
+        className={({ isActive, isPending }) => cn(
+          buttonVariants({ variant: isActive || isPathnameActive ? "default" : "ghost" }),
           `${isPending ? 'animate-pulse' : null}`,
           `w-full ${collapsed
             ? "px-2 justify-center"
             : group
               ? "justify-start px-4"
               : "justify-start px-3"
-          } h-8 ${isPathnameActive
+          } h-8 ${isActive || isPathnameActive
             ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`

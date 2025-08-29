@@ -115,3 +115,13 @@ export const useWorkflowQuery = (workflow_slug: string) => {
         .then((res) => res.data),
   });
 };
+
+export const useLevelWorkflowQuery = (level_slug: string) => {
+  return useQuery<WorkflowProps[]>({
+    queryKey: [workflowQueryKey, { level_slug }],
+    queryFn: () =>
+      api
+        .get(`/form-management/submission/module-level/${level_slug}/`)
+        .then((res) => res.data),
+  });
+};
