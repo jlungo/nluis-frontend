@@ -1,7 +1,6 @@
 import Layout from "./layout";
 import Page from "./page";
 import FormWorkflows from "./form-workflows";
-import ModuleLevels from "./module-levels";
 import type { RouteObject } from "react-router";
 
 const Index: RouteObject = {
@@ -13,7 +12,6 @@ const Index: RouteObject = {
       Component: Page,
     },
     FormWorkflows,
-    ModuleLevels,
   ],
 };
 
