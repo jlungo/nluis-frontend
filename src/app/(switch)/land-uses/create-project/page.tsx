@@ -31,7 +31,7 @@ type FormData = {
 
 export default function CreateProjectPage() {
   const { setPage } = usePageStore();
-  
+
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [selectedProjectType, setSelectedProjectType] = useState<string>('');
 
@@ -71,7 +71,7 @@ export default function CreateProjectPage() {
       const projectType = projectTypes.find(pt => pt.id.toString() === selectedProjectType);
       if (projectType) {
         setSelectedLevel(projectType.level_id);
-        
+
         // Reset locations if level is National
         if (projectType.level_id === 1) {
           setFormData(prev => ({
@@ -106,7 +106,7 @@ export default function CreateProjectPage() {
     setFormData(prev => {
       const newLocations = [...prev.locations];
       newLocations[index] = { ...newLocations[index], [field]: value };
-      
+
       // Reset dependent fields when a parent field changes
       if (field === 'region') {
         newLocations[index].district = '';
@@ -118,7 +118,7 @@ export default function CreateProjectPage() {
       } else if (field === 'ward') {
         newLocations[index].village = '';
       }
-      
+
       return { ...prev, locations: newLocations };
     });
   };
@@ -141,12 +141,12 @@ export default function CreateProjectPage() {
 
   const isFormValid = () => {
     // Basic validation
-    if (!formData.name || !formData.description || !formData.reg_date || 
-        !formData.auth_date || !formData.budget || !formData.project_type || 
-        formData.funders.length === 0) {
+    if (!formData.name || !formData.description || !formData.reg_date ||
+      !formData.auth_date || !formData.budget || !formData.project_type ||
+      formData.funders.length === 0) {
       return false;
     }
-    
+
     // Location validation based on level
     if (selectedLevel && selectedLevel > 1) {
       for (const location of formData.locations) {
@@ -156,7 +156,7 @@ export default function CreateProjectPage() {
         if (selectedLevel >= 5 && !location.village) return false;
       }
     }
-    
+
     return true;
   };
 
@@ -184,7 +184,7 @@ export default function CreateProjectPage() {
 
       // Use React Query mutation to create project
       await createProjectMutation.mutateAsync(submitData);
-      
+
       navigateBack();
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -303,7 +303,7 @@ export default function CreateProjectPage() {
                     <Checkbox
                       id={`funder-${funder.id}`}
                       checked={formData.funders.includes(funder.id)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleFunderChange(funder.id, checked as boolean)
                       }
                     />
@@ -317,8 +317,8 @@ export default function CreateProjectPage() {
                 ))}
               </div>
             </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
         {selectedLevel && (
           <Card>
@@ -349,7 +349,7 @@ export default function CreateProjectPage() {
                           </Button>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         {selectedLevel >= 2 && (
                           <div>
@@ -440,7 +440,7 @@ export default function CreateProjectPage() {
                       </div>
                     </div>
                   ))}
-                  
+
                   <Button type="button" variant="outline" onClick={addLocationRow}>
                     Add Another Location
                   </Button>

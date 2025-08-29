@@ -21,7 +21,7 @@ export default function Page() {
 
     if (!data && !isLoading)
         return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>No workflow data found!</p>
+            <p className='text-muted-foreground'>No workflows found!</p>
         </div>
 
     if (!data || isLoading)

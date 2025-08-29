@@ -3,7 +3,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
-import { UploadCloud } from "lucide-react";
+import { Asterisk, UploadCloud } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
 
 type FileInputProps = ComponentPropsWithoutRef<typeof Input> & {
@@ -22,7 +22,7 @@ const FormFileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
         return (
             <div className="w-full space-y-2 md:w-[48%] xl:w-[49%]">
-                <Label htmlFor={data.name}>{data.label}</Label>
+                <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
                 <div className="relative">
                     <Input
                         id={data.name}

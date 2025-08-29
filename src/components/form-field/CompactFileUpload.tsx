@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,6 +10,7 @@ import {
     FileVideo,
     FileAudio
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CompactFileUploadProps {
     label?: string;
@@ -18,6 +19,8 @@ interface CompactFileUploadProps {
     maxFiles?: number;
     maxSize?: number; // in MB
     onChange?: (files: File[]) => void;
+    disabled?: boolean;
+    required?: boolean;
     className?: string;
 }
 
@@ -28,6 +31,8 @@ export default function CompactFileUpload({
     maxFiles = 5,
     maxSize = 10,
     onChange,
+    disabled,
+    required,
     className = ""
 }: CompactFileUploadProps) {
     const [files, setFiles] = useState<File[]>([]);
@@ -93,16 +98,16 @@ export default function CompactFileUpload({
     };
 
     return (
-        <div className={`space-y-2 ${className}`}>
+        <div className={cn(`space-y-2`, className)}>
             {/* Compact Upload Area */}
             <div
-                className={`border-2 border-dashed rounded-lg transition-colors ${dragOver
-                        ? 'border-primary bg-primary/5'
-                        : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                className={`border-2 border-dashed rounded-lg transition-colors ${dragOver && !disabled
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/25 hover:border-muted-foreground/50'
                     }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDrop={!disabled ? handleDrop : undefined}
+                onDragOver={!disabled ? handleDragOver : undefined}
+                onDragLeave={!disabled ? handleDragLeave : undefined}
             >
                 <input
                     type="file"
@@ -111,6 +116,8 @@ export default function CompactFileUpload({
                     onChange={(e) => handleFileSelect(e.target.files)}
                     className="hidden"
                     id="file-upload"
+                    disabled={disabled}
+                    required={required}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer block">
                     <div className="flex items-center gap-3 p-3">

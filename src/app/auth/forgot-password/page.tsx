@@ -78,20 +78,20 @@ export default function ForgotPassword() {
         {/* Success Header */}
         <div className="text-center space-y-6">
           <div className="w-20 h-20 mx-auto flex items-center justify-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-950 rounded-full flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </div>
 
           <div className="flex justify-center">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
+            <Badge variant="secondary" className="bg-green-100 dark:bg-green-950 text-green-800 border-green-200 dark:border-green-800 px-3 py-1">
               <Mail className="h-3 w-3 mr-1" />
               Reset Email Sent
             </Badge>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-green-800">Password Reset Requested!</h1>
+            <h1 className="text-2xl font-semibold text-green-800 dark:text-green-700">Password Reset Requested!</h1>
             <p className="text-base text-muted-foreground">
               We've sent password reset instructions to your email address
             </p>
@@ -100,10 +100,10 @@ export default function ForgotPassword() {
 
         {/* Success Card */}
         <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
-          <CardContent className="px-8 py-8">
-            <Alert className="border-green-200 bg-green-50 mb-6">
-              <Mail className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800">Check Your Email</AlertTitle>
+          <CardContent>
+            <Alert className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 mb-6">
+              <Mail className="h-4 w-4 text-green-600 dark:text-green-600" />
+              <AlertTitle className="text-green-800 dark:text-green-600">Check Your Email</AlertTitle>
               <AlertDescription className="text-green-700">
                 Click the reset password link in the email we sent to <span className="font-medium">{email}</span> to create a new password.
               </AlertDescription>
@@ -167,7 +167,7 @@ export default function ForgotPassword() {
         </div>
 
         <div className="flex justify-center">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+          <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-950 text-blue-800 border-blue-300 dark:border-blue-800 px-3 py-1">
             <Key className="h-3 w-3 mr-1" />
             Password Recovery
           </Badge>
@@ -178,15 +178,12 @@ export default function ForgotPassword() {
           <p className="text-base text-muted-foreground">
             National Land Use Information System
           </p>
-          <p className="text-sm text-muted-foreground">
-            Tanzania National Land Use Planning Commission
-          </p>
         </div>
       </div>
 
       {/* Reset Form Card */}
-      <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
-        <CardHeader className="text-center pb-6 pt-8">
+      <Card className="shadow-lg border-0 py-0 md:py-0">
+        <CardHeader className="text-center py-6">
           <CardTitle className="flex items-center justify-center gap-2 text-lg">
             <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
