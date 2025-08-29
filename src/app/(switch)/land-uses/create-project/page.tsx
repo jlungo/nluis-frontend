@@ -38,11 +38,10 @@ export default function CreateProjectPage() {
   // React Query hooks
   const { data: projectTypesData, isLoading: loadingProjectTypes } = useProjectTypes();
   const { data: funders, isLoading: loadingFunders } = useFunders();
-  const { data: localitiesData, isLoading: loadingLocalities } = useLocalities();
+  const { data: localities, isLoading: loadingLocalities } = useLocalities();
   const createProjectMutation = useCreateProject();
 
   const projectTypes = projectTypesData?.results || [];
-  const localities = localitiesData?.results || [];
 
   const [formData, setFormData] = useState<FormData>({
     project_type: '',
@@ -170,7 +169,7 @@ export default function CreateProjectPage() {
         description: formData.description,
         reg_date: formData.reg_date,
         auth_date: formData.auth_date,
-        budget: parseFloat(formData.budget),
+        budget: formData.budget,
         project_type: parseInt(formData.project_type),
         funders: formData.funders,
         // For national level, set locations to empty
@@ -192,10 +191,11 @@ export default function CreateProjectPage() {
   };
 
   // Helper functions to filter localities
-  const getRegions = () => localities.filter(l => l.level === 2);
-  const getDistricts = (regionId: string) => localities.filter(l => l.level === 3 && l.parent === parseInt(regionId));
-  const getWards = (districtId: string) => localities.filter(l => l.level === 4 && l.parent === parseInt(districtId));
-  const getVillages = (wardId: string) => localities.filter(l => l.level === 5 && l.parent === parseInt(wardId));
+  const getRegions = () => localities?.filter(l => l.level === 2) || [];
+  const getDistricts = (regionId: string) => localities?.filter(l => l.level === 3 && l.parent === Number(regionId)) || [];
+  const getWards = (districtId: string) => localities?.filter(l => l.level === 4 && l.parent === Number(districtId)) || [];
+  const getVillages = (wardId: string) => localities?.filter(l => l.level === 5 && l.parent === Number(wardId)) || [];
+
 
   // Show loading states
   if (loadingProjectTypes || loadingFunders || loadingLocalities) {
