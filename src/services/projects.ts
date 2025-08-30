@@ -1,7 +1,7 @@
 import api from '@/lib/axios';
 import type { 
-  Project, 
-  ProjectType, 
+  ProjectI, 
+  ProjectTypeI, 
   CreateProjectRequest, 
   UpdateProjectRequest, 
   ProjectStats, 
@@ -33,13 +33,13 @@ class ProjectService {
   private baseUrl = '/projects';
 
   // Project Types
-  async getProjectTypes(): Promise<ProjectType[]> {
+  async getProjectTypes(): Promise<ProjectTypeI[]> {
     const response = await api.get(`${this.baseUrl}/types`);
     return response.data;
   }
 
   // Projects CRUD
-  async getProjects(filters: ProjectFilters = {}): Promise<Project[]> {
+  async getProjects(filters: ProjectFilters = {}): Promise<ProjectI[]> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
@@ -51,12 +51,12 @@ class ProjectService {
     return response.data.results || response.data;
   }
 
-  async getProject(id: string): Promise<Project> {
+  async getProject(id: string): Promise<ProjectI> {
     const response = await api.get(`${this.baseUrl}/${id}`);
     return response.data;
   }
 
-  async getOrganizationProjects(organizationId: string, filters: ProjectFilters = {}): Promise<Project[]> {
+  async getOrganizationProjects(organizationId: string, filters: ProjectFilters = {}): Promise<ProjectI[]> {
     const params = new URLSearchParams();
     params.append('organization_id', organizationId);
     Object.entries(filters).forEach(([key, value]) => {
@@ -69,12 +69,12 @@ class ProjectService {
     return response.data.results || response.data;
   }
 
-  async createProject(data: CreateProjectRequest): Promise<Project> {
+  async createProject(data: CreateProjectRequest): Promise<ProjectI> {
     const response = await api.post(this.baseUrl, data);
     return response.data;
   }
 
-  async updateProject(id: string, data: UpdateProjectRequest): Promise<Project> {
+  async updateProject(id: string, data: UpdateProjectRequest): Promise<ProjectI> {
     const response = await api.patch(`${this.baseUrl}/${id}`, data);
     return response.data;
   }
@@ -225,12 +225,12 @@ class ProjectService {
   }
 
   // Public endpoints
-  async getPublicProjectTypes(): Promise<ProjectType[]> {
+  async getPublicProjectTypes(): Promise<ProjectTypeI[]> {
     const response = await api.get(`${this.baseUrl}/public/project-types`);
     return response.data;
   }
 
-  async getPublishedProjects(): Promise<Project[]> {
+  async getPublishedProjects(): Promise<ProjectI[]> {
     const response = await api.get(`${this.baseUrl}/published`);
     return response.data;
   }
@@ -241,7 +241,7 @@ class ProjectService {
   }
 
   // Filtered project lists
-  async getFilteredProjects(projectTypeId: string, statusId: string, desc: string): Promise<Project[]> {
+  async getFilteredProjects(projectTypeId: string, statusId: string, desc: string): Promise<ProjectI[]> {
     const response = await api.get(`${this.baseUrl}/list/${projectTypeId}/${statusId}/${desc}`);
     return response.data;
   }
