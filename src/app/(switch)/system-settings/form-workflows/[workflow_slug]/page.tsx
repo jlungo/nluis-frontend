@@ -14,7 +14,7 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: data ? data?.name : isLoading ? "..." : "Form Workflow Details",
-            backButton: 'Modules'
+
         })
     }, [setPage, data])
 

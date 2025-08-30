@@ -22,8 +22,6 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         const [open, setOpen] = useState(false);
         const [date, setDate] = useState<Date | undefined>(dateValue);
 
-        // const formatDate = (d?: Date) => (d ? d.toISOString().split("T")[0] : "");
-
         const handleSelect = (d: Date | undefined) => {
             if (!d) return
             setDate(d);
@@ -55,6 +53,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
                             selected={date}
                             captionLayout="dropdown"
                             onSelect={handleSelect}
+                            endMonth={new Date(2099, 11)}
                         />
                     </PopoverContent>
                 </Popover>

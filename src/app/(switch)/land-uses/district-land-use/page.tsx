@@ -292,7 +292,6 @@ export default function DistrictLandUsePage() {
     setPage({
       module: 'land-uses',
       title: "District Land Use Projects",
-      backButton: 'Modules'
     });
   }, [setPage]);
 
@@ -400,13 +399,13 @@ export default function DistrictLandUsePage() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Project List</h2>
-        <Button 
-          onClick={() => navigate('/land-uses/create-project', { 
-            state: { 
+        <Button
+          onClick={() => navigate('/land-uses/create-project', {
+            state: {
               type: 'District Land Use Plans',
-              from: location.pathname 
+              from: location.pathname
             }
-          })} 
+          })}
           className="bg-primary hover:bg-primary/90"
         >
           <Plus className="h-4 w-4 mr-2" /> Create New Project

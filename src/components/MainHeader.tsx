@@ -9,7 +9,6 @@ import {
 import { ThemeTogglePopover } from "./ToggleTheme";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { usePageStore } from "@/store/pageStore";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/store/auth";
 import { LogoutButton } from "./LogoutButton";
@@ -24,7 +23,6 @@ interface MainHeaderProps {
 export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: MainHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation()
-  const { page } = usePageStore();
   const { user } = useAuth()
 
   return (
@@ -32,7 +30,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
       <div className="flex items-center gap-2 md:gap-4">
         {/* Back to Home */}
         {location.pathname === "/board" ? (
-          <Button variant="outline" size="sm" onClick={() => navigate('/', { replace: true })}>
+          <Button type="button" variant="outline" size="sm" onClick={() => navigate('/', { replace: true })}>
             <ArrowLeft />
             Home
           </Button>
@@ -54,6 +52,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   onClick={toggleSidebar}
@@ -75,45 +74,20 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
         ) : null}
 
         {/* Back Button */}
-        {page && page?.backButton ? (
-          <Button variant="outline" size="sm" onClick={() => {
-            if (user?.modules && user.modules.length === 1) navigate('/', { replace: true })
-            else navigate('/board', { replace: true })
-          }}>
-            <ArrowLeft />
-            {user?.modules && user.modules.length === 1 ? (
-              <span>
-                <span className="block lg:inline">
-                  Back to
-                </span>
-                <span className="hidden lg:inline">
-                  Home
-                </span>
-              </span>
-            ) : (
-              <span>
-                <span className="block lg:inline">
-                  {page.backButton.split(" ")[0] + " "}
-                </span>
-                <span className="hidden lg:inline">
-                  {page.backButton.split(" ").slice(1).join(" ")}
-                </span>
-              </span>
-            )}
-          </Button>
-        ) : null}
-
-        {/* Page Title */}
-        {page &&
-          page?.showPageHeader !== undefined &&
-          page.showPageHeader &&
-          page?.title && (
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
-                {page.title}
-              </h1>
-            </div>
-          )}
+        <Button type="button" variant="outline" size="sm" onClick={() => {
+          if (user?.modules && user.modules.length === 1) navigate('/', { replace: true })
+          else navigate('/board', { replace: true })
+        }}>
+          <ArrowLeft />
+          <span>
+            <span className="hidden md:inline">
+              Back to{" "}
+            </span>
+            <span className="block md:inline">
+              {user?.modules && user.modules.length === 1 ? "Home" : "Modules"}
+            </span>
+          </span>
+        </Button>
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
@@ -126,6 +100,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   className="relative text-foreground hover:bg-accent"
@@ -152,6 +127,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     // onClick={() => onPageChange('profile')}
@@ -177,6 +153,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   // onClick={() => onPageChange('profile')}

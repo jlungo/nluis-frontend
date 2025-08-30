@@ -14,7 +14,7 @@ export default function Page() {
     setPage({
       module: 'land-uses',
       title: "Village Land Use Project",
-      backButton: 'Modules'
+
     });
   }, [setPage]);
 

@@ -5,19 +5,18 @@ import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect } from "react";
 import { getCategoryKey } from "@/lib/utils";
 import { useParams } from "react-router";
+// import { useFormDataQuery } from "@/queries/useFormDataQuery";
 
 export default function Page() {
   const { project_slug } = useParams<{ project_slug: string }>();
   const { setPage } = usePageStore();
 
-  // const { data, isLoading } = useProjectQuery(workflow_slug || "");
   const { data: workflow, isLoading: isLoadingWorkflow } = useLevelWorkflowQuery("village-land-use");
 
   useLayoutEffect(() => {
     setPage({
       module: 'land-uses',
       title: "Village Land Use Project Workflow",
-      backButton: 'Modules',
       isFormPage: true
     });
   }, [setPage]);
@@ -36,9 +35,9 @@ export default function Page() {
 
   const categorized = workflow ? workflow.filter(item => item.category === workflowKey) : [];
   const maxVersion = categorized.length > 0 ? Math.max(...categorized.map(item => Number(item.version))) : 0
-  const data = categorized.filter(item => Number(item.version) === maxVersion);
+  const workflowData = categorized.filter(item => Number(item.version) === maxVersion);
 
-  if (data.length === 0 && !isLoadingWorkflow)
+  if (workflowData.length === 0 && !isLoadingWorkflow)
     return <div className='flex flex-col items-center justify-center h-60'>
       <p className='text-muted-foreground'>No workflow data found!</p>
     </div>
@@ -48,5 +47,17 @@ export default function Page() {
     <p className="text-muted-foreground mt-4">Loading workflow...</p>
   </div>
 
-  return <SectionedForm data={data[0]} projectId={project_slug} />
+  if (!project_slug)
+    return <div className='flex flex-col items-center justify-center h-60'>
+      <p className='text-muted-foreground'>No project identifier!</p>
+    </div>
+
+  // const { data: values, isLoading } = useFormDataQuery(workflowData[0].slug, project_slug)
+
+  // if (isLoading) return <div className='flex flex-col items-center justify-center h-60'>
+  //   <Spinner />
+  //   <p className="text-muted-foreground mt-4">Loading workflow data...</p>
+  // </div>
+
+  return <SectionedForm data={workflowData[0]} values={[]} projectId={project_slug} />
 }

@@ -16,7 +16,7 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: "Edit Workflow",
-            backButton: 'Modules'
+
         })
     }, [setPage])
 

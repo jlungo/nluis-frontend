@@ -82,7 +82,6 @@ export default function LandUsesOverviewPage() {
     setPage({
       module: 'land-uses',
       title: "Land Use Overview",
-      backButton: 'Modules'
     });
   }, [setPage]);
 

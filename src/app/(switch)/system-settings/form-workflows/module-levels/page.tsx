@@ -20,7 +20,7 @@ export default function Page() {
     setPageData({
       module: 'system-settings',
       title: "Module Levels",
-      backButton: 'Modules'
+
     })
   }, [setPageData])
 

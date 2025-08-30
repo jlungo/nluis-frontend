@@ -64,7 +64,6 @@ export default function FormResponsesPage() {
     setPage({
       module: "system-settings",
       title: "Form Responses",
-      backButton: "Back to Forms",
     });
   }, [setPage]);
 

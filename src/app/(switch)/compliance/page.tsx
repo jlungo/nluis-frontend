@@ -75,7 +75,6 @@ export default function CompliancePage() {
     setPage({
       module: "compliance",
       title: "Compliance & Village Meetings",
-      backButton: "Back to Dashboard",
     });
   }, [setPage]);
 

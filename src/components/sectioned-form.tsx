@@ -15,9 +15,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { formDataQueryKey } from '@/queries/useFormDataQuery';
+import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
-export function SectionedForm({ data, disabled, projectId }: { data: WorkflowProps; disabled?: boolean; projectId?: string }) {
+export function SectionedForm({ data, values, disabled, projectId }: { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectId?: string }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -39,7 +39,7 @@ export function SectionedForm({ data, disabled, projectId }: { data: WorkflowPro
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) =>
-            // TODO post to form
+            // TODO post to form endpoint
             api.post(``, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -276,7 +276,14 @@ export function SectionedForm({ data, disabled, projectId }: { data: WorkflowPro
             )[0]
             if (lowest) setExpandedSections([lowest.slug])
         }
-    }, [])
+    }, [values])
+
+    useEffect(() => {
+        if (values)
+            values.forEach(value => {
+                updateFieldValue(value.form_slug, value.value, value.type, value.name, value.field_id, value.project_id)
+            });
+    }, [values])
 
     if (activeForm) return renderForm(activeForm);
 

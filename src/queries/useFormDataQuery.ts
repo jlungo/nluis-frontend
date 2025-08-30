@@ -1,24 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { APIResponse } from "@/types/api-response";
+import { InputType } from "@/types/input-types";
 
-interface DataProps extends APIResponse {
-  results: [];
+export interface formDataI {
+  form_slug: string;
+  value: string;
+  type: InputType;
+  name: string;
+  field_id: number;
+  project_id: string;
 }
 
 export const formDataQueryKey = "formDataKey";
 
 export const useFormDataQuery = (
-  limit: number,
-  offset: number,
-  formSlug: string
+  workflow_slug: string,
+  project_slug: string
 ) => {
-  return useQuery<DataProps>({
-    queryKey: [formDataQueryKey, { limit, offset, formSlug }],
+  return useQuery({
+    queryKey: [formDataQueryKey, { workflow_slug, project_slug }],
     queryFn: () =>
       api
         .get(
-          `/form-management/form-data/?limit=${limit}&offset=${offset}&form_slug=${formSlug}`
+          `/form-management/form-data/?workflow_id=${workflow_slug}&project_id=${project_slug}`
         )
         .then((res) => res.data),
   });

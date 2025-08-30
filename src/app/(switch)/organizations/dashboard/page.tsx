@@ -2,15 +2,14 @@ import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect } from "react";
 
 export default function OrganizationDashboard() {
-    // set layout
-      const { setPage } = usePageStore();
-      useLayoutEffect(() => {
-        setPage({
-          module: "organizations",
-          title: "Organizations",
-          backButton: "Back to Modules",
-        });
-      }, [setPage]);
+  // set layout
+  const { setPage } = usePageStore();
+  useLayoutEffect(() => {
+    setPage({
+      module: "organizations",
+      title: "Organizations",
+    });
+  }, [setPage]);
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Organization Dashboard</h1>
