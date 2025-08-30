@@ -6,7 +6,7 @@ export default function Layout() {
 
     return (
         <>
-            {isNavigating && <div className="m-auto w-fit h-fit">Loading...</div>}
+            {isNavigating && <div className="m-auto w-fit h-fit"></div>}
             <Outlet />
         </>
     )
