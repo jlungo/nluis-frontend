@@ -4,7 +4,7 @@ import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
 // import { locationService } from '@/services/locations';
-import type { ProjectType, CreateProjectRequest } from '@/types/projects';
+import type { CreateProjectRequest, ProjectTypeI } from '@/types/projects';
 import type { OrganizationI } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 import { toast } from 'sonner';
@@ -77,7 +77,7 @@ export default function NewProjectPage() {
   const { setPage } = usePageStore();
 
   const [organization, setOrganization] = useState<OrganizationI | null>(null);
-  const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
+  const [projectTypes, setProjectTypes] = useState<ProjectTypeI[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(true);
