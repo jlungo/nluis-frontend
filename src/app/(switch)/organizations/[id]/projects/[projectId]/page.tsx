@@ -3,17 +3,15 @@ import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
-import type { Project, ProjectUser } from '@/types/projects';
+import type { ProjectI, ProjectUser } from '@/types/projects';
 import type { OrganizationI } from '@/types/organizations';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import {
   FolderOpen,
-  MapPin,
   Calendar,
   DollarSign,
   Users,
@@ -32,7 +30,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const { setPage } = usePageStore();
 
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<ProjectI | null>(null);
   const [organization, setOrganization] = useState<OrganizationI | null>(null);
   const [projectUsers, setProjectUsers] = useState<ProjectUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,22 +86,22 @@ export default function ProjectDetailPage() {
     loadData();
   }, [id, projectId, navigate]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-progress-completed/10 text-progress-completed border-progress-completed/20';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'suspended':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'active':
+  //       return 'bg-progress-completed/10 text-progress-completed border-progress-completed/20';
+  //     case 'completed':
+  //       return 'bg-blue-100 text-blue-800 border-blue-200';
+  //     case 'draft':
+  //       return 'bg-gray-100 text-gray-800 border-gray-200';
+  //     case 'suspended':
+  //       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  //     case 'cancelled':
+  //       return 'bg-red-100 text-red-800 border-red-200';
+  //     default:
+  //       return 'bg-gray-100 text-gray-800 border-gray-200';
+  //   }
+  // };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -128,21 +126,21 @@ export default function ProjectDetailPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   return new Date(dateString).toLocaleDateString('en-US', {
+  //     year: 'numeric',
+  //     month: 'long',
+  //     day: 'numeric'
+  //   });
+  // };
 
-  const calculateDaysRemaining = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diffTime = end.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+  // const calculateDaysRemaining = (endDate: string) => {
+  //   const end = new Date(endDate);
+  //   const now = new Date();
+  //   const diffTime = end.getTime() - now.getTime();
+  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //   return diffDays;
+  // };
 
   if (loading) {
     return (
@@ -164,7 +162,7 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const daysRemaining = project.end_date ? calculateDaysRemaining(project.end_date) : null;
+  const daysRemaining = null;
 
   return (
     <div className="space-y-6">
@@ -215,22 +213,22 @@ export default function ProjectDetailPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Project Type</label>
-                  <Badge variant="outline" className="mt-1">
+                  {/* <Badge variant="outline" className="mt-1">
                     {project.type.name}
-                  </Badge>
+                  </Badge> */}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <div className="mt-1">
-                    <Badge className={getStatusColor(project.status)}>
+                    {/* <Badge className={getStatusColor(project.status)}>
                       {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Created Date</label>
                   <p className="text-foreground">
-                    {project.created_at ? formatDate(project.created_at) : 'N/A'}
+                    {/* {project.created_at ? formatDate(project.created_at) : 'N/A'} */}
                   </p>
                 </div>
               </div>
@@ -243,7 +241,7 @@ export default function ProjectDetailPage() {
               )}
 
               {/* Progress */}
-              {project.progress_percentage !== undefined && (
+              {/* {project.progress_percentage !== undefined && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium text-muted-foreground">Progress</label>
@@ -251,7 +249,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <Progress value={project.progress_percentage} className="h-2" />
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
 
@@ -268,13 +266,13 @@ export default function ProjectDetailPage() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Start Date</label>
                   <p className="text-foreground">
-                    {project.start_date ? formatDate(project.start_date) : 'Not set'}
+                    {/* {project.start_date ? formatDate(project.start_date) : 'Not set'} */}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">End Date</label>
                   <p className="text-foreground">
-                    {project.end_date ? formatDate(project.end_date) : 'Not set'}
+                    {/* {project.end_date ? formatDate(project.end_date) : 'Not set'} */}
                   </p>
                 </div>
                 <div>
@@ -299,7 +297,7 @@ export default function ProjectDetailPage() {
           </Card>
 
           {/* Location Information */}
-          {project.location && (
+          {/* {project.location && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -336,7 +334,7 @@ export default function ProjectDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
 
           {/* Project Team */}
           {projectUsers.length > 0 && (
@@ -417,7 +415,7 @@ export default function ProjectDetailPage() {
                   <Target className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Progress</span>
                 </div>
-                <span className="font-semibold">{project.progress_percentage || 0}%</span>
+                {/* <span className="font-semibold">{project.progress_percentage || 0}%</span> */}
               </div>
               <Separator />
               <div className="flex items-center justify-between">
