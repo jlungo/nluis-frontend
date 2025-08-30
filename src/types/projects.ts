@@ -1,33 +1,102 @@
-export interface ProjectType {
+export interface ProjectI {
   id: string;
   name: string;
-  description?: string;
-  category: 'land-use' | 'ccro' | 'compliance' | 'evaluation' | 'other';
+  organization: string;
+  type: string | null;
+  description: string | null;
+  registration_date: string;
+  authorization_date: string;
+  project_status: number;
+  approval_status: number;
+  remarks: string | null;
+  budget: string;
+  total_locality: string | null;
+  total_funders: string | null;
+  funders: Array<{ id: string; name: string; category: string }> | null;
+  localities: Array<{ id: string; name: string; level: string }> | null;
+  created_at: string;
 }
 
-export interface Project {
+export interface ProjectsListPageProps {
+  module: string;
+  moduleLevel: string;
+  pageTitle: string;
+}
+
+export interface ProjectTypeI {
   id: string;
   name: string;
-  description?: string;
-  type: ProjectType;
-  status: 'draft' | 'active' | 'completed' | 'suspended' | 'cancelled';
-  organization_id: string;
-  organization_name?: string;
-  start_date?: string;
-  end_date?: string;
-  budget?: number;
-  location?: {
-    region?: string;
-    district?: string;
-    ward?: string;
-    village?: string;
-  };
-  assigned_users?: ProjectUser[];
-  progress_percentage?: number;
+  level_id: string;
+}
+
+export interface ProjectFunderI {
+  id: number;
+  name: string;
+  category: string;
+}
+
+export type SelectedLocality = {
+  id: string;
+  name: string;
+  path: string;
+};
+
+export interface LocalityLevelI {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  parent: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LocalityI {
+  id: string;
+  name: string;
+  code?: string;
+  level?: string;
+  parent?: string | null;
   created_at?: string;
   updated_at?: string;
-  created_by?: string;
-  updated_by?: string;
+}
+
+export interface ProjectStatsI {
+  total_projects: number;
+  active_projects: number;
+  completed_projects: number;
+  draft_projects: number;
+  projects_by_module_level: Array<{
+    module_level: string;
+    count: number;
+  }>;
+  projects_by_status: Array<{
+    status: string;
+    count: number;
+  }>;
+}
+
+export interface ProjectQueryParamsI {
+  id?: string;
+  organization?: string;
+  module_level?: string | number;
+  status?: string;
+  search?: string;
+  registration_date?: string;
+  authorization_date?: string;
+  funder?: string;
+}
+
+export interface CreateProjectDataI {
+  name: string;
+  organization: string;
+  description: string;
+  registration_date: string;
+  authorization_date: string;
+  budget: string;
+  module_level: string;
+  funder_ids: string[];
+  locality_ids: string[];
 }
 
 export interface ProjectUser {
@@ -56,7 +125,7 @@ export interface CreateProjectRequest {
 }
 
 export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
-  status?: Project['status'];
+  status?: string;
   progress_percentage?: number;
 }
 
@@ -251,7 +320,7 @@ export interface ApiListResponse<T> {
 export interface ProjectApprovalResponse {
   success: boolean;
   message: string;
-  project: Project;
+  project: ProjectI;
 }
 
 export interface DocumentListResponse {
