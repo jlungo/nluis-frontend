@@ -72,6 +72,8 @@ export default function ForgotPassword() {
     navigate('/auth/signin', { replace: true });
   };
 
+  if (user) return null
+
   if (showSuccess && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
@@ -110,7 +112,7 @@ export default function ForgotPassword() {
             </Alert>
 
             <div className="space-y-3">
-              <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+              <Button onClick={onBackToLogin} className="w-full gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Button>
@@ -119,7 +121,7 @@ export default function ForgotPassword() {
                 variant="outline"
                 onClick={handleResendReset}
                 disabled={isLoading}
-                className="w-full h-12 gap-2"
+                className="w-full gap-2"
               >
                 {isLoading ? (
                   <>
@@ -153,7 +155,6 @@ export default function ForgotPassword() {
     );
   }
 
-  if (user) return null
   return (
     <div className="max-w-md w-full space-y-8">
       {/* Header */}
@@ -194,73 +195,69 @@ export default function ForgotPassword() {
             We'll send reset instructions to your registered email address
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
-          <div className="space-y-6">
-            {/* Email Input */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Official Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.name@nlupc.go.tz"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
-                }}
-                disabled={isLoading}
-                className="h-12 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-              />
-              {error && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {error}
-                </p>
-              )}
-            </div>
-
-            {/* Info Alert */}
-            <Alert>
+        <CardContent className='space-y-6 pb-4 md:pb-6'>
+          {/* Email Input */}
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <AlertTitle>How This Works</AlertTitle>
-              <AlertDescription>
-                We'll send a secure link to your email address. Click the link to create a new password for your account.
-              </AlertDescription>
-            </Alert>
+              Official Email Address
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your.name@nlupc.go.tz"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
+              disabled={isLoading}
+              className="h-12"
+            />
+            {error && (
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {error}
+              </p>
+            )}
+          </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <Button
-                onClick={handleRequestReset}
-                disabled={isLoading || !email}
-                className="w-full h-12 gap-2 bg-primary hover:bg-primary/90"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Sending Reset Email...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Send Reset Instructions
-                  </>
-                )}
-              </Button>
+          {/* Info Alert */}
+          <Alert>
+            <Mail className="h-4 w-4" />
+            <AlertTitle>How This Works</AlertTitle>
+            <AlertDescription>
+              We'll send a secure link to your email address. Click the link to create a new password for your account.
+            </AlertDescription>
+          </Alert>
 
-              <div className="text-center pt-2">
-                <Link
-                  to="/auth/signin"
-                  className={cn(buttonVariants({ variant: 'ghost' }), "text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors")}
-                >
-                  <ArrowLeft className="h-3 w-3" />
-                  Back to Login
-                </Link>
-              </div>
-            </div>
+          {/* Action Buttons */}
+          <div className="space-y-3 mt-4 pt-4 border-t border-border">
+            <Button
+              onClick={handleRequestReset}
+              disabled={isLoading || !email}
+              className="w-full gap-2 bg-primary hover:bg-primary/90"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Sending Reset Email...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send Reset Instructions
+                </>
+              )}
+            </Button>
+
+            <Link
+              to="/auth/signin"
+              className={cn(buttonVariants({ variant: 'ghost' }), "text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors")}
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Login
+            </Link>
           </div>
         </CardContent>
       </Card>

@@ -83,7 +83,7 @@ export default function Page() {
           </Alert>
 
           <div className="space-y-3">
-            <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+            <Button onClick={onBackToLogin} className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Login
             </Button>
@@ -92,7 +92,7 @@ export default function Page() {
               variant="outline"
               onClick={handleResendReset}
               disabled={isLoading}
-              className="w-full h-12 gap-2"
+              className="w-full gap-2"
             >
               {isLoading ? (
                 <>
