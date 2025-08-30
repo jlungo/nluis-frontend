@@ -26,7 +26,7 @@ export default function Page() {
 
   if (!workflowKey)
     return <div className='flex flex-col items-center justify-center h-60'>
-      <p className='text-muted-foreground'>No workflow key configuration error!</p>
+      <p className='text-muted-foreground'>Workflow key configuration error!</p>
     </div>
 
   if (!workflow && !isLoadingWorkflow)

@@ -37,7 +37,6 @@ import {
     Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { InputType } from '@/types/input-types';
 
 export interface FieldOption {
     id: string;
@@ -85,47 +84,6 @@ export interface WorkflowTemplate {
     isTemplate: boolean;
     sections?: FormSection[];
     version: number;
-}
-
-interface OptionsSubmissionStructure {
-    text_label: string;
-    value: string;
-    position: number;
-}
-
-interface FieldsSubmissionStructure {
-    label: string,
-    type: InputType,
-    placeholder: string | null,
-    name: string,
-    required: boolean,
-    position: number,
-    select_options: OptionsSubmissionStructure[];
-}
-
-interface FormsSubmissionStructure {
-    name: string,
-    description: string | null,
-    position: number,
-    editor_roles: { user_role: string }[]
-    fields: FieldsSubmissionStructure[]
-}
-
-interface SectionSubmissionStructure {
-    name: string,
-    description: string,
-    position: number,
-    approval_roles: { user_role: string }[]
-    forms: FormsSubmissionStructure[]
-}
-
-export interface WorkflowSubmisionStructure {
-    name: string;
-    description: string | null;
-    module_level: string;
-    category: number;
-    version: string;
-    sections: SectionSubmissionStructure[];
 }
 
 interface WorkflowPreviewTesterProps {

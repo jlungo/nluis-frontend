@@ -11,22 +11,25 @@ import { cn } from '@/lib/utils';
 import FormField, { FieldValue } from '@/components/form-field';
 import { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import { toast } from 'sonner';
+import { AxiosError } from 'axios';
+import { formDataQueryKey } from '@/queries/useFormDataQuery';
 
-export function SectionedForm({ data, disabled, isSubmitting, projectId }: { data: WorkflowProps; disabled?: boolean; isSubmitting?: boolean; projectId?: string }) {
+export function SectionedForm({ data, disabled, projectId }: { data: WorkflowProps; disabled?: boolean; projectId?: string }) {
+    const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
     const [searchParams] = useSearchParams();
     const { user } = useAuth()
 
     const [isLoading, setIsLoading] = useState(false);
-
     const [expandedSections, setExpandedSections] = useState<string[]>([]);
     const [activeForm, setActiveForm] = useState<string>('');
-
-    // const [formData, setFormData] = useState<Record<string, FieldValue>>({});
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string, type: InputType, name: string, field_id: number, project_id: string) => {
+    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, name: string, field_id: number, project_id: string) => {
         if (!user || project_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -34,15 +37,91 @@ export function SectionedForm({ data, disabled, isSubmitting, projectId }: { dat
         }));
     };
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>, formSlug: string) => {
+    const { mutateAsync, isPending } = useMutation({
+        mutationFn: (e: FormData) =>
+            // TODO post to form
+            api.post(``, e, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                }
+            }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [formDataQueryKey],
+            }),
+        onError: (e) => {
+            console.log(e);
+        },
+    });
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>, formSlug: string) => {
         e.preventDefault()
         if (!user) return
         try {
             setIsLoading(true)
-            console.log(formSlug)
-            console.log(fieldData)
+
+            const entries = Object.entries(fieldData).filter(([key]) => {
+                const i = key.lastIndexOf("-");
+                if (i === -1) return false;
+                const slug = key.slice(0, i); // everything before the last "-"
+                return slug === formSlug;
+            }).map(([key, value]) => {
+                const i = key.lastIndexOf("-");
+                const field_id = key.slice(i + 1); // everything before the last "-"
+                return {
+                    ...value,
+                    field_id: isNaN(Number(field_id)) ? field_id : Number(field_id), // convert to number if numeric
+                };
+            });
+            const formData = new FormData();
+
+            entries.forEach((field) => {
+                const { value, type, name, field_id, project_id, created_by } = field;
+
+                if (Array.isArray(value) && type === 'file')
+                    // If value is File[] or multiple files
+                    formData.append(`${type}-${field_id}`, value[0]);
+                else formData.append(`${type}-${field_id}`, value as string);
+
+                // Include data for field
+                const submitData = {
+                    type,
+                    name,
+                    project_id,
+                    created_by
+                }
+                formData.append(`${field_id}`, JSON.stringify(submitData));
+            });
+
+            for (const [key, value] of formData.entries()) {
+                const fieldId = Number(key)
+                if (isNaN(fieldId)) console.log(key, value);
+                else console.log(fieldId, JSON.parse(value as string))
+            }
+
+            toast.promise(mutateAsync(formData), {
+                loading: "Processing...",
+                success: () => {
+                    const active = searchParams.get("form");
+                    if (active) navigate(`${location.pathname}`, { replace: true });
+                    else navigate(-1)
+                    return `Success`
+                },
+                error: (e: AxiosError) => {
+                    const detail =
+                        e?.response?.data &&
+                            typeof e.response.data === "object" &&
+                            "detail" in e.response.data
+                            ? (e.response.data as { detail?: string }).detail
+                            : undefined;
+                    return `${detail || "Network error!"}`;
+                }
+            })
+
         } catch (e) {
             console.log(e)
+            toast.error("Failed to post!");
         } finally {
             setIsLoading(false)
         }
@@ -107,8 +186,8 @@ export function SectionedForm({ data, disabled, isSubmitting, projectId }: { dat
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || isSubmitting || isLoading}>
-                                {isSubmitting || isLoading ? (
+                            <Button type='submit' className='w-full' disabled={disabled || isPending || isLoading}>
+                                {isPending || isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                         Saving...
@@ -160,8 +239,8 @@ export function SectionedForm({ data, disabled, isSubmitting, projectId }: { dat
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button type='submit' className='w-full' disabled={disabled || isSubmitting || isLoading}>
-                                    {isSubmitting || isLoading ? (
+                                <Button type='submit' className='w-full' disabled={disabled || isPending || isLoading}>
+                                    {isPending || isLoading ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                             Saving...
@@ -325,8 +404,8 @@ export function SectionedForm({ data, disabled, isSubmitting, projectId }: { dat
                             </Collapsible>
                             <CardFooter className='flex items-center justify-between px-3 md:px-4'>
                                 <p className='text-muted-foreground text-xs md:text-sm'>Approval</p>
-                                <Button type='button' size='sm' disabled={disabled || isSubmitting || isLoading}>
-                                    {isSubmitting || isLoading ? (
+                                <Button type='button' size='sm' disabled={disabled || isPending || isLoading}>
+                                    {isPending || isLoading ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                             Approving...
