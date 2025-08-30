@@ -31,3 +31,43 @@ export const workflowCategoryTypes: Record<number, workflowCategoryTypeProps> =
   };
 
 export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
+
+export const LOCALITY_LEVELS = {
+  NATIONAL: "1",
+  ZONAL: "2",
+  REGION: "3",
+  DISTRICT: "4",
+  WARD: "5",
+  VILLAGE: "6",
+} as const;
+
+export const LOCALITY_LEVEL_NAMES = {
+  [LOCALITY_LEVELS.NATIONAL]: "National",
+  [LOCALITY_LEVELS.ZONAL]: "Zonal",
+  [LOCALITY_LEVELS.REGION]: "Regional",
+  [LOCALITY_LEVELS.DISTRICT]: "District",
+  [LOCALITY_LEVELS.WARD]: "Ward",
+  [LOCALITY_LEVELS.VILLAGE]: "Village",
+} as const;
+
+export const ProjectStatus: Record<number, string> = {
+  1: "Pending",
+  2: "In Process",
+  3: "Completed",
+  4: "On Hold",
+};
+
+export const ProjectApprovalStatus: Record<number, string> = {
+  1: "Waiting for Approval",
+  2: "Approved",
+  3: "Rejected",
+};
+
+export const ProjectStatusFilters: Record<string, string> = {
+  all: "All Statuses",
+  draft: "Draft",
+  "in-progress": "In Progress",
+  approved: "Approved",
+  rejected: "Rejected",
+  completed: "Completed",
+};
