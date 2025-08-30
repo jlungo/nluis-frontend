@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from "@/store/pageStore";
 import { projectService } from '@/services/projects';
 import { organizationService } from '@/services/organizations';
-import type { Project, ProjectType, UpdateProjectRequest } from '@/types/projects';
+import type { ProjectI, ProjectTypeI, UpdateProjectRequest } from '@/types/projects';
 import type { OrganizationI } from '@/types/organizations';
 import type { Region, District } from '@/types/locations';
 import { toast } from 'sonner';
@@ -77,9 +77,9 @@ export default function EditProjectPage() {
   const navigate = useNavigate();
   const { setPage } = usePageStore();
 
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<ProjectI | null>(null);
   const [organization, setOrganization] = useState<OrganizationI | null>(null);
-  const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
+  const [projectTypes, setProjectTypes] = useState<ProjectTypeI[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,31 +143,31 @@ export default function EditProjectPage() {
         // Use temporary regions for testing
         setRegions(tempRegions);
 
-        // Find region and district IDs from names
-        const regionId = tempRegions.find((r: Region) => r.name === projectData.location?.region)?.id || '';
-        let districtId = '';
+        // // Find region and district IDs from names
+        // const regionId = '';
+        // let districtId = '';
 
-        if (regionId && projectData.location?.district) {
-          const regionDistricts = tempDistricts[regionId] || [];
-          districtId = regionDistricts.find((d: DistrictData) => d.name === projectData.location?.district)?.id || '';
-          setDistricts(regionDistricts);
-        }
+        // if (regionId && projectData.location?.district) {
+        //   const regionDistricts = tempDistricts[regionId] || [];
+        //   districtId = regionDistricts.find((d: DistrictData) => d.name === projectData.location?.district)?.id || '';
+        //   setDistricts(regionDistricts);
+        // }
 
         // Populate form with project data
-        setFormData({
-          name: projectData.name || '',
-          description: projectData.description || '',
-          type_id: projectData.type.id || '',
-          status: projectData.status || '',
-          start_date: projectData.start_date || '',
-          end_date: projectData.end_date || '',
-          budget: projectData.budget?.toString() || '',
-          progress_percentage: projectData.progress_percentage?.toString() || '',
-          region: regionId,
-          district: districtId,
-          ward: projectData.location?.ward || '',
-          village: projectData.location?.village || ''
-        });
+        // setFormData({
+        //   name: projectData.name || '',
+        //   description: projectData.description || '',
+        //   type_id: projectData.type.id || '',
+        //   status: projectData.status || '',
+        //   start_date: projectData.start_date || '',
+        //   end_date: projectData.end_date || '',
+        //   budget: projectData.budget?.toString() || '',
+        //   progress_percentage: projectData.progress_percentage?.toString() || '',
+        //   region: regionId,
+        //   district: districtId,
+        //   ward: projectData.location?.ward || '',
+        //   village: projectData.location?.village || ''
+        // });
 
       } catch (error) {
         console.error('Error loading initial data:', error);
@@ -286,7 +286,7 @@ export default function EditProjectPage() {
         name: formData.name,
         description: formData.description || undefined,
         type_id: formData.type_id,
-        status: formData.status as Project['status'],
+        status: formData.status as ProjectI['status_info'],
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
         budget: formData.budget ? Number(formData.budget) : undefined,
