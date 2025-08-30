@@ -30,6 +30,43 @@ export interface Project {
   updated_by?: string;
 }
 
+export interface ProjectI {
+  id: number;
+  name: string;
+  description: string;
+  reg_date: string;
+  auth_date: string;
+  budget: number;
+  published_date: string;
+  action: string;
+  remarks: string;
+  datetime: string;
+  project_type_info: {
+    id: number;
+    name: string;
+    duration: number;
+    level_id: number;
+  };
+  status_info: string;
+  total_locality: number;
+  age: number;
+  station_info: {
+    id: number;
+    name: string;
+  };
+  current_task: string;
+  funders: Array<{
+    id: number;
+    name: string;
+    category: string;
+  }>;
+  localities: Array<{
+    region: number | null;
+    district: number | null;
+    ward: number | null;
+    village: number | null;
+  }>;
+}
 export interface ProjectUser {
   id: string;
   user_id: string;

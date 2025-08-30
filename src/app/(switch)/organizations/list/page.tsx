@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { usePageStore } from "@/store/pageStore";
 import { DataTable } from "@/components/DataTable";
-import { ListOrganizationsColumns } from "@/lib/TableColumns/organizations.columns";
+import { ListOrganizationsColumns } from "@/app/(switch)/organizations/list/organizations.columns";
 import ActionButtons from "@/components/ActionButtons";
 
 type SortField =

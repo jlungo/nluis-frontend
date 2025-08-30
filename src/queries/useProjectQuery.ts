@@ -92,6 +92,7 @@ export interface ProjectQueryParams {
   type?: string;
   status?: string;
   search?: string;
+  organization?: string;
 }
 
 export interface CreateProjectData {
