@@ -10,6 +10,13 @@ const Index = {
       Component: Page,
     },
     {
+      path: "create",
+      async lazy() {
+        const { default: Component } = await import("./create/page");
+        return { Component };
+      },
+    },
+    {
       path: ":id",
       async lazy() {
         const { default: Component } = await import("./[id]/page");

@@ -8,7 +8,7 @@ export function useUserOrganization() {
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        setOrganization(user.organization || null);
+        setOrganization(user.organization?.id || null);
       } catch (error) {
         console.error("Failed to parse user data from localStorage:", error);
       }

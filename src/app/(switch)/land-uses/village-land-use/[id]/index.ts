@@ -1,5 +1,5 @@
 import Page from "./page";
-import ProjectSlug from "./[locality_project_slug]";
+import projectId from "./[locality_project_slug]";
 import Edit from "./edit"
 
 const Index = {
@@ -10,7 +10,7 @@ const Index = {
       Component: Page,
     },
     Edit,
-    ProjectSlug,
+    projectId,
   ],
 };
 

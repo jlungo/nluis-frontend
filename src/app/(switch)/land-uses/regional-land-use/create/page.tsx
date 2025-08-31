@@ -1,26 +1,23 @@
-import EditProject from '@/components/project/EditProject';
+import CreateProject from '@/components/project/CreateProject';
 import { usePageStore } from '@/store/pageStore';
 import { LOCALITY_LEVELS } from '@/types/constants';
 import { useLayoutEffect } from 'react';
-import { useParams } from 'react-router';
 
 export default function Page() {
   const { setPage } = usePageStore();
-  const { project_slug } = useParams<{ project_slug: string }>();
 
   useLayoutEffect(() => {
     setPage({
       module: "land-uses",
-      title: "Edit Regional Land Use Project",
+      title: "Create Regional Land Use Project",
     });
   }, [setPage]);
 
   return (
     <div>
-      <EditProject 
-        projectId={project_slug as string}
+      <CreateProject 
         moduleLevel={LOCALITY_LEVELS.REGION}
-        afterUpdateRedirectPath="/land-uses/regional-land-use"
+        afterCreateRedirectPath="/land-use/regional-land-use"
       />
     </div>
   );

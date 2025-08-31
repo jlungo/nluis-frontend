@@ -18,7 +18,7 @@ export default function Page() {
   return (
     <div>
       <EditProject 
-        projectSlug={project_slug as string}
+        projectId={project_slug as string}
         moduleLevel={LOCALITY_LEVELS.NATIONAL}
         afterUpdateRedirectPath="/land-uses/national-land-use"
       />
