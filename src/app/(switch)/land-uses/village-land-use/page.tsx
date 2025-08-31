@@ -1,5 +1,3 @@
-'use client';
-
 import ProjectsList from '@/components/project/ProjectsListPage';
 import { usePageStore } from '@/store/pageStore';
 import { useEffect } from 'react';
