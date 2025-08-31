@@ -8,7 +8,7 @@ import { useParams } from "react-router";
 // import { useFormDataQuery } from "@/queries/useFormDataQuery";
 
 export default function Page() {
-  const { project_slug } = useParams<{ project_slug: string }>();
+  const { locality_project_slug } = useParams<{ locality_project_slug: string }>();
   const { setPage } = usePageStore();
 
   const { data: workflow, isLoading: isLoadingWorkflow } = useLevelWorkflowQuery("village-land-use");
@@ -47,17 +47,17 @@ export default function Page() {
     <p className="text-muted-foreground mt-4">Loading workflow...</p>
   </div>
 
-  if (!project_slug)
+  if (!locality_project_slug)
     return <div className='flex flex-col items-center justify-center h-60'>
       <p className='text-muted-foreground'>No project identifier!</p>
     </div>
 
-  // const { data: values, isLoading } = useFormDataQuery(workflowData[0].slug, project_slug)
+  // const { data: values, isLoading } = useFormDataQuery(workflowData[0].slug, locality_project_slug)
 
   // if (isLoading) return <div className='flex flex-col items-center justify-center h-60'>
   //   <Spinner />
   //   <p className="text-muted-foreground mt-4">Loading workflow data...</p>
   // </div>
 
-  return <SectionedForm data={workflowData[0]} values={[]} projectId={project_slug} />
+  return <SectionedForm data={workflowData[0]} values={[]} projectLocalitySlug={locality_project_slug} />
 }

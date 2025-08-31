@@ -1,4 +1,4 @@
-import Layout from "./layout";
+import Layout from "../layout";
 import Page from "./page";
 
 const Index = {
@@ -8,6 +8,27 @@ const Index = {
     {
       index: true,
       Component: Page,
+    },
+    {
+      path: "create",
+      async lazy() {
+        const { default: Component } = await import("./create/page");
+        return { Component };
+      },
+    },
+    {
+      path: ":id",
+      async lazy() {
+        const { default: Component } = await import("./[id]/page");
+        return { Component };
+      },
+    },
+    {
+      path: ":id/edit",
+      async lazy() {
+        const { default: Component } = await import("./[id]/edit/page");
+        return { Component };
+      },
     },
   ],
 };

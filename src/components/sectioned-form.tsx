@@ -17,9 +17,9 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
-type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectId?: string }
+type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectLocalitySlug?: string }
 
-export function SectionedForm({ data, values, disabled, projectId }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalitySlug }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -31,11 +31,11 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, name: string, field_id: number, project_id: string) => {
-        if (!user || project_id.length === 0) return
+    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, name: string, field_id: number, project_locality_slug: string) => {
+        if (!user || project_locality_slug.length === 0) return
         setFieldData(prev => ({
             ...prev,
-            [`${formSlug}-${field_id}`]: { value, type, name, field_id, project_id, created_by: user.id }
+            [`${formSlug}-${field_id}`]: { value, type, name, field_id, project_locality_slug, created_by: user.id }
         }));
     };
 
@@ -79,7 +79,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
             const formData = new FormData();
 
             entries.forEach((field) => {
-                const { value, type, name, field_id, project_id, created_by } = field;
+                const { value, type, name, field_id, project_locality_slug, created_by } = field;
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
@@ -90,7 +90,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                 const submitData = {
                     type,
                     name,
-                    project_id,
+                    project_locality_slug,
                     created_by
                 }
                 formData.append(`${field_id}`, JSON.stringify(submitData));
@@ -232,7 +232,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                         disabled={disabled || !canClickForm(form)}
                                         value={fieldData[`${form.slug}-${field.id}`]?.value}
                                         setValue={updateFieldValue}
-                                        project_id={projectId || ""}
+                                        project_locality_slug={projectLocalitySlug || ""}
                                         {...field}
                                     />
                                 )}
@@ -285,7 +285,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                             disabled={disabled || !canClickForm(form)}
                                             value={fieldData[form.slug]?.value}
                                             setValue={updateFieldValue}
-                                            project_id={projectId || ""}
+                                            project_locality_slug={projectLocalitySlug || ""}
                                             {...field}
                                         />
                                     ))}
@@ -334,7 +334,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
     useEffect(() => {
         if (values)
             values.forEach(value => {
-                updateFieldValue(value.form_slug, value.value, value.type, value.name, value.field_id, value.project_id)
+                updateFieldValue(value.form_slug, value.value, value.type, value.name, value.field_id, value.project_locality_slug)
             });
     }, [values])
 

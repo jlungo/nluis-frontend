@@ -8,7 +8,7 @@ export interface formDataI {
   type: InputType;
   name: string;
   field_id: number;
-  project_id: string;
+  project_locality_slug: string;
   approved: boolean;
 }
 

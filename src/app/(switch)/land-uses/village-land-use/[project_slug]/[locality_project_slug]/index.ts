@@ -1,16 +1,16 @@
+import Layout from "./layout";
 import Page from "./page";
-import ProjectSlug from "./[locality_project_slug]";
-import Edit from "./edit"
+import Workflow from "./workflow";
 
 const Index = {
-  path: ":project_slug",
+  path: ":locality_project_slug",
+  Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    Edit,
-    ProjectSlug,
+    Workflow,
   ],
 };
 

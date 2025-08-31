@@ -31,3 +31,53 @@ export const workflowCategoryTypes: Record<number, workflowCategoryTypeProps> =
   };
 
 export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
+
+export const LOCALITY_LEVELS = {
+  NATIONAL: "1",
+  ZONAL: "2",
+  REGION: "3",
+  DISTRICT: "4",
+  WARD: "5",
+  VILLAGE: "6",
+} as const;
+
+export const LOCALITY_LEVEL_NAMES = {
+  [LOCALITY_LEVELS.NATIONAL]: "National",
+  [LOCALITY_LEVELS.ZONAL]: "Zonal",
+  [LOCALITY_LEVELS.REGION]: "Regional",
+  [LOCALITY_LEVELS.DISTRICT]: "District",
+  [LOCALITY_LEVELS.WARD]: "Ward",
+  [LOCALITY_LEVELS.VILLAGE]: "Village",
+} as const;
+
+export const ProjectStatus: Record<number, string> = {
+  1: "Pending",
+  2: "In Process",
+  3: "Completed",
+  4: "On Hold",
+};
+
+export const ProjectApprovalStatus: Record<number, string> = {
+  1: "Waiting for Approval",
+  2: "Approved",
+  3: "Rejected",
+};
+
+export const ProjectStatusFilters: Record<string, string> = {
+  all: "All Statuses",
+  draft: "Draft",
+  "in-progress": "In Progress",
+  approved: "Approved",
+  rejected: "Rejected",
+  completed: "Completed",
+};
+
+export const ProjectStatusColors: Record<string, string> = {
+  "Pending": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
+  "In Process": "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
+  "Completed": "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
+  "On Hold": "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100",
+  "Waiting for Approval": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
+  "Approved": "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
+  "Rejected": "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+};

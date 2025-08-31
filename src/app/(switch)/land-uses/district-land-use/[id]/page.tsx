@@ -4,7 +4,7 @@ export default function Page() {
 
   return (
     <>
-      <ViewProjectPage moduleLevel="village-land-use" />
+      <ViewProjectPage moduleLevel="district-land-use" />
     </>
   );
 }
