@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
@@ -179,7 +177,6 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
       setPage({
         module: 'land-uses',
         title: project.name,
-        backButton: 'Back to Modules',
       });
     }
   }, [project, setPage]);
