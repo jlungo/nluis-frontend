@@ -29,7 +29,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     module_level: moduleLevel,
     status: filters.status || undefined,
     search: filters.name || undefined,
-  }); 
+  });
 
   const deleteProjectMutation = useDeleteProject();
 
@@ -54,13 +54,13 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     });
 
   const handleDelete = async (project: ProjectI) => {
-      try {
-        await deleteProjectMutation.mutateAsync(project.id);
-        refetch();
-      } catch (error) {
-        // console.error('Failed to delete project: ', error);
-        setError('Failed to delete project. Please try again.');
-      }
+    try {
+      await deleteProjectMutation.mutateAsync(project.id);
+      refetch();
+    } catch (error) {
+      // console.error('Failed to delete project: ', error);
+      setError('Failed to delete project. Please try again.');
+    }
   };
 
   return (
@@ -76,12 +76,17 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         }}
       />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Projects List</h1>
-        <p className="text-muted-foreground">Manage and track land use planning projects</p>
+      <div className='flex justify-between items-start'>
+        <div className='space-y-1'>
+          <h1 className="text-lg lg:text-2xl font-semibold">Projects List</h1>
+          <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
+        </div>
+        <Button onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
+          <Plus className="h-4 w-4" /> <span className='hidden lg:inline'>Create </span>New Project
+        </Button>
       </div>
 
-      <Card className="mb-6">
+      <Card className="mb-0">
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -113,7 +118,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
               </Select>
             </div>
 
-            <Button onClick={handleSearch} className="gap-2">
+            <Button onClick={handleSearch} size='sm' className="gap-2">
               <Search className="h-4 w-4" /> Search
             </Button>
           </div>
@@ -129,11 +134,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         onRowClick={handleRowClick}
         initialPageSize={10}
         pageSizeOptions={[5, 10, 20, 50]}
-        rightToolbar={
-          <Button onClick={handleCreate} className="gap-2">
-            <Plus className="h-4 w-4" /> Create New Project
-          </Button>
-        }
         rowActions={(row) => (
           <ActionButtons
             entity={row}

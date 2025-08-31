@@ -87,7 +87,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       cols.push({
         id: "_rownum",
         header: () => <div className="text-center">No.</div>,
-        cell: ({ table, row }: {table: any, row: any}) => (
+        cell: ({ table, row }: { table: any, row: any }) => (
           <div className="text-center text-muted-foreground">
             {table.getState().pagination.pageIndex *
               table.getState().pagination.pageSize +
@@ -106,7 +106,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       cols.push({
         id: "_actions",
         header: () => <div className="text-right pr-2">Actions</div>,
-        cell: ({ row }:{row: any}) => (
+        cell: ({ row }: { row: any }) => (
           // Prevent row onClick when interacting with actions
           <div className="text-right" onClick={(e) => e.stopPropagation()}>
             {rowActions(row.original)}
@@ -166,10 +166,10 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       </div>
 
       {/* Table wrapper with sticky header */}
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-xl border overflow-hidden shadow-md">
         <div className="relative max-h-[70vh] overflow-auto">
           <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background">
+            <TableHeader className="sticky top-0 z-10 bg-card">
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id}>
                   {hg.headers.map((header) => {
@@ -177,9 +177,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     return (
                       <TableHead
                         key={header.id}
-                        className={`whitespace-nowrap ${
-                          canSort ? "cursor-pointer select-none" : ""
-                        }`}
+                        className={`whitespace-nowrap ${canSort ? "cursor-pointer select-none" : ""
+                          }`}
                         onClick={
                           canSort
                             ? header.column.getToggleSortingHandler()
@@ -193,11 +192,10 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                           )}
                           {canSort && (
                             <ArrowUpDown
-                              className={`h-4 w-4 ${
-                                header.column.getIsSorted()
-                                  ? "opacity-100"
-                                  : "opacity-40"
-                              }`}
+                              className={`h-4 w-4 ${header.column.getIsSorted()
+                                ? "opacity-100"
+                                : "opacity-40"
+                                }`}
                             />
                           )}
                         </div>
@@ -207,7 +205,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody>
+            <TableBody className="bg-card">
               {isLoading ? (
                 Array.from({ length: loadingRows }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`} className="animate-pulse">
@@ -222,9 +220,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`hover:bg-accent/50 ${
-                      onRowClick ? "cursor-pointer" : ""
-                    }`}
+                    className={`hover:bg-accent/50 ${onRowClick ? "cursor-pointer" : ""
+                      }`}
                     onClick={
                       onRowClick ? () => onRowClick(row.original) : undefined
                     }
@@ -257,12 +254,15 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected
-        </div>
+        {table.getFilteredSelectedRowModel().rows.length > 0 ? (
+
+          <div className="text-xs lg:text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected
+          </div>
+        ) : <div />}
         <div className="flex items-center gap-2">
-          <span className="text-sm">Rows per page</span>
+          <span className="sr-only md:not-sr-only text-sm">Rows per page</span>
           <select
             className="h-9 rounded-md border bg-transparent px-2 text-sm"
             value={table.getState().pagination.pageSize}

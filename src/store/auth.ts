@@ -144,6 +144,8 @@ export const useAuth = create<AuthState>((set, get) => ({
         accessToken: access,
         refreshToken: refresh,
         user: userData,
+        tempId: undefined,
+        tempEmail: undefined,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -169,8 +171,10 @@ export const useAuth = create<AuthState>((set, get) => ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);
-      if (typeof error === "string") throw { detail: error };
-      throw error.response?.data || { detail: "Network error!" };
+      set({ accessToken: null, refreshToken: null, user: null });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
     } finally {
       set({ loading: false });
     }
