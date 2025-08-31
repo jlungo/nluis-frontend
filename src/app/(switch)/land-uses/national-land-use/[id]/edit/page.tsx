@@ -6,7 +6,7 @@ import { useParams } from 'react-router';
 
 export default function Page() {
   const { setPage } = usePageStore();
-  const { id } = useParams<{ id: string }>();
+  const { project_slug } = useParams<{ project_slug: string }>();
 
   useLayoutEffect(() => {
     setPage({
@@ -18,7 +18,7 @@ export default function Page() {
   return (
     <div>
       <EditProject 
-        projectId={id as string}
+        projectSlug={project_slug as string}
         moduleLevel={LOCALITY_LEVELS.NATIONAL}
         afterUpdateRedirectPath="/land-uses/national-land-use"
       />

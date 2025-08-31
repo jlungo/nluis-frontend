@@ -13,7 +13,7 @@ import { LOCALITY_LEVELS } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
 
 interface Props {
-  projectId: string;
+  projectSlug: string;
   moduleLevel: string;
   afterUpdateRedirectPath: string;
 }
@@ -33,11 +33,11 @@ const LEVEL_NAMES = {
   [LOCALITY_LEVELS.VILLAGE]: "Village",
 } as const;
 
-export default function EditProject({ projectId, moduleLevel, afterUpdateRedirectPath = '/land-uses' }: Props) {
+export default function EditProject({ projectSlug, moduleLevel, afterUpdateRedirectPath = '/land-uses' }: Props) {
   const userOrganization = useUserOrganization();
   
   // Fetch project data
-  const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ id: projectId });
+  const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ project_slug: projectSlug });
   const project = projectData?.results as ProjectI | undefined;
 
   const [formData, setFormData] = useState<CreateProjectDataI>({
@@ -289,7 +289,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
         locality_ids: moduleLevel === LOCALITY_LEVELS.NATIONAL ? [] : formData.locality_ids,
       };
 
-      await updateProjectMutation.mutateAsync({ id: projectId, data: payload });
+      await updateProjectMutation.mutateAsync({ project_slug: projectSlug, data: payload });
       window.location.href = afterUpdateRedirectPath;
     } catch (error) {
       console.error('Failed to update project:', error);

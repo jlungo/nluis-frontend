@@ -165,11 +165,11 @@ const ErrorState: React.FC = () => (
 );
 
 export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
-  const { id } = useParams<{ id: string }>();
+  const { project_slug } = useParams<{ project_slug: string }>();
   const navigate = useNavigate();
   const { setPage } = usePageStore();
 
-  const { data: projectData, isLoading } = useProjectsQuery({ id });
+  const { data: projectData, isLoading } = useProjectsQuery({ project_slug });
   const project = projectData?.results as ProjectI | undefined;
 
   useEffect(() => {
@@ -182,8 +182,8 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
   }, [project, setPage]);
 
   const handleBack = () => navigate(`/land-uses/${moduleLevel}`);
-  const handleEdit = () => navigate(`/land-uses/${moduleLevel}/${id}/edit`);
-  const handleLocalityClick = (locality: any) => navigate(`/${locality.id}/workflow`);
+  const handleEdit = () => navigate(`/land-uses/${moduleLevel}/${project_slug}/edit`);
+  const handleLocalityClick = (locality: any) => navigate(`/${locality.project_slug}/workflow`);
 
   if (isLoading) return <LoadingState />;
   if (!project) return <ErrorState />;
