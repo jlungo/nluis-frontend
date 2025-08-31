@@ -157,22 +157,22 @@ export default function MultiStepForm({
                                         onClick={() => canNavigate && onStepChange(step.id)}
                                         disabled={!canNavigate}
                                         className={`w-full p-2 rounded transition-colors relative flex items-center justify-center ${isActive
-                                                ? 'bg-primary/10 border border-primary/20'
-                                                : step.isCompleted
-                                                    ? 'bg-progress-completed/10 hover:bg-progress-completed/20'
-                                                    : canNavigate
-                                                        ? 'hover:bg-muted/50'
-                                                        : 'opacity-50 cursor-not-allowed'
+                                            ? 'bg-primary/10 border border-primary/20'
+                                            : step.isCompleted
+                                                ? 'bg-progress-completed/10 hover:bg-progress-completed/20'
+                                                : canNavigate
+                                                    ? 'hover:bg-muted/50'
+                                                    : 'opacity-50 cursor-not-allowed'
                                             }`}
                                         title={step.title}
                                     >
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${isActive
-                                                ? 'bg-primary text-primary-foreground'
-                                                : step.isCompleted
-                                                    ? 'bg-progress-completed text-white'
-                                                    : step.validationErrors && step.validationErrors.length > 0
-                                                        ? 'bg-destructive text-destructive-foreground'
-                                                        : 'bg-muted text-muted-foreground'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : step.isCompleted
+                                                ? 'bg-progress-completed text-white'
+                                                : step.validationErrors && step.validationErrors.length > 0
+                                                    ? 'bg-destructive text-destructive-foreground'
+                                                    : 'bg-muted text-muted-foreground'
                                             }`}>
                                             {step.isCompleted ? (
                                                 <CheckCircle className="h-3 w-3" />
@@ -183,9 +183,7 @@ export default function MultiStepForm({
                                             )}
                                         </div>
 
-                                        {step.isRequired && (
-                                            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-destructive rounded-full"></span>
-                                        )}
+                                        {step.isRequired && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-destructive rounded-full" />}
                                     </button>
                                 );
                             }
@@ -196,12 +194,12 @@ export default function MultiStepForm({
                                     onClick={() => canNavigate && onStepChange(step.id)}
                                     disabled={!canNavigate}
                                     className={`w-full text-left p-2 rounded transition-colors ${isActive
-                                            ? 'bg-primary/10 border border-primary/20'
-                                            : step.isCompleted
-                                                ? 'bg-progress-completed/10 hover:bg-progress-completed/20'
-                                                : canNavigate
-                                                    ? 'hover:bg-muted/50'
-                                                    : 'opacity-50 cursor-not-allowed'
+                                        ? 'bg-primary/10 border border-primary/20'
+                                        : step.isCompleted
+                                            ? 'bg-progress-completed/10 hover:bg-progress-completed/20'
+                                            : canNavigate
+                                                ? 'hover:bg-muted/50'
+                                                : 'opacity-50 cursor-not-allowed'
                                         }`}
                                 >
                                     <div className="flex items-start gap-2">
@@ -210,8 +208,8 @@ export default function MultiStepForm({
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className={`font-medium text-xs ${isActive ? 'text-primary' :
-                                                        step.isCompleted ? 'text-progress-completed' :
-                                                            'text-foreground'
+                                                    step.isCompleted ? 'text-progress-completed' :
+                                                        'text-foreground'
                                                     }`}>
                                                     {step.title}
                                                 </span>
@@ -224,10 +222,10 @@ export default function MultiStepForm({
                                                 <Badge
                                                     variant="outline"
                                                     className={`text-xs px-1 py-0 h-4 ${step.isCompleted
-                                                            ? 'border-progress-completed text-progress-completed'
-                                                            : isActive
-                                                                ? 'border-primary text-primary'
-                                                                : 'border-muted-foreground text-muted-foreground'
+                                                        ? 'border-progress-completed text-progress-completed'
+                                                        : isActive
+                                                            ? 'border-primary text-primary'
+                                                            : 'border-muted-foreground text-muted-foreground'
                                                         }`}
                                                 >
                                                     {index + 1}

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FormField, { FieldValue } from '@/components/form-field';
 import { InputType } from '@/types/input-types';
@@ -41,7 +41,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) =>
-            // TODO post to form endpoint
+            // TODO: post to form endpoint
             api.post(``, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -175,6 +175,11 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
 
         const allApproved = section.forms.every(form => areAllFieldsApproved(form.slug))
         return allApproved && isApprover
+    }
+
+    const isFilledSection = (section: SectionProps) => {
+        const allFilled = section.forms.every(form => isFilledForm(form.slug))
+        return allFilled
     }
 
     const countFilledForms = (section: SectionProps) => {
@@ -372,7 +377,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
             <div className={`flex-1 overflow-y-auto ${!disabled ? "px-4 md:px-6 pb-4 md:pb-4" : ""}`}>
                 <div className="space-y-4">
                     {data.sections.slice().sort((a, b) => a.position - b.position).slice().sort((a, b) => a.position - b.position).map((section) => (
-                        <Card key={section.slug} className="overflow-hidden gap-2 lg:gap-2 pb-3 md:pb-3">
+                        <Card key={section.slug} className={`overflow-hidden gap-2 lg:gap-2 pb-3 md:pb-3 ${isSectionApproved(section) ? 'border-green-800 dark:border-green-900' : ''}`}>
                             <Collapsible
                                 open={expandedSections.includes(section.slug)}
                                 onOpenChange={() => toggleSection(section.slug)}
@@ -385,22 +390,25 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                                 <span className="font-medium">{section.name}</span>
                                             </div>
 
-                                            <Badge
-                                                variant={countFilledForms(section) === section.forms.length ? 'default' : 'secondary'}
-                                                className={countFilledForms(section) === section.forms.length ? 'bg-green-700 dark:bg-green-900' : ''}
-                                            >
-                                                {countFilledForms(section)} / {section.forms.length} filled
-                                            </Badge>
+                                            {!disabled
+                                                ? <>
+                                                    <Badge
+                                                        variant={countFilledForms(section) === section.forms.length ? 'default' : 'secondary'}
+                                                        className={countFilledForms(section) === section.forms.length ? 'bg-green-700 dark:bg-green-900' : ''}
+                                                    >
+                                                        {countFilledForms(section)} / {section.forms.length} filled
+                                                    </Badge>
 
-                                            {isSectionApproved(section)
-                                                ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
-                                                : null}
+                                                    {isSectionApproved(section)
+                                                        ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
+                                                        : null}
+                                                </> : null}
 
                                             {/* {!section.isAccessible && (
-                                                <Badge variant="outline" className="text-muted-foreground">
-                                                    <Lock className="h-3 w-3 mr-1" />
-                                                    Locked
-                                                </Badge>
+                                            <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                Locked
+                                            </Badge>
                                             )} */}
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -428,7 +436,7 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form)}
+                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin")}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
@@ -443,10 +451,10 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {/* {!form.isAccessible && (
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Lock className="h-3 w-3 mr-1" />
-                                                                Locked
-                                                            </Badge>
+                                                        <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                            <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                            Locked
+                                                        </Badge>
                                                         )} */}
                                                         {areAllFieldsApproved(form.slug) && (
                                                             <Badge variant="default" className="bg-green-800 text-xs">
@@ -462,26 +470,55 @@ export function SectionedForm({ data, values, disabled, projectId }: Props) {
                                 </CollapsibleContent>
                             </Collapsible>
 
-                            {!isSectionApproved(section) ? (
-                                <CardFooter className='flex items-center justify-between px-3 md:px-4'>
-                                    <p className='text-muted-foreground text-xs md:text-sm'>Approval</p>
-                                    <Button type='button' size='sm' disabled={disabled || isSectionApproved(section) || isPending || isLoading}>
-                                        {isPending || isLoading ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Approving...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Check className="h-4 w-4" />
-                                                Approve
-                                            </>
-                                        )}
-                                    </Button>
-                                </CardFooter>
-                            ) : (
-                                <CardFooter className='flex items-center justify-between px-3 md:px-4 py-1'></CardFooter>
-                            )}
+                            {section.approval_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" ? (
+                                <>
+                                    {!isSectionApproved(section)
+                                        ? <CardFooter className='flex items-center justify-between px-3 md:px-4'>
+                                            <p className='text-muted-foreground text-xs md:text-sm'>{disabled ? 'Approval' : 'Approve the details'}</p>
+                                            <Button
+                                                type='button'
+                                                size='sm'
+                                                disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isLoading}
+                                                className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
+                                            >
+                                                {isPending || isLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Approving...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Check className="h-4 w-4" />
+                                                        Approve
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </CardFooter>
+                                        : <CardFooter className='flex items-center justify-between px-3 md:px-4'>
+                                            <p className='text-muted-foreground text-xs md:text-sm'>Reject Approval</p>
+                                            <Button
+                                                type='button'
+                                                variant='outline'
+                                                size='sm'
+                                                disabled={disabled || !isSectionApproved(section) || isPending || isLoading}
+                                                className='border-destructive'
+                                            >
+                                                {isPending || isLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Disapproving...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <X className="h-4 w-4 text-destructive" />
+                                                        Disapprove
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </CardFooter>
+                                    }
+                                </>
+                            ) : <CardFooter className='flex items-center justify-between px-3 md:px-4 py-1' />}
                         </Card>
                     ))}
                 </div>
