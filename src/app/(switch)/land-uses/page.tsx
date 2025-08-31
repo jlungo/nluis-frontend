@@ -12,7 +12,6 @@ export default function DashboardPage() {
     setPage({
       module: "land-uses",
       title: "Dashboard",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

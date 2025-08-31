@@ -7,7 +7,7 @@ export default function Page() {
         setPage({
             module: 'document-management',
             title: "Document Management",
-            backButton: 'Back to Modules',
+
         })
     }, [setPage])
 

@@ -98,7 +98,6 @@ export default function ReportsPage() {
     setPage({
       module: "reports",
       title: "Reports & Analytics",
-      backButton: "Back to Dashboard",
     });
   }, [setPage]);
 
@@ -378,8 +377,8 @@ export default function ReportsPage() {
                   <Card
                     key={report.id}
                     className={`cursor-pointer transition-colors ${state.selectedReport?.id === report.id
-                        ? "border-primary bg-primary/5"
-                        : ""
+                      ? "border-primary bg-primary/5"
+                      : ""
                       }`}
                     onClick={() =>
                       setState((prev) => ({ ...prev, selectedReport: report }))

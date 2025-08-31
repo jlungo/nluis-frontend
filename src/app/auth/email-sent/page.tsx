@@ -72,7 +72,7 @@ export default function Page() {
       </div>
 
       {/* Success Card */}
-      <Card className="border-primary/10 shadow-lg">
+      <Card className="shadow-lg border-0 py-0 md:py-0">
         <CardContent>
           <Alert className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 mb-6">
             <Mail className="h-4 w-4 text-green-600 dark:text-green-600" />
@@ -83,7 +83,7 @@ export default function Page() {
           </Alert>
 
           <div className="space-y-3">
-            <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+            <Button onClick={onBackToLogin} className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Login
             </Button>
@@ -92,7 +92,7 @@ export default function Page() {
               variant="outline"
               onClick={handleResendReset}
               disabled={isLoading}
-              className="w-full h-12 gap-2"
+              className="w-full gap-2"
             >
               {isLoading ? (
                 <>

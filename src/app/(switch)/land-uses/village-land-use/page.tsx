@@ -78,7 +78,7 @@ export default function Page() {
     setPage({
       module: 'land-uses',
       title: "Village Land Use Projects",
-      backButton: 'Modules'
+
     });
   }, [setPage]);
 

@@ -100,7 +100,6 @@ export default function DynamicFormsPage() {
     setPage({
       module: "system-settings",
       title: "Dynamic Forms & Questionnaires",
-      backButton: "Back to Data Collection",
     });
   }, [setPage]);
 

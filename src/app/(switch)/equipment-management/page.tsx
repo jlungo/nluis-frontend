@@ -7,7 +7,7 @@ export default function Page() {
         setPage({
             module: 'equipment-management',
             title: "Inventory Tracking",
-            backButton: 'Back to Modules',
+
         })
     }, [setPage])
 

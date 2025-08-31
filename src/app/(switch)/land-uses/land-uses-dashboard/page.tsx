@@ -48,7 +48,6 @@ export default function DashboardPage() {
     setPage({
       module: "land-uses",
       title: "Dashboard",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -250,15 +249,14 @@ export default function DashboardPage() {
                       <div
                         className="bg-primary h-2 rounded-full"
                         style={{
-                          width: `${
-                            (funder.count /
+                          width: `${(funder.count /
                               Math.max(
                                 ...dashboardData.projectStats.funders.map(
                                   (f) => f.count
                                 )
                               )) *
                             100
-                          }%`,
+                            }%`,
                         }}
                       ></div>
                     </div>
