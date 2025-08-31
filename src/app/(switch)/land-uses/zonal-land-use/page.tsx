@@ -15,7 +15,7 @@ export default function ZoneLandUsePage() {
   return (
     <ProjectsListPage
       module="land-uses"
-      moduleLevel="zone-land-use"
+      moduleLevel="zonal-land-use"
       pageTitle="Zone Land Use"
     />
   );

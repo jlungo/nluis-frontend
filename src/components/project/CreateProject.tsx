@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, SelectedLocality } from '@/types/projects';
 import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface Props {
   moduleLevel: string;
@@ -56,7 +57,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   const createProjectMutation = useCreateProject();
 
   // Helper functions for locality filtering
-  const getLocalitiesByLevel = (level: string) => 
+  const getLocalitiesByLevel = (level: string) =>
     localities?.filter(l => l.level === level) || [];
 
   const getChildLocalities = (level: string, parentId: string) =>
@@ -64,34 +65,34 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
 
   const buildLocalityPath = (locality: LocalityI): string => {
     const pathParts: string[] = [];
-    
+
     if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
-      const zonal = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.ZONAL && 
+      const zonal = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.ZONAL &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (zonal) pathParts.push(zonal.name);
     }
 
-    if (moduleLevel >= LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.ZONAL) {
-      const region = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.REGION && 
+    if (moduleLevel >= LOCALITY_LEVELS.REGION) {
+      const region = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.REGION &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (region) pathParts.push(region.name);
     }
 
-    if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.ZONAL && locality.level !== LOCALITY_LEVELS.REGION) {
-      const district = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.DISTRICT && 
+    if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.REGION) {
+      const district = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.DISTRICT &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (district) pathParts.push(district.name);
     }
 
-    if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.ZONAL && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
-      const ward = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.WARD && 
+    if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
+      const ward = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.WARD &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (ward) pathParts.push(ward.name);
@@ -115,19 +116,17 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleFunderSelect = (funderId: string) => {
+  const handleFunderSelect = (funderIds: string[]) => {
     setFormData(prev => ({
       ...prev,
-      funder_ids: prev.funder_ids.includes(funderId) 
-        ? prev.funder_ids.filter(f => f !== funderId)
-        : [...prev.funder_ids, funderId]
+      funder_ids: funderIds,
     }));
   };
 
   const handleSelectionChange = (level: keyof typeof currentSelection, value: string) => {
     setCurrentSelection(prev => {
       const newSelection = { ...prev };
-      
+
       // Reset child selections when parent changes
       if (level === 'zonal') {
         newSelection.region = '';
@@ -139,7 +138,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
       } else if (level === 'district') {
         newSelection.ward = '';
       }
-      
+
       newSelection[level] = value;
       return newSelection;
     });
@@ -218,10 +217,10 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     const basicFieldsValid = !!(name && description && registration_date && authorization_date && budget && funder_ids.length > 0);
 
     if (!basicFieldsValid) return false;
-    
+
     // For national level, no localities needed
     if (moduleLevel === LOCALITY_LEVELS.NATIONAL) return true;
-    
+
     // For other levels, at least one locality must be selected
     return formData.locality_ids.length > 0;
   };
@@ -274,67 +273,103 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {moduleLevel >= LOCALITY_LEVELS.ZONAL && (
-            <FormFieldInput
-              type="select"
-              id="zonal-select"
-              label="Zone"
-              value={currentSelection.zonal}
-              options={getLocalitiesByLevel(LOCALITY_LEVELS.ZONAL).map(zone => ({
-                value: zone.id,
-                label: zone.name
-              }))}
-              onChange={(value) => handleSelectionChange('zonal', value)}
-            />
-          )}
+          {/* {moduleLevel >= LOCALITY_LEVELS.ZONAL && (
+            <div>
+              <Label htmlFor='select-zone'>Select Zone</Label>
+              <Select
+                name={'select-zone'}
+                value={currentSelection.zonal}
+                onValueChange={(value) => handleSelectionChange('zonal', value)}
+              >
+                <SelectTrigger id='select-zone' className='w-full'>
+                  <SelectValue placeholder="Select zone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='test'>Test</SelectItem>
+                  {getLocalitiesByLevel(LOCALITY_LEVELS.ZONAL).map(zone => (
+                    <SelectItem key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )} */}
 
-          {moduleLevel >= LOCALITY_LEVELS.REGION && currentSelection.zonal && (
-            <FormFieldInput
-              type="select"
-              id="region-select"
-              label="Region"
-              value={currentSelection.region}
-              options={getChildLocalities(LOCALITY_LEVELS.REGION, currentSelection.zonal).map(region => ({
-                value: region.id,
-                label: region.name
-              }))}
-              onChange={(value) => handleSelectionChange('region', value)}
-            />
-          )}
+          {moduleLevel >= LOCALITY_LEVELS.REGION &&
+            <div>
+              <Label htmlFor='select-region'>Select Region</Label>
+              <Select
+                name={'select-region'}
+                value={currentSelection.region}
+                onValueChange={(value) => handleSelectionChange('region', value)}
+              >
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='test'>Test</SelectItem>
+                  {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
+                    <SelectItem key={region.id} value={region.id}>
+                      {region.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
 
           {moduleLevel >= LOCALITY_LEVELS.DISTRICT && currentSelection.region && (
-            <FormFieldInput
-              type="select"
-              id="district-select"
-              label="District"
-              value={currentSelection.district}
-              options={getChildLocalities(LOCALITY_LEVELS.DISTRICT, currentSelection.region).map(district => ({
-                value: district.id,
-                label: district.name
-              }))}
-              onChange={(value) => handleSelectionChange('district', value)}
-            />
+            <div>
+              <Label htmlFor='select-district'>Select District</Label>
+              <Select
+                name={'select-district'}
+                value={currentSelection.district}
+                onValueChange={(value) => handleSelectionChange('district', value)}
+              >
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder="Select district" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='test'>Test</SelectItem>
+                  {getLocalitiesByLevel(LOCALITY_LEVELS.DISTRICT).map(district => (
+                    <SelectItem key={district.id} value={district.id}>
+                      {district.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
 
           {moduleLevel >= LOCALITY_LEVELS.WARD && currentSelection.district && (
-            <FormFieldInput
-              type="select"
-              id="ward-select"
-              label="Ward"
-              value={currentSelection.ward}
-              options={getChildLocalities(LOCALITY_LEVELS.WARD, currentSelection.district).map(ward => ({
-                value: ward.id,
-                label: ward.name
-              }))}
-              onChange={(value) => handleSelectionChange('ward', value)}
-            />
+            <div>
+              <Label htmlFor='select-ward'>Select Ward</Label>
+              <Select
+                name={'select-ward'}
+                value={currentSelection.ward}
+                onValueChange={(value) => handleSelectionChange('ward', value)}
+              >
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder="Select ward" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='test'>Test</SelectItem>
+                  {getLocalitiesByLevel(LOCALITY_LEVELS.WARD).map(ward => (
+                    <SelectItem key={ward.id} value={ward.id}>
+                      {ward.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
 
         <div className="flex justify-end">
-          <Button 
-            type="button" 
-            onClick={addLocality} 
+          <Button
+            type="button"
+            onClick={addLocality}
             disabled={
               (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
               (moduleLevel === LOCALITY_LEVELS.REGION && !currentSelection.region) ||
@@ -393,21 +428,21 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormFieldInput 
-              type="text" 
-              id="name" 
-              label="Project Name" 
-              value={formData.name} 
-              onChange={(val) => handleInputChange('name', val)} 
-              required 
+            <FormFieldInput
+              type="text"
+              id="name"
+              label="Project Name"
+              value={formData.name}
+              onChange={(val) => handleInputChange('name', val)}
+              required
             />
-            <FormFieldInput 
-              type="textarea" 
-              id="description" 
-              label="Description" 
-              value={formData.description} 
-              onChange={(val) => handleInputChange('description', val)} 
-              required 
+            <FormFieldInput
+              type="textarea"
+              id="description"
+              label="Description"
+              value={formData.description}
+              onChange={(val) => handleInputChange('description', val)}
+              required
             />
           </CardContent>
         </Card>
@@ -422,21 +457,21 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
-              <FormFieldInput 
-                type="date" 
-                id="registration_date" 
-                label="Registration Date" 
-                value={formData.registration_date} 
-                onChange={(val) => handleInputChange('registration_date', val)} 
-                required 
+              <FormFieldInput
+                type="date"
+                id="registration_date"
+                label="Registration Date"
+                value={formData.registration_date}
+                onChange={(val) => handleInputChange('registration_date', val)}
+                required
               />
-              <FormFieldInput 
-                type="date" 
-                id="authorization_date" 
-                label="Authorization Date" 
-                value={formData.authorization_date} 
-                onChange={(val) => handleInputChange('authorization_date', val)} 
-                required 
+              <FormFieldInput
+                type="date"
+                id="authorization_date"
+                label="Authorization Date"
+                value={formData.authorization_date}
+                onChange={(val) => handleInputChange('authorization_date', val)}
+                required
               />
             </div>
           </CardContent>
@@ -451,47 +486,29 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormFieldInput 
-              type="number" 
-              id="budget" 
-              label="Project Budget (TZS)" 
-              value={formData.budget} 
-              onChange={(val) => handleInputChange('budget', val)} 
-              required 
-            />
-            
-            <div className="space-y-3">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormFieldInput
+                type="number"
+                id="budget"
+                label="Project Budget (TZS)"
+                value={formData.budget}
+                onChange={(val) => handleInputChange('budget', val)}
+                required
+              />
+
               <FormFieldInput
                 type="select"
                 id="funder-select"
-                label="Select Funder"
+                label="Funder"
                 value=""
                 options={funders?.map(funder => ({
                   value: funder.id.toString(),
                   label: funder.name
                 })) || []}
-                onChange={handleFunderSelect}
+                onChange={() => { }}
+                values={formData.funder_ids}
+                onValuesChange={handleFunderSelect}
               />
-
-              {formData.funder_ids.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-900 max-h-32 overflow-y-auto">
-                  {formData.funder_ids.map(funderId => {
-                    const funder = funders?.find(f => f.id.toString() === funderId);
-                    return funder ? (
-                      <Badge key={funderId} variant="secondary" className="gap-1">
-                        {funder.name}
-                        <button
-                          type="button"
-                          onClick={() => handleFunderSelect(funderId)}
-                          className="ml-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full p-0.5"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -513,16 +530,16 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-4 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => (window.location.href = afterCreateRedirectPath)} 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => (window.location.href = afterCreateRedirectPath)}
             disabled={createProjectMutation.isPending}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!isFormValid() || createProjectMutation.isPending}
           >
             {createProjectMutation.isPending ? 'Creating Project...' : 'Create Project'}

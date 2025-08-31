@@ -20,7 +20,8 @@ import { Spinner } from "./ui/spinner"
 interface MultiselectProps {
     title: string;
     data: { value: string; label: string }[];
-    selected: string[]; setSelected: (selected: string[]) => void;
+    selected: string[];
+    setSelected: (selected: string[]) => void;
     isLoading: boolean
 }
 
