@@ -77,7 +77,7 @@ export interface ProjectStatsI {
 }
 
 export interface ProjectQueryParamsI {
-  project_slug?: string;
+  project_id?: string;
   organization?: string;
   module_level?: string | number;
   status?: string;

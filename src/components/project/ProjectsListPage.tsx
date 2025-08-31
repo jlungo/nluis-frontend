@@ -26,7 +26,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
 
   const { data, isLoading, error: queryError, refetch } = useProjectsQuery({
     organization: userOrganization || '',
-    module_level: 1, // TODO: Update to use dynamic module level
+    module_level: moduleLevel,
     status: filters.status || undefined,
     search: filters.name || undefined,
   });

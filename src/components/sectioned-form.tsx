@@ -17,9 +17,9 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
-type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectLocalitySlug?: string }
+type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectLocalityId?: string }
 
-export function SectionedForm({ data, values, disabled, projectLocalitySlug }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -232,7 +232,7 @@ export function SectionedForm({ data, values, disabled, projectLocalitySlug }: P
                                         disabled={disabled || !canClickForm(form)}
                                         value={fieldData[`${form.slug}-${field.id}`]?.value}
                                         setValue={updateFieldValue}
-                                        project_locality_slug={projectLocalitySlug || ""}
+                                        project_locality_slug={projectLocalityId || ""}
                                         {...field}
                                     />
                                 )}
@@ -285,7 +285,7 @@ export function SectionedForm({ data, values, disabled, projectLocalitySlug }: P
                                             disabled={disabled || !canClickForm(form)}
                                             value={fieldData[form.slug]?.value}
                                             setValue={updateFieldValue}
-                                            project_locality_slug={projectLocalitySlug || ""}
+                                            project_locality_slug={projectLocalityId || ""}
                                             {...field}
                                         />
                                     ))}
