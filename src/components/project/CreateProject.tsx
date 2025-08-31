@@ -21,6 +21,8 @@ interface Props {
 export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '/land-uses' }: Props) {
   const userOrganization = useUserOrganization();
 
+  console.log('Module Level:', moduleLevel);
+
   const [formData, setFormData] = useState<CreateProjectDataI>({
     name: '',
     organization: userOrganization || '',
@@ -46,7 +48,6 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   // Locality selection state
   const [selectedLocalities, setSelectedLocalities] = useState<SelectedLocality[]>([]);
   const [currentSelection, setCurrentSelection] = useState({
-    // zonal: '',
     region: '',
     district: '',
     ward: '',
@@ -65,51 +66,25 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     localities?.filter(l => l.level == level && l.parent == parentId) || [];
 
   const buildLocalityPath = (locality: LocalityI): string => {
-    const pathParts: string[] = [];
-
-    // if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
-    //   const zonal = localities?.find(l =>
-    //     l.level === LOCALITY_LEVELS.ZONAL &&
-    //     (l.id === locality.id || isAncestor(l.id, locality.id))
-    //   );
-    //   if (zonal) pathParts.push(zonal.name);
-    // }
-
-    if (moduleLevel >= LOCALITY_LEVELS.REGION) {
-      const region = localities?.find(l =>
-        l.level === LOCALITY_LEVELS.REGION &&
-        (l.id === locality.id || isAncestor(l.id, locality.id))
-      );
-      if (region) pathParts.push(region.name);
-    }
-
-    if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.REGION) {
-      const district = localities?.find(l =>
-        l.level === LOCALITY_LEVELS.DISTRICT &&
-        (l.id === locality.id || isAncestor(l.id, locality.id))
-      );
-      if (district) pathParts.push(district.name);
-    }
-
-    if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
-      const ward = localities?.find(l =>
-        l.level === LOCALITY_LEVELS.WARD &&
-        (l.id === locality.id || isAncestor(l.id, locality.id))
-      );
-      if (ward) pathParts.push(ward.name);
-    }
-
-    pathParts.push(locality.name);
-    return pathParts.join(' → ');
+    return locality.name;
   };
 
-  const isAncestor = (ancestorId: string, descendantId: string): boolean => {
-    let current = localities?.find(l => l.id === descendantId);
-    while (current?.parent) {
-      if (current.parent === ancestorId) return true;
-      current = localities?.find(l => l.id === current?.parent);
+  // Check if a locality can be added
+  const canAddLocality = (): boolean => {
+    switch (moduleLevel) {
+      case LOCALITY_LEVELS.REGION:
+        return !!currentSelection.region && !selectedLocalities.find(loc => loc.id == currentSelection.region);
+      case LOCALITY_LEVELS.DISTRICT:
+        return !!currentSelection.district && !selectedLocalities.find(loc => loc.id == currentSelection.district);
+      case LOCALITY_LEVELS.WARD:
+        return !!currentSelection.ward && !selectedLocalities.find(loc => loc.id == currentSelection.ward);
+      case LOCALITY_LEVELS.VILLAGE:
+        // For village level, we need to check if there are villages available under the selected ward
+        const availableVillages = getChildLocalities(LOCALITY_LEVELS.VILLAGE, currentSelection.ward);
+        return availableVillages.length > 0 && !selectedLocalities.find(loc => loc.id == availableVillages[0]?.id);
+      default:
+        return false;
     }
-    return false;
   };
 
   // Handlers
@@ -129,15 +104,10 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
       const newSelection = { ...prev };
 
       // Reset child selections when parent changes
-      // if (level === 'zonal') {
-      //   newSelection.region = '';
-      //   newSelection.district = '';
-      //   newSelection.ward = '';
-      // }
-      if (level === 'region') {
+      if (level == 'region') {
         newSelection.district = '';
         newSelection.ward = '';
-      } else if (level === 'district') {
+      } else if (level == 'district') {
         newSelection.ward = '';
       }
 
@@ -152,10 +122,6 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
 
     // Determine the target level and ID based on moduleLevel
     switch (moduleLevel) {
-      // case LOCALITY_LEVELS.ZONAL:
-      //   targetLevel = LOCALITY_LEVELS.ZONAL;
-      //   targetId = currentSelection.zonal;
-      //   break;
       case LOCALITY_LEVELS.REGION:
         targetLevel = LOCALITY_LEVELS.REGION;
         targetId = currentSelection.region;
@@ -172,16 +138,17 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
         targetLevel = LOCALITY_LEVELS.VILLAGE;
         // For village, we need to get villages under the selected ward
         const availableVillages = getChildLocalities(LOCALITY_LEVELS.VILLAGE, currentSelection.ward);
-        if (availableVillages.length > 0) {
+        if (availableVillages.length == 0) {
           // TODO: Show info dialog here, no village found
           return;
         }
+        targetId = availableVillages[0].id;
         break;
     }
 
-    if (!targetId || selectedLocalities.find(loc => loc.id === targetId)) return;
+    if (!targetId || selectedLocalities.find(loc => loc.id == targetId)) return;
 
-    const locality = localities?.find(l => l.id === targetId && l.level === targetLevel);
+    const locality = localities?.find(l => l.id == targetId && l.level == targetLevel);
     if (!locality) return;
 
     const newLocality: SelectedLocality = {
@@ -193,12 +160,11 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     setSelectedLocalities(prev => [...prev, newLocality]);
     setFormData(prev => ({
       ...prev,
-      localities: [...prev.locality_ids, locality.id]
+      locality_ids: [...prev.locality_ids, locality.id]
     }));
 
     // Reset selections
     setCurrentSelection({
-      // zonal: '',
       region: '',
       district: '',
       ward: '',
@@ -209,7 +175,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     setSelectedLocalities(prev => prev.filter(loc => loc.id !== localityId));
     setFormData(prev => ({
       ...prev,
-      localities: prev.locality_ids.filter(id => id !== localityId)
+      locality_ids: prev.locality_ids.filter(id => id !== localityId)
     }));
   };
 
@@ -221,7 +187,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     if (!basicFieldsValid) return false;
 
     // For national level, no localities needed
-    if (moduleLevel === LOCALITY_LEVELS.NATIONAL) return true;
+    if (moduleLevel == LOCALITY_LEVELS.NATIONAL) return true;
 
     // For other levels, at least one locality must be selected
     return formData.locality_ids.length > 0;
@@ -240,8 +206,9 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
         budget: formData.budget,
         module_level: moduleLevel,
         funder_ids: formData.funder_ids,
-        locality_ids: moduleLevel === LOCALITY_LEVELS.NATIONAL ? ["92"] : formData.locality_ids, // Locality ID of Tanzania is 92
+        locality_ids: moduleLevel == LOCALITY_LEVELS.NATIONAL ? ["92"] : formData.locality_ids, // Locality ID of Tanzania is 92
       };
+      console.log("====payload on submit: ", payload);
 
       await createProjectMutation.mutateAsync(payload);
       window.location.href = afterCreateRedirectPath;
@@ -260,7 +227,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   }
 
   const renderLocalitySelection = () => {
-    if (moduleLevel === LOCALITY_LEVELS.NATIONAL) {
+    if (moduleLevel == LOCALITY_LEVELS.NATIONAL) {
       return (
         <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/50 dark:border-blue-800">
           <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-100" />
@@ -275,38 +242,14 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* {moduleLevel >= LOCALITY_LEVELS.ZONAL && (
-            <div>
-              <Label htmlFor='select-zone'>Select Zone</Label>
-              <Select
-                name={'select-zone'}
-                value={currentSelection.zonal}
-                onValueChange={(value) => handleSelectionChange('zonal', value)}
-              >
-                <SelectTrigger id='select-zone' className='w-full'>
-                  <SelectValue placeholder="Select zone" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='test'>Test</SelectItem>
-                  {getLocalitiesByLevel(LOCALITY_LEVELS.ZONAL).map(zone => (
-                    <SelectItem key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )} */}
-
           {moduleLevel >= LOCALITY_LEVELS.REGION &&
             <div>
               <Label htmlFor='select-region'>Select Region</Label>
               <Select
-                name={'select-region'}
                 value={currentSelection.region}
                 onValueChange={(value) => handleSelectionChange('region', value)}
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='select-region' className='w-full'>
                   <SelectValue placeholder="Select region" />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,11 +267,10 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
             <div>
               <Label htmlFor='select-district'>Select District</Label>
               <Select
-                name={'select-district'}
                 value={currentSelection.district}
                 onValueChange={(value) => handleSelectionChange('district', value)}
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='select-district' className='w-full'>
                   <SelectValue placeholder="Select district" />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,11 +288,10 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
             <div>
               <Label htmlFor='select-ward'>Select Ward</Label>
               <Select
-                name={'select-ward'}
                 value={currentSelection.ward}
                 onValueChange={(value) => handleSelectionChange('ward', value)}
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger id='select-ward' className='w-full'>
                   <SelectValue placeholder="Select ward" />
                 </SelectTrigger>
                 <SelectContent>
@@ -369,13 +310,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           <Button
             type="button"
             onClick={addLocality}
-            disabled={
-              // (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
-              (moduleLevel === LOCALITY_LEVELS.REGION && !currentSelection.region) ||
-              (moduleLevel === LOCALITY_LEVELS.DISTRICT && !currentSelection.district) ||
-              (moduleLevel === LOCALITY_LEVELS.WARD && !currentSelection.ward)
-              // (moduleLevel === LOCALITY_LEVELS.VILLAGE && !currentSelection.village)
-            }
+            disabled={!canAddLocality()}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -383,9 +318,11 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           </Button>
         </div>
 
-        {selectedLocalities.length > 0 && (
-          <div className="space-y-2">
-            <Label>Selected {LOCALITY_LEVEL_NAMES[moduleLevel as keyof typeof LOCALITY_LEVEL_NAMES]}s ({selectedLocalities.length})</Label>
+  <div className="space-y-2">
+          <Label>
+            Selected {LOCALITY_LEVEL_NAMES[moduleLevel as keyof typeof LOCALITY_LEVEL_NAMES]}s ({selectedLocalities.length})
+          </Label>
+          {selectedLocalities.length > 0 ? (
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md bg-gray-50">
               {selectedLocalities.map(locality => (
                 <Badge key={locality.id} variant="secondary" className="gap-1">
@@ -400,23 +337,18 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                 </Badge>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-center max-h-32 p-2 border rounded-md bg-gray-50 text-sm text-gray-500">
+              Select a locality and click add
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
     <div className="container max-w-6xl mx-auto p-6">
-      {/* <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-blue-800 font-medium">
-          This project will be added to your organization: <span className="font-bold">{userOrganization || 'Loading...'}</span>
-        </p>
-        <p className="text-blue-600 text-sm mt-1">
-          The organization is automatically set based on your logged-in account.
-        </p>
-      </div> */}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Project Details Section */}
         <Card>
@@ -434,6 +366,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
               value={formData.name}
               onChange={(val) => handleInputChange('name', val)}
               required
+              placeholder="Enter project name"
             />
             <FormFieldInput
               type="textarea"
@@ -442,6 +375,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
               value={formData.description}
               onChange={(val) => handleInputChange('description', val)}
               required
+              placeholder="Describe the project"
             />
           </CardContent>
         </Card>
@@ -493,6 +427,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                 value={formData.budget}
                 onChange={(val) => handleInputChange('budget', val)}
                 required
+                placeholder="Enter budget amount"
               />
 
               <FormFieldInput
@@ -507,6 +442,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                 onChange={() => { }}
                 values={formData.funder_ids}
                 onValuesChange={handleFunderSelect}
+                placeholder="Select funders"
               />
             </div>
           </CardContent>
