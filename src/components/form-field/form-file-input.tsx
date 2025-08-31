@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     Upload,
@@ -143,20 +143,15 @@ function FileInput({
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2"><p className="text-sm font-medium text-foreground">{label}</p>{required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</div>
-                            <p className="text-xs text-muted-foreground">{placeholder}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] 2xl:text-xs text-muted-foreground">{placeholder}</p>
+                            <p className="text-[9px] text-muted-foreground">
                                 ({accept ? `${accept} files` : 'Any file type'} • Max {maxSize}MB
                                 {multiple && ` • Up to ${maxFiles} files`})
                             </p>
                         </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                        >
+                        <div className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "h-7 px-2 text-xs hover:bg-accent/60 group-hover:bg-accent/60 dark:hover:bg-accent/70 dark:group-hover:bg-accent/70")}>
                             Browse
-                        </Button>
+                        </div>
                     </div>
                 </label>
             </div>

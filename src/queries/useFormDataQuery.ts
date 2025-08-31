@@ -9,6 +9,7 @@ export interface formDataI {
   name: string;
   field_id: number;
   project_id: string;
+  approved: boolean;
 }
 
 export const formDataQueryKey = "formDataKey";

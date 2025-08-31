@@ -1,6 +1,6 @@
 import { FormEvent, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
-import type { WorkflowProps } from '@/queries/useWorkflowQuery';
+import type { FormProps, SectionProps, WorkflowProps } from '@/queries/useWorkflowQuery';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,9 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
-export function SectionedForm({ data, values, disabled, projectId }: { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectId?: string }) {
+type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectId?: string }
+
+export function SectionedForm({ data, values, disabled, projectId }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -135,6 +137,52 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
         );
     };
 
+    const isFilledForm = (formSlug: string): boolean => {
+        if (!values) return false
+        const formValues = values.filter(value => value.form_slug === formSlug)
+        const formFields = data.sections.flatMap(section =>
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+
+        if (formValues.length !== formFields.length) return false
+        return true
+    }
+
+    const areAllFieldsApproved = (formSlug: string) => {
+        if (!values) return false
+        const formValues = values.filter(value => value.form_slug === formSlug && value.approved === true)
+        const formFields = data.sections.flatMap(section =>
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+
+        if (formValues.length !== formFields.length) return false
+        return true
+    }
+
+    const canClickForm = (form: FormProps) => {
+        if (!user) return false
+        const isEditor =
+            form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined ||
+            user.role?.name === "Admin"
+
+        const allApproved = areAllFieldsApproved(form.slug)
+        return !allApproved && isEditor
+    }
+
+    const isSectionApproved = (section: SectionProps) => {
+        if (!user) return false
+        const isApprover =
+            section.approval_roles.find(role => role.role_id === user.role?.id) !== undefined ||
+            user.role?.name === "Admin"
+
+        const allApproved = section.forms.every(form => areAllFieldsApproved(form.slug))
+        return allApproved && isApprover
+    }
+
+    const countFilledForms = (section: SectionProps) => {
+        return section.forms.reduce((count, form) => {
+            return count + (isFilledForm(form.slug) ? 1 : 0)
+        }, 0)
+    }
+
     const renderForm = (formId: string) => {
         if (!data) return
 
@@ -176,7 +224,7 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                                 {form.fields.slice().sort((a, b) => a.position - b.position).map((field) =>
                                     <FormField
                                         key={field.id}
-                                        disabled={disabled}
+                                        disabled={disabled || !canClickForm(form)}
                                         value={fieldData[`${form.slug}-${field.id}`]?.value}
                                         setValue={updateFieldValue}
                                         project_id={projectId || ""}
@@ -186,7 +234,7 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || isPending || isLoading}>
+                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isPending || isLoading}>
                                 {isPending || isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -229,7 +277,7 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                                     {form.fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
-                                            disabled={disabled}
+                                            disabled={disabled || !canClickForm(form)}
                                             value={fieldData[form.slug]?.value}
                                             setValue={updateFieldValue}
                                             project_id={projectId || ""}
@@ -239,7 +287,7 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button type='submit' className='w-full' disabled={disabled || isPending || isLoading}>
+                                <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isPending || isLoading}>
                                     {isPending || isLoading ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -284,6 +332,8 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                 updateFieldValue(value.form_slug, value.value, value.type, value.name, value.field_id, value.project_id)
             });
     }, [values])
+
+    if (!user) return
 
     if (activeForm) return renderForm(activeForm);
 
@@ -334,12 +384,18 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                                                 {/* {section.icon} */}
                                                 <span className="font-medium">{section.name}</span>
                                             </div>
-                                            {/* <Badge variant={section.isCompleted ? "default" : "secondary"} className={section.isCompleted ? "bg-green-600" : ""}> */}
-                                            <Badge variant={"secondary"} className={""}>
-                                                {/* {section.isCompleted ? "Complete" : `${section.subForms.filter(sf => sf.isCompleted).length}/${section.subForms.length}`} */}
-                                                {/* {`${section.forms.filter(sf => sf.isCompleted).length}/${section.forms.length}`} */}
-                                                {section.forms.length}
+
+                                            <Badge
+                                                variant={countFilledForms(section) === section.forms.length ? 'default' : 'secondary'}
+                                                className={countFilledForms(section) === section.forms.length ? 'bg-green-700 dark:bg-green-900' : ''}
+                                            >
+                                                {countFilledForms(section)} / {section.forms.length} filled
                                             </Badge>
+
+                                            {isSectionApproved(section)
+                                                ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
+                                                : null}
+
                                             {/* {!section.isAccessible && (
                                                 <Badge variant="outline" className="text-muted-foreground">
                                                     <Lock className="h-3 w-3 mr-1" />
@@ -363,69 +419,69 @@ export function SectionedForm({ data, values, disabled, projectId }: { data: Wor
                                         <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
                                         <div className="grid gap-3">
                                             {section.forms.slice().sort((a, b) => a.position - b.position).map((form) => (
-                                                <Link to={`${window.location.origin}${location.pathname}?form=${form.slug}`}>
-                                                    <div
-                                                        key={form.slug}
-                                                        // className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${form.isAccessible
-                                                        //     ? 'hover:bg-muted/50 cursor-pointer'
-                                                        //     : 'bg-muted/20 cursor-not-allowed'
-                                                        //     }`}
-                                                        className={cn(`flex items-center justify-between p-3 rounded-lg border transition-colors bg-muted/20 cursor-pointer`,
-                                                            {
-                                                                "border-green-700 dark:border-green-800": form.slug,
-                                                            }
-                                                        )}
-                                                    // onClick={() => form.isAccessible && Sub(form.id, section)}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex items-center gap-2">
-                                                                {form.slug
-                                                                    ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800" />
-                                                                    : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />}
-                                                                <div>
-                                                                    <div className="font-medium text-sm">{form.name}</div>
-                                                                    <div className="text-xs text-muted-foreground">{form?.description || null}</div>
-                                                                </div>
+                                                <button
+                                                    type='button'
+                                                    key={form.slug}
+                                                    className={cn(`text-start flex items-center justify-between p-3 rounded-lg border transition-all bg-muted/20 disabled:cursor-not-allowed disabled:opacity-70 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer hover:bg-muted/50 disabled:hover:bg-muted/20`,
+                                                        {
+                                                            "border-green-700 dark:border-green-800": isFilledForm(form.slug),
+                                                        }
+                                                    )}
+                                                    onClick={() => navigate(`?form=${form.slug}`)}
+                                                    disabled={!canClickForm(form)}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2">
+                                                            {isFilledForm(form.slug)
+                                                                ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800" />
+                                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />}
+                                                            <div>
+                                                                <div className="font-medium text-sm">{form.name}</div>
+                                                                <div className="text-xs text-muted-foreground">{form?.description || null}</div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {/* {!form.isAccessible && (
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {/* {!form.isAccessible && (
                                                             <Badge variant="outline" className="text-xs">
                                                                 <Lock className="h-3 w-3 mr-1" />
                                                                 Locked
                                                             </Badge>
-                                                        )}
-                                                        {form.isCompleted && (
-                                                            <Badge variant="default" className="bg-green-600 text-xs">
+                                                        )} */}
+                                                        {areAllFieldsApproved(form.slug) && (
+                                                            <Badge variant="default" className="bg-green-800 text-xs">
                                                                 Complete
                                                             </Badge>
-                                                        )} */}
-                                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                                        </div>
+                                                        )}
+                                                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                                     </div>
-                                                </Link>
+                                                </button>
                                             ))}
                                         </div>
                                     </div>
                                 </CollapsibleContent>
                             </Collapsible>
-                            <CardFooter className='flex items-center justify-between px-3 md:px-4'>
-                                <p className='text-muted-foreground text-xs md:text-sm'>Approval</p>
-                                <Button type='button' size='sm' disabled={disabled || isPending || isLoading}>
-                                    {isPending || isLoading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Approving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Check className="h-4 w-4" />
-                                            Approve
-                                        </>
-                                    )}
-                                    {"  "}
-                                </Button>
-                            </CardFooter>
+
+                            {!isSectionApproved(section) ? (
+                                <CardFooter className='flex items-center justify-between px-3 md:px-4'>
+                                    <p className='text-muted-foreground text-xs md:text-sm'>Approval</p>
+                                    <Button type='button' size='sm' disabled={disabled || isSectionApproved(section) || isPending || isLoading}>
+                                        {isPending || isLoading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Approving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                Approve
+                                            </>
+                                        )}
+                                    </Button>
+                                </CardFooter>
+                            ) : (
+                                <CardFooter className='flex items-center justify-between px-3 md:px-4 py-1'></CardFooter>
+                            )}
                         </Card>
                     ))}
                 </div>
