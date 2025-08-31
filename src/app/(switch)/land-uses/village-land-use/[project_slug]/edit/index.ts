@@ -1,16 +1,12 @@
 import Page from "./page";
-import ProjectSlug from "./[locality_project_slug]";
-import Edit from "./edit"
 
 const Index = {
-  path: ":project_slug",
+  path: "edit",
   children: [
     {
       index: true,
       Component: Page,
     },
-    Edit,
-    ProjectSlug,
   ],
 };
 

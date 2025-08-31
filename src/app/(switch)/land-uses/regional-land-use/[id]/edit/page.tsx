@@ -12,7 +12,6 @@ export default function Page() {
     setPage({
       module: "land-uses",
       title: "Edit Regional Land Use Project",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

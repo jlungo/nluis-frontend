@@ -10,7 +10,6 @@ export default function Page() {
     setPage({
       module: "land-uses",
       title: "Create Village Land Use Project",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

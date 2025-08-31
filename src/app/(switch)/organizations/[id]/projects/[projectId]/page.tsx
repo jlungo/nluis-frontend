@@ -118,13 +118,13 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-TZ', {
-      style: 'currency',
-      currency: 'TZS',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  // const formatCurrency = (amount: number) => {
+  //   return new Intl.NumberFormat('en-TZ', {
+  //     style: 'currency',
+  //     currency: 'TZS',
+  //     minimumFractionDigits: 0,
+  //   }).format(amount);
+  // };
 
   // const formatDate = (dateString: string) => {
   //   return new Date(dateString).toLocaleDateString('en-US', {
@@ -278,7 +278,7 @@ export default function ProjectDetailPage() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Budget</label>
                   <p className="text-foreground font-medium">
-                    {project.budget ? formatCurrency(project.budget) : 'Not specified'}
+                    {/* {project.budget ? formatCurrency(project.budget) : 'Not specified'} */}
                   </p>
                 </div>
                 {daysRemaining !== null && (
@@ -433,7 +433,7 @@ export default function ProjectDetailPage() {
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Budget</span>
                     </div>
-                    <span className="font-semibold text-sm">{formatCurrency(project.budget)}</span>
+                    {/* <span className="font-semibold text-sm">{formatCurrency(project.budget)}</span> */}
                   </div>
                 </>
               )}

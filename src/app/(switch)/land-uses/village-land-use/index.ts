@@ -1,5 +1,6 @@
 import Layout from "../layout";
 import Page from "./page";
+import ProjectSlug from "./[project_slug]";
 import type { RouteObject } from "react-router";
 
 const Index: RouteObject = {
@@ -20,17 +21,11 @@ const Index: RouteObject = {
     {
       path: ":id",
       async lazy() {
-        const { default: Component } = await import("./[id]/page");
+        const { default: Component } = await import("./[project_slug]/page");
         return { Component };
       },
     },
-    {
-      path: ":id/edit",
-      async lazy() {
-        const { default: Component } = await import("./[id]/edit/page");
-        return { Component };
-      },
-    },
+    ProjectSlug
   ],
 };
 

@@ -286,7 +286,7 @@ export default function EditProjectPage() {
         name: formData.name,
         description: formData.description || undefined,
         type_id: formData.type_id,
-        status: formData.status as ProjectI['status_info'],
+        status: formData.status,
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
         budget: formData.budget ? Number(formData.budget) : undefined,

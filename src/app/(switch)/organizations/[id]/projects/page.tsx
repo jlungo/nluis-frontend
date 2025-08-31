@@ -49,7 +49,7 @@ import {
   RefreshCw,
   ArrowLeft,
   MapPin,
-  Calendar,
+  // Calendar,
   DollarSign,
   Building2,
 } from "lucide-react";
@@ -176,30 +176,30 @@ export default function OrganizationProjectsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-progress-completed/10 text-progress-completed border-progress-completed/20";
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "draft":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      case "suspended":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "active":
+  //       return "bg-progress-completed/10 text-progress-completed border-progress-completed/20";
+  //     case "completed":
+  //       return "bg-blue-100 text-blue-800 border-blue-200";
+  //     case "draft":
+  //       return "bg-gray-100 text-gray-800 border-gray-200";
+  //     case "suspended":
+  //       return "bg-yellow-100 text-yellow-800 border-yellow-200";
+  //     case "cancelled":
+  //       return "bg-red-100 text-red-800 border-red-200";
+  //     default:
+  //       return "bg-gray-100 text-gray-800 border-gray-200";
+  //   }
+  // };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-TZ", {
-      style: "currency",
-      currency: "TZS",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  // const formatCurrency = (amount: number) => {
+  //   return new Intl.NumberFormat("en-TZ", {
+  //     style: "currency",
+  //     currency: "TZS",
+  //     minimumFractionDigits: 0,
+  //   }).format(amount);
+  // };
 
   if (loading) {
     return (
@@ -498,14 +498,14 @@ export default function OrganizationProjectsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{project.project_type_info.name}</Badge>
+                          {/* <Badge variant="outline">{project.project_type_info.name}</Badge> */}
                         </TableCell>
                         <TableCell>
                           {project.localities ? (
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                {project.localities.map((locality) => (
+                                {/* {project.localities.map((locality) => (
                                   <div>
                                     {locality.region ||
                                       locality.district ||
@@ -513,7 +513,7 @@ export default function OrganizationProjectsPage() {
                                       locality.village ||
                                       "N/A"}
                                   </div>
-                                ))}
+                                ))} */}
                               </span>
                             </div>
                           ) : (
@@ -523,9 +523,9 @@ export default function OrganizationProjectsPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(project.status_info)}>
+                          {/* <Badge className={getStatusColor(project.status_info)}>
                             {project.status_info}
-                          </Badge>
+                          </Badge> */}
                         </TableCell>
                         <TableCell>
                           {/* {project.progress_percentage !== undefined ? (
@@ -553,7 +553,7 @@ export default function OrganizationProjectsPage() {
                             <div className="flex items-center gap-1">
                               <DollarSign className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                {formatCurrency(project.budget)}
+                                {/* {formatCurrency(project.budget)} */}
                               </span>
                             </div>
                           ) : (
@@ -563,7 +563,7 @@ export default function OrganizationProjectsPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {project.published_date ? (
+                          {/* {project.published_date ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
@@ -572,11 +572,11 @@ export default function OrganizationProjectsPage() {
                                 ).toLocaleDateString()}
                               </span>
                             </div>
-                          ) : (
+                          ) : ( */}
                             <span className="text-sm text-muted-foreground">
                               N/A
                             </span>
-                          )}
+                          {/* )} */}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
