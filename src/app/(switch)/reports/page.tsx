@@ -264,7 +264,7 @@ export default function ReportsPage() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -437,7 +437,7 @@ export default function ReportsPage() {
                       size="sm"
                     >
                       {state.generating ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                       ) : (
                         <BarChart3 className="h-4 w-4 mr-2" />
                       )}

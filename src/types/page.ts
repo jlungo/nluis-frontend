@@ -38,7 +38,7 @@ export type Page =
 
   // Management & Evaluation pages
   | "overview"
-  | "reports";
+  | "reports"
 
   // MapShop Management pages
 
@@ -49,9 +49,15 @@ export type Page =
   // User Management pages
 
   // System Settings pages
+  | "system-settings"
+  | "Form Management"
+  | "Locality Management"
+  | "User Management"
+  | "Organization Management"
+  | "Land Use Management";
 
-  // Billing pages
+// Billing pages
 
-  // Document Management pages
+// Document Management pages
 
-  // Equipment Management pages
+// Equipment Management pages
