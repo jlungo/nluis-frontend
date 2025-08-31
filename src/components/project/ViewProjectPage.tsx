@@ -12,31 +12,12 @@ import { ArrowLeft, Edit, MapPin, Calendar, Building, DollarSign, FileText, User
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
-import { LocalityTableColumns } from '@/components/project/ProjectDataTableColumns';
+import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/ProjectDataTableColumns';
 import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
 
 interface ViewProjectPageProps {
   moduleLevel: string;
 }
-
-// Status color mappings
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case "Completed":
-    case "Approved":
-      return "default";
-    case "In Process":
-      return "secondary";
-    case "Pending":
-    case "Waiting for Approval":
-      return "outline";
-    case "On Hold":
-    case "Rejected":
-      return "destructive";
-    default:
-      return "secondary";
-  }
-};
 
 const ProjectDetailsGrid: React.FC<{ project: ProjectI }> = ({ project }) => (
   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -140,12 +121,8 @@ const ProjectCardHeader: React.FC<{ project: ProjectI }> = ({ project }) => {
         </div>
       </div>
       <div className="flex gap-2">
-        <Badge variant={getStatusVariant(projectStatus)} className="px-3 py-1">
-          {projectStatus}
-        </Badge>
-        <Badge variant={getStatusVariant(approvalStatus)} className="px-3 py-1">
-          {approvalStatus}
-        </Badge>
+        <ProjectStatusBadge status={projectStatus} />
+        <ProjectStatusBadge status={approvalStatus} />
       </div>
     </div>
   );

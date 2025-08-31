@@ -310,11 +310,11 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const renderLocalitySelection = () => {
     if (moduleLevel === LOCALITY_LEVELS.NATIONAL) {
       return (
-        <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <MapPin className="h-5 w-5 text-blue-600" />
+        <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900/50 dark:border-blue-800">
+          <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-100" />
           <div>
-            <p className="font-medium text-blue-900">National Coverage</p>
-            <p className="text-sm text-blue-700">This project will cover the entire nation of Tanzania.</p>
+            <p className="font-medium text-blue-900 dark:text-blue-100">National Coverage</p>
+            <p className="text-sm text-blue-700 dark:text-blue-300">This project will cover the entire nation of Tanzania.</p>
           </div>
         </div>
       );
@@ -513,7 +513,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
               />
 
               {formData.funder_ids.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50">
+                <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-900 max-h-32 overflow-y-auto">
                   {formData.funder_ids.map(funderId => {
                     const funder = funders?.find(f => f.id.toString() === funderId);
                     return funder ? (
@@ -522,7 +522,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
                         <button
                           type="button"
                           onClick={() => handleFunderSelect(funderId)}
-                          className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                          className="ml-1 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>
