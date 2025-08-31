@@ -46,7 +46,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   // Locality selection state
   const [selectedLocalities, setSelectedLocalities] = useState<SelectedLocality[]>([]);
   const [currentSelection, setCurrentSelection] = useState({
-    zonal: '',
+    // zonal: '',
     region: '',
     district: '',
     ward: '',
@@ -57,22 +57,23 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   const createProjectMutation = useCreateProject();
 
   // Helper functions for locality filtering
-  const getLocalitiesByLevel = (level: string) =>
-    localities?.filter(l => l.level === level) || [];
+  const getLocalitiesByLevel = (level: string) => {
+    return localities?.filter(l => l.level == level) || [];
+  };
 
   const getChildLocalities = (level: string, parentId: string) =>
-    localities?.filter(l => l.level === level && l.parent === parentId) || [];
+    localities?.filter(l => l.level == level && l.parent == parentId) || [];
 
   const buildLocalityPath = (locality: LocalityI): string => {
     const pathParts: string[] = [];
 
-    if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
-      const zonal = localities?.find(l =>
-        l.level === LOCALITY_LEVELS.ZONAL &&
-        (l.id === locality.id || isAncestor(l.id, locality.id))
-      );
-      if (zonal) pathParts.push(zonal.name);
-    }
+    // if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
+    //   const zonal = localities?.find(l =>
+    //     l.level === LOCALITY_LEVELS.ZONAL &&
+    //     (l.id === locality.id || isAncestor(l.id, locality.id))
+    //   );
+    //   if (zonal) pathParts.push(zonal.name);
+    // }
 
     if (moduleLevel >= LOCALITY_LEVELS.REGION) {
       const region = localities?.find(l =>
@@ -128,11 +129,12 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
       const newSelection = { ...prev };
 
       // Reset child selections when parent changes
-      if (level === 'zonal') {
-        newSelection.region = '';
-        newSelection.district = '';
-        newSelection.ward = '';
-      } else if (level === 'region') {
+      // if (level === 'zonal') {
+      //   newSelection.region = '';
+      //   newSelection.district = '';
+      //   newSelection.ward = '';
+      // }
+      if (level === 'region') {
         newSelection.district = '';
         newSelection.ward = '';
       } else if (level === 'district') {
@@ -150,10 +152,10 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
 
     // Determine the target level and ID based on moduleLevel
     switch (moduleLevel) {
-      case LOCALITY_LEVELS.ZONAL:
-        targetLevel = LOCALITY_LEVELS.ZONAL;
-        targetId = currentSelection.zonal;
-        break;
+      // case LOCALITY_LEVELS.ZONAL:
+      //   targetLevel = LOCALITY_LEVELS.ZONAL;
+      //   targetId = currentSelection.zonal;
+      //   break;
       case LOCALITY_LEVELS.REGION:
         targetLevel = LOCALITY_LEVELS.REGION;
         targetId = currentSelection.region;
@@ -196,7 +198,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
 
     // Reset selections
     setCurrentSelection({
-      zonal: '',
+      // zonal: '',
       region: '',
       district: '',
       ward: '',
@@ -238,7 +240,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
         budget: formData.budget,
         module_level: moduleLevel,
         funder_ids: formData.funder_ids,
-        locality_ids: moduleLevel === LOCALITY_LEVELS.NATIONAL ? [] : formData.locality_ids,
+        locality_ids: moduleLevel === LOCALITY_LEVELS.NATIONAL ? ["92"] : formData.locality_ids, // Locality ID of Tanzania is 92
       };
 
       await createProjectMutation.mutateAsync(payload);
@@ -308,7 +310,6 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                   <SelectValue placeholder="Select region" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='test'>Test</SelectItem>
                   {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
                     <SelectItem key={region.id} value={region.id}>
                       {region.name}
@@ -331,8 +332,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                   <SelectValue placeholder="Select district" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='test'>Test</SelectItem>
-                  {getLocalitiesByLevel(LOCALITY_LEVELS.DISTRICT).map(district => (
+                  {getChildLocalities(LOCALITY_LEVELS.DISTRICT, currentSelection.region).map(district => (
                     <SelectItem key={district.id} value={district.id}>
                       {district.name}
                     </SelectItem>
@@ -354,8 +354,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                   <SelectValue placeholder="Select ward" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='test'>Test</SelectItem>
-                  {getLocalitiesByLevel(LOCALITY_LEVELS.WARD).map(ward => (
+                  {getChildLocalities(LOCALITY_LEVELS.WARD, currentSelection.district).map(ward => (
                     <SelectItem key={ward.id} value={ward.id}>
                       {ward.name}
                     </SelectItem>
@@ -371,7 +370,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
             type="button"
             onClick={addLocality}
             disabled={
-              (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
+              // (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
               (moduleLevel === LOCALITY_LEVELS.REGION && !currentSelection.region) ||
               (moduleLevel === LOCALITY_LEVELS.DISTRICT && !currentSelection.district) ||
               (moduleLevel === LOCALITY_LEVELS.WARD && !currentSelection.ward)

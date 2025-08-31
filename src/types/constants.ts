@@ -34,16 +34,16 @@ export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
 
 export const LOCALITY_LEVELS = {
   NATIONAL: "1",
-  ZONAL: "2",
-  REGION: "3",
-  DISTRICT: "4",
-  WARD: "5",
-  VILLAGE: "6",
+  // ZONAL: "2",
+  REGION: "2",
+  DISTRICT: "3",
+  WARD: "4",
+  VILLAGE: "5",
 } as const;
 
 export const LOCALITY_LEVEL_NAMES = {
   [LOCALITY_LEVELS.NATIONAL]: "National",
-  [LOCALITY_LEVELS.ZONAL]: "Zonal",
+  // [LOCALITY_LEVELS.ZONAL]: "Zonal",
   [LOCALITY_LEVELS.REGION]: "Regional",
   [LOCALITY_LEVELS.DISTRICT]: "District",
   [LOCALITY_LEVELS.WARD]: "Ward",
