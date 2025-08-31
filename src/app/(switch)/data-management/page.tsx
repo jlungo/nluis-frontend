@@ -52,7 +52,6 @@ export default function DataCollectionPage() {
     setPage({
       module: "system-settings",
       title: "Data Management",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

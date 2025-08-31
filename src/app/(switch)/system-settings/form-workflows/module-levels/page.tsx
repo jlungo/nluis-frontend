@@ -19,9 +19,8 @@ export default function Page() {
   useLayoutEffect(() => {
     setPageData({
       module: 'system-settings',
-      title: "System Settings",
-      backButton: 'Back to Modules',
-      isFormPage: true
+      title: "Module Levels",
+
     })
   }, [setPageData])
 

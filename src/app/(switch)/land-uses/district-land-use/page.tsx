@@ -10,8 +10,7 @@ export default function DistrictLandUsePage() {
   useEffect(() => {
     setPage({
       module: 'land-uses',
-      title: 'District Land Use Projects',
-      backButton: 'Modules',
+      title: "District Land Use Projects",
     });
   }, [setPage]);
 

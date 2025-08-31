@@ -11,7 +11,6 @@ export default function ZoneLandUsePage() {
     setPage({
       module: 'land-uses',
       title: 'Zone Land Use Projects',
-      backButton: 'Modules',
     });
   }, [setPage]);
 

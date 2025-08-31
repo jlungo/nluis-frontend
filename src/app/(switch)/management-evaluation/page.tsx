@@ -8,7 +8,6 @@ export default function Page() {
     setPage({
       module: "management-evaluation",
       title: "Spatial Data Management",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

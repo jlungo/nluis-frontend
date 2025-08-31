@@ -97,7 +97,6 @@ export default function MapShopManagementPage() {
     setPage({
       module: "mapshop-management",
       title: "MapShop Management",
-      backButton: "Back to Dashboard",
     });
   }, [setPage]);
 
@@ -339,9 +338,8 @@ export default function MapShopManagementPage() {
 
         {/* Map */}
         <div
-          className={`${
-            state.showLayerManager ? "lg:col-span-3" : "lg:col-span-4"
-          }`}
+          className={`${state.showLayerManager ? "lg:col-span-3" : "lg:col-span-4"
+            }`}
         >
           <Card>
             <CardHeader>

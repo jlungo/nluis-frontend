@@ -11,7 +11,6 @@ export default function NationalUsePage() {
     setPage({
       module: 'land-uses',
       title: 'National Land Use Projects',
-      backButton: 'Modules',
     });
   }, [setPage]);
 

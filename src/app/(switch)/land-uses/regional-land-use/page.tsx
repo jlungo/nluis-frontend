@@ -11,7 +11,6 @@ export default function RegionalUsePage() {
     setPage({
       module: 'land-uses',
       title: 'Regional Land Use Projects',
-      backButton: 'Modules',
     });
   }, [setPage]);
 

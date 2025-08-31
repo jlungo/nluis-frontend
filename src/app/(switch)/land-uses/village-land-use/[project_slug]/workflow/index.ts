@@ -1,17 +1,14 @@
 import Layout from "./layout";
 import Page from "./page";
-import FormWorkflows from "./form-workflows";
-import type { RouteObject } from "react-router";
 
-const Index: RouteObject = {
-  path: "/system-settings",
+const Index = {
+  path: "workflow",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    FormWorkflows,
   ],
 };
 

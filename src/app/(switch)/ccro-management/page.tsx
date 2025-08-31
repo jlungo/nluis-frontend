@@ -97,7 +97,6 @@ export default function CCROManagementPage() {
     setPage({
       module: "ccro-management",
       title: "CCRO Management",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 

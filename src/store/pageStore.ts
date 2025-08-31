@@ -5,9 +5,7 @@ export interface PageMetadata {
   module: Page | null;
   title: string;
   isFormPage?: boolean;
-  showPageHeader?: boolean;
   pageActions?: boolean;
-  backButton?: string;
 }
 
 interface PageState {

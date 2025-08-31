@@ -47,7 +47,6 @@ export default function DashboardPage() {
     setPage({
       module: "dashboard",
       title: "Dashboard",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -250,11 +249,11 @@ export default function DashboardPage() {
                         className="bg-primary h-2 rounded-full"
                         style={{
                           width: `${(funder.count /
-                              Math.max(
-                                ...dashboardData.projectStats.funders.map(
-                                  (f) => f.count
-                                )
-                              )) *
+                            Math.max(
+                              ...dashboardData.projectStats.funders.map(
+                                (f) => f.count
+                              )
+                            )) *
                             100
                             }%`,
                         }}

@@ -35,7 +35,6 @@ export default function OrganizationList() {
     setPage({
       module: "organizations",
       title: "Organizations-list",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
   // Load organizations

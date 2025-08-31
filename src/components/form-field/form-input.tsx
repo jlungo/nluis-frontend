@@ -3,6 +3,7 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import { cn } from "@/lib/utils";
+import { Asterisk } from "lucide-react";
 
 type FormInputProps = React.ComponentPropsWithoutRef<typeof Input> & {
     data: FieldsProps;
@@ -11,7 +12,7 @@ type FormInputProps = React.ComponentPropsWithoutRef<typeof Input> & {
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     ({ data, className, disabled, ...props }, ref) => (
         <div className="w-full space-y-2 md:w-[48%] xl:w-[49%]">
-            <Label htmlFor={data.name}>{data.label}</Label>
+            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
             <Input
                 id={data.name}
                 type={data.type}

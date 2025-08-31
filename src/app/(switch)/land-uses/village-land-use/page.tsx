@@ -4,14 +4,13 @@ import ProjectsList from '@/components/project/ProjectsListPage';
 import { usePageStore } from '@/store/pageStore';
 import { useEffect } from 'react';
 
-export default function VillageLandUsePage() {
+export default function Page() {
   const { setPage } = usePageStore();
 
   useEffect(() => {
     setPage({
       module: 'land-uses',
       title: 'Village Land Use Projects',
-      backButton: 'Modules',
     });
   }, [setPage]);
 

@@ -77,7 +77,6 @@ export function NavigationSidebar({
     return `/${page.module}/${id}`
   };
 
-  console.log("Current page:", page);
   // Get module-specific navigation or default navigation
   const getNavigationItems = (): (
     | NavigationItem
@@ -281,7 +280,7 @@ export function NavigationSidebar({
         case "organizations":
           return [
             {
-              id: "",
+              id: "organizations",
               label: "Dashboard",
               icon: <LayoutDashboard className="h-4 w-4" />
             },
@@ -300,13 +299,14 @@ export function NavigationSidebar({
 
   const navigationItems = getNavigationItems();
 
-  const renderNavigationItem = (item: NavigationItem, group?: string) => {
-    const isPathnameActive = pathname.includes(item.id) && group
+  const renderNavigationItem = (item: NavigationItem, group?: NavigationGroup) => {
+    const link = group ? group.id === item.id ? group.id : `${group.id}/${item.id}` : item.id
+    const isPathnameActive = pathname.endsWith(link)
 
     const buttonContent = (
       <NavLink
         key={item.id}
-        to={navigateTo(group ? group === item.id ? group : `${group}/${item.id}` : item.id)}
+        to={navigateTo(link)}
         end
         className={({ isActive, isPending }) => cn(
           buttonVariants({ variant: isActive || isPathnameActive ? "default" : "ghost" }),
@@ -485,7 +485,7 @@ export function NavigationSidebar({
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-1 pl-1">
-          {group.items.map((item) => renderNavigationItem(item, group.id))}
+          {group.items.map(item => renderNavigationItem(item, group))}
         </CollapsibleContent>
       </Collapsible>
     );

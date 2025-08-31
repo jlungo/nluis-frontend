@@ -88,7 +88,6 @@ export default function FormBuilderPage() {
     setPage({
       module: "system-settings",
       title: "Form Builder",
-      backButton: "Back to Forms",
     });
   }, [setPage]);
 
