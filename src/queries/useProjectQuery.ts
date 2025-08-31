@@ -5,13 +5,13 @@ import { CreateProjectDataI, LocalityI, LocalityLevelI, ProjectFunderI, ProjectI
 
 export const useProjectsQuery = (options: ProjectQueryParamsI) => {
   return useQuery({
-    queryKey: options.id
-      ? ["project", options.id]
+    queryKey: options.project_id
+      ? ["project", options.project_id]
       : ["projects", options],
     queryFn: async (): Promise<APIResponse<ProjectI>> => {
-      if (options.id) {
-        // Fetch a single project by id
-        const response = await api.get<APIResponse<ProjectI>>(`/projects/${options.id}`);
+      if (options.project_id) {
+        // Fetch a single project by project_id
+        const response = await api.get<APIResponse<ProjectI>>(`/projects/${options.project_id}`);
         return response.data;
       } else {
         // Fetch multiple projects with optional params
@@ -21,7 +21,7 @@ export const useProjectsQuery = (options: ProjectQueryParamsI) => {
         return response.data;
       }
     },
-    enabled: !!options.id || !!options,
+    enabled: !!options.project_id || !!options,
   });
 };
 

@@ -17,16 +17,16 @@ const Index = {
       },
     },
     {
-      path: ":id",
+      path: ":project_id",
       async lazy() {
-        const { default: Component } = await import("./[id]/page");
+        const { default: Component } = await import("./[project_id]/page");
         return { Component };
       },
     },
     {
-      path: ":id/edit",
+      path: ":project_id/edit",
       async lazy() {
-        const { default: Component } = await import("./[id]/edit/page");
+        const { default: Component } = await import("./[project_id]/edit/page");
         return { Component };
       },
     },

@@ -37,7 +37,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const userOrganization = useUserOrganization();
   
   // Fetch project data
-  const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ id: projectId });
+  const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ project_id: projectId });
   const project = projectData?.results as ProjectI | undefined;
 
   const [formData, setFormData] = useState<CreateProjectDataI>({

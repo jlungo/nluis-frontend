@@ -1,7 +1,9 @@
 import Layout from "../layout";
 import Page from "./page";
+import projectId from "./[project_id]";
+import type { RouteObject } from "react-router";
 
-const Index = {
+const Index: RouteObject = {
   path: "zonal-land-use",
   Component: Layout,
   children: [
@@ -10,19 +12,20 @@ const Index = {
       Component: Page,
     },
     {
-      path: ":id",
+      path: "create",
       async lazy() {
-        const { default: Component } = await import("./[id]/page");
+        const { default: Component } = await import("./create/page");
         return { Component };
       },
     },
     {
-      path: ":id/edit",
+      path: ":project_id",
       async lazy() {
-        const { default: Component } = await import("./[id]/edit/page");
+        const { default: Component } = await import("./[project_id]/page");
         return { Component };
       },
     },
+    projectId
   ],
 };
 
