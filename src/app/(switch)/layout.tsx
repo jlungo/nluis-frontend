@@ -225,9 +225,9 @@ export default function Layout() {
                           </h1>
                           : null}
                       </div>
-                      <div className="text-sm text-muted-foreground hidden xl:block">
+                      {/* <div className="text-sm text-muted-foreground hidden xl:block">
                         Module Dashboard
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   <Outlet />

@@ -190,7 +190,7 @@ export default function MapShopManagementPage() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -383,15 +383,15 @@ export default function MapShopManagementPage() {
                   </p>
                   <div className="mt-4 space-y-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full" />
                       <span>Available Plots</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-red-500 rounded-full" />
                       <span>Occupied Plots</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full" />
                       <span>Pending Plots</span>
                     </div>
                   </div>
