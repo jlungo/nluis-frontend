@@ -34,7 +34,7 @@ export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
 
 export const LOCALITY_LEVELS = {
   NATIONAL: "1",
-  // ZONAL: "2",
+  ZONAL: "NULL",
   REGION: "2",
   DISTRICT: "3",
   WARD: "4",
@@ -43,11 +43,20 @@ export const LOCALITY_LEVELS = {
 
 export const LOCALITY_LEVEL_NAMES = {
   [LOCALITY_LEVELS.NATIONAL]: "National",
-  // [LOCALITY_LEVELS.ZONAL]: "Zonal",
+  [LOCALITY_LEVELS.ZONAL]: "Zonal",
   [LOCALITY_LEVELS.REGION]: "Regional",
   [LOCALITY_LEVELS.DISTRICT]: "District",
   [LOCALITY_LEVELS.WARD]: "Ward",
   [LOCALITY_LEVELS.VILLAGE]: "Village",
+} as const;
+
+export const MODULE_LEVEL_SLUG = {
+  [LOCALITY_LEVELS.NATIONAL]: "national-land-use",
+  [LOCALITY_LEVELS.ZONAL]: "zonal-land-use",
+  [LOCALITY_LEVELS.REGION]: "regional-land-use",
+  [LOCALITY_LEVELS.DISTRICT]: "district-land-use",
+  [LOCALITY_LEVELS.WARD]: "ward-land-use",
+  [LOCALITY_LEVELS.VILLAGE]: "village-land-use",
 } as const;
 
 export const ProjectStatus: Record<number, string> = {
