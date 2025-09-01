@@ -33,8 +33,7 @@ export default function UserManagement() {
   useLayoutEffect(() => {
     setPage({
       module: "user-management",
-      title: "User-Management",
-      backButton: "Back to Modules",
+      title: "User-Management"
     });
   }, [setPage]);
 
