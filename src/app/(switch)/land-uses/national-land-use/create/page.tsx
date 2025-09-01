@@ -17,7 +17,7 @@ export default function Page() {
     <div>
       <CreateProject 
         moduleLevel={LOCALITY_LEVELS.NATIONAL}
-        afterCreateRedirectPath="/land-use/national-land-use"
+        afterCreateRedirectPath="/land-uses/national-land-use"
       />
     </div>
   );
