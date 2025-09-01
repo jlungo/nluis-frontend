@@ -13,7 +13,7 @@ export interface ProjectI {
   total_locality: string | null;
   total_funders: string | null;
   funders: Array<{ id: string; name: string; category: string }> | null;
-  localities: Array<{ id: string; name: string; level: string }> | null;
+  localities: Array<{ locality__id: string; locality__name: string; locality__level: string }> | null;
   created_at: string;
 }
 
@@ -89,6 +89,18 @@ export interface ProjectQueryParamsI {
 }
 
 export interface CreateProjectDataI {
+  name: string;
+  organization: string;
+  description: string;
+  registration_date: string;
+  authorization_date: string;
+  budget: string;
+  module_level: string;
+  funder_ids: string[];
+  locality_ids: string[];
+}
+
+export interface UpdateProjectDataI {
   name: string;
   organization: string;
   description: string;

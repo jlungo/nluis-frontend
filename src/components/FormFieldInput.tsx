@@ -47,7 +47,7 @@ type FormFieldInputProps =
     value?: string;
     values?: string[];
     isLoading?: boolean;
-    options: { value: string; label: string }[];
+    options: SelectOption[];
     onChange: (value: string) => void;
     onValuesChange?: (values: string[]) => void;
     required?: boolean;
