@@ -17,7 +17,7 @@ export default function Page() {
     <div>
       <CreateProject 
         moduleLevel={LOCALITY_LEVELS.ZONAL}
-        afterCreateRedirectPath="/land-use/zonal-land-use"
+        afterCreateRedirectPath="/land-uses/zonal-land-use"
       />
     </div>
   );
