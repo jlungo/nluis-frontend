@@ -97,7 +97,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   const handleSingleSelection = (level: 'selectedRegion' | 'selectedDistrict' | 'selectedWard', value: string) => {
     setCurrentSelection(prev => {
       const newSelection = { ...prev };
-      
+
       // Reset child selections when parent changes
       if (level === 'selectedRegion') {
         newSelection.districts = [];
@@ -215,16 +215,31 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     return (
       <div className="space-y-4">
         {/* Selection Controls */}
-        <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg space-y-4">
-          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
+        <div className="border p-4 md:p-6 rounded-lg space-y-4">
+          <h4 className="font-medium text-base text-gray-700 dark:text-gray-300">
             Select localities to add to your project
           </h4>
-          
+
           <div className="grid gap-4">
             {/* Region Selection */}
             {moduleLevel >= LOCALITY_LEVELS.REGION && (
               <div className="space-y-2">
                 {targetLevel === LOCALITY_LEVELS.REGION ? (
+                  <FormFieldInput
+                    type="multiselect"
+                    id="regions-multi"
+                    label="Select Regions"
+                    values={currentSelection.regions} // Pass current values
+                    options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
+                      value: region.id,
+                      label: region.name
+                    }))}
+                    onChange={() => { }}
+                    onValuesChange={(values) => handleMultiSelection('regions', values)}
+                    placeholder="Select regions"
+                  />
+                ) : (
+                  <>
                     <FormFieldInput
                       type="multiselect"
                       id="regions-multi"
@@ -234,29 +249,29 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                         value: region.id,
                         label: region.name
                       }))}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       onValuesChange={(values) => handleMultiSelection('regions', values)}
                       placeholder="Select regions"
                     />
-                  ) : (
-                  <div>
-                    <Label htmlFor='select-region'>Select Region</Label>
-                    <Select
-                      value={currentSelection.selectedRegion}
-                      onValueChange={(value: string) => handleSingleSelection('selectedRegion', value)}
-                    >
-                      <SelectTrigger id='select-region' className='w-full'>
-                        <SelectValue placeholder="Select region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
-                          <SelectItem key={region.id} value={region.id}>
-                            {region.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div>
+                      <Label htmlFor='select-region'>Select Region</Label>
+                      <Select
+                        value={currentSelection.selectedRegion}
+                        onValueChange={(value: string) => handleSingleSelection('selectedRegion', value)}
+                      >
+                        <SelectTrigger id='select-region' className='w-full'>
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
+                            <SelectItem key={region.id} value={region.id}>
+                              {region.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -274,7 +289,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                       value: district.id,
                       label: district.name
                     }))}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     onValuesChange={(values) => handleMultiSelection('districts', values)}
                     placeholder="Select districts"
                   />
@@ -315,7 +330,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                       value: ward.id,
                       label: ward.name
                     }))}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     onValuesChange={(values) => handleMultiSelection('wards', values)}
                     placeholder="Select wards"
                   />
@@ -354,7 +369,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                     value: village.id,
                     label: village.name
                   }))}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   onValuesChange={(values) => handleMultiSelection('villages', values)}
                   placeholder="Select villages"
                 />
@@ -367,7 +382,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
   };
 
   return (
-    <div className="container max-w-6xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Project Details Section */}
         <Card>
@@ -483,7 +498,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
         <Separator />
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 -mt-1 pb-4">
           <Button
             type="button"
             variant="outline"

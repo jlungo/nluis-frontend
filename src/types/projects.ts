@@ -81,6 +81,7 @@ export interface ProjectQueryParamsI {
   organization?: string;
   module_level?: string | number;
   status?: string;
+  approval_status?: string;
   search?: string;
   registration_date?: string;
   authorization_date?: string;
@@ -104,7 +105,7 @@ export interface ProjectUser {
   user_id: string;
   user_name: string;
   user_email: string;
-  role: 'manager' | 'coordinator' | 'member' | 'observer';
+  role: "manager" | "coordinator" | "member" | "observer";
   assigned_at: string;
 }
 
@@ -209,7 +210,7 @@ export interface Parcel {
 export interface ParcelParty {
   id: string;
   parcel_id: string;
-  party_type: 'owner' | 'tenant' | 'claimant' | 'witness';
+  party_type: "owner" | "tenant" | "claimant" | "witness";
   name: string;
   id_number?: string;
   contact_number?: string;
@@ -235,7 +236,7 @@ export interface Signatory {
   role: string;
   signing_order?: number;
   signed_at?: string;
-  status: 'pending' | 'signed' | 'rejected';
+  status: "pending" | "signed" | "rejected";
   created_at?: string;
 }
 
@@ -255,7 +256,7 @@ export interface TeamMember {
   email?: string;
   role: string;
   assigned_at: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export interface CreateTeamMemberRequest {
@@ -280,7 +281,7 @@ export interface MonitoringRecord {
   monitor_name: string;
   findings: string;
   recommendations: string;
-  status: 'satisfactory' | 'needs_improvement' | 'unsatisfactory';
+  status: "satisfactory" | "needs_improvement" | "unsatisfactory";
   created_at?: string;
 }
 
@@ -338,7 +339,7 @@ export interface TeamMemberHistory {
   project_id: string;
   user_id: string;
   user_name: string;
-  action: 'added' | 'removed' | 'role_changed';
+  action: "added" | "removed" | "role_changed";
   previous_role?: string;
   new_role?: string;
   performed_by: string;

@@ -43,7 +43,7 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading }: M
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between bg-accent dark:bg-input/30 font-normal text-muted-foreground dark:text-muted-foreground/90"
+                    className="w-full overflow-hidden justify-between bg-accent dark:bg-input/30 font-normal text-muted-foreground dark:text-muted-foreground/90"
                 >
                     {selected && selected.length > 0
                         ? data
@@ -77,10 +77,10 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading }: M
                                             className={cn(
                                                 'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary dark:border-primary bg-accent dark:bg-input/30',
                                                 selected.includes(fw.value)
-                                                ? 'bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground'
-                                                : 'opacity-50 [&_svg]:invisible'
+                                                    ? 'bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground'
+                                                    : 'opacity-50 [&_svg]:invisible'
                                             )}
-                                            >
+                                        >
                                             <Check className="h-4 w-4 text-white" />
                                         </div>
                                         {fw.label}

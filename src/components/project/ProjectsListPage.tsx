@@ -20,7 +20,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [filters, setFilters] = useState({ status: '', name: '' });
+  const [filters, setFilters] = useState({ status: '', name: '', approval_status: '' });
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +29,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     module_level: moduleLevel,
     status: filters.status || undefined,
     search: filters.name || undefined,
+    approval_status: filters.approval_status || undefined
   });
 
   const deleteProjectMutation = useDeleteProject();

@@ -42,7 +42,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) =>
             // TODO: post to form endpoint
-            api.post(``, e, {
+            api.post(`/form-management/submit-form-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
@@ -79,28 +79,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
             const formData = new FormData();
 
             entries.forEach((field) => {
-                const { value, type, name, field_id, project_locality_slug, created_by } = field;
+                const { value, type, field_id, project_locality_slug } = field;
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
-                    formData.append(`${type}-${field_id}`, value[0]);
-                else formData.append(`${type}-${field_id}`, value as string);
+                    formData.append(`data-${field_id}`, value[0]);
+                else formData.append(`data-${field_id}`, value as string);
 
-                // Include data for field
-                const submitData = {
-                    type,
-                    name,
-                    project_locality_slug,
-                    created_by
-                }
-                formData.append(`${field_id}`, JSON.stringify(submitData));
+                // Include project slug for field
+                formData.append(`${field_id}`, project_locality_slug);
             });
-
-            for (const [key, value] of formData.entries()) {
-                const fieldId = Number(key)
-                if (isNaN(fieldId)) console.log(key, value);
-                else console.log(fieldId, JSON.parse(value as string))
-            }
 
             toast.promise(mutateAsync(formData), {
                 loading: "Processing...",
@@ -199,7 +187,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
 
         const isSingle = data.sections.length == 1 && data.sections.every(section => section.forms.length == 1)
 
-        if (isSingle)
+        if (isSingle && disabled)
             return (
                 <Card className='max-w-4xl mx-auto pt-0 md:pt-0 overflow-hidden'>
                     <CardHeader className='bg-muted dark:bg-accent/50 pb-2 pt-6 flex justify-between gap-1'>
