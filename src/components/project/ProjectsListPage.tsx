@@ -141,7 +141,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
             entityName="Project"
             onView={(e) => navigate(`${e.id}`)}
             onEdit={(e) => navigate(`${e.id}/edit`)}
-            deleteFunction={handleDelete}
+            deleteFunction={() => handleDelete(row)}
           />
         )}
       />

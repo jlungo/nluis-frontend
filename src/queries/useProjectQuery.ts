@@ -36,14 +36,9 @@ export const useUpdateProject = () => {
 };
 
 export const useDeleteProject = () => {
-  const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async (projectId: string): Promise<void> => {
       await api.delete(`/projects/${projectId}/delete/`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 };
