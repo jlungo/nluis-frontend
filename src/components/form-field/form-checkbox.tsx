@@ -2,21 +2,25 @@ import type { ComponentPropsWithoutRef } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
+import { Asterisk } from "lucide-react";
 
-type CheckboxProps = ComponentPropsWithoutRef<typeof Checkbox> & {
+type CheckboxProps = Omit<ComponentPropsWithoutRef<typeof Checkbox>, "onCheckedChange"> & {
     data: FieldsProps;
+    checked?: boolean;
+    onValueChange?: (value: boolean) => void;
 };
 
-export default function FormCheckbox(props: CheckboxProps) {
+export default function FormCheckbox({ data, checked, onValueChange, ...rest }: CheckboxProps) {
     return (
-        <div className='w-full md:w-[48%] xl:w-[49%] flex gap-4 items-center'>
+        <div className="w-full md:w-[48%] xl:w-[49%] flex gap-4 items-center">
             <Checkbox
-                id={props.data.name}
-                name={props.data.name}
-                disabled={props.disabled}
-                {...props}
+                id={data.name}
+                name={data.name}
+                checked={checked}
+                onCheckedChange={(val) => onValueChange?.(val === true)} // normalize to boolean
+                {...rest}
             />
-            <Label htmlFor={props.data.name}>{props.data.label}</Label>
+            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
         </div>
-    )
+    );
 }

@@ -218,7 +218,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       <div className="rounded-md border overflow-hidden">
         <div className="relative max-h-[70vh] overflow-auto">
           <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background">
+            <TableHeader className="sticky top-0 z-10 bg-card">
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id}>
                   {hg.headers.map((header) => {
@@ -226,9 +226,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     return (
                       <TableHead
                         key={header.id}
-                        className={`whitespace-nowrap ${
-                          canSort ? "cursor-pointer select-none" : ""
-                        }`}
+                        className={`whitespace-nowrap ${canSort ? "cursor-pointer select-none" : ""
+                          }`}
                         onClick={
                           canSort
                             ? header.column.getToggleSortingHandler()
@@ -242,11 +241,10 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                           )}
                           {canSort && (
                             <ArrowUpDown
-                              className={`h-4 w-4 ${
-                                header.column.getIsSorted()
-                                  ? "opacity-100"
-                                  : "opacity-40"
-                              }`}
+                              className={`h-4 w-4 ${header.column.getIsSorted()
+                                ? "opacity-100"
+                                : "opacity-40"
+                                }`}
                             />
                           )}
                         </div>
@@ -256,7 +254,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody>
+            <TableBody className="bg-card">
               {isLoading ? (
                 Array.from({ length: loadingRows }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`} className="animate-pulse">
@@ -271,9 +269,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`hover:bg-accent/50 ${
-                      onRowClick ? "cursor-pointer" : ""
-                    }`}
+                    className={`hover:bg-accent/50 ${onRowClick ? "cursor-pointer" : ""
+                      }`}
                     onClick={
                       onRowClick
                         ? () => onRowClick(row.original as TData)
@@ -282,7 +279,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="dark:text-muted-foreground">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -321,7 +318,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm">Rows per page</span>
+          <span className="sr-only md:not-sr-only text-sm">Rows per page</span>
           <select
             className="h-9 rounded-md border bg-transparent px-2 text-sm"
             value={pag.pageSize}

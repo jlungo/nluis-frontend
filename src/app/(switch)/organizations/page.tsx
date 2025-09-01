@@ -51,7 +51,6 @@ export default function OrganizationDirectory() {
     setPage({
       module: "organizations",
       title: "Organizations",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
   // Load organizations

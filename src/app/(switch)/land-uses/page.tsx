@@ -11,15 +11,14 @@ export default function DashboardPage() {
   useLayoutEffect(() => {
     setPage({
       module: "land-uses",
-      title: "Dashboard",
-      backButton: "Back to Modules",
+      title: "Lan Uses Dashboard",
     });
   }, [setPage]);
 
   // if (isLoading) {
   //   return (
   //     <div className="flex items-center justify-center h-64">
-  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
   //     </div>
   //   );
   // }

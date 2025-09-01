@@ -4,6 +4,12 @@ import type { APIResponse } from "@/types/api-response";
 import type { WorkflowCategoryKey } from "@/types/constants";
 import type { InputType } from "@/types/input-types";
 
+export type RoleT = {
+  id: number;
+  role_id: string;
+  role_name: string;
+};
+
 export interface SelectOptionProps {
   text_label: string;
   value: string;
@@ -47,7 +53,7 @@ export interface FormProps {
   module_slug: string;
   module_name: string;
   position: number;
-  editor_roles: string[];
+  editor_roles: RoleT[];
   fields: FieldsProps[];
 }
 
@@ -56,7 +62,7 @@ export interface SectionProps {
   name: string;
   description: string;
   position: number;
-  approval_roles: string[];
+  approval_roles: RoleT[];
   is_active: boolean;
   workflow_slug: string;
   workflow_name: string;
@@ -112,6 +118,16 @@ export const useWorkflowQuery = (workflow_slug: string) => {
     queryFn: () =>
       api
         .get(`/form-management/submission/${workflow_slug}/`)
+        .then((res) => res.data),
+  });
+};
+
+export const useLevelWorkflowQuery = (level_slug: string) => {
+  return useQuery<WorkflowProps[]>({
+    queryKey: [workflowQueryKey, { level_slug }],
+    queryFn: () =>
+      api
+        .get(`/form-management/submission/module-level/${level_slug}/`)
         .then((res) => res.data),
   });
 };

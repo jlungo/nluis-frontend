@@ -97,7 +97,6 @@ export default function CCROManagementPage() {
     setPage({
       module: "ccro-management",
       title: "CCRO Management",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -370,7 +369,7 @@ export default function CCROManagementPage() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }

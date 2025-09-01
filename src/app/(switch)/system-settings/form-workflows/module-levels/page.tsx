@@ -19,9 +19,8 @@ export default function Page() {
   useLayoutEffect(() => {
     setPageData({
       module: 'system-settings',
-      title: "System Settings",
-      backButton: 'Back to Modules',
-      isFormPage: true
+      title: "Module Levels",
+
     })
   }, [setPageData])
 
@@ -119,8 +118,8 @@ export default function Page() {
             <TableHeader>
               <TableRow>
                 <TableHead>Level Name</TableHead>
+                <TableHead className="text-center">Slug</TableHead>
                 <TableHead className="text-center">Module</TableHead>
-                {/* <TableHead className="text-center">Sections</TableHead> */}
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -128,6 +127,7 @@ export default function Page() {
               {!isLoadingLevels && levels?.results && levels.results.length > 0 ? levels.results.map(level => (
                 <TableRow key={level.slug}>
                   <TableCell>{level.name}</TableCell>
+                  <TableCell className="text-center">{level.slug}</TableCell>
                   <TableCell className="text-center">{level.module_name}</TableCell>
                   <TableCell className="gap-2 flex justify-center">
                     <Button

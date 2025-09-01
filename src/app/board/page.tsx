@@ -162,7 +162,7 @@ export default function Page() {
         return null
     }
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 min-h-[calc(100vh-120px)] flex flex-col">
             {/* Module Tiles Grid */}
             <main className="space-y-6">
                 <div className="text-center">
@@ -170,13 +170,13 @@ export default function Page() {
                     <p className="text-muted-foreground">Click on any module to access its dedicated workspace</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6 md:w-fit max-w-[1500px] mx-auto">
                     {visibleModules.map((module) => (
                         <TooltipProvider key={module.id}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Card
-                                        className="border group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
+                                        className="border w-full mx-auto sm:w-fit sm:min-w-[25rem] md:min-w-[22.25rem] lg:min-w-[25rem] xl:min-w-[22rem] group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
                                         onClick={() => navigate(`/${module.id}`)}
                                     >
                                         <CardHeader className="pb-3">
@@ -223,7 +223,7 @@ export default function Page() {
             </main>
 
             {/* Role Information */}
-            <footer className="text-center mt-8">
+            <footer className="text-center mt-auto mb-0">
                 <p className="text-sm text-muted-foreground">
                     Logged in as: <span className="font-medium capitalize">
                         {user?.role?.name}

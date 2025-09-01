@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useLayoutEffect } from 'react';
 import { usePageStore } from "@/store/pageStore";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +80,6 @@ export default function LandUsesOverviewPage() {
     setPage({
       module: 'land-uses',
       title: "Land Use Overview",
-      backButton: 'Modules'
     });
   }, [setPage]);
 

@@ -59,8 +59,8 @@ export default function VerifyEmail() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-6">
           <div className="w-20 h-20 mx-auto flex items-center justify-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Key className="h-8 w-8 text-blue-600 animate-pulse" />
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-950 rounded-full flex items-center justify-center">
+              <Key className="h-8 w-8 text-blue-600 dark:text-blue-500 animate-pulse" />
             </div>
           </div>
           <h1 className="text-2xl font-semibold text-foreground">Verifying Reset Link...</h1>
@@ -77,13 +77,13 @@ export default function VerifyEmail() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-6">
           <div className="w-20 h-20 mx-auto flex items-center justify-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="h-8 w-8 text-red-600" />
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-500" />
             </div>
           </div>
 
           <div className="flex justify-center">
-            <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200 px-3 py-1">
+            <Badge variant="secondary" className="bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-500 border-red-200 dark:border-red-900 px-3 py-1">
               <Lock className="h-3 w-3 mr-1" />
               Invalid Email Verification Link
             </Badge>
@@ -97,17 +97,17 @@ export default function VerifyEmail() {
           </div>
         </div>
 
-        <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
-          <CardContent className="px-8 py-8">
-            <Alert className="border-red-200 bg-red-50 mb-6">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertTitle className="text-red-800">Verification Failed</AlertTitle>
-              <AlertDescription className="text-red-700">
+        <Card>
+          <CardContent>
+            <Alert className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 mb-6">
+              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-500" />
+              <AlertTitle className="text-red-800 dark:text-red-700">Verification Failed</AlertTitle>
+              <AlertDescription className="text-red-700 dark:text-red-800">
                 Please request a new password reset link or contact system administrator.
               </AlertDescription>
             </Alert>
 
-            <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+            <Button onClick={onBackToLogin} className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Login
             </Button>

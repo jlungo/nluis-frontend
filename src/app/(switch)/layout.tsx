@@ -200,15 +200,14 @@ export default function Layout() {
         {/* Page Content - SCROLLABLE */}
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <div className="px-4 md:px-6 py-4 md:py-4 space-y-6">
-              {page && page?.isFormPage !== undefined && page.isFormPage ? (
-                <Outlet />
-              ) : (
-                <>
+            {page && page?.isFormPage !== undefined && page.isFormPage
+              ? <Outlet />
+              : (
+                <div className="px-4 md:px-6 py-4 md:py-4 space-y-6">
                   {/* Module Context Header */}
                   <div className="border-b border-border pb-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 lg:gap-4">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -218,23 +217,22 @@ export default function Layout() {
                           <ArrowLeft className="h-4 w-4" />
                           Back
                         </Button>
-                        <div className="h-4 w-px bg-border" />
+                        <div className="h-4 w-px bg-border -ml-3" />
                         {page && page.pageActions !== false && <DynamicBreadcrums />}
                         {page ?
-                          <h1 className="text-base lg:text-lg font-semibold text-primary">
+                          <p className="text-base lg:text-lg font-semibold text-primary line-clamp-1 lg:-ml-4">
                             {page.title}
-                          </h1>
+                          </p>
                           : null}
                       </div>
-                      <div className="text-sm text-muted-foreground hidden xl:block">
+                      {/* <div className="text-sm text-muted-foreground hidden xl:block">
                         Module Dashboard
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   <Outlet />
-                </>
+                </div>
               )}
-            </div>
           </div>
         </main>
       </div>

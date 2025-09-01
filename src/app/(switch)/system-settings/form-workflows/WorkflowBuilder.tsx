@@ -32,12 +32,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
 import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
-import type { FieldOption, FormField, FormSection, SectionForm, WorkflowSubmisionStructure, WorkflowTemplate } from './FormPreviewTester';
+import type { FieldOption, FormField, FormSection, SectionForm, WorkflowTemplate } from './FormPreviewTester';
 import { workflowCategoryTypes } from '@/types/constants';
 import { slugify } from '@/lib/utils';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { MultiSelect } from '@/components/multiselect';
 import { Switch } from '@/components/ui/switch';
+import { Submission } from '@/types/submission';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
@@ -110,7 +111,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     };
 
     const initializeDefaultSections = () => {
-
         const defaultSections: FormSection[] = [
             {
                 id: `section-default-UI-${Date.now()}-1`,
@@ -121,7 +121,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 order: 1
             }
         ]
-
         setFormSections(defaultSections);
     };
 
@@ -379,7 +378,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     };
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: WorkflowSubmisionStructure) => {
+        mutationFn: (e: Submission) => {
             if (previousData) return api.put(`/form-management/submissions/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
         },
@@ -414,7 +413,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             return;
         }
 
-        const workflowData: WorkflowSubmisionStructure = {
+        const workflowData: Submission = {
             name: formDetails.name,
             description: formDetails.description,
             module_level: selectedLevel.slug,

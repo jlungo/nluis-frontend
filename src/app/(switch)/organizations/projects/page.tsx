@@ -8,7 +8,6 @@ export default function OrganizationProjectsPage() {
     setPage({
       module: "organizations",
       title: "Organization Projects",
-      backButton: "Back to Organizations",
     });
   }, [setPage]);
 

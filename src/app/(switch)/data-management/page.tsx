@@ -52,7 +52,6 @@ export default function DataCollectionPage() {
     setPage({
       module: "system-settings",
       title: "Data Management",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -215,7 +214,7 @@ export default function DataCollectionPage() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -272,7 +271,7 @@ export default function DataCollectionPage() {
                 <div
                   className="bg-primary h-2 rounded-full transition-all duration-300"
                   style={{ width: `${state.downloadProgress}%` }}
-                ></div>
+                />
               </div>
             </div>
           )}
@@ -328,7 +327,7 @@ export default function DataCollectionPage() {
                     className={`w-3 h-3 rounded-full ${getLayerTypeColor(
                       layer.type
                     )}`}
-                  ></div>
+                  />
                   <span className="text-sm text-muted-foreground capitalize">
                     {layer.type}
                   </span>

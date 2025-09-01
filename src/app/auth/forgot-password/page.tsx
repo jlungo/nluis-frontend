@@ -72,26 +72,28 @@ export default function ForgotPassword() {
     navigate('/auth/signin', { replace: true });
   };
 
+  if (user) return null
+
   if (showSuccess && !user) {
     return (
       <div className="max-w-md w-full space-y-8">
         {/* Success Header */}
         <div className="text-center space-y-6">
           <div className="w-20 h-20 mx-auto flex items-center justify-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-950 rounded-full flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </div>
 
           <div className="flex justify-center">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
+            <Badge variant="secondary" className="bg-green-100 dark:bg-green-950 text-green-800 border-green-200 dark:border-green-800 px-3 py-1">
               <Mail className="h-3 w-3 mr-1" />
               Reset Email Sent
             </Badge>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-green-800">Password Reset Requested!</h1>
+            <h1 className="text-2xl font-semibold text-green-800 dark:text-green-700">Password Reset Requested!</h1>
             <p className="text-base text-muted-foreground">
               We've sent password reset instructions to your email address
             </p>
@@ -100,17 +102,17 @@ export default function ForgotPassword() {
 
         {/* Success Card */}
         <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
-          <CardContent className="px-8 py-8">
-            <Alert className="border-green-200 bg-green-50 mb-6">
-              <Mail className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800">Check Your Email</AlertTitle>
+          <CardContent>
+            <Alert className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 mb-6">
+              <Mail className="h-4 w-4 text-green-600 dark:text-green-600" />
+              <AlertTitle className="text-green-800 dark:text-green-600">Check Your Email</AlertTitle>
               <AlertDescription className="text-green-700">
                 Click the reset password link in the email we sent to <span className="font-medium">{email}</span> to create a new password.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              <Button onClick={onBackToLogin} className="w-full h-12 gap-2">
+              <Button onClick={onBackToLogin} className="w-full gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Button>
@@ -119,7 +121,7 @@ export default function ForgotPassword() {
                 variant="outline"
                 onClick={handleResendReset}
                 disabled={isLoading}
-                className="w-full h-12 gap-2"
+                className="w-full gap-2"
               >
                 {isLoading ? (
                   <>
@@ -153,7 +155,6 @@ export default function ForgotPassword() {
     );
   }
 
-  if (user) return null
   return (
     <div className="max-w-md w-full space-y-8">
       {/* Header */}
@@ -167,7 +168,7 @@ export default function ForgotPassword() {
         </div>
 
         <div className="flex justify-center">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+          <Badge variant="secondary" className="bg-blue-200 dark:bg-blue-950 text-blue-800 border-blue-300 dark:border-blue-800 px-3 py-1">
             <Key className="h-3 w-3 mr-1" />
             Password Recovery
           </Badge>
@@ -178,18 +179,15 @@ export default function ForgotPassword() {
           <p className="text-base text-muted-foreground">
             National Land Use Information System
           </p>
-          <p className="text-sm text-muted-foreground">
-            Tanzania National Land Use Planning Commission
-          </p>
         </div>
       </div>
 
       {/* Reset Form Card */}
-      <Card className="shadow-lg border-0 bg-white py-0 md:py-0">
-        <CardHeader className="text-center pb-6 pt-8">
+      <Card className="shadow-lg border-0 py-0 md:py-0">
+        <CardHeader className="text-center py-6">
           <CardTitle className="flex items-center justify-center gap-2 text-lg">
             <div className="w-4 h-4 border-2 border-primary rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <div className="w-2 h-2 bg-primary rounded-full" />
             </div>
             Password Reset Request
           </CardTitle>
@@ -197,73 +195,69 @@ export default function ForgotPassword() {
             We'll send reset instructions to your registered email address
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
-          <div className="space-y-6">
-            {/* Email Input */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Official Email Address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.name@nlupc.go.tz"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
-                }}
-                disabled={isLoading}
-                className="h-12 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-              />
-              {error && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {error}
-                </p>
-              )}
-            </div>
-
-            {/* Info Alert */}
-            <Alert>
+        <CardContent className='space-y-6 pb-4 md:pb-6'>
+          {/* Email Input */}
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              <AlertTitle>How This Works</AlertTitle>
-              <AlertDescription>
-                We'll send a secure link to your email address. Click the link to create a new password for your account.
-              </AlertDescription>
-            </Alert>
+              Official Email Address
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your.name@nlupc.go.tz"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
+              disabled={isLoading}
+              className="h-12"
+            />
+            {error && (
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {error}
+              </p>
+            )}
+          </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <Button
-                onClick={handleRequestReset}
-                disabled={isLoading || !email}
-                className="w-full h-12 gap-2 bg-primary hover:bg-primary/90"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Sending Reset Email...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Send Reset Instructions
-                  </>
-                )}
-              </Button>
+          {/* Info Alert */}
+          <Alert>
+            <Mail className="h-4 w-4" />
+            <AlertTitle>How This Works</AlertTitle>
+            <AlertDescription>
+              We'll send a secure link to your email address. Click the link to create a new password for your account.
+            </AlertDescription>
+          </Alert>
 
-              <div className="text-center pt-2">
-                <Link
-                  to="/auth/signin"
-                  className={cn(buttonVariants({ variant: 'ghost' }), "text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors")}
-                >
-                  <ArrowLeft className="h-3 w-3" />
-                  Back to Login
-                </Link>
-              </div>
-            </div>
+          {/* Action Buttons */}
+          <div className="space-y-3 mt-4 pt-4 border-t border-border">
+            <Button
+              onClick={handleRequestReset}
+              disabled={isLoading || !email}
+              className="w-full gap-2 bg-primary hover:bg-primary/90"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Sending Reset Email...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send Reset Instructions
+                </>
+              )}
+            </Button>
+
+            <Link
+              to="/auth/signin"
+              className={cn(buttonVariants({ variant: 'ghost' }), "text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mx-auto transition-colors")}
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Login
+            </Link>
           </div>
         </CardContent>
       </Card>

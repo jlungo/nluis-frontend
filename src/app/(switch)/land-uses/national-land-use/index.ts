@@ -1,5 +1,7 @@
-import Layout from "./layout";
+import Layout from "../layout";
 import Page from "./page";
+import Create from "./create";
+import ProjectId from "./[project_id]";
 
 const Index = {
   path: "national-land-use",
@@ -9,6 +11,8 @@ const Index = {
       index: true,
       Component: Page,
     },
+    Create,
+    ProjectId,
   ],
 };
 

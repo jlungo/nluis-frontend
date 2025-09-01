@@ -14,13 +14,16 @@ import { Button } from "@/components/ui/button";
 import { CircleAlert, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/store/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function LogoutButton() {
     const { logout } = useAuth()
+    const queryClient = useQueryClient()
 
     const onLogout = async () => {
         try {
             await logout()
+            queryClient.clear()
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             toast('Error', {

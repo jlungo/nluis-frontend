@@ -7,7 +7,6 @@ export default function Page() {
         setPage({
             module: 'billing',
             title: "Billing & Payments",
-            backButton: 'Back to Modules',
         })
     }, [setPage])
 

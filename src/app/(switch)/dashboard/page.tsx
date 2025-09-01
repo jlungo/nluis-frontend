@@ -47,7 +47,6 @@ export default function DashboardPage() {
     setPage({
       module: "dashboard",
       title: "Dashboard",
-      backButton: "Back to Modules",
     });
   }, [setPage]);
 
@@ -127,7 +126,7 @@ export default function DashboardPage() {
   if (dashboardData.loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -250,15 +249,15 @@ export default function DashboardPage() {
                         className="bg-primary h-2 rounded-full"
                         style={{
                           width: `${(funder.count /
-                              Math.max(
-                                ...dashboardData.projectStats.funders.map(
-                                  (f) => f.count
-                                )
-                              )) *
+                            Math.max(
+                              ...dashboardData.projectStats.funders.map(
+                                (f) => f.count
+                              )
+                            )) *
                             100
                             }%`,
                         }}
-                      ></div>
+                      />
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {funder.count}
