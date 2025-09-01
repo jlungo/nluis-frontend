@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
 import { MultiSelect } from './multiselect';
-import MultiSelectShowListInput from './MultiSelectShowListInput';
+import MultiSelectShowListInput, { SelectOption } from './MultiSelectShowListInput';
 
 type FormFieldInputProps =
   | {
@@ -48,7 +48,7 @@ type FormFieldInputProps =
     value?: string;
     values?: string[];
     isLoading?: boolean;
-    options: { value: string; label: string }[];
+    options: SelectOption[];
     onChange: (value: string) => void;
     onValuesChange?: (values: string[]) => void;
     required?: boolean;

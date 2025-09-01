@@ -28,32 +28,19 @@ export const useProjectsQuery = (options: ProjectQueryParamsI) => {
 export const useUpdateProject = () => {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CreateProjectDataI }) => {
-      const response = await api.put(`/projects/${id}/`, data);
+      console.log('Updating project with data:', data);
+      const response = await api.put(`/projects/${id}/update/`, data);
       return response.data;
     },
   });
 };
-
-// export const useUpdateProject = () => {
-//   const queryClient = useQueryClient();
-  
-//   return useMutation({
-//     mutationFn: async ({ id, ...projectData }: CreateProjectDataI & { id: string }): Promise<APIResponse<ProjectI>> => {
-//       const response = await api.put<APIResponse<ProjectI>>(`/projects/${id}/`, projectData);
-//       return response.data;
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ['projects'] });
-//     },
-//   });
-// };
 
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (projectId: string): Promise<void> => {
-      await api.delete(`/projects/${projectId}/`);
+      await api.delete(`/projects/${projectId}/delete/`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });

@@ -16,6 +16,7 @@ export type SelectOption = {
   label: string;
   isDisabled?: boolean;
   description?: string;
+  isSelected?: boolean; // New optional property to indicate pre-selected state
 };
 
 type MultiSelectShowListInputProps = {
@@ -40,15 +41,21 @@ export default function MultiSelectShowListInput({
 }: MultiSelectShowListInputProps) {
   const [open, setOpen] = useState(false);
 
-  const selectedOptions = options.filter((opt) => values.includes(opt.value));
+  // Merge values from props with values from options that have isSelected=true
+  const mergedValues = [...new Set([
+    ...values,
+    ...options.filter(opt => opt.isSelected).map(opt => opt.value)
+  ])];
+
+  const selectedOptions = options.filter((opt) => mergedValues.includes(opt.value));
 
   const toggleValue = (value: string) => {
     let newValues: string[];
 
-    if (values.includes(value)) {
-      newValues = values.filter((v) => v !== value);
+    if (mergedValues.includes(value)) {
+      newValues = mergedValues.filter((v) => v !== value);
     } else {
-      newValues = [...values, value];
+      newValues = [...mergedValues, value];
     }
 
     onValuesChange(newValues);
@@ -95,7 +102,7 @@ export default function MultiSelectShowListInput({
                 <CommandEmpty>No item found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((option) => {
-                    const isSelected = values.includes(option.value);
+                    const isSelected = mergedValues.includes(option.value);
                     return (
                       <CommandItem
                         key={option.value}
@@ -113,6 +120,11 @@ export default function MultiSelectShowListInput({
                           <Check className="h-4 w-4 text-white" />
                         </div>
                         <span>{option.label}</span>
+                        {option.isSelected && !isSelected && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (pre-selected)
+                          </span>
+                        )}
                       </CommandItem>
                     );
                   })}
@@ -132,14 +144,16 @@ export default function MultiSelectShowListInput({
               className="flex items-center gap-1"
             >
               {option.label}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-3 w-3 p-0"
-                onClick={() => toggleValue(option.value)}
-              >
-                <X className="h-3 w-3 cursor-pointer"/>
-              </Button>
+              {!option.isSelected && ( // Only show remove button for non-pre-selected items
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-3 w-3 p-0"
+                  onClick={() => toggleValue(option.value)}
+                >
+                  <X className="h-3 w-3 cursor-pointer"/>
+                </Button>
+              )}
             </Badge>
           ))}
           <Button
