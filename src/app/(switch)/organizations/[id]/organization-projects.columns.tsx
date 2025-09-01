@@ -21,7 +21,7 @@ export const ListOrganizationProjectsColumns: ColumnDef<ProjectI, unknown>[] = [
   {
     id: "status",
     header: () => <div className="flex items-center gap-2">Status</div>,
-    accessorFn: (p) => p.project_type_info.name ?? "-",
+    accessorFn: (p) => p.name ?? "-",
     cell: ({ getValue }) => {
       const v = String(getValue() ?? "-");
       const tone =

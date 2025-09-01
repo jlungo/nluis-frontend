@@ -1,5 +1,4 @@
 import { useState, useEffect, JSX } from "react";
-import { useUsersQuery } from "@/queries/useUsersQuery";
 import { useParams, useNavigate } from "react-router";
 import { organizationService } from "@/services/organizations";
 import { OrganizationStatusE, type OrganizationI } from "@/types/organizations";
@@ -20,19 +19,12 @@ import {
   User,
   Plus,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useProjectsQuery } from "@/queries/useProjectQuery";
 import { DataTable } from "@/components/DataTable";
 import { ListOrganizationProjectsColumns } from "./organization-projects.columns";
-import { ListOrganizationMembersColumns } from "./organization-members.columns";
 import ActionButtons from "@/components/ActionButtons";
+import { ListOrganizationMembersColumns } from "./organization-members.columns";
+import { useUsersList } from "@/queries/useUsersQuery";
 
 export default function OrganizationDetail() {
   const { id } = useParams();
@@ -82,7 +74,11 @@ export default function OrganizationDetail() {
     data: users,
     isLoading: membersLoading,
     isError: membersError,
-  } = useUsersQuery({ organization: orgId });
+  } = useUsersList({
+    organization: orgId,
+    page: 1,
+    page_size: 10
+  });
 
   if (loading) {
     return (
@@ -295,48 +291,15 @@ export default function OrganizationDetail() {
                 </div>
               ) : membersError ? (
                 <div className="text-destructive">Failed to load members.</div>
-              ) : !users || users.length === 0 ? (
+              ) : !users || users.items.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-6">
                   No members found.
                 </p>
               ) : (
                 <div className="w-full overflow-x-auto">
-                  {/* <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[220px]">Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="w-[1%] whitespace-nowrap text-right">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((m: any) => (
-                        <TableRow key={m.id}>
-                          <TableCell className="font-medium">
-                            {m.first_name} {m.last_name}
-                          </TableCell>
-                          <TableCell>{m.email || "-"}</TableCell>
-                          <TableCell>{m.role || "-"}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                navigate(`/organizations/${id}/members/${m.id}`)
-                              }
-                            >
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table> */}
+                 
                   <DataTable
-                      data={users ?? []}
+                      data={users.items ?? []}
                       columns={ListOrganizationMembersColumns}
                       isLoading={loading}
                       showRowNumbers

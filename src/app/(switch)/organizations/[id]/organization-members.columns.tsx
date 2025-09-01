@@ -1,11 +1,12 @@
 // src/components/tables/members-columns.tsx
-import { UserType } from "@/queries/useUsersQuery";
+import { UserI } from "@/types/users";
 import { ColumnDef } from "@tanstack/react-table";
 
 
 
 
-export const ListOrganizationMembersColumns : ColumnDef<UserType, unknown>[] =[
+export const ListOrganizationMembersColumns : ColumnDef<UserI, unknown>[] =[
+  
   {
     id: "name",
     header: () => <div className="flex items-center gap-2">Name</div>,

@@ -1,6 +1,6 @@
 import { OrganizationStatusE, type OrganizationI } from "@/types/organizations";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Building2, Mail, MapPin, Users } from "lucide-react";
+import { Building2, Mail, MapPin, Users } from "lucide-react";
 
 export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
   {
@@ -99,7 +99,7 @@ export const ListOrganizationsColumns: ColumnDef<OrganizationI, unknown>[] = [
           : s === OrganizationStatusE.PENDING
           ? "Pending"
           : "Inactive";
-      return <Badge className={cls}>{text}</Badge>;
+      return <p className={cls}>{text}</p>;
     },
     enableSorting: true,
   },

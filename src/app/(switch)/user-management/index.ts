@@ -2,7 +2,7 @@ import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "/user-management",
+  path: "system-settings/user-management",
   Component: Layout,
   children: [
     {

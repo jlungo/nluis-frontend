@@ -123,7 +123,7 @@ export const useProjectsQuery = (options: ProjectQueryParams) => {
         return response.data;
       } else {
         // Fetch multiple projects with optional params
-        const response = await api.get<APIResponse<Project>>(`/projects/list`, {
+        const response = await api.get<APIResponse<Project>>(`/projects/`, {
           params: options,
         });
         return response.data;
