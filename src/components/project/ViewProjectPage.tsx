@@ -88,8 +88,8 @@ const ProjectDetailsGrid: React.FC<{ project: ProjectI }> = ({ project }) => (
   </div>
 );
 
-const ProjectHeader: React.FC<{ 
-  project: ProjectI; 
+const ProjectHeader: React.FC<{
+  project: ProjectI;
   moduleLevel: string;
   onBack: () => void;
   onEdit: () => void;
@@ -101,7 +101,7 @@ const ProjectHeader: React.FC<{
         <ArrowLeft className="h-4 w-4" />
         Back to Projects
       </Button>
-      
+
       <div className="flex gap-2">
         <Button onClick={onEdit} className="gap-2">
           <Edit className="h-4 w-4" />
@@ -133,7 +133,7 @@ const ProjectCardHeader: React.FC<{ project: ProjectI }> = ({ project }) => {
   );
 };
 
-const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) => void;}> = ({
+const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) => void; }> = ({
   project,
   navigate,
 }) => (
@@ -151,9 +151,7 @@ const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) 
           data={project.localities}
           enableGlobalFilter={true}
           searchPlaceholder="Search localities..."
-          onRowClick={(locality) =>
-            navigate(getLocalityWorkflowPath(locality.id))
-          }
+          onRowClick={(locality) => navigate(getLocalityWorkflowPath(locality.id))}
           showRowNumbers={true}
           rowActions={(locality) => (
             <Button
@@ -210,8 +208,8 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
   return (
     <div className="container max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <ProjectHeader 
-        project={project} 
+      <ProjectHeader
+        project={project}
         moduleLevel={moduleLevel}
         onBack={handleBack}
         onEdit={handleEdit}
@@ -222,7 +220,7 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
         <CardHeader className="dark:bg-blue-950/50 pt-6 md:pt-6 border-b">
           <ProjectCardHeader project={project} />
         </CardHeader>
-        
+
         <CardContent>
           {/* Description */}
           <div className="mb-6">

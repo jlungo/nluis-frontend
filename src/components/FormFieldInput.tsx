@@ -1,11 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
-import { MultiSelect } from './multiselect';
 import MultiSelectShowListInput from './MultiSelectShowListInput';
+import DatePicker from './FormDateSelect';
 
 type FormFieldInputProps =
   | {
@@ -68,64 +67,45 @@ type FormFieldInputProps =
   }
 
 export function FormFieldInput(props: FormFieldInputProps) {
-  const { id, label, required, isLoading } = props;
+  const { id, type, label, placeholder, required, isLoading, onChange } = props;
 
   return (
-    <div className="w-full space-y-2 overflow-hidden">
-      <Label htmlFor={id}>{label} {required && '*'}</Label>
+    <div className="w-full space-y-2">
+      {type !== 'date' ? <Label htmlFor={id}>{label} {required && '*'}</Label> : null}
 
-      {props.type === 'textarea' && (
+      {type === 'textarea' && (
         <Textarea
           id={id}
           value={props.value}
-          onChange={(e) => props.onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           required={required}
-          placeholder={props.placeholder}
+          placeholder={placeholder}
         />
       )}
 
-      {['text', 'number', 'date'].includes(props.type) && (
+      {['text', 'number'].includes(type) && (
         <Input
           id={id}
-          type={props.type}
+          type={type}
           value={props.value}
-          onChange={(e) => props.onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           required={required}
-          placeholder={props.placeholder}
+          placeholder={placeholder}
         />
       )}
 
-      {props.type === 'select' && (
-        <>
-          {props?.values && props?.onValuesChange ? (
-            <MultiSelect
-              title={label}
-              data={props.options}
-              selected={props.values}
-              setSelected={props.onValuesChange}
-              isLoading={false}
-            />
-          ) :
-            <Select name={slugify(label)} value={props.value} onValueChange={props.onChange}>
-              <SelectTrigger
-                id={id}
-                className='w-full'
-              >
-                <SelectValue placeholder={props.placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='i'>Test</SelectItem>
-                {props.options.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>}
-        </>
+      {['date'].includes(type) && (
+        <DatePicker
+          label={props.label}
+          name={slugify(props.label)}
+          dateValue={props.value ? new Date(props.value as string) : undefined}
+          onDateChange={(e) => onChange(e.toISOString().split("T")[0])}
+          required={required}
+          placeholder={placeholder}
+        />
       )}
 
-      {props.type === 'multiselect' && (
+      {type === 'select' && (
         <>
           {props.values && props.onValuesChange && (
             <MultiSelectShowListInput
@@ -135,15 +115,33 @@ export function FormFieldInput(props: FormFieldInputProps) {
               isLoading={isLoading}
               values={props.values}
               options={props.options}
-              placeholder={props.placeholder}
-              onValuesChange={props.onValuesChange}
-              onChange={() => {}}
+              placeholder={placeholder}
+              onValuesChange={(e) => props.onChange(e[0])}
+              isSingle
             />
           )}
         </>
       )}
 
-      {props.type === 'checkbox-group' && (
+      {type === 'multiselect' && (
+        <>
+          {props.values && props.onValuesChange && (
+            <MultiSelectShowListInput
+              id={id}
+              label={label}
+              required={required}
+              isLoading={isLoading}
+              values={props.values}
+              options={props.options}
+              placeholder={placeholder}
+              onValuesChange={props.onValuesChange}
+              onChange={() => { }}
+            />
+          )}
+        </>
+      )}
+
+      {type === 'checkbox-group' && (
         <div className="grid grid-cols-2 gap-2 mt-2">
           {props.options.map((opt) => (
             <div key={opt.value} className="flex items-center space-x-2">
@@ -151,7 +149,7 @@ export function FormFieldInput(props: FormFieldInputProps) {
                 id={`${id}-${opt.value}`}
                 checked={props.values.includes(opt.value)}
                 onCheckedChange={(checked) =>
-                  props.onChange(opt.value, checked as boolean)
+                  onChange(opt.value, checked as boolean)
                 }
               />
               <Label
