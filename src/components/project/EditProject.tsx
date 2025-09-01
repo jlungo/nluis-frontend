@@ -26,7 +26,7 @@ type SelectedLocality = {
 
 const LEVEL_NAMES = {
   [LOCALITY_LEVELS.NATIONAL]: "National",
-  [LOCALITY_LEVELS.ZONAL]: "Zonal",
+  // [LOCALITY_LEVELS.ZONAL]: "Zonal",
   [LOCALITY_LEVELS.REGION]: "Regional",
   [LOCALITY_LEVELS.DISTRICT]: "District",
   [LOCALITY_LEVELS.WARD]: "Ward",
@@ -112,15 +112,15 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const buildLocalityPath = (locality: LocalityI): string => {
     const pathParts: string[] = [];
     
-    if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
-      const zonal = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.ZONAL && 
-        (l.id === locality.id || isAncestor(l.id, locality.id))
-      );
-      if (zonal) pathParts.push(zonal.name);
-    }
+    // if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
+    //   const zonal = localities?.find(l => 
+    //     l.level === LOCALITY_LEVELS.ZONAL && 
+    //     (l.id === locality.id || isAncestor(l.id, locality.id))
+    //   );
+    //   if (zonal) pathParts.push(zonal.name);
+    // }
 
-    if (moduleLevel >= LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.ZONAL) {
+    if (moduleLevel >= LOCALITY_LEVELS.REGION) {
       const region = localities?.find(l => 
         l.level === LOCALITY_LEVELS.REGION && 
         (l.id === locality.id || isAncestor(l.id, locality.id))
@@ -128,7 +128,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
       if (region) pathParts.push(region.name);
     }
 
-    if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.ZONAL && locality.level !== LOCALITY_LEVELS.REGION) {
+    if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.REGION) {
       const district = localities?.find(l => 
         l.level === LOCALITY_LEVELS.DISTRICT && 
         (l.id === locality.id || isAncestor(l.id, locality.id))
@@ -136,7 +136,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
       if (district) pathParts.push(district.name);
     }
 
-    if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.ZONAL && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
+    if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
       const ward = localities?.find(l => 
         l.level === LOCALITY_LEVELS.WARD && 
         (l.id === locality.id || isAncestor(l.id, locality.id))
@@ -198,10 +198,10 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
 
     // Determine the target level and ID based on moduleLevel
     switch (moduleLevel) {
-      case LOCALITY_LEVELS.ZONAL:
-        targetLevel = LOCALITY_LEVELS.ZONAL;
-        targetId = currentSelection.zonal;
-        break;
+      // case LOCALITY_LEVELS.ZONAL:
+      //   targetLevel = LOCALITY_LEVELS.ZONAL;
+      //   targetId = currentSelection.zonal;
+      //   break;
       case LOCALITY_LEVELS.REGION:
         targetLevel = LOCALITY_LEVELS.REGION;
         targetId = currentSelection.region;
@@ -321,7 +321,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {moduleLevel >= LOCALITY_LEVELS.ZONAL && (
+          {/* {moduleLevel >= LOCALITY_LEVELS.ZONAL && (
             <FormFieldInput
               type="select"
               id="zonal-select"
@@ -333,15 +333,15 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
               }))}
               onChange={(value) => handleSelectionChange('zonal', value)}
             />
-          )}
+          )} */}
 
-          {moduleLevel >= LOCALITY_LEVELS.REGION && currentSelection.zonal && (
+          {moduleLevel >= LOCALITY_LEVELS.REGION && (
             <FormFieldInput
               type="select"
               id="region-select"
               label="Region"
               value={currentSelection.region}
-              options={getChildLocalities(LOCALITY_LEVELS.REGION, currentSelection.zonal).map(region => ({
+              options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
                 value: region.id,
                 label: region.name
               }))}
@@ -383,7 +383,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
             type="button" 
             onClick={addLocality} 
             disabled={
-              (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
+              // (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
               (moduleLevel === LOCALITY_LEVELS.REGION && !currentSelection.region) ||
               (moduleLevel === LOCALITY_LEVELS.DISTRICT && !currentSelection.district) ||
               (moduleLevel === LOCALITY_LEVELS.WARD && !currentSelection.ward)

@@ -123,7 +123,7 @@ export const useLocalities = () => {
     queryKey: ['localities'],
     queryFn: async (): Promise<LocalityI[]> => {
       const response = await api.get('/localities/localities/');
-      console.log('Fetched localities:', response);
+      // console.log('Fetched localities:', response);
       return response.data;
     },
   });
