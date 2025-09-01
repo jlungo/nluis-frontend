@@ -17,6 +17,13 @@ interface ViewProjectPageProps {
   moduleLevel: string;
 }
 
+const getLocalityWorkflowPath = (
+  localityId: string | number
+): string => {
+  return `${localityId}/workflow`;
+};
+
+
 const ProjectDetailsGrid: React.FC<{ project: ProjectI }> = ({ project }) => (
   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     {/* Type */}
@@ -126,10 +133,10 @@ const ProjectCardHeader: React.FC<{ project: ProjectI }> = ({ project }) => {
   );
 };
 
-const CoverageAreasCard: React.FC<{ 
-  project: ProjectI; 
-  onLocalityClick: (locality: any) => void;
-}> = ({ project, onLocalityClick }) => (
+const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) => void;}> = ({
+  project,
+  navigate,
+}) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -144,7 +151,19 @@ const CoverageAreasCard: React.FC<{
           data={project.localities}
           enableGlobalFilter={true}
           searchPlaceholder="Search localities..."
-          onRowClick={onLocalityClick}
+          onRowClick={(locality) =>
+            navigate(getLocalityWorkflowPath(locality.id))
+          }
+          showRowNumbers={true}
+          rowActions={(locality) => (
+            <Button
+              variant="outline"
+              className="btn-sm mx-4"
+              onClick={() => navigate(getLocalityWorkflowPath(locality.id))}
+            >
+              Workflow
+            </Button>
+          )}
         />
       ) : (
         <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>
@@ -184,7 +203,6 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
 
   const handleBack = () => navigate(`/land-uses/${moduleLevel}`);
   const handleEdit = () => navigate(`/land-uses/${moduleLevel}/${project_id}/edit`);
-  const handleLocalityClick = (locality: any) => navigate(`/${locality.project_id}/workflow`);
 
   if (isLoading) return <LoadingState />;
   if (!project) return <ErrorState />;
@@ -234,10 +252,7 @@ export default function ViewProjectPage({ moduleLevel }: ViewProjectPageProps) {
         </CardContent>
       </Card>
 
-      <CoverageAreasCard 
-        project={project} 
-        onLocalityClick={handleLocalityClick}
-      />
+      <CoverageAreasCard project={project} navigate={navigate} />
     </div>
   );
 }

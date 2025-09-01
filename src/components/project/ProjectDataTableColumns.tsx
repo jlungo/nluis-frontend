@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { formatDate } from '@/lib/utils';
 import { ProjectI } from "@/types/projects";
 import { Badge } from "../ui/badge";
-import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors, LOCALITY_LEVEL_NAMES } from "@/types/constants";
+import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors } from "@/types/constants";
 
 export const ProjectStatusBadge = ({ status }: { status: string }) => (
   <Badge
@@ -84,20 +84,7 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
 // Table columns for localities project
 export const LocalityTableColumns: ColumnDef<any>[] = [
   {
-    accessorKey: 'name',
+    accessorKey: 'locality__name',
     header: 'Name',
-  },
-  {
-    accessorKey: 'level',
-    header: 'Level',
-    cell: ({ row }) => {
-      const level = row.original.level;
-      const levelName = LOCALITY_LEVEL_NAMES[level as keyof typeof LOCALITY_LEVEL_NAMES] || level;
-      return <Badge variant="outline">{levelName}</Badge>;
-    },
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID',
   },
 ];

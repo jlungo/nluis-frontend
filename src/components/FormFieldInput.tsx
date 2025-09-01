@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
 import { MultiSelect } from './multiselect';
+import MultiSelectShowListInput from './MultiSelectShowListInput';
 
 type FormFieldInputProps =
   | {
@@ -12,6 +13,7 @@ type FormFieldInputProps =
     id: string;
     label: string;
     value: string;
+    isLoading?: boolean;
     onChange: (value: string) => void;
     required?: boolean;
     placeholder?: string
@@ -21,6 +23,7 @@ type FormFieldInputProps =
     id: string;
     label: string;
     value: string;
+    isLoading?: boolean;
     onChange: (value: string) => void;
     required?: boolean;
     placeholder?: string
@@ -31,6 +34,20 @@ type FormFieldInputProps =
     label: string;
     value?: string;
     values?: string[];
+    isLoading?: boolean;
+    options: { value: string; label: string }[];
+    onChange: (value: string) => void;
+    onValuesChange?: (values: string[]) => void;
+    required?: boolean;
+    placeholder?: string
+  }
+  | {
+    type: 'multiselect';
+    id: string;
+    label: string;
+    value?: string;
+    values?: string[];
+    isLoading?: boolean;
     options: { value: string; label: string }[];
     onChange: (value: string) => void;
     onValuesChange?: (values: string[]) => void;
@@ -41,6 +58,7 @@ type FormFieldInputProps =
     type: 'checkbox-group';
     id: string;
     label: string;
+    isLoading?: boolean;
     options: { value: string; label: string }[];
     values: string[];
     value?: string[];
@@ -50,10 +68,10 @@ type FormFieldInputProps =
   }
 
 export function FormFieldInput(props: FormFieldInputProps) {
-  const { id, label, required } = props;
+  const { id, label, required, isLoading } = props;
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-2 overflow-hidden">
       <Label htmlFor={id}>{label} {required && '*'}</Label>
 
       {props.type === 'textarea' && (
@@ -104,6 +122,24 @@ export function FormFieldInput(props: FormFieldInputProps) {
                 ))}
               </SelectContent>
             </Select>}
+        </>
+      )}
+
+      {props.type === 'multiselect' && (
+        <>
+          {props.values && props.onValuesChange && (
+            <MultiSelectShowListInput
+              id={id}
+              label={label}
+              required={required}
+              isLoading={isLoading}
+              values={props.values}
+              options={props.options}
+              placeholder={props.placeholder}
+              onValuesChange={props.onValuesChange}
+              onChange={() => {}}
+            />
+          )}
         </>
       )}
 
