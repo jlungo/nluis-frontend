@@ -207,7 +207,7 @@ export default function Layout() {
                   {/* Module Context Header */}
                   <div className="border-b border-border pb-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 lg:gap-4">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -217,12 +217,12 @@ export default function Layout() {
                           <ArrowLeft className="h-4 w-4" />
                           Back
                         </Button>
-                        <div className="h-4 w-px bg-border" />
+                        <div className="h-4 w-px bg-border -ml-3" />
                         {page && page.pageActions !== false && <DynamicBreadcrums />}
                         {page ?
-                          <h1 className="text-base lg:text-lg font-semibold text-primary">
+                          <p className="text-base lg:text-lg font-semibold text-primary line-clamp-1 lg:-ml-4">
                             {page.title}
-                          </h1>
+                          </p>
                           : null}
                       </div>
                       {/* <div className="text-sm text-muted-foreground hidden xl:block">

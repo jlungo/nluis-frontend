@@ -29,6 +29,7 @@ type MultiSelectShowListInputProps = {
   required?: boolean;
   onChange?: (selected: SelectOption[]) => void;
   onValuesChange: (values: string[]) => void;
+  isSingle?: boolean;
 };
 
 export default function MultiSelectShowListInput({
@@ -38,6 +39,7 @@ export default function MultiSelectShowListInput({
   isLoading = false,
   onChange,
   onValuesChange,
+  isSingle
 }: MultiSelectShowListInputProps) {
   const [open, setOpen] = useState(false);
 
@@ -90,15 +92,15 @@ export default function MultiSelectShowListInput({
 
         <PopoverContent className="w-80 sm:w-96 md:w-96 xl:w-[495px] p-0">
           <Command>
-            <CommandInput placeholder="Search Locality..." />
+            {!isSingle ? <CommandInput placeholder="Search..." /> : null}
             {isLoading ? (
-                <CommandList>
-                    <CommandEmpty className="flex items-center justify-center h-20">
-                        <Spinner />
-                    </CommandEmpty>
-                </CommandList>
+              <CommandList>
+                <CommandEmpty className="flex items-center justify-center h-20">
+                  <Spinner />
+                </CommandEmpty>
+              </CommandList>
             ) : (
-            <CommandList>
+              <CommandList>
                 <CommandEmpty>No item found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((option) => {
@@ -129,7 +131,7 @@ export default function MultiSelectShowListInput({
                     );
                   })}
                 </CommandGroup>
-            </CommandList>
+              </CommandList>
             )}
           </Command>
         </PopoverContent>
@@ -144,16 +146,14 @@ export default function MultiSelectShowListInput({
               className="flex items-center gap-1"
             >
               {option.label}
-              {!option.isSelected && ( // Only show remove button for non-pre-selected items
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-3 w-3 p-0"
-                  onClick={() => toggleValue(option.value)}
-                >
-                  <X className="h-3 w-3 cursor-pointer"/>
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-3 w-3 p-0"
+                onClick={() => toggleValue(option.value)}
+              >
+                <X className="h-3 w-3 cursor-pointer" />
+              </Button>
             </Badge>
           ))}
           <Button
