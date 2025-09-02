@@ -7,16 +7,20 @@ import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import { InputType } from "@/types/input-types";
 
-export interface FieldValue {
-    value?: string | File[];
-    type: InputType;
-    name: string;
-    field_id: number;
-    project_locality_slug: string;
-    created_by: string;
-}
-
-export default function Index(data: FieldsProps & { disabled?: boolean; project_locality_slug: string; value: any; setValue: (formSlug: string, value: string | File[], type: InputType, name: string, field_id: number, project_locality_slug: string) => void }) {
+export default function Index(
+    data: FieldsProps & {
+        disabled?: boolean;
+        project_locality_id: string;
+        value: any;
+        setValue: (
+            formSlug: string,
+            value: string | File[],
+            type: InputType,
+            field_id: number,
+            project_locality_id: string
+        ) => void
+    }
+) {
     switch (data.type) {
         case ('textarea'):
             return (
@@ -25,7 +29,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value || undefined}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.name, data.id, data.project_locality_slug)}
+                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('date'):
@@ -34,7 +38,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     data={data}
                     disabled={data.disabled}
                     dateValue={data?.value ? new Date(data.value as string) : undefined}
-                    onDateChange={(e) => data.setValue(data.form_slug, e.toISOString().split("T")[0], data.type, data.name, data.id, data.project_locality_slug)}
+                    onDateChange={(e) => data.setValue(data.form_slug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('checkbox'):
@@ -44,7 +48,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     disabled={data.disabled}
                     required={data.required}
                     checked={data?.value && data.value === "true"}
-                    onValueChange={(e) => data.setValue(data.form_slug, String(e), data.type, data.name, data.id, data.project_locality_slug)}
+                    onValueChange={(e) => data.setValue(data.form_slug, String(e), data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('file'):
@@ -57,7 +61,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e, data.type, data.name, data.id, data.project_locality_slug)}
+                    onChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                     className="w-full"
                 />
             )
@@ -68,7 +72,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.name, data.id, data.project_locality_slug)}
+                    onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:
@@ -78,7 +82,7 @@ export default function Index(data: FieldsProps & { disabled?: boolean; project_
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.name, data.id, data.project_locality_slug)}
+                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
     }

@@ -1,14 +1,13 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { ProjectI } from "@/types/projects";
 import { Badge } from "../ui/badge";
 import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors } from "@/types/constants";
 
 export const ProjectStatusBadge = ({ status }: { status: string }) => (
   <Badge
-    className={`${
-      ProjectStatusColors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
-    } font-medium`}
+    className={cn(`bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 border border-primary font-medium ${ProjectStatusColors[status]}`)}
+    variant='outline'
   >
     {status}
   </Badge>

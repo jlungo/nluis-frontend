@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, ProjectI } from '@/types/projects';
 import { LOCALITY_LEVELS } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
+import { useNavigate } from 'react-router';
+import { canEditProject } from './permissions';
 
 interface Props {
   projectId: string;
@@ -35,10 +37,17 @@ const LEVEL_NAMES = {
 
 export default function EditProject({ projectId, moduleLevel, afterUpdateRedirectPath = '/land-uses' }: Props) {
   const userOrganization = useUserOrganization();
-  
+  const navigate = useNavigate()
+
+
   // Fetch project data
   const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ project_id: projectId });
   const project = projectData?.results as ProjectI | undefined;
+
+  if (!project || !canEditProject(project.approval_status)) {
+    navigate(afterUpdateRedirectPath, { replace: true })
+    return
+  }
 
   const [formData, setFormData] = useState<CreateProjectDataI>({
     name: '',
@@ -66,7 +75,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
         funder_ids: project.funders?.map(f => f.id.toString()) || [],
         locality_ids: project.localities?.map(l => l.id) || [],
       });
-      
+
       // Set selected localities
       if (project.localities && project.localities.length > 0) {
         const localitiesWithPath = project.localities.map(locality => ({
@@ -103,7 +112,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const updateProjectMutation = useUpdateProject();
 
   // Helper functions for locality filtering
-  const getLocalitiesByLevel = (level: string) => 
+  const getLocalitiesByLevel = (level: string) =>
     localities?.filter(l => l.level === level) || [];
 
   const getChildLocalities = (level: string, parentId: string) =>
@@ -111,7 +120,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
 
   const buildLocalityPath = (locality: LocalityI): string => {
     const pathParts: string[] = [];
-    
+
     // if (moduleLevel >= LOCALITY_LEVELS.ZONAL) {
     //   const zonal = localities?.find(l => 
     //     l.level === LOCALITY_LEVELS.ZONAL && 
@@ -121,24 +130,24 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
     // }
 
     if (moduleLevel >= LOCALITY_LEVELS.REGION) {
-      const region = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.REGION && 
+      const region = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.REGION &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (region) pathParts.push(region.name);
     }
 
     if (moduleLevel >= LOCALITY_LEVELS.DISTRICT && locality.level !== LOCALITY_LEVELS.REGION) {
-      const district = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.DISTRICT && 
+      const district = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.DISTRICT &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (district) pathParts.push(district.name);
     }
 
     if (moduleLevel >= LOCALITY_LEVELS.WARD && locality.level !== LOCALITY_LEVELS.REGION && locality.level !== LOCALITY_LEVELS.DISTRICT) {
-      const ward = localities?.find(l => 
-        l.level === LOCALITY_LEVELS.WARD && 
+      const ward = localities?.find(l =>
+        l.level === LOCALITY_LEVELS.WARD &&
         (l.id === locality.id || isAncestor(l.id, locality.id))
       );
       if (ward) pathParts.push(ward.name);
@@ -165,7 +174,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const handleFunderSelect = (funderId: string) => {
     setFormData(prev => ({
       ...prev,
-      funder_ids: prev.funder_ids.includes(funderId) 
+      funder_ids: prev.funder_ids.includes(funderId)
         ? prev.funder_ids.filter(f => f !== funderId)
         : [...prev.funder_ids, funderId]
     }));
@@ -174,7 +183,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const handleSelectionChange = (level: keyof typeof currentSelection, value: string) => {
     setCurrentSelection(prev => {
       const newSelection = { ...prev };
-      
+
       // Reset child selections when parent changes
       if (level === 'zonal') {
         newSelection.region = '';
@@ -186,7 +195,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
       } else if (level === 'district') {
         newSelection.ward = '';
       }
-      
+
       newSelection[level] = value;
       return newSelection;
     });
@@ -265,10 +274,10 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
     const basicFieldsValid = !!(name && description && registration_date && authorization_date && budget && funder_ids.length > 0);
 
     if (!basicFieldsValid) return false;
-    
+
     // For national level, no localities needed
     if (moduleLevel === LOCALITY_LEVELS.NATIONAL) return true;
-    
+
     // For other levels, at least one locality must be selected
     return formData.locality_ids.length > 0;
   };
@@ -290,7 +299,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
       };
 
       await updateProjectMutation.mutateAsync({ id: projectId, data: payload });
-      window.location.href = afterUpdateRedirectPath;
+      navigate(afterUpdateRedirectPath, { replace: true })
     } catch (error) {
       console.error('Failed to update project:', error);
     }
@@ -379,9 +388,9 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
         </div>
 
         <div className="flex justify-end">
-          <Button 
-            type="button" 
-            onClick={addLocality} 
+          <Button
+            type="button"
+            onClick={addLocality}
             disabled={
               // (moduleLevel === LOCALITY_LEVELS.ZONAL && !currentSelection.zonal) ||
               (moduleLevel === LOCALITY_LEVELS.REGION && !currentSelection.region) ||
@@ -430,21 +439,21 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormFieldInput 
-              type="text" 
-              id="name" 
-              label="Project Name" 
-              value={formData.name} 
-              onChange={(val) => handleInputChange('name', val)} 
-              required 
+            <FormFieldInput
+              type="text"
+              id="name"
+              label="Project Name"
+              value={formData.name}
+              onChange={(val) => handleInputChange('name', val)}
+              required
             />
-            <FormFieldInput 
-              type="textarea" 
-              id="description" 
-              label="Description" 
-              value={formData.description} 
-              onChange={(val) => handleInputChange('description', val)} 
-              required 
+            <FormFieldInput
+              type="textarea"
+              id="description"
+              label="Description"
+              value={formData.description}
+              onChange={(val) => handleInputChange('description', val)}
+              required
             />
           </CardContent>
         </Card>
@@ -459,21 +468,21 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
-              <FormFieldInput 
-                type="date" 
-                id="registration_date" 
-                label="Registration Date" 
-                value={formData.registration_date} 
-                onChange={(val) => handleInputChange('registration_date', val)} 
-                required 
+              <FormFieldInput
+                type="date"
+                id="registration_date"
+                label="Registration Date"
+                value={formData.registration_date}
+                onChange={(val) => handleInputChange('registration_date', val)}
+                required
               />
-              <FormFieldInput 
-                type="date" 
-                id="authorization_date" 
-                label="Authorization Date" 
-                value={formData.authorization_date} 
-                onChange={(val) => handleInputChange('authorization_date', val)} 
-                required 
+              <FormFieldInput
+                type="date"
+                id="authorization_date"
+                label="Authorization Date"
+                value={formData.authorization_date}
+                onChange={(val) => handleInputChange('authorization_date', val)}
+                required
               />
             </div>
           </CardContent>
@@ -488,15 +497,15 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormFieldInput 
-              type="number" 
-              id="budget" 
-              label="Project Budget (TZS)" 
-              value={formData.budget} 
-              onChange={(val) => handleInputChange('budget', val)} 
-              required 
+            <FormFieldInput
+              type="number"
+              id="budget"
+              label="Project Budget (TZS)"
+              value={formData.budget}
+              onChange={(val) => handleInputChange('budget', val)}
+              required
             />
-            
+
             <div className="space-y-3">
               <FormFieldInput
                 type="select"
@@ -550,16 +559,16 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-4 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => (window.location.href = afterUpdateRedirectPath)} 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(afterUpdateRedirectPath, { replace: true })}
             disabled={updateProjectMutation.isPending}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!isFormValid() || updateProjectMutation.isPending}
           >
             {updateProjectMutation.isPending ? 'Updating Project...' : 'Update Project'}

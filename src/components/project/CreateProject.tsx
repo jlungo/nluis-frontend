@@ -11,6 +11,8 @@ import { CreateProjectDataI } from '@/types/projects';
 import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useNavigate } from 'react-router';
+import { canCreateProject } from './permissions';
 
 interface Props {
   moduleLevel: string;
@@ -19,6 +21,12 @@ interface Props {
 
 export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '/land-uses' }: Props) {
   const userOrganization = useUserOrganization();
+  const navigate = useNavigate()
+
+  if (!canCreateProject()) {
+    navigate(afterCreateRedirectPath, { replace: true })
+    return
+  }
 
   const [formData, setFormData] = useState<CreateProjectDataI>({
     name: '',
@@ -182,7 +190,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
       };
 
       await createProjectMutation.mutateAsync(payload);
-      window.location.href = afterCreateRedirectPath;
+      navigate(afterCreateRedirectPath, { replace: true })
     } catch (error) {
       console.error("Failed to create project:", error);
     }
@@ -239,39 +247,24 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
                     placeholder="Select regions"
                   />
                 ) : (
-                  <>
-                    <FormFieldInput
-                      type="multiselect"
-                      id="regions-multi"
-                      label="Select Regions"
-                      values={currentSelection.regions} // Pass current values
-                      options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
-                        value: region.id,
-                        label: region.name
-                      }))}
-                      onChange={() => { }}
-                      onValuesChange={(values) => handleMultiSelection('regions', values)}
-                      placeholder="Select regions"
-                    />
-                    <div>
-                      <Label htmlFor='select-region'>Select Region</Label>
-                      <Select
-                        value={currentSelection.selectedRegion}
-                        onValueChange={(value: string) => handleSingleSelection('selectedRegion', value)}
-                      >
-                        <SelectTrigger id='select-region' className='w-full'>
-                          <SelectValue placeholder="Select region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
-                            <SelectItem key={region.id} value={region.id}>
-                              {region.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
+                  <div>
+                    <Label htmlFor='select-region'>Select Region</Label>
+                    <Select
+                      value={currentSelection.selectedRegion}
+                      onValueChange={(value: string) => handleSingleSelection('selectedRegion', value)}
+                    >
+                      <SelectTrigger id='select-region' className='w-full'>
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
+                          <SelectItem key={region.id} value={region.id}>
+                            {region.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
             )}
@@ -502,7 +495,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           <Button
             type="button"
             variant="outline"
-            onClick={() => (window.location.href = afterCreateRedirectPath)}
+            onClick={() => navigate(afterCreateRedirectPath, { replace: true })}
             disabled={createProjectMutation.isPending}
           >
             Cancel
