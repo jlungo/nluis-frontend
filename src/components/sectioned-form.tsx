@@ -8,7 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import FormField, { FieldValue } from '@/components/form-field';
+import FormField from '@/components/form-field';
 import { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +17,20 @@ import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
-type Props = { data: WorkflowProps; values?: formDataI[]; disabled?: boolean; projectLocalityId?: string }
+interface FieldValue {
+    value?: string | File[];
+    type: InputType;
+    field_id: number;
+    project_locality_id: string;
+    created_by: string;
+}
+
+type Props = {
+    data: WorkflowProps;
+    values?: formDataI[];
+    disabled?: boolean;
+    projectLocalityId?: string
+}
 
 export function SectionedForm({ data, values, disabled, projectLocalityId }: Props) {
     const queryClient = useQueryClient();
@@ -31,11 +44,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, name: string, field_id: number, project_locality_slug: string) => {
-        if (!user || project_locality_slug.length === 0) return
+    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, field_id: number, project_locality_id: string) => {
+        if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
-            [`${formSlug}-${field_id}`]: { value, type, name, field_id, project_locality_slug, created_by: user.id }
+            [`${formSlug}-${field_id}`]: { value, type, field_id, project_locality_id, created_by: user.id }
         }));
     };
 
@@ -79,7 +92,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
             const formData = new FormData();
 
             entries.forEach((field) => {
-                const { value, type, field_id, project_locality_slug } = field;
+                const { value, type, field_id, project_locality_id } = field;
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
@@ -87,7 +100,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                 else formData.append(`data-${field_id}`, value as string);
 
                 // Include project slug for field
-                formData.append(`${field_id}`, project_locality_slug);
+                formData.append(`${field_id}`, project_locality_id);
             });
 
             toast.promise(mutateAsync(formData), {
@@ -220,7 +233,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                                         disabled={disabled || !canClickForm(form)}
                                         value={fieldData[`${form.slug}-${field.id}`]?.value}
                                         setValue={updateFieldValue}
-                                        project_locality_slug={projectLocalityId || ""}
+                                        project_locality_id={projectLocalityId || ""}
                                         {...field}
                                     />
                                 )}
@@ -273,7 +286,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                                             disabled={disabled || !canClickForm(form)}
                                             value={fieldData[form.slug]?.value}
                                             setValue={updateFieldValue}
-                                            project_locality_slug={projectLocalityId || ""}
+                                            project_locality_id={projectLocalityId || ""}
                                             {...field}
                                         />
                                     ))}
@@ -320,11 +333,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
     }, [values])
 
     useEffect(() => {
-        if (values)
+        if (values && projectLocalityId)
             values.forEach(value => {
-                updateFieldValue(value.form_slug, value.value, value.type, value.name, value.field_id, value.project_locality_slug)
+                updateFieldValue(value.form_slug, value.value, value.type, value.field_id, projectLocalityId)
             });
-    }, [values])
+    }, [values, projectLocalityId])
 
     if (!user) return
 

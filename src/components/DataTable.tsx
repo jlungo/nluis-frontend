@@ -53,6 +53,8 @@ export type DataTableProps<TData, TValue> = {
     updater: PaginationState | ((old: PaginationState) => PaginationState)
   ) => void;
   rowCount?: number; // total rows from server (for "Showing x–y of z")
+  /** Table has shadow */
+  shadowed?: boolean;
 };
 
 export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
@@ -76,6 +78,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     pagination,
     onPaginationChange,
     rowCount,
+    shadowed = true
   } = props;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -195,9 +198,10 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   return (
     <div className="space-y-3">
       {/* Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 pt-1 pr-1">
-        <div className="hidden sm:block" />
-        <div className="justify-self-center w-full sm:w-[360px]">
+      <div className="flex flex-wrap items-center gap-2">
+
+        {/* Centered search */}
+        <div className="justify-self-end w-full sm:w-[360px] md:w-[500px]">
           {enableGlobalFilter && (
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -211,11 +215,13 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
             </div>
           )}
         </div>
-        <div className="justify-self-end">{rightToolbar}</div>
+
+        {/* Right-aligned toolbar (actions button / etc.) */}
+        {rightToolbar && <div className="justify-self-end">{rightToolbar}</div>}
       </div>
 
-      {/* Table wrapper */}
-      <div className="rounded-md border overflow-hidden">
+      {/* Table wrapper with sticky header */}
+      <div className={`rounded-xl border overflow-hidden ${shadowed ? 'shadow-md' : ''}`}>
         <div className="relative max-h-[70vh] overflow-auto">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
@@ -318,7 +324,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="sr-only md:not-sr-only text-sm">Rows per page</span>
+          <span className="hidden md:inline text-sm">Rows per page</span>
           <select
             className="h-9 rounded-md border bg-transparent px-2 text-sm"
             value={pag.pageSize}

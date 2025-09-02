@@ -14,6 +14,7 @@ import { ProjectI, ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
 import { ProjectStatusFilters } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
+import { canCreateProject } from './permissions';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
   const userOrganization = useUserOrganization();
@@ -83,9 +84,11 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
           <h1 className="text-lg lg:text-2xl font-semibold">Projects List</h1>
           <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
         </div>
-        <Button onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
-          <Plus className="h-4 w-4" /> <span className='hidden lg:inline'>Create </span>New Project
-        </Button>
+        {canCreateProject() ? (
+          <Button onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
+            <Plus className="h-4 w-4" /> <span className='hidden lg:inline'>Create </span>New Project
+          </Button>
+        ) : null}
       </div>
 
       <Card className="mb-0">

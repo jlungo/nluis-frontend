@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar, DollarSign, FileText } from 'lucide-react';
@@ -11,6 +11,8 @@ import { CreateProjectDataI, ProjectI } from '@/types/projects';
 import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG } from '@/types/constants';
 import { useUserOrganization } from '@/hooks/use-user-organization';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useNavigate } from 'react-router';
+import { canEditProject } from './permissions';
 
 interface Props {
   projectId: string;
@@ -20,9 +22,17 @@ interface Props {
 
 export default function EditProject({ projectId, moduleLevel, afterUpdateRedirectPath = '/land-uses' }: Props) {
   const userOrganization = useUserOrganization();
+  const navigate = useNavigate()
 
+
+  // Fetch project data
   const { data: projectData, isLoading: loadingProject } = useProjectsQuery({ project_id: projectId });
   const project = projectData?.results as ProjectI | undefined;
+
+  if (!project || !canEditProject(project.approval_status)) {
+    navigate(afterUpdateRedirectPath, { replace: true })
+    return
+  }
 
   const [formData, setFormData] = useState<CreateProjectDataI>({
     name: '',
@@ -96,9 +106,8 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const updateProjectMutation = useUpdateProject();
 
   // Helper functions for locality filtering
-  const getLocalitiesByLevel = (level: string) => {
-    return localities?.filter(l => l.level == level) || [];
-  };
+  const getLocalitiesByLevel = (level: string) =>
+    localities?.filter(l => l.level === level) || [];
 
   const getChildLocalities = (level: string, parentId: string) =>
     localities?.filter(l => l.level == level && l.parent == parentId) || [];
@@ -135,7 +144,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
   const handleSingleSelection = (level: 'selectedRegion' | 'selectedDistrict' | 'selectedWard', value: string) => {
     setCurrentSelection(prev => {
       const newSelection = { ...prev };
-      
+
       // Reset child selections when parent changes
       if (level == 'selectedRegion') {
         newSelection.districts = [];
@@ -220,7 +229,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
       };
 
       await updateProjectMutation.mutateAsync({ id: projectId, data: payload });
-      window.location.href = afterUpdateRedirectPath;
+      navigate(afterUpdateRedirectPath, { replace: true })
     } catch (error) {
       console.error("Failed to update project:", error);
     }
@@ -257,26 +266,26 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
           <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
             Select localities to add to your project
           </h4>
-          
+
           <div className="grid gap-4">
             {/* Region Selection */}
             {moduleLevel >= LOCALITY_LEVELS.REGION && (
               <div className="space-y-2">
                 {targetLevel == LOCALITY_LEVELS.REGION ? (
-                    <FormFieldInput
-                      type="multiselect"
-                      id="regions-multi"
-                      label="Select Regions"
-                      values={currentSelection.regions}
-                      options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
-                        value: region.id,
-                        label: region.name
-                      }))}
-                      onChange={() => {}}
-                      onValuesChange={(values) => handleMultiSelection('regions', values)}
-                      placeholder="Select regions"
-                    />
-                  ) : (
+                  <FormFieldInput
+                    type="multiselect"
+                    id="regions-multi"
+                    label="Select Regions"
+                    values={currentSelection.regions}
+                    options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
+                      value: region.id,
+                      label: region.name
+                    }))}
+                    onChange={() => { }}
+                    onValuesChange={(values) => handleMultiSelection('regions', values)}
+                    placeholder="Select regions"
+                  />
+                ) : (
                   <div>
                     <Label htmlFor='select-region'>Select Region</Label>
                     <Select
@@ -312,7 +321,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
                       value: district.id,
                       label: district.name
                     }))}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     onValuesChange={(values) => handleMultiSelection('districts', values)}
                     placeholder="Select districts"
                   />
@@ -353,7 +362,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
                       value: ward.id,
                       label: ward.name
                     }))}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     onValuesChange={(values) => handleMultiSelection('wards', values)}
                     placeholder="Select wards"
                   />
@@ -392,7 +401,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
                     value: village.id,
                     label: village.name
                   }))}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   onValuesChange={(values) => handleMultiSelection('villages', values)}
                   placeholder="Select villages"
                 />
@@ -525,7 +534,7 @@ export default function EditProject({ projectId, moduleLevel, afterUpdateRedirec
           <Button
             type="button"
             variant="outline"
-            onClick={() => (window.location.href = afterUpdateRedirectPath)}
+            onClick={() => navigate(afterUpdateRedirectPath, { replace: true })}
             disabled={updateProjectMutation.isPending}
           >
             Cancel
