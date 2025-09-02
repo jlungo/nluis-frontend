@@ -3,7 +3,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
-import MultiSelectShowListInput from './MultiSelectShowListInput';
+import MultiSelectShowListInput, { SelectOption } from './MultiSelectShowListInput';
 import DatePicker from './FormDateSelect';
 
 type FormFieldInputProps =
