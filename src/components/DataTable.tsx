@@ -147,7 +147,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       <div className="flex flex-wrap items-center gap-2">
 
         {/* Centered search */}
-        <div className="justify-self-end w-full sm:w-[360px] md:w-1/2 xl:w-1/3">
+        <div className="justify-self-end w-full sm:w-[360px] md:w-[500px]">
           {enableGlobalFilter && (
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

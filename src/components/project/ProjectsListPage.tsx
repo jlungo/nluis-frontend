@@ -56,6 +56,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     });
 
   const handleDelete = async (project: ProjectI) => {
+    console.log("Deleting project:", project.id);
     try {
       await deleteProjectMutation.mutateAsync(project.id);
       refetch();
@@ -144,7 +145,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
             entityName="Project"
             onView={(e) => navigate(`${e.id}`)}
             onEdit={(e) => navigate(`${e.id}/edit`)}
-            deleteFunction={handleDelete}
+            deleteFunction={() => handleDelete(row)}
           />
         )}
       />

@@ -59,24 +59,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               </div>
             </div>
             <div className="flex flex-col-reverse items-end gap-4">
-              <div className='flex gap-2 flex-col md:flex-row items-end'>
-                {canEditProject(project.approval_status) ? (
-                  <>
-                    <Link to={`/land-uses/${moduleLevel}/${project_id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
-                      <Edit className="h-4 w-4 hidden md:inline-block" />
-                      Edit Project
-                    </Link>
-                  </>
-                ) : null}
-                {canApproveProject(project.approval_status) ? (
-                  <>
-                    <Link to={`/land-uses/${moduleLevel}/${project_id}/approve`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90")}>
-                      <Check className="h-4 w-4 hidden md:inline-block" />
-                      Approve Project
-                    </Link>
-                  </>
-                ) : null}
-              </div>
+              <ButtonsComponent moduleLevel={moduleLevel} project_id={project_id!} approval_status={project.approval_status} />
               <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
                 <ProjectStatusBadge status={approvalStatus} />
                 <ProjectStatusBadge status={projectStatus} />
@@ -179,6 +162,28 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   );
 }
 
+const ButtonsComponent: React.FC<{ moduleLevel: string, project_id: string, approval_status: number }> = ({ moduleLevel, project_id, approval_status }) => {
+  return (
+    <div className='flex gap-2 flex-col md:flex-row items-end'>
+      {canEditProject(approval_status) ? (
+        <>
+          <Link to={`/land-uses/${moduleLevel}/${project_id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
+            <Edit className="h-4 w-4 hidden md:inline-block" />
+            Edit Project
+          </Link>
+        </>
+      ) : null}
+      {canApproveProject(approval_status) ? (
+        <>
+          <Link to={`/land-uses/${moduleLevel}/${project_id}/approve`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90")}>
+            <Check className="h-4 w-4 hidden md:inline-block" />
+            Approve Project
+          </Link>
+        </>
+      ) : null}
+    </div>
+  )
+}
 
 const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) => void; }> = ({
   project,
