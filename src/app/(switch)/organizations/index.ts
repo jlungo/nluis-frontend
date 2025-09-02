@@ -25,13 +25,13 @@ const Index: RouteObject = {
       }
     },
    
-    {
-      path: "projects",
-      async lazy() {
-        const { default: Component } = await import("./projects/page");
-        return { Component };
-      }
-    },
+    // {
+    //   path: "projects",
+    //   async lazy() {
+    //     const { default: Component } = await import("./projects/page");
+    //     return { Component };
+    //   }
+    // },
     {
       path: ":id",
       async lazy() {
@@ -46,34 +46,7 @@ const Index: RouteObject = {
         return { Component };
       }
     },
-    {
-      path: ":id/projects",
-      async lazy() {
-        const { default: Component } = await import("./[id]/projects/page");
-        return { Component };
-      }
-    },
-    {
-      path: ":id/projects/new",
-      async lazy() {
-        const { default: Component } = await import("./[id]/projects/new/page");
-        return { Component };
-      }
-    },
-    {
-      path: ":id/projects/:projectId",
-      async lazy() {
-        const { default: Component } = await import("./[id]/projects/[projectId]/page");
-        return { Component };
-      }
-    },
-    {
-      path: ":id/projects/:projectId/edit",
-      async lazy() {
-        const { default: Component } = await import("./[id]/projects/[projectId]/edit/page");
-        return { Component };
-      }
-    }
+    
   ],
 };
 

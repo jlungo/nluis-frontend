@@ -1,17 +1,13 @@
 // components/DataTable.tsx
-// TanStack Table v8 + shadcn/ui
-// - Sticky header, zebra-ready rows, soft borders
-// - Sorting, global search (centered), pagination
-// - Optional "No." column and row actions column
-
 import * as React from "react";
 import {
   ColumnDef,
   SortingState,
+  PaginationState,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
   flexRender,
 } from "@tanstack/react-table";
@@ -38,26 +34,25 @@ import {
 export type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  /** Shows a leading "No." column */
   showRowNumbers?: boolean;
-  /** Optional actions column renderer (appears at the far right) */
   rowActions?: (row: TData) => React.ReactNode;
-  /** Loading state */
   isLoading?: boolean;
-  /** How many skeleton rows to show while loading */
   loadingRows?: number;
-  /** Called when a row is clicked */
   onRowClick?: (row: TData) => void;
-  /** Enable the search input */
   enableGlobalFilter?: boolean;
-  /** Optional placeholder for search */
   searchPlaceholder?: string;
-  /** External toolbar content on the right (e.g., Add button) */
   rightToolbar?: React.ReactNode;
-  /** Initial page size */
   initialPageSize?: number;
-  /** Page size choices */
   pageSizeOptions?: number[];
+
+  // NEW: server (manual) pagination support
+  manualPagination?: boolean;
+  pageCount?: number; // total pages from server
+  pagination?: PaginationState; // controlled pagination state
+  onPaginationChange?: (
+    updater: PaginationState | ((old: PaginationState) => PaginationState)
+  ) => void;
+  rowCount?: number; // total rows from server (for "Showing x–y of z")
   /** Table has shadow */
   shadowed?: boolean;
 };
@@ -76,11 +71,33 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     rightToolbar,
     initialPageSize = 10,
     pageSizeOptions = [5, 10, 20, 50],
+
+    // NEW
+    manualPagination = false,
+    pageCount,
+    pagination,
+    onPaginationChange,
+    rowCount,
     shadowed = true
   } = props;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+
+  // Fallback internal pagination state if not controlled
+  const [internalPagination, setInternalPagination] =
+    React.useState<PaginationState>({
+      pageIndex: 0,
+      pageSize: initialPageSize,
+    });
+
+  const pag = pagination ?? internalPagination;
+  const setPag =
+    onPaginationChange ??
+    ((updater: PaginationState | ((old: PaginationState) => PaginationState)) =>
+      setInternalPagination((old) =>
+        typeof updater === "function" ? (updater as any)(old) : updater
+      ));
 
   // Compose visible columns: No. | provided | Actions
   const composedColumns = React.useMemo<ColumnDef<TData, TValue>[]>(() => {
@@ -90,7 +107,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       cols.push({
         id: "_rownum",
         header: () => <div className="text-center">No.</div>,
-        cell: ({ table, row }: { table: any, row: any }) => (
+        cell: ({ table, row }: { table: any; row: any }) => (
           <div className="text-center text-muted-foreground">
             {table.getState().pagination.pageIndex *
               table.getState().pagination.pageSize +
@@ -110,7 +127,6 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
         id: "_actions",
         header: () => <div className="text-right pr-2">Actions</div>,
         cell: ({ row }: { row: any }) => (
-          // Prevent row onClick when interacting with actions
           <div className="text-right" onClick={(e) => e.stopPropagation()}>
             {rowActions(row.original)}
           </div>
@@ -123,23 +139,61 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     return cols;
   }, [columns, showRowNumbers, rowActions]);
 
-  const table = useReactTable({
+  // Build base config
+  const config: any = {
     data,
     columns: composedColumns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter, pagination: pag },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPag,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: initialPageSize } },
-    globalFilterFn: (row, _columnId, filterValue) => {
-      // Simple case-insensitive substring across all visible string values
-      const v = String(Object.values(row.original || {}).join(" ")).toLowerCase();
+    globalFilterFn: (row: any, _columnId: any, filterValue: any) => {
+      const v = String(
+        Object.values(row.original || {}).join(" ")
+      ).toLowerCase();
       return v.includes(String(filterValue).toLowerCase());
     },
-  });
+  };
+
+  // Client vs Server pagination
+  if (manualPagination) {
+    config.manualPagination = true;
+    config.pageCount = pageCount ?? 1;
+    // Do NOT add getPaginationRowModel when manual
+  } else {
+    config.getPaginationRowModel = getPaginationRowModel();
+  }
+
+  const table = useReactTable(config);
+
+  // Footer helpers
+  const totalRows = rowCount ?? table.getFilteredRowModel().rows.length;
+  const start = data.length ? pag.pageIndex * pag.pageSize + 1 : 0;
+  const end = pag.pageIndex * pag.pageSize + data.length;
+  const canPrev = pag.pageIndex > 0;
+  const canNext = manualPagination
+    ? pag.pageIndex + 1 < (pageCount ?? 1)
+    : table.getCanNextPage();
+
+  const goFirst = () => setPag((old) => ({ ...old, pageIndex: 0 }));
+  const goPrev = () =>
+    setPag((old) => ({ ...old, pageIndex: Math.max(0, old.pageIndex - 1) }));
+  const goNext = () =>
+    setPag((old) => ({
+      ...old,
+      pageIndex: manualPagination
+        ? Math.min((pageCount ?? 1) - 1, old.pageIndex + 1)
+        : old.pageIndex + 1,
+    }));
+  const goLast = () =>
+    setPag((old) => ({ ...old, pageIndex: Math.max(0, (pageCount ?? 1) - 1) }));
+
+  const changePageSize = (size: number) =>
+    setPag(() => ({ pageIndex: 0, pageSize: size }));
 
   return (
     <div className="space-y-3">
@@ -224,7 +278,9 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     className={`hover:bg-accent/50 ${onRowClick ? "cursor-pointer" : ""
                       }`}
                     onClick={
-                      onRowClick ? () => onRowClick(row.original) : undefined
+                      onRowClick
+                        ? () => onRowClick(row.original as TData)
+                        : undefined
                     }
                     data-state={row.getIsSelected() && "selected"}
                   >
@@ -255,19 +311,24 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between gap-2">
-        {table.getFilteredSelectedRowModel().rows.length > 0 ? (
+        <div className="text-sm text-muted-foreground">
+          {totalRows ? (
+            <>
+              Showing <span className="font-medium">{start}</span>–
+              <span className="font-medium">{end}</span> of{" "}
+              <span className="font-medium">{totalRows}</span>
+            </>
+          ) : (
+            "No rows"
+          )}
+        </div>
 
-          <div className="text-xs lg:text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected
-          </div>
-        ) : <div />}
         <div className="flex items-center gap-2">
           <span className="hidden md:inline text-sm">Rows per page</span>
           <select
             className="h-9 rounded-md border bg-transparent px-2 text-sm"
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            value={pag.pageSize}
+            onChange={(e) => changePageSize(Number(e.target.value))}
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
@@ -275,38 +336,37 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
               </option>
             ))}
           </select>
+
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="icon"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
+              onClick={goFirst}
+              disabled={!canPrev}
             >
               <ChevronsLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={goPrev}
+              disabled={!canPrev}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={goNext}
+              disabled={!canNext}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                table.setPageIndex(table.getPageCount() - 1)
-              }
-              disabled={!table.getCanNextPage()}
+              onClick={goLast}
+              disabled={manualPagination ? !canNext : !table.getCanNextPage()}
             >
               <ChevronsRight className="h-4 w-4" />
             </Button>
