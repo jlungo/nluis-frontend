@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { Spinner } from './ui/spinner';
 
 export type SelectOption = {
-  value: string;
+  value: string | number;
   label: string;
   isDisabled?: boolean;
   description?: string;
@@ -28,7 +28,7 @@ type MultiSelectShowListInputProps = {
   isLoading?: boolean;
   required?: boolean;
   onChange?: (selected: SelectOption[]) => void;
-  onValuesChange: (values: string[]) => void;
+  onValuesChange: (values: (string | number)[]) => void;
   isSingle?: boolean;
 };
 
@@ -51,8 +51,8 @@ export default function MultiSelectShowListInput({
 
   const selectedOptions = options.filter((opt) => mergedValues.includes(opt.value));
 
-  const toggleValue = (value: string) => {
-    let newValues: string[];
+  const toggleValue = (value: string | number) => {
+    let newValues: (string | number)[];
 
     if (mergedValues.includes(value)) {
       newValues = mergedValues.filter((v) => v !== value);

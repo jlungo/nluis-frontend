@@ -1,54 +1,100 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar, DollarSign, FileText } from 'lucide-react';
-import { useFunders, useLocalities, useCreateProject } from '@/queries/useProjectQuery';
+import { useFunders, useLocalities, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { FormFieldInput } from '@/components/FormFieldInput';
 import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { CreateProjectDataI } from '@/types/projects';
+import { CreateProjectDataI, LocalityI, ProjectFunderI, ProjectI } from '@/types/projects';
 import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG } from '@/types/constants';
-import { useUserOrganization } from '@/hooks/use-user-organization';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useNavigate } from 'react-router';
-import { canCreateProject } from './permissions';
+import { canCreateProject, canEditProject } from './permissions';
+import { useAuth } from '@/store/auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Props {
   moduleLevel: string;
-  afterCreateRedirectPath: string;
+  redirectPath: string;
+  projectId?: string
 }
 
-export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '/land-uses' }: Props) {
-  const userOrganization = useUserOrganization();
-  const navigate = useNavigate()
+interface FormProps {
+  moduleLevel: string;
+  redirectPath: string;
+  funders: ProjectFunderI[] | undefined
+  localities: LocalityI[] | undefined
+  organizationId: string
+  project?: ProjectI
+}
 
-  if (!canCreateProject()) {
-    navigate(afterCreateRedirectPath, { replace: true })
-    return
+export default function CreateOrEditProject(props: Props) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { data: funders, isLoading: loadingFunders } = useFunders();
+  const { data: localities, isLoading: loadingLocalities } = useLocalities();
+  const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
+
+  const canCreate = () => {
+    if (!user || !user?.role?.name) return
+    return canCreateProject(user.role.name)
   }
 
-  const [formData, setFormData] = useState<CreateProjectDataI>({
-    name: '',
-    organization: userOrganization || '',
-    description: '',
-    module_level: '',
-    registration_date: new Date().toISOString().split('T')[0],
-    authorization_date: '',
-    budget: '',
-    funder_ids: [],
-    locality_ids: [],
-  });
+  const canEdit = () => {
+    if (!user || !user?.role?.name || !project) return false
+    return canEditProject(user?.role?.name, project.approval_status)
+  }
 
-  // Update formData when userOrganization is available
-  useEffect(() => {
-    if (userOrganization) {
-      setFormData(prev => ({
-        ...prev,
-        organization: userOrganization
-      }));
-    }
-  }, [userOrganization]);
+  if (loadingFunders || loadingLocalities) {
+    return (
+      <div className='flex flex-col items-center justify-center h-60'>
+        <Spinner />
+        <p className="text-muted-foreground mt-4">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!props.projectId && canCreate() && user?.organization?.id)
+    return (
+      <Forms
+        {...props}
+        funders={funders}
+        localities={localities}
+        organizationId={user.organization.id}
+      />
+    )
+
+  if (isLoadingProject || !project) {
+    return (
+      <div className='flex flex-col items-center justify-center h-60'>
+        <Spinner />
+        <p className="text-muted-foreground mt-4">Loading...</p>
+      </div>
+    );
+  }
+
+  if (canEdit() && user?.organization?.id)
+    return (
+      <Forms
+        {...props}
+        funders={funders}
+        localities={localities}
+        organizationId={user.organization.id}
+        project={project}
+      />
+    )
+
+  navigate(props.redirectPath, { replace: true })
+  return null
+}
+
+function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, project, organizationId }: FormProps) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { mutateAsync: mutateAsyncCreate, isPending: isPendingCreate } = useCreateProject();
+  const { mutateAsync: mutateAsyncUpdate, isPending } = useUpdateProject();
 
   // Locality selection state
   const [currentSelection, setCurrentSelection] = useState({
@@ -61,9 +107,65 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     selectedWard: '',
   });
 
-  const { data: funders, isLoading: loadingFunders } = useFunders();
-  const { data: localities, isLoading: loadingLocalities } = useLocalities();
-  const createProjectMutation = useCreateProject();
+  const [formData, setFormData] = useState<CreateProjectDataI>({
+    name: project ? project.name : '',
+    organization: organizationId || '',
+    description: project ? project.description || '' : '',
+    module_level: project ? project.name : '',
+    registration_date: project ? project.registration_date : new Date().toISOString().split('T')[0],
+    authorization_date: project ? project.authorization_date : '',
+    budget: project ? project.budget : '',
+    funder_ids: project?.funders ? project.funders.map(funder => funder.id) : [],
+    locality_ids: project?.localities ? project.localities.map(locality => locality.id) : [],
+  });
+
+  useEffect(() => {
+    if (!project) return
+    const targetLevel = getTargetLevel();
+
+    if (targetLevel === LOCALITY_LEVELS.REGION) {
+      setCurrentSelection(prev => ({
+        ...prev,
+        regions: project.localities ? project.localities.map(locality => locality.locality__id) : []
+      }))
+    } else if (targetLevel === LOCALITY_LEVELS.DISTRICT) {
+      setCurrentSelection(prev => ({
+        ...prev,
+        districts: project.localities ? project.localities.map(locality => locality.locality__id) : []
+      }))
+    } else if (targetLevel === LOCALITY_LEVELS.WARD) {
+      setCurrentSelection(prev => ({
+        ...prev,
+        wards: project.localities ? project.localities.map(locality => locality.locality__id) : []
+      }))
+    } else if (targetLevel === LOCALITY_LEVELS.VILLAGE) {
+      setCurrentSelection(prev => ({
+        ...prev,
+        villages: project.localities ? project.localities.map(locality => locality.locality__id) : []
+      }))
+    }
+  }, [])
+
+  useEffect(() => {
+    // Update locality_ids based on current selection
+    const targetLevel = getTargetLevel();
+    let selectedLocalityIds: string[] = [];
+
+    if (targetLevel === LOCALITY_LEVELS.REGION) {
+      selectedLocalityIds = currentSelection.regions;
+    } else if (targetLevel === LOCALITY_LEVELS.DISTRICT) {
+      selectedLocalityIds = currentSelection.districts;
+    } else if (targetLevel === LOCALITY_LEVELS.WARD) {
+      selectedLocalityIds = currentSelection.wards;
+    } else if (targetLevel === LOCALITY_LEVELS.VILLAGE) {
+      selectedLocalityIds = currentSelection.villages;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      locality_ids: selectedLocalityIds
+    }));
+  }, [currentSelection.regions, currentSelection.districts, currentSelection.wards, currentSelection.villages, moduleLevel]);
 
   // Helper functions for locality filtering
   const getLocalitiesByLevel = (level: string) => {
@@ -89,15 +191,14 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     }
   };
 
-  // Handlers
   const handleInputChange = (key: keyof CreateProjectDataI, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleFunderSelect = (funderIds: string[]) => {
+  const handleFunderSelect = (funderIds: (string | number)[]) => {
     setFormData(prev => ({
       ...prev,
-      funder_ids: funderIds,
+      funder_ids: funderIds as string[],
     }));
   };
 
@@ -126,29 +227,8 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
     });
   };
 
-  useEffect(() => {
-    // Update locality_ids based on current selection
-    const targetLevel = getTargetLevel();
-    let selectedLocalityIds: string[] = [];
-
-    if (targetLevel === LOCALITY_LEVELS.REGION) {
-      selectedLocalityIds = currentSelection.regions;
-    } else if (targetLevel === LOCALITY_LEVELS.DISTRICT) {
-      selectedLocalityIds = currentSelection.districts;
-    } else if (targetLevel === LOCALITY_LEVELS.WARD) {
-      selectedLocalityIds = currentSelection.wards;
-    } else if (targetLevel === LOCALITY_LEVELS.VILLAGE) {
-      selectedLocalityIds = currentSelection.villages;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      locality_ids: selectedLocalityIds
-    }));
-  }, [currentSelection.regions, currentSelection.districts, currentSelection.wards, currentSelection.villages, moduleLevel]);
-
   // Update the handleMultiSelection function to properly handle multiselect
-  const handleMultiSelection = (level: 'regions' | 'districts' | 'wards' | 'villages', values: string[]) => {
+  const handleMultiSelection = (level: 'regions' | 'districts' | 'wards' | 'villages', values: (string | number)[]) => {
     setCurrentSelection(prev => ({
       ...prev,
       [level]: values
@@ -189,21 +269,19 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           moduleLevel === LOCALITY_LEVELS.NATIONAL ? ["92"] : formData.locality_ids, // Locality ID of Tanzania is 92
       };
 
-      await createProjectMutation.mutateAsync(payload);
-      navigate(afterCreateRedirectPath, { replace: true })
+      if (!project) await mutateAsyncCreate(payload);
+      else
+        await mutateAsyncUpdate({ id: project.id, data: payload }).then(() =>
+          queryClient.invalidateQueries({
+            refetchType: "active",
+            queryKey: [queryProjectKey],
+          }),
+        )
+      navigate(redirectPath, { replace: true })
     } catch (error) {
       console.error("Failed to create project:", error);
     }
   };
-
-  if (loadingFunders || loadingLocalities) {
-    return (
-      <div className='flex flex-col items-center justify-center h-60'>
-        <Spinner />
-        <p className="text-muted-foreground mt-4">Loading...</p>
-      </div>
-    );
-  }
 
   const renderLocalitySelection = () => {
     if (moduleLevel == LOCALITY_LEVELS.NATIONAL) {
@@ -445,7 +523,7 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
               Budget & Funding
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 transition-all">
             <div className="grid md:grid-cols-2 gap-4">
               <FormFieldInput
                 type="number"
@@ -458,12 +536,12 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
               />
 
               <FormFieldInput
-                type="select"
+                type="multiselect"
                 id="funder-select"
                 label="Funder"
                 value=""
                 options={funders?.map(funder => ({
-                  value: funder.id.toString(),
+                  value: funder.id,
                   label: funder.name
                 })) || []}
                 onChange={() => { }}
@@ -495,16 +573,16 @@ export default function CreateProject({ moduleLevel, afterCreateRedirectPath = '
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate(afterCreateRedirectPath, { replace: true })}
-            disabled={createProjectMutation.isPending}
+            onClick={() => navigate(redirectPath, { replace: true })}
+            disabled={isPending || isPendingCreate}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            disabled={!isFormValid() || createProjectMutation.isPending}
+            disabled={!isFormValid() || isPending || isPendingCreate}
           >
-            {createProjectMutation.isPending ? 'Creating Project...' : 'Create Project'}
+            {project ? isPending || isPendingCreate ? 'Updating Project...' : 'Update Project' : isPending || isPendingCreate ? 'Creating Project...' : 'Create Project'}
           </Button>
         </div>
       </form>

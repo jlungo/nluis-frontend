@@ -1,34 +1,45 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
-import { CreateProjectDataI, LocalityI, LocalityLevelI, ProjectFunderI, ProjectI, ProjectQueryParamsI, ProjectStatsI, ProjectTypeI } from "@/types/projects";
+import {
+  CreateProjectDataI,
+  LocalityI,
+  LocalityLevelI,
+  ProjectFunderI,
+  ProjectI,
+  ProjectQueryParamsI,
+  ProjectStatsI,
+  ProjectTypeI,
+} from "@/types/projects";
 
-export const useProjectsQuery = (options: ProjectQueryParamsI) => {
-  return useQuery({
-    queryKey: options.project_id
-      ? ["project", options.project_id]
-      : ["projects", options],
-    queryFn: async (): Promise<APIResponse<ProjectI>> => {
-      if (options.project_id) {
-        // Fetch a single project by project_id
-        const response = await api.get<APIResponse<ProjectI>>(`/projects/${options.project_id}`);
-        return response.data;
-      } else {
-        // Fetch multiple projects with optional params
-        const response = await api.get<APIResponse<ProjectI>>(`/projects/`, {
-          params: options,
-        });
-        return response.data;
-      }
-    },
-    enabled: !!options.project_id || !!options,
+export const queryProjectKey = "projects";
+
+export const useProjectsQuery = (params: ProjectQueryParamsI) => {
+  return useQuery<APIResponse<ProjectI>>({
+    queryKey: [queryProjectKey, params],
+    queryFn: () => api.get(`/projects/`, { params }).then((res) => res.data),
+  });
+};
+
+export const useProjectQuery = (project_id?: string) => {
+  return useQuery<ProjectI>({
+    queryKey: [queryProjectKey, project_id],
+    queryFn: () =>
+      api.get(`/projects/${project_id}`).then((res) => res.data.results),
+    enabled: !!project_id,
   });
 };
 
 export const useUpdateProject = () => {
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: CreateProjectDataI }) => {
-      console.log('Updating project with data:', data);
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateProjectDataI;
+    }) => {
+      console.log("Updating project with data:", data);
       const response = await api.put(`/projects/${id}/update/`, data);
       return response.data;
     },
@@ -45,36 +56,43 @@ export const useDeleteProject = () => {
 
 export const useProjectStats = (organization_id?: string) => {
   return useQuery({
-    queryKey: ['projectStats', organization_id],
+    queryKey: ["projectStats", organization_id],
     queryFn: async (): Promise<APIResponse<ProjectStatsI>> => {
-      const response = await api.get(`/projects/stats?organization_id=${organization_id}`);
+      const response = await api.get(
+        `/projects/stats?organization_id=${organization_id}`
+      );
       return response.data;
-    }
+    },
   });
 };
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (projectData: CreateProjectDataI): Promise<APIResponse<ProjectI>> => {
-      console.log('Creating project with data:', projectData);
 
-      const response = await api.post<APIResponse<ProjectI>>('/projects/create/', projectData);
+  return useMutation({
+    mutationFn: async (
+      projectData: CreateProjectDataI
+    ): Promise<APIResponse<ProjectI>> => {
+      console.log("Creating project with data:", projectData);
+
+      const response = await api.post<APIResponse<ProjectI>>(
+        "/projects/create/",
+        projectData
+      );
       return response.data;
     },
     onSuccess: () => {
       // Invalidate the projects query to refetch the list
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 };
 
 export const useProjectTypes = () => {
   return useQuery({
-    queryKey: ['projectTypes'],
+    queryKey: ["projectTypes"],
     queryFn: async (): Promise<APIResponse<ProjectTypeI>> => {
-      const response = await api.get('/projects/public/project-types');
+      const response = await api.get("/projects/public/project-types");
       return response.data;
     },
   });
@@ -82,9 +100,9 @@ export const useProjectTypes = () => {
 
 export const useFunders = () => {
   return useQuery({
-    queryKey: ['funders'],
+    queryKey: ["funders"],
     queryFn: async (): Promise<ProjectFunderI[]> => {
-      const response = await api.get('/setup/funders');
+      const response = await api.get("/setup/funders");
       return response.data;
     },
   });
@@ -92,9 +110,9 @@ export const useFunders = () => {
 
 export const useLevels = () => {
   return useQuery({
-    queryKey: ['levels'],
+    queryKey: ["levels"],
     queryFn: async (): Promise<APIResponse<LocalityLevelI[]>> => {
-      const response = await api.get('/localities/levels/');
+      const response = await api.get("/localities/levels/");
       return response.data;
     },
   });
@@ -102,9 +120,9 @@ export const useLevels = () => {
 
 export const useLocalities = () => {
   return useQuery({
-    queryKey: ['localities'],
+    queryKey: ["localities"],
     queryFn: async (): Promise<LocalityI[]> => {
-      const response = await api.get('/localities/localities/');
+      const response = await api.get("/localities/localities/");
       // console.log('Fetched localities:', response);
       return response.data;
     },

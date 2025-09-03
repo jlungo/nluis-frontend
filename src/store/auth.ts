@@ -164,7 +164,13 @@ export const useAuth = create<AuthState>((set, get) => ({
         refresh: localStorage.getItem("refreshToken"),
       });
 
-      set({ accessToken: null, refreshToken: null, user: null });
+      set({
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        tempId: undefined,
+        tempEmail: undefined,
+      });
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
@@ -188,7 +194,13 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.setItem("accessToken", newAccess);
       set({ accessToken: newAccess });
     } catch {
-      set({ accessToken: null, refreshToken: null, user: null });
+      set({
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        tempId: undefined,
+        tempEmail: undefined,
+      });
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");

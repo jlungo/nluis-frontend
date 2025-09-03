@@ -11,7 +11,6 @@ export type Page =
   | "mapshop-management"
   | "reports"
   | "organizations"
-  | "user-management"
   | "system-settings"
   | "billing"
   | "document-management"

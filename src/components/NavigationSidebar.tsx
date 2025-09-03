@@ -182,8 +182,6 @@ export function NavigationSidebar({
           ];
         case "reports":
           return [];
-        case "user-management":
-          return [];
         case "system-settings":
           return [
             {

@@ -13,27 +13,27 @@ import { Button } from '@/components/ui/button';
 import { ProjectI, ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
 import { ProjectStatusFilters } from '@/types/constants';
-import { useUserOrganization } from '@/hooks/use-user-organization';
-import { canCreateProject } from './permissions';
+import { canCreateProject, canDeleteProject } from './permissions';
+import { useAuth } from '@/store/auth';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
-  const userOrganization = useUserOrganization();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth()
 
   const [filters, setFilters] = useState({ status: '', name: '', approval_status: '' });
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading, error: queryError, refetch } = useProjectsQuery({
-    organization: userOrganization || '',
+    organization: user?.organization?.id || '',
     module_level: moduleLevel,
     status: filters.status || undefined,
     search: filters.name || undefined,
     approval_status: filters.approval_status || undefined
   });
 
-  const deleteProjectMutation = useDeleteProject();
+  const { mutateAsync } = useDeleteProject();
 
   useEffect(() => {
     if (queryError) {
@@ -55,16 +55,26 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
       state: { type: pageTitle, from: location.pathname },
     });
 
-  const handleDelete = async (project: ProjectI) => {
-    console.log("Deleting project:", project.id);
-    try {
-      await deleteProjectMutation.mutateAsync(project.id);
-      refetch();
-    } catch (error) {
-      // console.error('Failed to delete project: ', error);
-      setError('Failed to delete project. Please try again.');
-    }
+  const handleDelete = (project: ProjectI) => {
+    if (!user || !user.role?.name) return
+    const canDelete = canDeleteProject(user.role.name, project.approval_status)
+    if (!canDelete) return
+    console.log(canDelete)
+    mutateAsync(project.id).then(() => refetch());
   };
+
+  const viewAction = (e: any) => {
+    navigate(`${e.id}`)
+  }
+  const editAction = (e: any) => {
+    navigate(`${e.id}/edit`)
+  }
+  const canCreate = () => {
+    if (!user || !user.role?.name) return false
+    return canCreateProject(user.role.name)
+  }
+
+  if (!user) return
 
   return (
     <>
@@ -84,7 +94,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
           <h1 className="text-lg lg:text-2xl font-semibold">Projects List</h1>
           <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
         </div>
-        {canCreateProject() ? (
+        {canCreate() ? (
           <Button onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
             <Plus className="h-4 w-4" /> <span className='hidden lg:inline'>Create </span>New Project
           </Button>
@@ -143,8 +153,8 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
           <ActionButtons
             entity={row}
             entityName="Project"
-            onView={(e) => navigate(`${e.id}`)}
-            onEdit={(e) => navigate(`${e.id}/edit`)}
+            onView={viewAction}
+            onEdit={editAction}
             deleteFunction={() => handleDelete(row)}
           />
         )}

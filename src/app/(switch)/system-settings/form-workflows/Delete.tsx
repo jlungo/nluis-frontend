@@ -32,8 +32,7 @@ export default function Delete({ workflow }: Props) {
 
     const confirmDelete = () => {
         try {
-            const res = mutateAsync();
-            toast.promise(res, {
+            toast.promise(mutateAsync(), {
                 loading: "Deleting...",
                 success: () => {
                     setOpen(false);

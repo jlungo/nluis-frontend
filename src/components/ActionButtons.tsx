@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { EllipsisVertical, Pencil, Eye, Trash2, Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
 
 type IdLike = string | number | undefined;
 
@@ -67,12 +68,17 @@ export default function ActionButtons<T>({
     if (!deleteFunction) return;
     try {
       setIsDeleting(true);
-      await Promise.resolve(deleteFunction(id ?? entity));
-      toast.success(`${entityName} deleted`);
+      toast.promise(await deleteFunction(id ?? entity), {
+        loading: "Deleting...",
+        success: () => {
+          return `${entityName} deleted successfully`
+        },
+        error: (err: AxiosError | any) => {
+          return err?.message || err?.response?.data?.message || `Failed to delete ${entityName}`;
+        }
+      });
     } catch (err: any) {
-      const msg =
-        err?.message || err?.response?.data?.message || `Failed to delete ${entityName}`;
-      toast.error(msg);
+      console.log(err)
     } finally {
       setIsDeleting(false);
       setConfirmOpen(false);
@@ -100,20 +106,20 @@ export default function ActionButtons<T>({
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           {onView && (
-            <DropdownMenuItem onClick={() => onView(entity)} disabled={disabled}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => onView(entity)} disabled={disabled}>
               <Eye className="mr-2 h-4 w-4" />
               View
             </DropdownMenuItem>
           )}
           {onEdit && (
-            <DropdownMenuItem onClick={() => onEdit(entity)} disabled={disabled}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => onEdit(entity)} disabled={disabled}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
           )}
           {(onView || onEdit) && <DropdownMenuSeparator />}
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-destructive focus:text-destructive cursor-pointer"
             onClick={() => setConfirmOpen(true)}
             disabled={disabled || !deleteFunction}
           >
@@ -138,7 +144,7 @@ export default function ActionButtons<T>({
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting || !deleteFunction}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white hover:bg-destructive/90"
             >
               {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Delete

@@ -1,4 +1,4 @@
-import CreateProject from '@/components/project/CreateProject';
+import CreateOrEditProject from '@/components/project/CreateOrEditProject';
 import { usePageStore } from '@/store/pageStore';
 import { LOCALITY_LEVELS } from '@/types/constants';
 import { useLayoutEffect } from 'react';
@@ -13,12 +13,5 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return (
-    <div>
-      <CreateProject 
-        moduleLevel={LOCALITY_LEVELS.NATIONAL}
-        afterCreateRedirectPath="/land-uses/national-land-use"
-      />
-    </div>
-  );
+  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.NATIONAL} redirectPath="/land-uses/national-land-use" />;
 }

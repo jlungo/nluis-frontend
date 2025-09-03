@@ -6,7 +6,7 @@ import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors } from "@/typ
 
 export const ProjectStatusBadge = ({ status }: { status: string }) => (
   <Badge
-    className={cn(`bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 border border-primary font-medium ${ProjectStatusColors[status]}`)}
+    className={cn(`border border-accent font-medium ${ProjectStatusColors[status]}`)}
     variant='outline'
   >
     {status}

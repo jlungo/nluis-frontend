@@ -1,4 +1,3 @@
-// src/pages/admin/UserManagement.tsx
 import { useLayoutEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,8 +31,8 @@ export default function UserManagement() {
   const { setPage } = usePageStore();
   useLayoutEffect(() => {
     setPage({
-      module: "user-management",
-      title: "User-Management"
+      module: "system-settings",
+      title: "User Management"
     });
   }, [setPage]);
 
@@ -156,17 +155,17 @@ export default function UserManagement() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex flex-wrap w-full gap-2">
-          <TabsTrigger value="all" className="flex-1 min-w-32">
+        <TabsList className="flex flex-wrap w-full gap-2 rounded-full">
+          <TabsTrigger value="all" className="flex-1 min-w-32 rounded-full cursor-pointer">
             All
           </TabsTrigger>
-          <TabsTrigger value="active" className="flex-1 min-w-32">
+          <TabsTrigger value="active" className="flex-1 min-w-32 rounded-full cursor-pointer">
             Active
           </TabsTrigger>
-          <TabsTrigger value="pending" className="flex-1 min-w-32">
+          <TabsTrigger value="pending" className="flex-1 min-w-32 rounded-full cursor-pointer">
             Pending
           </TabsTrigger>
-          <TabsTrigger value="inactive" className="flex-1 min-w-32">
+          <TabsTrigger value="inactive" className="flex-1 min-w-32 rounded-full cursor-pointer">
             Inactive
           </TabsTrigger>
         </TabsList>
