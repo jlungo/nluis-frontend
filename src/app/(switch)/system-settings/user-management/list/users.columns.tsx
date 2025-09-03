@@ -56,7 +56,7 @@ export const ListUsersColumns: ColumnDef<UserI, unknown>[] = [
   {
     id: "organization_name",
     header: () => <div className="flex items-center gap-2">Organization</div>,
-    cell: ({ getValue }) => <span>{fallback(getValue())}</span>,
+    cell: ({ row }) => <span>{fallback(row.original.organization_name)}</span>,
     enableSorting: true,
   },
   {

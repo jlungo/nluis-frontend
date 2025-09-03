@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ProjectI, ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
-import { ProjectStatusFilters } from '@/types/constants';
+import { ProjectApprovalStatus, ProjectStatusFilters } from '@/types/constants';
 import { canCreateProject, canDeleteProject } from './permissions';
 import { useAuth } from '@/store/auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
   const navigate = useNavigate();
@@ -42,10 +43,8 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     }
   }, [queryError]);
 
-  const handleChange = (key: 'status' | 'name', value: string) =>
+  const handleChange = (key: 'status' | 'name' | 'approval_status', value: string) =>
     setFilters(prev => ({ ...prev, [key]: value }));
-
-  const handleSearch = () => handleChange('name', search);
 
   const handleRowClick = (project: ProjectI) =>
     navigate(`/${module}/${moduleLevel}/${project.id}`);
@@ -63,12 +62,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     mutateAsync(project.id).then(() => refetch());
   };
 
-  const viewAction = (e: any) => {
-    navigate(`${e.id}`)
-  }
-  const editAction = (e: any) => {
-    navigate(`${e.id}/edit`)
-  }
   const canCreate = () => {
     if (!user || !user.role?.name) return false
     return canCreateProject(user.role.name)
@@ -91,17 +84,17 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
 
       <div className='flex justify-between items-start'>
         <div className='space-y-1'>
-          <h1 className="text-lg lg:text-2xl font-semibold">Projects List</h1>
+          <h1 className="text-lg lg:text-2xl font-semibold capitalize">{decodeURIComponent(moduleLevel.replace(/-/g, " "))} Projects</h1>
           <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
         </div>
         {canCreate() ? (
-          <Button onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
+          <Button type='button' onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">
             <Plus className="h-4 w-4" /> <span className='hidden lg:inline'>Create </span>New Project
           </Button>
         ) : null}
       </div>
 
-      <Card className="mb-0">
+      <Card className="mb-5">
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -110,7 +103,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
                 placeholder="Search projects by name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => e.key === 'Enter' && handleChange('name', search)}
                 className="pl-10"
               />
             </div>
@@ -133,32 +126,44 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
               </Select>
             </div>
 
-            <Button onClick={handleSearch} size='sm' className="gap-2">
+            <Button onClick={() => handleChange('name', search)} size='sm' className="gap-2">
               <Search className="h-4 w-4" /> Search
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <DataTable<ProjectI, unknown>
-        columns={ProjectsDataTableColumn}
-        data={data?.results || []}
-        isLoading={isLoading}
-        showRowNumbers
-        enableGlobalFilter={false}
-        onRowClick={handleRowClick}
-        initialPageSize={10}
-        pageSizeOptions={[5, 10, 20, 50]}
-        rowActions={(row) => (
-          <ActionButtons
-            entity={row}
-            entityName="Project"
-            onView={viewAction}
-            onEdit={editAction}
-            deleteFunction={() => handleDelete(row)}
+      <Tabs value={filters.approval_status} onValueChange={e => handleChange('approval_status', e)}>
+        <TabsList className='rounded-full w-full'>
+          <TabsTrigger value="" className='cursor-pointer rounded-full text-xs md:text-sm'>All</TabsTrigger>
+          {Object.entries(ProjectApprovalStatus).map(([key, label]) => (
+            <TabsTrigger key={key} value={key} className='cursor-pointer rounded-full text-xs md:text-sm'>
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value={filters.approval_status}>
+          <DataTable<ProjectI, unknown>
+            columns={ProjectsDataTableColumn}
+            data={data?.results || []}
+            isLoading={isLoading}
+            showRowNumbers
+            enableGlobalFilter={false}
+            onRowClick={handleRowClick}
+            initialPageSize={10}
+            pageSizeOptions={[5, 10, 20, 50]}
+            rowActions={(row) => (
+              <ActionButtons
+                entity={row}
+                entityName="Project"
+                onView={e => navigate(`${e.id}`)}
+                onEdit={e => navigate(`${e.id}/edit`)}
+                deleteFunction={() => handleDelete(row)}
+              />
+            )}
           />
-        )}
-      />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

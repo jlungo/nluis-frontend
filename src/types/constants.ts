@@ -1,5 +1,6 @@
 export type userTypeProps = "Staff" | "Planner" | "Officer" | "Stakeholder";
 export type genderTypeProps = "Male" | "Female";
+export type userStatusProps = "Active" | "Inactive";
 export type workflowCategoryTypeProps =
   | "registration"
   | "assessment"
@@ -13,6 +14,11 @@ export const userTypes: Record<number, userTypeProps> = {
   2: "Planner",
   3: "Officer",
   4: "Stakeholder",
+};
+
+export const userStatus: Record<number, userStatusProps> = {
+  0: "Inactive",
+  1: "Active",
 };
 
 export const genderTypes: Record<number, genderTypeProps> = {
@@ -67,7 +73,7 @@ export const ProjectStatus: Record<number, string> = {
 };
 
 export const ProjectApprovalStatus: Record<number, string> = {
-  1: "Waiting for Approval",
+  1: "Waiting Approval",
   2: "Approved",
   3: "Rejected",
 };
@@ -82,11 +88,16 @@ export const ProjectStatusFilters: Record<string, string> = {
 };
 
 export const ProjectStatusColors: Record<string, string> = {
-  "Pending": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
+  Pending: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
   "In Process": "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
-  "Completed": "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
-  "On Hold": "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100",
-  "Waiting for Approval": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
-  "Approved": "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
-  "Rejected": "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+  Completed:
+    "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
+  "On Hold":
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100",
+  "Waiting for Approval":
+    "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
+  Approved: "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
+  Rejected: "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100",
 };
+
+export const tanzaniaLocalityKey = 92;

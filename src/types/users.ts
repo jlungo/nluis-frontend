@@ -16,7 +16,6 @@ export interface UserI {
   location: string;
 }
 
-
 export type CreateUserPayloadI = {
   first_name: string;
   last_name: string;
@@ -29,12 +28,10 @@ export type CreateUserPayloadI = {
 };
 
 export type UsersListParams = {
-  page?: number;         // 1-based
-  page_size?: number;    // page size
-  search?: string;
+  page?: number; // 1-based
+  page_size?: number; // page size
+  keyword?: string;
   role?: string;
   organization?: string;
-  status?: "active" | "inactive" | "pending" | "suspended";
+  is_verified?: string;
 };
-
-
