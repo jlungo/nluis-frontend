@@ -11,7 +11,7 @@ type Filters = {
   search?: string;
   role?: string;
   organization?: string;
-  status?: "active" | "inactive" | "pending" | "suspended";
+  status?: string;
 };
 
 type Props = {
@@ -35,13 +35,13 @@ export default function UsersTable({
   const { data, isLoading, isFetching, error } = useUsersList({
     page: pagination.pageIndex + 1,
     page_size: pagination.pageSize,
-    search: filters.search || undefined,
-    role: filters.role && filters.role !== "all" ? filters.role : undefined,
+    keyword: filters.search || undefined,
+    role: filters.role ? filters.role : undefined,
     organization:
       filters.organization && filters.organization !== "all"
         ? filters.organization
         : undefined,
-    status: filters.status,
+    is_verified: filters.status,
   });
 
   if (error)
@@ -63,48 +63,48 @@ export default function UsersTable({
       onPaginationChange={setPagination}
       rowCount={data?.rowCount ?? 0}
       // actions – adapt to your DataTable’s row arg shape
-    //   rowActions={(u: UserI) => (
-    //     <div className="flex items-center gap-2">
-    //       {u.status === "pending" && (
-    //         <button
-    //           className="text-sm underline"
-    //           onClick={() => onResendInvite(u)}
-    //         >
-    //           Resend Invite
-    //         </button>
-    //       )}
-    //       <button className="text-sm underline" onClick={() => onEdit(u)}>
-    //         Edit
-    //       </button>
-    //       {u.status === "active" ? (
-    //         <button
-    //           className="text-sm underline"
-    //           onClick={() => onSuspend(u.id)}
-    //         >
-    //           Suspend
-    //         </button>
-    //       ) : (
-    //         <button
-    //           className="text-sm underline"
-    //           onClick={() => onActivate(u.id)}
-    //         >
-    //           Activate
-    //         </button>
-    //       )}
-    //       <button
-    //         className="text-sm text-red-600 underline"
-    //         onClick={() => onDelete(u.id)}
-    //       >
-    //         Delete
-    //       </button>
-    //     </div>
-    //   )}
+      //   rowActions={(u: UserI) => (
+      //     <div className="flex items-center gap-2">
+      //       {u.status === "pending" && (
+      //         <button
+      //           className="text-sm underline"
+      //           onClick={() => onResendInvite(u)}
+      //         >
+      //           Resend Invite
+      //         </button>
+      //       )}
+      //       <button className="text-sm underline" onClick={() => onEdit(u)}>
+      //         Edit
+      //       </button>
+      //       {u.status === "active" ? (
+      //         <button
+      //           className="text-sm underline"
+      //           onClick={() => onSuspend(u.id)}
+      //         >
+      //           Suspend
+      //         </button>
+      //       ) : (
+      //         <button
+      //           className="text-sm underline"
+      //           onClick={() => onActivate(u.id)}
+      //         >
+      //           Activate
+      //         </button>
+      //       )}
+      //       <button
+      //         className="text-sm text-red-600 underline"
+      //         onClick={() => onDelete(u.id)}
+      //       >
+      //         Delete
+      //       </button>
+      //     </div>
+      //   )}
       rowActions={(row) => (
         <ActionButtons
           entity={row}
           entityName="Member"
-        //   onView={(e) => navigate(`/member/${(e as any).id}`)}
-          onEdit={(row) =>onEdit(row)}
+          //   onView={(e) => navigate(`/member/${(e as any).id}`)}
+          onEdit={(row) => onEdit(row)}
           deleteFunction={undefined}
         />
       )}

@@ -25,6 +25,9 @@ import UsersTable from "./list/usertable";
 import UserCreateDialog from "./create/page";
 import UserEditDialog from "./edit/page";
 import { usePageStore } from "@/store/pageStore";
+import { useOrganizationsQuery } from "@/queries/useOrganizationQuery";
+import { useLocalitiesQuery } from "@/queries/useLocalityQuery";
+import { tanzaniaLocalityKey, userStatus } from "@/types/constants";
 
 export default function UserManagement() {
   // set layout
@@ -36,7 +39,7 @@ export default function UserManagement() {
     });
   }, [setPage]);
 
-  const [activeTab, setActiveTab] = useState("all");
+  const [status, setStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrganization, setSelectedOrganization] = useState("all");
   const [selectedRole, setSelectedRole] = useState("all");
@@ -46,12 +49,10 @@ export default function UserManagement() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { data: roles = [] } = useRolesQuery();
-  const deleteUser = useDeleteUserMutation();
+  const { data: organizations } = useOrganizationsQuery();
+  const { data: regions } = useLocalitiesQuery(tanzaniaLocalityKey);
 
-  const status =
-    activeTab === "all"
-      ? undefined
-      : (activeTab as "active" | "pending" | "inactive" | "suspended");
+  const deleteUser = useDeleteUserMutation();
 
   const handleResendInvitation = (u: UserI) => {
     toast.success(`Invitation email resent to ${u.email}`);
@@ -131,6 +132,11 @@ export default function UserManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Organizations</SelectItem>
+                  {organizations && organizations?.results.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -142,7 +148,7 @@ export default function UserManagement() {
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
                   {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.name}>
+                    <SelectItem key={r.id} value={r.id}>
                       {r.name}
                     </SelectItem>
                   ))}
@@ -154,23 +160,19 @@ export default function UserManagement() {
       </Card>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={status} onValueChange={setStatus}>
         <TabsList className="flex flex-wrap w-full gap-2 rounded-full">
-          <TabsTrigger value="all" className="flex-1 min-w-32 rounded-full cursor-pointer">
+          <TabsTrigger value="" className="flex-1 min-w-32 rounded-full cursor-pointer">
             All
           </TabsTrigger>
-          <TabsTrigger value="active" className="flex-1 min-w-32 rounded-full cursor-pointer">
-            Active
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="flex-1 min-w-32 rounded-full cursor-pointer">
-            Pending
-          </TabsTrigger>
-          <TabsTrigger value="inactive" className="flex-1 min-w-32 rounded-full cursor-pointer">
-            Inactive
-          </TabsTrigger>
+          {Object.entries(userStatus).reverse().map(([key, label]) => (
+            <TabsTrigger key={key} value={key} className='cursor-pointer rounded-full text-xs md:text-sm'>
+              {label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value={activeTab}>
+        <TabsContent value={status}>
           <UsersTable
             filters={{
               search: searchQuery || undefined,
@@ -195,6 +197,7 @@ export default function UserManagement() {
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         roles={roles}
+        organizations={organizations?.results || []}
         onSuccess={() =>
           setSuccess("User account created! Invitation email sent.")
         }
@@ -204,18 +207,8 @@ export default function UserManagement() {
         onOpenChange={setIsEditOpen}
         user={editingUser}
         roles={roles}
-        regions={[
-          "Dar es Salaam",
-          "Dodoma",
-          "Mwanza",
-          "Arusha",
-          "Mbeya",
-          "Morogoro",
-          "Tanga",
-          "Mtwara",
-          "Iringa",
-          "Tabora",
-        ]}
+        organizations={organizations?.results || []}
+        regions={regions || []}
       />
     </div>
   );

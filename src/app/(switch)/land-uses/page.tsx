@@ -11,7 +11,7 @@ export default function DashboardPage() {
   useLayoutEffect(() => {
     setPage({
       module: "land-uses",
-      title: "Lan Uses Dashboard",
+      title: "Land Uses Dashboard",
     });
   }, [setPage]);
 

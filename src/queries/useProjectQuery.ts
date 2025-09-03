@@ -3,7 +3,6 @@ import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
 import {
   CreateProjectDataI,
-  LocalityI,
   LocalityLevelI,
   ProjectFunderI,
   ProjectI,
@@ -113,17 +112,6 @@ export const useLevels = () => {
     queryKey: ["levels"],
     queryFn: async (): Promise<APIResponse<LocalityLevelI[]>> => {
       const response = await api.get("/localities/levels/");
-      return response.data;
-    },
-  });
-};
-
-export const useLocalities = () => {
-  return useQuery({
-    queryKey: ["localities"],
-    queryFn: async (): Promise<LocalityI[]> => {
-      const response = await api.get("/localities/localities/");
-      // console.log('Fetched localities:', response);
       return response.data;
     },
   });

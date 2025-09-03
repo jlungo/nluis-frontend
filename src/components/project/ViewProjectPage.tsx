@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
 import { queryProjectKey, useProjectQuery } from '@/queries/useProjectQuery';
@@ -58,7 +58,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
         <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
           <div className="flex items-start gap-2 justify-between">
             <div className="space-y-2">
-              <CardTitle className="text-lg lg:text-xl 2xl:text-2xl font-bold text-foreground">{project.name}</CardTitle>
+              <CardTitle className="text-lg lg:text-xl 2xl:text-2xl font-bold text-foreground/80">{project.name}</CardTitle>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Building className="h-4 w-4" />
                 <span className="text-sm lg:text-base">{project.organization}</span>
@@ -172,9 +172,11 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
+  const [open, setOpen] = useState(false)
+
   const { mutateAsync, isPending } = useMutation({
     // TODO : add appove project url
-    mutationFn: () => api.delete(``),
+    mutationFn: (e: { remarks: string | null }) => api.post(``, e),
     onSuccess: () =>
       queryClient.invalidateQueries({
         refetchType: "active",
@@ -190,14 +192,17 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
     try {
       if (!user || !user?.role?.name) return
       if (!canApproveProject(user.role.name, approval_status)) return
-      toast.promise(mutateAsync(), {
+
+      const formData = new FormData(e.currentTarget);
+      const remarks = formData.get("remarks") as string;
+
+      toast.promise(mutateAsync({ remarks: remarks.length > 0 ? remarks : null }), {
         loading: "Approving...",
         success: () => {
+          setOpen(false)
           return `Project approved successfully`
         },
-        error: (err: AxiosError | any) => {
-          return err?.message || err?.response?.data?.message || `Failed to approve project!`;
-        }
+        error: (err: AxiosError | any) => `${err?.message || err?.response?.data?.message || "Failed to approve project!"}`
       });
     } catch (err: any) {
       console.log(err)
@@ -207,35 +212,33 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   if (!user || !user?.role?.name) return
   return (
     <div className='flex gap-2 flex-col md:flex-row items-end'>
-      {canEditProject(user.role.name, approval_status) ? (
-        <>
-          <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
-            <Edit className="h-4 w-4 hidden md:inline-block" />
-            Edit Project
-          </Link>
-        </>
-      ) : null}
+      {canEditProject(user.role.name, approval_status) ?
+        <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
+          <Edit className="h-4 w-4 hidden md:inline-block" />
+          Edit Project
+        </Link>
+        : null}
       {canApproveProject(user.role.name, approval_status) ? (
-        <Dialog>
-          <form onSubmit={handleSubmit}>
-            <DialogTrigger asChild>
-              <Button
-                type='button'
-                size='sm'
-                className="gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90"
-              >
-                <Check className="h-4 w-4 hidden md:inline-block" />
-                Approve Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type='button'
+              size='sm'
+              className="gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90"
+            >
+              <Check className="h-4 w-4 hidden md:inline-block" />
+              Approve Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent >
+            <form onSubmit={handleSubmit} className='space-y-4'>
               <DialogHeader className='border-b pb-4'>
                 <DialogTitle>Approve Project</DialogTitle>
                 <DialogDescription>
                   {project.name}
                 </DialogDescription>
               </DialogHeader>
-              <div className="">
+              <div>
                 <Label htmlFor="name-1">Remarks</Label>
                 <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
               </div>
@@ -252,8 +255,8 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
                   Approve
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </form>
+            </form>
+          </DialogContent>
         </Dialog>
       ) : null}
     </div>

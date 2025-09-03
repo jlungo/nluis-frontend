@@ -11,15 +11,17 @@ import { genderTypes, userTypes } from "@/types/constants";
 import { toast } from "sonner";
 import { CreateUserPayloadI } from "@/types/users";
 import { useCreateUserMutation } from "@/queries/useUsersQuery";
+import { OrganizationI } from "@/types/organizations";
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   roles: { id: string; name: string }[];
   onSuccess?: () => void;
+  organizations: OrganizationI[];
 };
 
-export default function UserCreateDialog({ open, onOpenChange, roles, onSuccess }: Props) {
+export default function UserCreateDialog({ open, onOpenChange, roles, onSuccess, organizations }: Props) {
   const [form, setForm] = useState<CreateUserPayloadI>({
     first_name: "", last_name: "", email: "", phone: "", roleId: "", organization: "", gender: 0, user_type: 0,
   });
@@ -62,44 +64,44 @@ export default function UserCreateDialog({ open, onOpenChange, roles, onSuccess 
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2"><Label>First Name *</Label><Input value={form.first_name} onChange={e=>setForm({...form, first_name:e.target.value})}/></div>
-          <div className="space-y-2"><Label>Last Name *</Label><Input value={form.last_name} onChange={e=>setForm({...form, last_name:e.target.value})}/></div>
-          <div className="space-y-2"><Label>Email *</Label><Input type="email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})}/></div>
-          <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})}/></div>
+          <div className="space-y-2"><Label>First Name *</Label><Input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="Enter first name" /></div>
+          <div className="space-y-2"><Label>Last Name *</Label><Input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Enter last name" /></div>
+          <div className="space-y-2"><Label>Email *</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="Enter email" /></div>
+          <div className="space-y-2"><Label>Phone</Label><Input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Enter Phone Number" /></div>
           <div className="space-y-2">
             <Label>Role *</Label>
-            <Select value={form.roleId} onValueChange={(v)=>setForm({...form, roleId:v})}>
-              <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+            <Select value={form.roleId} onValueChange={(v) => setForm({ ...form, roleId: v })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select role" /></SelectTrigger>
               <SelectContent>
-                {roles.length ? roles.map(r=> <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>) : <SelectItem value="no-roles" disabled>No roles</SelectItem>}
+                {roles.length ? roles.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>) : <SelectItem value="no-roles" disabled>No roles</SelectItem>}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Gender *</Label>
-            <Select value={String(form.gender)} onValueChange={(v)=>setForm({...form, gender:parseInt(v)})}>
-              <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-              <SelectContent>{Object.entries(genderTypes).map(([v,l])=> <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+            <Select value={String(form.gender)} onValueChange={(v) => setForm({ ...form, gender: parseInt(v) })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select gender" /></SelectTrigger>
+              <SelectContent>{Object.entries(genderTypes).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>User Type *</Label>
-            <Select value={String(form.user_type)} onValueChange={(v)=>setForm({...form, user_type:parseInt(v)})}>
-              <SelectTrigger><SelectValue placeholder="Select user type" /></SelectTrigger>
-              <SelectContent>{Object.entries(userTypes).map(([v,l])=> <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+            <Select value={String(form.user_type)} onValueChange={(v) => setForm({ ...form, user_type: parseInt(v) })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select user type" /></SelectTrigger>
+              <SelectContent>{Object.entries(userTypes).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Organization *</Label>
-            <Select value={form.organization} onValueChange={(v)=>setForm({...form, organization:v})}>
-              <SelectTrigger><SelectValue placeholder="Select organization" /></SelectTrigger>
-              <SelectContent>{/* plug orgs here */}</SelectContent>
+            <Select value={form.organization} onValueChange={(v) => setForm({ ...form, organization: v })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select organization" /></SelectTrigger>
+              <SelectContent>{organizations.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-4">
-          <Button variant="outline" onClick={()=>onOpenChange(false)} disabled={createUser.isPending}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createUser.isPending}>Cancel</Button>
           <Button onClick={submit} className="gap-2" disabled={createUser.isPending}>
             {createUser.isPending ? (<><Loader2 className="h-4 w-4 animate-spin" />Creating…</>) : (<><Send className="h-4 w-4" />Create & Send Invitation</>)}
           </Button>

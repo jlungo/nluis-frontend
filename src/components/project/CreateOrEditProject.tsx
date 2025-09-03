@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar, DollarSign, FileText } from 'lucide-react';
-import { useFunders, useLocalities, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery } from '@/queries/useProjectQuery';
+import { useFunders, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { FormFieldInput } from '@/components/FormFieldInput';
 import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router';
 import { canCreateProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
 
 interface Props {
   moduleLevel: string;
@@ -34,7 +35,7 @@ export default function CreateOrEditProject(props: Props) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: funders, isLoading: loadingFunders } = useFunders();
-  const { data: localities, isLoading: loadingLocalities } = useLocalities();
+  const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery();
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
   const canCreate = () => {
