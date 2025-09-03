@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { organizationService } from '@/services/organizations';
 import { locationService } from '@/services/locations';

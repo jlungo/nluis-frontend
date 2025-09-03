@@ -7,7 +7,6 @@ import ManagementEvaluation from "./management-evaluation";
 import MapShopManagement from "./mapshop-management";
 import Reports from "./reports";
 import Organizations from "./organizations";
-import UserManagement from "./user-management";
 import SystemSettings from "./system-settings";
 import DocumentManagement from "./document-management";
 import EquipementManagement from "./equipment-management";
@@ -26,7 +25,6 @@ const Index: RouteObject = {
     MapShopManagement,
     Reports,
     Organizations,
-    UserManagement,
     SystemSettings,
     DocumentManagement,
     EquipementManagement,

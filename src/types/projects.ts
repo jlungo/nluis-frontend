@@ -13,7 +13,12 @@ export interface ProjectI {
   total_locality: string | null;
   total_funders: string | null;
   funders: Array<{ id: string; name: string; category: string }> | null;
-  localities: Array<{ locality__id: string; locality__name: string; locality__level: string }> | null;
+  localities: Array<{
+    id: string;
+    locality__id: string;
+    locality__name: string;
+    locality__level: string;
+  }> | null;
   created_at: string;
 }
 

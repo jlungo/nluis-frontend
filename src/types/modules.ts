@@ -7,7 +7,6 @@ export type ModuleTypes =
   | "mapshop-management"
   | "reports"
   | "organizations"
-  | "user-management"
   | "system-settings"
   | "billing"
   | "document-management"

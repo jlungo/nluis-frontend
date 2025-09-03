@@ -114,7 +114,7 @@ export const useWorkflowsQuery = (
 
 export const useWorkflowQuery = (workflow_slug: string) => {
   return useQuery<WorkflowProps>({
-    queryKey: [workflowQueryKey, { workflow_slug }],
+    queryKey: [workflowQueryKey, workflow_slug],
     queryFn: () =>
       api
         .get(`/form-management/submission/${workflow_slug}/`)

@@ -1,4 +1,4 @@
-import EditProject from '@/components/project/EditProject';
+import CreateOrEditProject from '@/components/project/CreateOrEditProject';
 import { usePageStore } from '@/store/pageStore';
 import { LOCALITY_LEVELS } from '@/types/constants';
 import { useLayoutEffect } from 'react';
@@ -15,13 +15,5 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return (
-    <div>
-      <EditProject 
-        projectId={ project_id as string}
-        moduleLevel={LOCALITY_LEVELS.VILLAGE}
-        afterUpdateRedirectPath="/land-uses/village-land-use"
-      />
-    </div>
-  );
+  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.VILLAGE} redirectPath="/land-uses/village-land-use" />
 }

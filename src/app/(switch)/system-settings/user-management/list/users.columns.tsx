@@ -19,11 +19,7 @@ const USER_TYPE_LABELS: Record<string | number, string> = {
   4: "Stakeholder",
 };
 
-
-
-
 export const ListUsersColumns: ColumnDef<UserI, unknown>[] = [
-
   {
     id: "name",
     header: () => <div className="flex items-center gap-2">Name</div>,

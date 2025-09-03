@@ -7,7 +7,6 @@ import {
     BarChart3,
     AlertTriangle,
     FileText,
-    Users,
     Settings,
     ArrowRight,
     Home,
@@ -104,14 +103,6 @@ export default function Page() {
             icon: <Building className="h-8 w-8" />,
             color: 'text-chart-3',
             bgColor: 'bg-chart-3/10'
-        },
-        {
-            id: 'user-management',
-            title: 'User Management',
-            description: 'User accounts, roles, and permissions',
-            icon: <Users className="h-8 w-8" />,
-            color: 'text-chart-4',
-            bgColor: 'bg-chart-4/10'
         },
         {
             id: 'system-settings',

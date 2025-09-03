@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
-import { useProjectsQuery } from '@/queries/useProjectQuery';
+import { queryProjectKey, useProjectQuery } from '@/queries/useProjectQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,14 +14,20 @@ import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/P
 import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canEditProject } from './permissions';
+import { useAuth } from '@/store/auth';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import { toast } from 'sonner';
+import { AxiosError } from 'axios';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
   const { setPage } = usePageStore();
-  const navigate = useNavigate();
 
-  const { data: projectData, isLoading } = useProjectsQuery({ project_id });
-  const project = projectData?.results as ProjectI | undefined;
+  const { data: project, isLoading } = useProjectQuery(project_id);
 
   useEffect(() => {
     if (project) {
@@ -59,7 +65,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               </div>
             </div>
             <div className="flex flex-col-reverse items-end gap-4">
-              <ButtonsComponent moduleLevel={moduleLevel} project_id={project_id!} approval_status={project.approval_status} />
+              <ButtonsComponent moduleLevel={moduleLevel} project={project} approval_status={project.approval_status} />
               <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
                 <ProjectStatusBadge status={approvalStatus} />
                 <ProjectStatusBadge status={projectStatus} />
@@ -157,68 +163,138 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
         </CardContent>
       </Card>
 
-      <CoverageAreasCard project={project} navigate={navigate} />
+      <CoverageAreasCard project={project} />
     </div>
   );
 }
 
-const ButtonsComponent: React.FC<{ moduleLevel: string, project_id: string, approval_status: number }> = ({ moduleLevel, project_id, approval_status }) => {
+const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number }> = ({ moduleLevel, project, approval_status }) => {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const { mutateAsync, isPending } = useMutation({
+    // TODO : add appove project url
+    mutationFn: () => api.delete(``),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        refetchType: "active",
+        queryKey: [queryProjectKey],
+      }),
+    onError: (e) => {
+      console.log(e);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    try {
+      if (!user || !user?.role?.name) return
+      if (!canApproveProject(user.role.name, approval_status)) return
+      toast.promise(mutateAsync(), {
+        loading: "Approving...",
+        success: () => {
+          return `Project approved successfully`
+        },
+        error: (err: AxiosError | any) => {
+          return err?.message || err?.response?.data?.message || `Failed to approve project!`;
+        }
+      });
+    } catch (err: any) {
+      console.log(err)
+    }
+  }
+
+  if (!user || !user?.role?.name) return
   return (
     <div className='flex gap-2 flex-col md:flex-row items-end'>
-      {canEditProject(approval_status) ? (
+      {canEditProject(user.role.name, approval_status) ? (
         <>
-          <Link to={`/land-uses/${moduleLevel}/${project_id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
+          <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
             <Edit className="h-4 w-4 hidden md:inline-block" />
             Edit Project
           </Link>
         </>
       ) : null}
-      {canApproveProject(approval_status) ? (
-        <>
-          <Link to={`/land-uses/${moduleLevel}/${project_id}/approve`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90")}>
-            <Check className="h-4 w-4 hidden md:inline-block" />
-            Approve Project
-          </Link>
-        </>
+      {canApproveProject(user.role.name, approval_status) ? (
+        <Dialog>
+          <form onSubmit={handleSubmit}>
+            <DialogTrigger asChild>
+              <Button
+                type='button'
+                size='sm'
+                className="gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90"
+              >
+                <Check className="h-4 w-4 hidden md:inline-block" />
+                Approve Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader className='border-b pb-4'>
+                <DialogTitle>Approve Project</DialogTitle>
+                <DialogDescription>
+                  {project.name}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="">
+                <Label htmlFor="name-1">Remarks</Label>
+                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
+              </div>
+              <DialogFooter className='flex-row justify-end'>
+                <DialogClose asChild>
+                  <Button type='button' variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className='bg-green-700 hover:opacity-90 hover:bg-green-800 dark:bg-green-900'
+                >
+                  <Check />
+                  Approve
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </form>
+        </Dialog>
       ) : null}
     </div>
   )
 }
 
-const CoverageAreasCard: React.FC<{ project: ProjectI; navigate: (path: string) => void; }> = ({
-  project,
-  navigate,
-}) => (
-  <Card className='shadow-none'>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <MapPin className="h-5 w-5" />
-        Coverage Areas ({project.localities?.length || 0})
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      {project.localities && project.localities.length > 0 ? (
-        <DataTable
-          columns={LocalityTableColumns}
-          data={project.localities}
-          enableGlobalFilter={true}
-          searchPlaceholder="Search localities..."
-          onRowClick={(locality) => navigate(`${locality.id}/workflow`)}
-          showRowNumbers={true}
-          shadowed={false}
-          rowActions={(locality) => (
-            <Button
-              variant="outline"
-              className="btn-sm mx-4"
-              onClick={() => navigate(`${locality.id}/workflow`)}
-            >
-              Workflow
-            </Button>
-          )}
-        />
-      ) : (
-        <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>
-      )}
-    </CardContent>
-  </Card>
-);
+const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
+  const navigate = useNavigate()
+
+  return (
+    <Card className='shadow-none'>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5" />
+          Coverage Areas ({project.localities?.length || 0})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {project.localities && project.localities.length > 0 ? (
+          <DataTable
+            columns={LocalityTableColumns}
+            data={project.localities}
+            enableGlobalFilter={true}
+            searchPlaceholder="Search localities..."
+            onRowClick={(locality) => navigate(`${locality.id}/workflow`)}
+            showRowNumbers={true}
+            shadowed={false}
+            rowActions={(locality) => (
+              <Button
+                variant="outline"
+                className="btn-sm mx-4"
+                onClick={() => navigate(`${locality.id}/workflow`)}
+              >
+                Workflow
+              </Button>
+            )}
+          />
+        ) : (
+          <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+};
