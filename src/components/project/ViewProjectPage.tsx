@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
-import { queryProjectKey, useProjectQuery } from '@/queries/useProjectQuery';
+import { queryProjectKey, useDeleteProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check } from 'lucide-react';
+import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2 } from 'lucide-react';
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
 import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/ProjectDataTableColumns';
 import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
-import { canApproveProject, canEditProject } from './permissions';
+import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Label } from '../ui/label';
@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -170,9 +171,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
 const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number }> = ({ moduleLevel, project, approval_status }) => {
   const { user } = useAuth()
+  const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const [open, setOpen] = useState(false)
+  const [openDelete, setOpenDelete] = useState(false)
 
   const { mutateAsync, isPending } = useMutation({
     // TODO : add appove project url
@@ -209,9 +213,62 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
     }
   }
 
+  const handleDelete = () => {
+    try {
+      if (!user || !user?.role?.name) return
+      if (!canDeleteProject(user.role.name, approval_status)) return
+
+      toast.promise(mutateAsyncDelete(project.id), {
+        loading: "Deleting project...",
+        success: () => {
+          setOpen(false)
+          navigate(`/land-uses/${moduleLevel}`, { replace: true })
+          return `Project deleted successfully`
+        },
+        error: (err: AxiosError | any) => `${err?.message || err?.response?.data?.message || "Failed to delete project!"}`
+      });
+    } catch (err: any) {
+      console.log(err)
+    }
+  }
+
   if (!user || !user?.role?.name) return
   return (
     <div className='flex gap-2 flex-col md:flex-row items-end'>
+      {canDeleteProject(user.role.name, approval_status) ?
+        <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
+          <AlertDialogTrigger asChild>
+            <Button
+              type='button'
+              variant="outline"
+              size='sm'
+              className="gap-2 w-fit border-destructive dark:border-destructive text-destructive dark:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 hidden md:inline-block text-destructive dark:text-destructive" />
+              Delete Poject
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete this Project {project.id !== undefined ? ` (ID: ${String(project.id)})` : ""}.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPendingDelete}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={isPendingDelete}
+                className="bg-destructive text-white hover:bg-destructive/90"
+              >
+                {isPendingDelete ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        : null}
       {canEditProject(user.role.name, approval_status) ?
         <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />

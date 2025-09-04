@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, ProjectFunderI, ProjectI } from '@/types/projects';
-import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG } from '@/types/constants';
+import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey } from '@/types/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useNavigate } from 'react-router';
 import { canCreateProject, canEditProject } from './permissions';
@@ -35,7 +35,7 @@ export default function CreateOrEditProject(props: Props) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: funders, isLoading: loadingFunders } = useFunders();
-  const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery();
+  const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
   const canCreate = () => {

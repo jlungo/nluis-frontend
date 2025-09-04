@@ -33,7 +33,7 @@ export default function FormFileInput(props: CompactFileUploadProps) {
     if (
         props?.value &&
         props.value.length > 0 &&
-        !(typeof props.value === "string" || Array.isArray(props.value) && typeof props.value[0] === "string")
+        (typeof props.value === "string" || (Array.isArray(props.value) && typeof props.value[0] === "string"))
     ) return <FileRenderer files={props.value} />
     return <FileInput {...props} />
 }

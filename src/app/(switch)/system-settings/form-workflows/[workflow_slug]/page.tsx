@@ -2,7 +2,7 @@ import { useLayoutEffect } from 'react';
 import { usePageStore } from '@/store/pageStore';
 import { useParams } from 'react-router';
 import { useWorkflowQuery } from '@/queries/useWorkflowQuery';
-import { SectionedForm } from '@/components/sectioned-form';
+import { SectionedForm } from '@/components/workflow/sectioned-form';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function Page() {
