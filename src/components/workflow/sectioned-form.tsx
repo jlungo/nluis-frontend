@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
+import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
 interface FieldValue {
     value?: string | File[];
@@ -150,7 +150,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
 
     const areAllFieldsApproved = (formSlug: string) => {
         if (!values) return false
-        const formValues = values.filter(value => value.form_slug === formSlug && value.approved === true)
+        const formValues = values.filter(value => value.form_slug === formSlug && value.is_approved === true)
         const formFields = data.sections.flatMap(section =>
             section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
 
@@ -284,7 +284,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                                         <FormField
                                             key={field.id}
                                             disabled={disabled || !canClickForm(form)}
-                                            value={fieldData[form.slug]?.value}
+                                            value={fieldData[`${form.slug}-${field.id}`]?.value}
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
                                             {...field}

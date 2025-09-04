@@ -1,15 +1,34 @@
-export function canCreateProject(role: string) {
-    return role === "Admin" || role === "Project Leader"
+export function canCreateProject(userRole: string) {
+  return userRole === "Admin" || userRole === "Project Leader";
 }
 
-export function canEditProject(role: string, approval_status: number) {
-    return (role === "Admin" || role === "Project Leader") && approval_status !== 2
+export function canEditProject(
+  userRole: string,
+  projectApprovalStatus: number
+) {
+  return (
+    (userRole === "Admin" || userRole === "Project Leader") &&
+    projectApprovalStatus !== 2
+  );
 }
 
-export function canDeleteProject(role: string, approval_status: number) {
-    return (role === "Admin" || role === "Project Leader" || role === "Dg") && approval_status !== 2
+export function canDeleteProject(
+  userRole: string,
+  projectApprovalStatus: number
+) {
+  return (
+    (userRole === "Admin" ||
+      userRole === "Project Leader" ||
+      userRole === "Dg") &&
+    projectApprovalStatus !== 2
+  );
 }
 
-export function canApproveProject(role: string, approval_status: number) {
-    return (role === "Admin" || role === "Dg") && approval_status !== 2
+export function canApproveProject(
+  userRole: string,
+  projectApprovalStatus: number
+) {
+  return (
+    (userRole === "Admin" || userRole === "Dg") && projectApprovalStatus !== 2
+  );
 }

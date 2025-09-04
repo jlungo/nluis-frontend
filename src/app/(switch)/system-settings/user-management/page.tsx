@@ -80,19 +80,19 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">User Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl 2xl:text-2xl font-semibold">User Management</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Create and manage user accounts
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
+        <div className="flex flex-col-reverse md:flex-row items-center gap-2 lg:gap-3">
+          <Button type="button" variant="outline" size='sm' className="gap-2">
             <Download className="h-4 w-4" />
             Export Users
           </Button>
-          <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+          <Button type="button" size="sm" className="gap-2" onClick={() => setIsCreateOpen(true)}>
             <UserPlus className="h-4 w-4" />
             Create User
           </Button>
@@ -111,7 +111,7 @@ export default function UserManagement() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="px-4 py-1">
           <div className="flex flex-col md:flex-row items-stretch gap-4 w-full">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
