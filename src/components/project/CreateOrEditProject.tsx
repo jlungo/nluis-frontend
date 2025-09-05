@@ -119,7 +119,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
   const [treeData, setTreeData] = useState<LocalityI[]>([]);
 
   const [pendingNodeId, setPendingNodeId] = useState<string | null>(null);
-  const { data: childLocalities } = useLocalitiesQuery(pendingNodeId ? parseInt(pendingNodeId) : 0);
+  const { data: childLocalities, isLoading: isLoadingChildren } = useLocalitiesQuery(pendingNodeId ? parseInt(pendingNodeId) : 0);
   
   // Initialize selected localities from project data if editing
   useEffect(() => {
@@ -205,10 +205,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     const isExpanded = expandedNodes.has(node.id);
     const isSelectable = parseInt(node.level || '0') == parseInt(getTargetLevel());
     const nodeHasChildren = hasChildren(node);
+    const isLoading = pendingNodeId === node.id && isLoadingChildren;
 
-    // console.log("=== node level : ", node)
-    // console.log("=== target level: ", parseInt(getTargetLevel()))
-    
     return (
       <div key={node.id} className="">
         <div className="flex items-center py-1">
@@ -218,8 +216,15 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               size="sm"
               className="h-6 w-6 p-0 mr-1"
               onClick={() => toggleNode(node.id)}
+              disabled={isLoading}
             >
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {isLoading ? (
+                <Spinner className="h-4 w-4" />
+              ) : isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </Button>
           ) : (
             <div className="w-6 mr-1" />
@@ -231,6 +236,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 id={`checkbox-${node.id}`}
                 checked={isLocalitySelected(node.id)}
                 onCheckedChange={() => handleLocalitySelect(node)}
+                disabled={isLoading}
               />
               <Label htmlFor={`checkbox-${node.id}`} className="text-sm font-normal cursor-pointer">
                 {node.name}
@@ -239,7 +245,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
           ) : (
             <div 
               className="flex-1 py-1 text-sm font-medium cursor-pointer"
-              onClick={() => nodeHasChildren && toggleNode(node.id)}
+              onClick={() => nodeHasChildren && !isLoading && toggleNode(node.id)}
             >
               {node.name}
             </div>
