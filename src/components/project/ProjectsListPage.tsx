@@ -58,7 +58,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     if (!user || !user.role?.name) return
     const canDelete = canDeleteProject(user.role.name, project.approval_status)
     if (!canDelete) return
-    console.log(canDelete)
     mutateAsync(project.id).then(() => refetch());
   };
 
