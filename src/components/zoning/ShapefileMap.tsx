@@ -128,6 +128,9 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   const handleMapClick = useCallback(
     (event: any) => {
+      mapRef.current.flyTo({
+        center: event.lngLat
+      });
       const features = mapRef.current?.queryRenderedFeatures(event.point);
       const clicked = features?.find((f: any) =>
         layers.some(layer => layer.id === f.source && layer.visible)
