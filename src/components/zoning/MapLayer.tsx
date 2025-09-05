@@ -3,6 +3,12 @@ import { Source, Layer } from 'react-map-gl/mapbox';
 import type { MapLayerType } from '@/types/zoning';
 import { createLayerStyle, getGeometryType } from '@/utils/zoningUtils';
 
+import type {
+  FeatureCollection,
+  Geometry,
+  GeoJsonProperties,
+} from 'geojson';
+
 interface MapLayerProps {
   layer: MapLayerType;
 }
@@ -24,7 +30,7 @@ export const MapLayer: React.FC<MapLayerProps> = ({ layer }) => {
     <Source
       id={layer.id}
       type="geojson"
-      data={layer.data}
+      data={layer.data as FeatureCollection<Geometry, GeoJsonProperties>}
     >
       <Layer {...layerStyle} />
     </Source>

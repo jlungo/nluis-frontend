@@ -34,7 +34,6 @@ export const LayerControl: React.FC<LayerControlProps> = ({
           }`}
         />
       </button>
-
       {/* Panel Content */}
       {isOpen && (
         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">

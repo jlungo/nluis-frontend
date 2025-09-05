@@ -23,6 +23,7 @@ import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { MapDialog } from '../zoning/MapDialog';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -89,12 +90,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Type */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Project Type</h3>
               <Badge variant="outline" className="text-sm px-3 py-1">
                 {project.type}
               </Badge>
-            </div>
+            </div> */}
 
             {/* Registration Date */}
             <div className="space-y-2">
@@ -326,9 +327,17 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
   return (
     <Card className='shadow-none'>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Coverage Areas ({project.localities?.length || 0})
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Coverage Areas ({project.localities?.length || 0})
+          </div>
+          {project.localities && project.localities.length > 0 && (
+          <MapDialog
+            title={project.name}
+            overlayMapsIds={project.localities?.map((loc) => loc.locality__id)}
+          />
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>

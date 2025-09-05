@@ -7,7 +7,6 @@ import { generateLayerColors, calculateBounds } from '@/utils/zoningUtils';
 import { AlertCircle } from 'lucide-react';
 import { useLocalityShapefileQuery } from '@/queries/useLocalityQuery';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
 import type {
   GeoJSONFeatureType,
@@ -15,6 +14,7 @@ import type {
   ShapefileMapPropsType,
   ViewportStateType
 } from '@/types/zoning';
+import { useThemeStore } from '@/store/themeStore';
 
 const DEFAULT_VIEWPORT = {
   longitude: 39.2083,
@@ -27,14 +27,14 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   overlayMapsIds = [],
   mapboxAccessToken = "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA",
   initialViewport = {},
-  mapboxStyle = 'mapbox://styles/mapbox/streets-v11',
+  mapboxStyle,
+  showLayersControl = true,
+  resetKey,
 }) => {
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
   const [layers, setLayers] = useState<MapLayerType[]>([]);
-  const [loadedOverlayIds, setLoadedOverlayIds] = useState<Set<string>>(new Set());
   const [selectedFeature, setSelectedFeature] = useState<GeoJSONFeatureType | null>(null);
-  const [baseMapBounds, setBaseMapBounds] = useState<[[number, number], [number, number]] | null>(
-    null
-  );
+  const [baseMapBounds, setBaseMapBounds] = useState<[[number, number], [number, number]] | null>(null);
   const [viewport, setViewport] = useState<ViewportStateType>({
     ...DEFAULT_VIEWPORT,
     ...initialViewport,
@@ -43,29 +43,36 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   const mapRef = useRef<any>(null);
   const colors = useMemo(() => generateLayerColors(), []);
 
-  // Load base map shapefile using its ID
+  // Load base map shapefile
   const {
     data: baseMapData,
     isLoading: baseMapLoading,
     error: baseMapError,
   } = useLocalityShapefileQuery(baseMapId);
 
-  // Load overlays using individual hook calls for each overlay id
-  const overlayQueries = overlayMapsIds.map(id => ({
-    id,
-    query: useLocalityShapefileQuery(id),
-  }));
+  // Load overlay maps - create individual hooks for each overlay
+  const overlayQueries = overlayMapsIds.map((id, index) => {
+    const { data, isLoading, error } = useLocalityShapefileQuery(id);
+    return { id, data, isLoading, error, index };
+  });
+
+  useEffect(() => {
+    setLayers([]);
+    setSelectedFeature(null);
+    setBaseMapBounds(null);
+    setViewport({
+      ...DEFAULT_VIEWPORT,
+      ...initialViewport,
+    });
+  }, [resetKey]);
 
   // Add base map to layer list
   useEffect(() => {
     if (!baseMapData) return;
 
     const baseLayer: MapLayerType = {
-      id: 'base-map',
-      name:
-        baseMapData.name ||
-        baseMapData.features?.[0]?.properties?.name ||
-        'Base Map',
+      id: `base-${baseMapId}`,
+      name: baseMapData.name || baseMapData.features?.[0]?.properties?.name || 'Base Map',
       data: baseMapData,
       visible: true,
       editable: false,
@@ -80,30 +87,31 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     });
 
     const bounds = calculateBounds([baseLayer]);
-    if (bounds) {
+    if (bounds && mapRef.current) {
       setBaseMapBounds(bounds);
-      mapRef.current?.fitBounds([bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]], {
+      mapRef.current.fitBounds([
+        [bounds[0][0], bounds[0][1]],
+        [bounds[1][0], bounds[1][1]]
+      ], {
         padding: 20,
         duration: 1000,
       });
-
-      setViewport(prev => ({
-        ...prev,
-        longitude: (bounds[0][0] + bounds[1][0]) / 2,
-        latitude: (bounds[0][1] + bounds[1][1]) / 2,
-        zoom: 6,
-      }));
     }
-  }, [baseMapData, colors]);
+  }, [baseMapData, baseMapId, colors]);
 
   // Add overlays when loaded
   useEffect(() => {
-    overlayQueries.forEach(({ id, query }, index) => {
-      const { data, error } = query;
-      if (!data || loadedOverlayIds.has(id)) return;
+    const newLayers: MapLayerType[] = [];
+
+    overlayQueries.forEach(({ id, data, isLoading, index }) => {
+      if (!data || isLoading) return;
+
+      // Check if this overlay is already in layers
+      const existingLayer = layers.find(l => l.id === `overlay-${id}-${index}`);
+      if (!!existingLayer) return;
 
       const overlayLayer: MapLayerType = {
-        id: `overlay-${id}`,
+        id: `overlay-${id}-${index}`, // Unique key with index
         name: data.name || data.features?.[0]?.properties?.name || `Overlay ${index + 1}`,
         data,
         visible: true,
@@ -113,14 +121,13 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         opacity: 0.4,
       };
 
-      setLayers(prev => [...prev, overlayLayer]);
-      setLoadedOverlayIds(prev => new Set(prev).add(id));
-
-      if (error) {
-        console.warn(`Error loading overlay ${id}:`, error);
-      }
+      newLayers.push(overlayLayer);
     });
-  }, [overlayQueries, colors, loadedOverlayIds]);
+
+    if (newLayers.length > 0) {
+      setLayers(prev => [...prev, ...newLayers]);
+    }
+  }, [overlayQueries, colors, layers]);
 
   const handleMapClick = useCallback(
     (event: any) => {
@@ -169,6 +176,11 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   const visibleLayers = useMemo(() => layers.filter(l => l.visible), [layers]);
 
+  const resolvedMapboxStyle = mapboxStyle ?? (isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v11');
+
+  const isAnyOverlayLoading = overlayQueries.some(q => q.isLoading);
+  const isLoading = baseMapLoading || isAnyOverlayLoading;
+
   if (baseMapError) {
     return (
       <div className="flex items-center justify-center h-96 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded">
@@ -183,7 +195,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-      {baseMapLoading && (
+      {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 dark:bg-black dark:bg-opacity-70 z-20">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2 mx-auto" />
@@ -198,7 +210,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         style={{ width: '100%', height: '100%' }}
         onMove={handleViewportChange}
         onClick={handleMapClick}
-        mapStyle={mapboxStyle}
+        mapStyle={resolvedMapboxStyle}
         mapboxAccessToken={mapboxAccessToken}
         interactiveLayerIds={visibleLayers.map(l => l.id)}
         maxZoom={20}
@@ -209,11 +221,14 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
           <MapLayer key={layer.id} layer={layer} />
         ))}
       </Map>
-      <LayerControl
-        layers={layers}
-        onToggleLayer={toggleLayerVisibility}
-        onExportLayer={exportLayer}
-      />
+      
+      {showLayersControl && (
+        <LayerControl
+          layers={layers}
+          onToggleLayer={toggleLayerVisibility}
+          onExportLayer={exportLayer}
+        />
+      )}
 
       <FeatureInfoPanel
         feature={selectedFeature}
@@ -222,4 +237,3 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     </div>
   );
 };
-

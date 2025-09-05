@@ -32,6 +32,7 @@ export interface ViewportStateType {
 }
 
 export interface ShapefileMapPropsType {
+  resetKey?: string | number;
   baseMapId?: string;
   overlayMapsIds?: string[];
   mapboxAccessToken?: string;
@@ -40,4 +41,5 @@ export interface ShapefileMapPropsType {
   onLayerChange?: (layers: MapLayerType[]) => void;
   onError?: (error: string) => void;
   className?: string;
+  showLayersControl?: boolean;
 }
