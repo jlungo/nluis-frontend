@@ -148,7 +148,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
               resetKey={`${resetKey}-${mapKey}`}
               baseMapId={baseMapId}
               overlayMapsIds={overlayMapsIds}
-              showLayersControl={false}
+              showLayersControl={isFullscreen}
             />
           </div>
         </div>
