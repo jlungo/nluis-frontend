@@ -29,10 +29,12 @@ type Props = {
     data: WorkflowProps;
     values?: formDataI[];
     disabled?: boolean;
-    projectLocalityId?: string
+    projectLocalityId?: string;
+    projectName?: string;
+    projectLocaleName?: string
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -189,7 +191,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
         }, 0)
     }
 
-    const renderForm = (formId: string) => {
+    const renderForm = (formId: string, isFilled: boolean) => {
         if (!data) return
 
         const form = data.sections
@@ -202,7 +204,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
 
         if (isSingle && disabled)
             return (
-                <Card className='max-w-4xl mx-auto pt-0 md:pt-0 overflow-hidden'>
+                <Card className='max-w-4xl mx-auto pt-0 md:pt-0 overflow-hidden mb-20'>
                     <CardHeader className='bg-muted dark:bg-accent/50 pb-2 pt-6 flex justify-between gap-1'>
                         <div className='w-full'>
                             <CardTitle>
@@ -230,17 +232,18 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                                 {form.fields.slice().sort((a, b) => a.position - b.position).map((field) =>
                                     <FormField
                                         key={field.id}
-                                        disabled={disabled || !canClickForm(form)}
+                                        disabled={disabled || !canClickForm(form) || isFilled}
                                         value={fieldData[`${form.slug}-${field.id}`]?.value}
                                         setValue={updateFieldValue}
                                         project_locality_id={projectLocalityId || ""}
+                                        isFilled={isFilled}
                                         {...field}
                                     />
                                 )}
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isPending || isLoading}>
+                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}>
                                 {isPending || isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -283,17 +286,18 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                                     {form.fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
-                                            disabled={disabled || !canClickForm(form)}
+                                            disabled={disabled || !canClickForm(form) || isFilled}
                                             value={fieldData[`${form.slug}-${field.id}`]?.value}
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
+                                            isFilled={isFilled}
                                             {...field}
                                         />
                                     ))}
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isPending || isLoading}>
+                                <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}>
                                     {isPending || isLoading ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -341,10 +345,10 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
 
     if (!user) return
 
-    if (activeForm) return renderForm(activeForm);
+    if (activeForm) return renderForm(activeForm, isFilledForm(activeForm));
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col mb-20">
             {/* Header */}
             <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                 <div className="flex items-center justify-between">
@@ -354,7 +358,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId }: Pro
                             Back
                         </Button>
                         <div>
-                            <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{data.name}</h1>
+                            <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{data.name}{projectLocaleName ? ` of ${projectLocaleName}${projectName ? ` - ${projectName}` : ''}` : ''}</h1>
                             <p className="text-xs lg:text-sm text-muted-foreground">
                                 {data?.description || ''}
                             </p>

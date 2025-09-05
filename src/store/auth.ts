@@ -177,7 +177,13 @@ export const useAuth = create<AuthState>((set, get) => ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log(error);
-      set({ accessToken: null, refreshToken: null, user: null });
+      set({
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        tempId: undefined,
+        tempEmail: undefined,
+      });
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");

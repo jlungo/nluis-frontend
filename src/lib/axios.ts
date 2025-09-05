@@ -5,7 +5,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 const api = axios.create({
   baseURL: API_URL,
 });
-// hello again
 // Attach access token to requests
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem("accessToken");
@@ -37,7 +36,9 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         return api(originalRequest);
       } catch {
-        localStorage.clear();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
         window.location.href = "/";
         return Promise.reject(err);
       }

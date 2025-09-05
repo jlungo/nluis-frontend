@@ -18,7 +18,8 @@ export default function Index(
             type: InputType,
             field_id: number,
             project_locality_id: string
-        ) => void
+        ) => void,
+        isFilled: boolean
     }
 ) {
     switch (data.type) {

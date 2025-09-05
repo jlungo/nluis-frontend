@@ -14,16 +14,16 @@ export const formDataQueryKey = "formDataKey";
 
 export const useFormDataQuery = (
   workflow_slug?: string,
-  project_locality_id?: string
+  locality_project_id?: string
 ) => {
   return useQuery<formDataI[]>({
-    queryKey: [formDataQueryKey, { workflow_slug, project_locality_id }],
+    queryKey: [formDataQueryKey, { workflow_slug, locality_project_id }],
     queryFn: () =>
       api
         .get(
-          `/form-management/data/?workflow_slug=${workflow_slug}&project_locality_id=${project_locality_id}`
+          `/form-management/data/?workflow_slug=${workflow_slug}&locality_project_id=${locality_project_id}`
         )
         .then((res) => res.data),
-    enabled: workflow_slug !== undefined && project_locality_id !== undefined,
+    enabled: workflow_slug !== undefined && locality_project_id !== undefined,
   });
 };

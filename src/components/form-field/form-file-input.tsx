@@ -13,6 +13,8 @@ import {
     Asterisk
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MEDIA_BASEPATH } from '@/types/constants';
+import { Label } from '../ui/label';
 
 interface CompactFileUploadProps {
     label?: string;
@@ -34,7 +36,15 @@ export default function FormFileInput(props: CompactFileUploadProps) {
         props?.value &&
         props.value.length > 0 &&
         (typeof props.value === "string" || (Array.isArray(props.value) && typeof props.value[0] === "string"))
-    ) return <FileRenderer files={props.value} />
+    )
+        return (
+            <FileRenderer
+                files={props.value!}
+                name={props.name}
+                label={props.label}
+                required={props.required}
+            />
+        )
     return <FileInput {...props} />
 }
 
@@ -195,8 +205,11 @@ function FileInput({
     );
 }
 
-const FileRenderer = ({ files }: { files: string | string[]; }) => {
-    const fileList = Array.isArray(files) ? files : [files];
+const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; files: string | string[]; }> = ({ name, label, required, files }) => {
+    const fileList = Array.isArray(files) ? files.map(file => MEDIA_BASEPATH + file) : [MEDIA_BASEPATH + files];
+
+    const officeViewerUrl = (url: string) =>
+        `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
 
     const getFileType = (url: string) => {
         const ext = url.split(".").pop()?.toLowerCase();
@@ -212,57 +225,105 @@ const FileRenderer = ({ files }: { files: string | string[]; }) => {
     };
 
     return (
-        <div className="grid gap-4">
-            {fileList.map((url, i) => {
-                const type = getFileType(url);
+        <div className="gap-4 w-full">
+            {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label> : null}
+            <div className='w-full bg-muted dark:bg-input/30 aspect-video rounded shadow'>
+                {fileList.map((url, i) => {
+                    const type = getFileType(url);
 
-                switch (type) {
-                    case "image":
-                        return (
-                            <img
-                                key={i}
-                                src={url}
-                                alt={`file-${i}`}
-                                className="max-w-sm rounded shadow"
-                            />
-                        );
+                    switch (type) {
+                        case "image":
+                            return (
+                                <img
+                                    key={i}
+                                    src={url}
+                                    alt={`file-${i}`}
+                                    className="object-center object-contain mx-auto"
+                                />
+                            );
 
-                    case "video":
-                        return (
-                            <video key={i} src={url} controls className="max-w-sm rounded shadow" />
-                        );
+                        case "video":
+                            return (
+                                <video key={i} src={url} controls className="max-w-sm rounded shadow" />
+                            );
 
-                    case "audio":
-                        return <audio key={i} src={url} controls className="w-full max-w-sm" />;
+                        case "audio":
+                            return <audio key={i} src={url} controls className="w-full max-w-sm" />;
 
-                    case "pdf":
-                        return (
-                            <embed
-                                key={i}
-                                src={url}
-                                type="application/pdf"
-                                className="w-full h-96 rounded shadow"
-                            />
-                        );
+                        case "pdf":
+                            return (
+                                <embed
+                                    key={i}
+                                    src={url}
+                                    type="application/pdf"
+                                    className="w-full h-96 rounded shadow"
+                                />
+                            );
 
-                    case "word":
-                    case "excel":
-                    case "other":
-                    default:
-                        return (
-                            <a
-                                key={i}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center space-x-2 text-blue-600 underline"
-                            >
-                                <FileIcon className="h-5 w-5" />
-                                <span>Download file</span>
-                            </a>
-                        );
-                }
-            })}
+                        case "word":
+                            return (
+                                <div key={i} className="w-full">
+                                    <iframe
+                                        src={officeViewerUrl(url)}
+                                        className="w-full h-[75vh] rounded bg-muted"
+                                        title={`word-${i}`}
+                                        referrerPolicy="no-referrer"
+                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                                    />
+                                    <div className="mt-2">
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 text-primary underline"
+                                        >
+                                            <FileIcon className="h-5 w-5" />
+                                            Open original Word file
+                                        </a>
+                                    </div>
+                                </div>
+                            )
+                        case "excel":
+                            return (
+                                <div key={i} className="w-full">
+                                    <iframe
+                                        src={officeViewerUrl(url)}
+                                        className="w-full h-[75vh] rounded bg-muted"
+                                        title={`${type}-${i}`}
+                                        // optional hardening
+                                        referrerPolicy="no-referrer"
+                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                                    />
+                                    <div className="mt-2">
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 text-primary underline"
+                                        >
+                                            <FileIcon className="h-5 w-5" />
+                                            Open original
+                                        </a>
+                                    </div>
+                                </div>
+                            )
+                        case "other":
+                        default:
+                            return (
+                                <a
+                                    key={i}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center space-x-2 text-blue-600 underline"
+                                >
+                                    <FileIcon className="h-5 w-5" />
+                                    <span>Download file</span>
+                                </a>
+                            );
+                    }
+                })}
+            </div>
         </div>
     );
 };
