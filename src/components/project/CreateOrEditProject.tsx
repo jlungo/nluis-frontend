@@ -377,7 +377,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               {/* Left panel - Tree view */}
               <div className="w-1/2 border rounded-md p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
                 <h3 className="font-medium mb-4">Localities List</h3>
-                {treeData.filter((item) => item.parent || item.parent != null).map((node) => renderTreeNode(node))}
+                {/* Get Regions of Tanzania initially */}
+                {treeData.filter((item) => item.parent == `${tanzaniaLocalityKey}`).map((node) => renderTreeNode(node))}
               </div>
 
               {/* Right panel - Selected localities */}
