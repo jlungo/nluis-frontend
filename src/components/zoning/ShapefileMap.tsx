@@ -103,8 +103,8 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   useEffect(() => {
     const newLayers: MapLayerType[] = [];
 
-    overlayQueries.forEach(({ id, data, index }) => {
-      if (!data) return;
+    overlayQueries.forEach(({ id, data, isLoading, index }) => {
+      if (!data || isLoading) return;
 
       // Check if this overlay is already in layers
       const existingLayer = layers.find(l => l.id === `overlay-${id}-${index}`);
@@ -178,6 +178,9 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   const resolvedMapboxStyle = mapboxStyle ?? (isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v11');
 
+  const isAnyOverlayLoading = overlayQueries.some(q => q.isLoading);
+  const isLoading = baseMapLoading || isAnyOverlayLoading;
+
   if (baseMapError) {
     return (
       <div className="flex items-center justify-center h-96 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded">
@@ -192,7 +195,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-      {baseMapLoading && (
+      {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 dark:bg-black dark:bg-opacity-70 z-20">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2 mx-auto" />
