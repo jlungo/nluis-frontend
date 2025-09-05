@@ -99,7 +99,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     }
   }, [baseMapData, baseMapId, colors]);
 
-  // Add overlays when loaded (skip errored overlays)
+  // Add overlays when loaded
   useEffect(() => {
     const newLayers: MapLayerType[] = [];
 
@@ -238,7 +238,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         onClose={() => setSelectedFeature(null)}
       />
 
-      {/* Overlay Loading Indicator (non-blocking) */}
+      {/* Overlay Loading Indicator */}
       {isAnyOverlayLoading && (
         <div className="absolute top-4 right-4 flex items-center space-x-2 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-70 px-3 py-2 rounded-lg shadow z-30">
           <Loader2 className="animate-spin text-blue-600" size={18} />
@@ -246,7 +246,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         </div>
       )}
 
-      {/* Overlay Errors (optional UI, safe fallback) */}
+      {/* Overlay Errors */}
       {overlayErrors.length > 0 && (
         <div className="absolute bottom-16 right-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 text-sm px-3 py-2 rounded shadow z-30">
           {overlayErrors.length} overlay(s) failed to load.
