@@ -358,7 +358,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                             Back
                         </Button>
                         <div>
-                            <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{data.name}{projectLocaleName ? ` of ${projectLocaleName}${projectName ? ` - ${projectName}` : ''}` : ''}</h1>
+                            <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground/70">{data.name}{projectLocaleName ? <span className='text-foreground'>: {projectLocaleName}</span> : null}{projectLocaleName ? <span className='text-foreground'> - {projectName}</span> : null}</h1>
                             <p className="text-xs lg:text-sm text-muted-foreground">
                                 {data?.description || ''}
                             </p>

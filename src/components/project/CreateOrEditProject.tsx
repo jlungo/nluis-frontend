@@ -120,7 +120,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
 
   const [pendingNodeId, setPendingNodeId] = useState<string | null>(null);
   const { data: childLocalities, isLoading: isLoadingChildren } = useLocalitiesQuery(pendingNodeId ? parseInt(pendingNodeId) : 0);
-  
+
   // Initialize selected localities from project data if editing
   useEffect(() => {
     if (project?.localities && localities) {
@@ -188,7 +188,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
   const hasChildren = (locality: LocalityI) => {
     const level = parseInt(locality.level || '0');
     const targetLevel = parseInt(getTargetLevel());
-    
+
     // If this locality's level is less than the target level, it might have children
     return level < targetLevel;
   };
@@ -229,7 +229,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
           ) : (
             <div className="w-6 mr-1" />
           )}
-          
+
           {isSelectable ? (
             <div className="flex items-center space-x-2 flex-1">
               <Checkbox
@@ -243,7 +243,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               </Label>
             </div>
           ) : (
-            <div 
+            <div
               className="flex-1 py-1 text-sm font-medium cursor-pointer"
               onClick={() => nodeHasChildren && !isLoading && toggleNode(node.id)}
             >
@@ -251,7 +251,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
             </div>
           )}
         </div>
-        
+
         {isExpanded && children.length > 0 && (
           <div className="border-l ml-3 pl-2">
             {children.map(child => renderTreeNode(child, depth + 1))}
@@ -324,7 +324,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         module_level: moduleLevelSlug || '',
         funder_ids: formData.funder_ids,
         locality_ids:
-          moduleLevel == LOCALITY_LEVELS.NATIONAL 
+          moduleLevel == LOCALITY_LEVELS.NATIONAL
             ? [`${tanzaniaLocalityKey}`]
             : selectedLocalities.map(locality => locality.id),
       };
@@ -368,7 +368,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
             </Button>
           </DialogTrigger>
 
-          <DialogContent aria-describedby='SetlocalityDialog' className="w-full max-w-6xl h-[80vh] flex flex-col">
+          <DialogContent aria-describedby='SetlocalityDialog' className="w-full transition-all sm:max-w-[95vw] lg:max-w-3xl h-[80vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Select Localities</DialogTitle>
             </DialogHeader>
@@ -382,7 +382,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               </div>
 
               {/* Right panel - Selected localities */}
-              <div className="w-1/2 border rounded-md p-4 overflow-y-auto"style={{ scrollbarWidth: 'none' }} >
+              <div className="w-1/2 border rounded-md p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
                 <h3 className="font-medium mb-4">Selected Localities</h3>
                 {selectedLocalities.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
