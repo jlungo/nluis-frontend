@@ -40,6 +40,7 @@ export default function CreateOrEditProject(props: Props) {
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
+
   const canCreate = () => {
     if (!user || !user?.role?.name) return false;
     return canCreateProject(user.role.name);
@@ -116,6 +117,9 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [selectedLocalities, setSelectedLocalities] = useState<LocalityI[]>([]);
   const [treeData, setTreeData] = useState<LocalityI[]>([]);
+
+  const [pendingNodeId, setPendingNodeId] = useState<string | null>(null);
+  const { data: childLocalities } = useLocalitiesQuery(pendingNodeId ? parseInt(pendingNodeId) : 0);
   
   // Initialize selected localities from project data if editing
   useEffect(() => {
@@ -135,30 +139,32 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     }
   }, [localities]);
 
+  useEffect(() => {
+    if (pendingNodeId && childLocalities && childLocalities.length > 0) {
+      setTreeData(prev => [...prev, ...childLocalities]);
+      setPendingNodeId(null);
+    }
+  }, [childLocalities, pendingNodeId]);
+
   // Toggle expansion of a node
-  const toggleNode = async (nodeId: string) => {
+  const toggleNode = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);
-    
+
     if (newExpanded.has(nodeId)) {
-      // Collapse the node
+      // Collapse
       newExpanded.delete(nodeId);
+      setExpandedNodes(newExpanded);
     } else {
-      // Expand the node
+      // Expand
       newExpanded.add(nodeId);
-      
-      // Check if we already have the children in treeData
-      const hasChildrenInTree = treeData.some(item => item.parent == nodeId);
-      
-      if (!hasChildrenInTree && localities) {
-        // Find children from the localities data we already have
-        const children = localities.filter(locality => locality.parent == nodeId);
-        if (children && children.length > 0) {
-          setTreeData(prev => [...prev, ...children]);
-        }
+      setExpandedNodes(newExpanded);
+
+      const alreadyLoaded = treeData.some(item => item.parent === nodeId);
+
+      if (!alreadyLoaded) {
+        setPendingNodeId(nodeId);
       }
     }
-    
-    setExpandedNodes(newExpanded);
   };
 
   // Handle selection of a locality
@@ -193,11 +199,15 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
   };
 
   // Render tree node recursively
+  // TODO: Get level from API 
   const renderTreeNode = (node: LocalityI, depth = 0) => {
     const children = getChildren(node.id);
     const isExpanded = expandedNodes.has(node.id);
     const isSelectable = parseInt(node.level || '0') == parseInt(getTargetLevel());
     const nodeHasChildren = hasChildren(node);
+
+    // console.log("=== node level : ", node)
+    // console.log("=== target level: ", parseInt(getTargetLevel()))
     
     return (
       <div key={node.id} className="">
