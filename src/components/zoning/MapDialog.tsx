@@ -81,7 +81,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
 
         <div className="relative">
           {/* Top-right controls - hidden on mobile */}
-          <div className="absolute top-3 right-3 flex items-center gap-2 z-10 hidden sm:flex">
+          <div className="absolute top-3 right-3 items-center gap-2 z-10 hidden sm:flex">
             <Button
               onClick={toggleFullscreen}
               size="icon"
