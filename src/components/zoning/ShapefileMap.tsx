@@ -4,7 +4,7 @@ import { MapLayer } from './MapLayer';
 import { LayerControl } from './LayerControl';
 import { FeatureInfoPanel } from './FeatureInfoPanel';
 import { generateLayerColors, calculateBounds } from '@/utils/zoningUtils';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { useLocalityShapefileQuery } from '@/queries/useLocalityQuery';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -50,7 +50,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     error: baseMapError,
   } = useLocalityShapefileQuery(baseMapId);
 
-  // Load overlay maps - create individual hooks for each overlay
+  // Load overlay maps
   const overlayQueries = overlayMapsIds.map((id, index) => {
     const { data, isLoading, error } = useLocalityShapefileQuery(id);
     return { id, data, isLoading, error, index };
@@ -99,19 +99,18 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     }
   }, [baseMapData, baseMapId, colors]);
 
-  // Add overlays when loaded
+  // Add overlays when loaded (skip errored overlays)
   useEffect(() => {
     const newLayers: MapLayerType[] = [];
 
-    overlayQueries.forEach(({ id, data, isLoading, index }) => {
-      if (!data || isLoading) return;
+    overlayQueries.forEach(({ id, data, isLoading, error, index }) => {
+      if (isLoading || error || !data) return;
 
-      // Check if this overlay is already in layers
-      const existingLayer = layers.find(l => l.id === `overlay-${id}-${index}`);
-      if (!!existingLayer) return;
+      const exists = layers.find(l => l.id === `overlay-${id}-${index}`);
+      if (exists) return;
 
-      const overlayLayer: MapLayerType = {
-        id: `overlay-${id}-${index}`, // Unique key with index
+      newLayers.push({
+        id: `overlay-${id}-${index}`,
         name: data.name || data.features?.[0]?.properties?.name || `Overlay ${index + 1}`,
         data,
         visible: true,
@@ -119,9 +118,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         isBase: false,
         color: colors[(index + 1) % colors.length],
         opacity: 0.4,
-      };
-
-      newLayers.push(overlayLayer);
+      });
     });
 
     if (newLayers.length > 0) {
@@ -178,8 +175,9 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   const resolvedMapboxStyle = mapboxStyle ?? (isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v11');
 
+  // Loading states
   const isAnyOverlayLoading = overlayQueries.some(q => q.isLoading);
-  const isLoading = baseMapLoading || isAnyOverlayLoading;
+  const overlayErrors = overlayQueries.filter(q => q.error);
 
   if (baseMapError) {
     return (
@@ -193,17 +191,20 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     );
   }
 
+  if (baseMapLoading) {
+    return (
+      <div className="flex items-center justify-center h-96 bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-white rounded">
+        <div className="text-center">
+          <Loader2 className="animate-spin mx-auto mb-2" size={24} />
+          <div className="text-sm">Loading base map...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 dark:bg-black dark:bg-opacity-70 z-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2 mx-auto" />
-            <div className="text-sm text-gray-700 dark:text-white">Loading shapefiles...</div>
-          </div>
-        </div>
-      )}
-
+      {/* Map */}
       <Map
         ref={mapRef}
         {...viewport}
@@ -222,6 +223,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         ))}
       </Map>
       
+      {/* Layers Control */}
       {showLayersControl && (
         <LayerControl
           layers={layers}
@@ -230,10 +232,26 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         />
       )}
 
+      {/* Feature Info */}
       <FeatureInfoPanel
         feature={selectedFeature}
         onClose={() => setSelectedFeature(null)}
       />
+
+      {/* Overlay Loading Indicator (non-blocking) */}
+      {isAnyOverlayLoading && (
+        <div className="absolute top-4 right-4 flex items-center space-x-2 bg-white dark:bg-black bg-opacity-80 dark:bg-opacity-70 px-3 py-2 rounded-lg shadow z-30">
+          <Loader2 className="animate-spin text-blue-600" size={18} />
+          <span className="text-sm text-gray-700 dark:text-white">Loading localities…</span>
+        </div>
+      )}
+
+      {/* Overlay Errors (optional UI, safe fallback) */}
+      {overlayErrors.length > 0 && (
+        <div className="absolute bottom-16 right-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 text-sm px-3 py-2 rounded shadow z-30">
+          {overlayErrors.length} overlay(s) failed to load.
+        </div>
+      )}
     </div>
   );
 };
