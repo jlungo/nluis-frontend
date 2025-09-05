@@ -38,13 +38,14 @@ export const workflowCategoryTypes: Record<number, workflowCategoryTypeProps> =
 
 export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
 
+// TODO: Oversee these, they are dynamic from database.
 export const LOCALITY_LEVELS = {
-  NATIONAL: "1",
+  NATIONAL: "4",
   ZONAL: "NULL",
   REGION: "2",
-  DISTRICT: "3",
-  WARD: "4",
-  VILLAGE: "5",
+  DISTRICT: "5",
+  WARD: "6",
+  VILLAGE: "7",
 } as const;
 
 export const LOCALITY_LEVEL_NAMES = {
