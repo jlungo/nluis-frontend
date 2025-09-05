@@ -6,21 +6,26 @@ import { useLayoutEffect } from "react";
 import { getCategoryKey } from "@/lib/utils";
 import { useFormDataQuery } from "@/queries/useFormDataQuery";
 import type { ModuleTypes } from "@/types/modules";
+import { useProjectQuery } from "@/queries/useProjectQuery";
 
 type Props = {
     pageTitle: string;
+    projectId: string;
     projectLocalityId: string;
     module: ModuleTypes;
     moduleLevel: string;
     worklowCategory: string
 }
 
-export default function ViewWorkflow({ pageTitle, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
+export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
     const { setPage } = usePageStore();
 
+    const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const workflowKey = getCategoryKey(worklowCategory) ?? 6
     const { data: workflow, isLoading: isLoadingWorkflow } = useWorkflowsQuery(1, 0, '', module, moduleLevel, workflowKey);
     const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflow && workflow?.results && workflow.results.length > 0 ? workflow.results[0].slug : undefined, projectLocalityId)
+
+    const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
 
     useLayoutEffect(() => {
         setPage({
@@ -35,10 +40,20 @@ export default function ViewWorkflow({ pageTitle, projectLocalityId, module, mod
             <p className='text-muted-foreground'>Workflow key configuration error!</p>
         </div>
 
-    if (isLoadingWorkflow || isLoadingValues) return <div className='flex flex-col items-center justify-center h-60'>
+    if (isLoadingWorkflow || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
         <p className="text-muted-foreground mt-4">Loading workflow and data...</p>
     </div>
+
+    if (!project)
+        return <div className='flex flex-col items-center justify-center h-60'>
+            <p className='text-muted-foreground'>No project with this data found!</p>
+        </div>
+
+    if (!projectLocaleName && !isLoadingWorkflow && !isLoadingValues && !isLoadingProject)
+        return <div className='flex flex-col items-center justify-center h-60'>
+            <p className='text-muted-foreground'>Project Locality not found!</p>
+        </div>
 
     if (!workflow || !workflow?.results || workflow.results.length === 0)
         return <div className='flex flex-col items-center justify-center h-60'>
@@ -50,5 +65,13 @@ export default function ViewWorkflow({ pageTitle, projectLocalityId, module, mod
             <p className='text-muted-foreground'>Failed to fetch workflow data!</p>
         </div>
 
-    return <SectionedForm data={workflow.results[0]} values={values} projectLocalityId={projectLocalityId} />
+    return (
+        <SectionedForm
+            data={workflow.results[0]}
+            values={values}
+            projectLocalityId={projectLocalityId}
+            projectName={project.name}
+            projectLocaleName={projectLocaleName}
+        />
+    )
 }
