@@ -1,0 +1,56 @@
+# Usage
+
+## 1. **Import the Component**
+
+```tsx
+import { ShapefileMap } from '@/components/zoning/ShapefileMap';
+```
+
+### 2. **Render the Component**
+
+```tsx
+<ShapefileMap
+  baseMapApiUrl="123" // ID for base shapefile
+  overlayApiUrls={["456", "789"]} // IDs for overlay shapefiles
+  mapboxAccessToken="mapbox-access-token" // Leave empty for development,already hardcoded in a component
+  mapboxStyle="mapbox://styles/mapbox/streets-v11"
+  onError={(msg) => console.error("Map Error:", msg)} // Still in implemetation progress
+/>
+```
+
+---
+
+## 🧾 Props
+
+| Prop                | Type                            | Required | Description                                              |
+| ------------------- | ------------------------------- | -------- | -------------------------------------------------------- |
+| `baseMapApiUrl`     | `string`                        | ✅        | Locality ID for the base map shapefile.                  |
+| `overlayApiUrls`    | `string[]`                      | ❌        | Array of locality IDs for overlay shapefiles.            |
+| `mapboxAccessToken` | `string`                        | ✅        | [Mapbox access token](https://account.mapbox.com/). |
+| `mapboxStyle`       | `string`                        | ❌        | Mapbox style URL. Defaults to `streets-v11`.             |
+| `initialViewport`   | `{ longitude, latitude, zoom }` | ❌        | Optional custom starting viewport.                       |
+| `onError`           | `(msg: string) => void`         | ❌        | Optional callback to handle errors.                      |
+
+---
+
+## API
+
+The component uses this API format to fetch shapefiles:
+
+```
+GET /localities/localities/:id/boundary/
+```
+
+The response should be a valid **GeoJSON FeatureCollection**.
+
+---
+
+## Features
+
+* Auto fits the map view to base map shapefile bounds
+* Toggle layer visibility
+* Export any layer as `.geojson`
+* Click to view feature properties
+* Random color assignment per layer
+
+---

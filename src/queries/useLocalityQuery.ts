@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import type { LocalityI } from "@/types/projects";
+import { GeoJSONFeatureCollectionType } from "@/types/zoning";
 import { useQuery } from "@tanstack/react-query";
 
 export const localityQueryKey = "locality";
@@ -19,5 +20,14 @@ export const useLocalityQuery = (level: number) => {
     queryKey: [localityQueryKey, { level }],
     queryFn: () =>
       api.get(`/localities/localities/?level=${level}`).then((res) => res.data),
+  });
+};
+
+export const useLocalityShapefileQuery = (locality_id?: string) => {
+  return useQuery<GeoJSONFeatureCollectionType>({
+    queryKey: [localityQueryKey, locality_id],
+    queryFn: () =>
+      api.get(`/localities/localities/${locality_id}/boundary/`).then((res) => res.data),
+    enabled: !!locality_id,
   });
 };
