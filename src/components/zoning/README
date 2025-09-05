@@ -54,3 +54,6 @@ The response should be a valid **GeoJSON FeatureCollection**.
 * Random color assignment per layer
 
 ---
+```
+*ignore this:
+npm install --save-dev @types/mapbox-gl
