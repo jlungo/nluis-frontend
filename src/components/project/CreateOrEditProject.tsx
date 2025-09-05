@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { MapPin, Calendar, DollarSign, FileText } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, FileText, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useFunders, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { FormFieldInput } from '@/components/FormFieldInput';
 import { Spinner } from '@/components/ui/spinner';
@@ -9,44 +9,46 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, ProjectFunderI, ProjectI } from '@/types/projects';
 import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey } from '@/types/constants';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useNavigate } from 'react-router';
 import { canCreateProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
 import { useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { Badge } from '../ui/badge';
+import { Checkbox } from '../ui/checkbox';
 import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
 
 interface Props {
   moduleLevel: string;
   redirectPath: string;
-  projectId?: string
+  projectId?: string;
 }
 
 interface FormProps {
   moduleLevel: string;
   redirectPath: string;
-  funders: ProjectFunderI[] | undefined
-  localities: LocalityI[] | undefined
-  organizationId: string
-  project?: ProjectI
+  funders: ProjectFunderI[] | undefined;
+  localities: LocalityI[] | undefined;
+  organizationId: string;
+  project?: ProjectI;
 }
 
 export default function CreateOrEditProject(props: Props) {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: funders, isLoading: loadingFunders } = useFunders();
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
   const canCreate = () => {
-    if (!user || !user?.role?.name) return
-    return canCreateProject(user.role.name)
-  }
+    if (!user || !user?.role?.name) return false;
+    return canCreateProject(user.role.name);
+  };
 
   const canEdit = () => {
-    if (!user || !user?.role?.name || !project) return false
-    return canEditProject(user?.role?.name, project.approval_status)
-  }
+    if (!user || !user?.role?.name || !project) return false;
+    return canEditProject(user?.role?.name, project.approval_status);
+  };
 
   if (loadingFunders || loadingLocalities) {
     return (
@@ -65,7 +67,7 @@ export default function CreateOrEditProject(props: Props) {
         localities={localities}
         organizationId={user.organization.id}
       />
-    )
+    );
 
   if (isLoadingProject || !project) {
     return (
@@ -85,96 +87,168 @@ export default function CreateOrEditProject(props: Props) {
         organizationId={user.organization.id}
         project={project}
       />
-    )
+    );
 
-  navigate(props.redirectPath, { replace: true })
-  return null
+  navigate(props.redirectPath, { replace: true });
+  return null;
 }
 
 function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, project, organizationId }: FormProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { mutateAsync: mutateAsyncCreate, isPending: isPendingCreate } = useCreateProject();
   const { mutateAsync: mutateAsyncUpdate, isPending } = useUpdateProject();
 
-  // Locality selection state
-  const [currentSelection, setCurrentSelection] = useState({
-    regions: [] as string[],
-    districts: [] as string[],
-    wards: [] as string[],
-    villages: [] as string[],
-    selectedRegion: '',
-    selectedDistrict: '',
-    selectedWard: '',
-  });
-
+  // Initialize form data with project data if editing, or empty values if creating
   const [formData, setFormData] = useState<CreateProjectDataI>({
-    name: project ? project.name : '',
-    organization: organizationId || '',
-    description: project ? project.description || '' : '',
-    module_level: project ? project.name : '',
-    registration_date: project ? project.registration_date : new Date().toISOString().split('T')[0],
-    authorization_date: project ? project.authorization_date : '',
-    budget: project ? project.budget : '',
-    funder_ids: project?.funders ? project.funders.map(funder => funder.id) : [],
-    locality_ids: project?.localities ? project.localities.map(locality => locality.id) : [],
+    name: project?.name || '',
+    organization: organizationId,
+    description: project?.description || '',
+    registration_date: project?.registration_date || '',
+    authorization_date: project?.authorization_date || '',
+    budget: project?.budget || '',
+    module_level: '',
+    funder_ids: project?.funders?.map(f => f.id.toString()) || [],
+    locality_ids: project?.localities?.map(l => l.locality__id) || [],
   });
 
+  const [isLocalityModalOpen, setIsLocalityModalOpen] = useState(false);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [selectedLocalities, setSelectedLocalities] = useState<LocalityI[]>([]);
+  const [treeData, setTreeData] = useState<LocalityI[]>([]);
+  
+  // Initialize selected localities from project data if editing
   useEffect(() => {
-    if (!project) return
-    const targetLevel = getTargetLevel();
-
-    if (targetLevel === LOCALITY_LEVELS.REGION) {
-      setCurrentSelection(prev => ({
-        ...prev,
-        regions: project.localities ? project.localities.map(locality => locality.locality__id) : []
-      }))
-    } else if (targetLevel === LOCALITY_LEVELS.DISTRICT) {
-      setCurrentSelection(prev => ({
-        ...prev,
-        districts: project.localities ? project.localities.map(locality => locality.locality__id) : []
-      }))
-    } else if (targetLevel === LOCALITY_LEVELS.WARD) {
-      setCurrentSelection(prev => ({
-        ...prev,
-        wards: project.localities ? project.localities.map(locality => locality.locality__id) : []
-      }))
-    } else if (targetLevel === LOCALITY_LEVELS.VILLAGE) {
-      setCurrentSelection(prev => ({
-        ...prev,
-        villages: project.localities ? project.localities.map(locality => locality.locality__id) : []
-      }))
+    if (project?.localities && localities) {
+      const projectLocalities = project.localities.map(pl => {
+        const locality = localities.find(l => l.id == pl.locality__id);
+        return locality ? locality : { id: pl.locality__id, name: pl.locality__name, level: pl.locality__level };
+      }).filter(Boolean) as LocalityI[];
+      setSelectedLocalities(projectLocalities);
     }
-  }, [])
+  }, [project, localities]);
 
+  // Initialize tree data with regional level
   useEffect(() => {
-    // Update locality_ids based on current selection
-    const targetLevel = getTargetLevel();
-    let selectedLocalityIds: string[] = [];
-
-    if (targetLevel === LOCALITY_LEVELS.REGION) {
-      selectedLocalityIds = currentSelection.regions;
-    } else if (targetLevel === LOCALITY_LEVELS.DISTRICT) {
-      selectedLocalityIds = currentSelection.districts;
-    } else if (targetLevel === LOCALITY_LEVELS.WARD) {
-      selectedLocalityIds = currentSelection.wards;
-    } else if (targetLevel === LOCALITY_LEVELS.VILLAGE) {
-      selectedLocalityIds = currentSelection.villages;
+    if (localities) {
+      setTreeData(localities);
     }
+  }, [localities]);
 
-    setFormData(prev => ({
-      ...prev,
-      locality_ids: selectedLocalityIds
-    }));
-  }, [currentSelection.regions, currentSelection.districts, currentSelection.wards, currentSelection.villages, moduleLevel]);
-
-  // Helper functions for locality filtering
-  const getLocalitiesByLevel = (level: string) => {
-    return localities?.filter(l => l.level == level) || [];
+  // Toggle expansion of a node
+  const toggleNode = async (nodeId: string) => {
+    const newExpanded = new Set(expandedNodes);
+    
+    if (newExpanded.has(nodeId)) {
+      // Collapse the node
+      newExpanded.delete(nodeId);
+    } else {
+      // Expand the node
+      newExpanded.add(nodeId);
+      
+      // Check if we already have the children in treeData
+      const hasChildrenInTree = treeData.some(item => item.parent == nodeId);
+      
+      if (!hasChildrenInTree && localities) {
+        // Find children from the localities data we already have
+        const children = localities.filter(locality => locality.parent == nodeId);
+        if (children && children.length > 0) {
+          setTreeData(prev => [...prev, ...children]);
+        }
+      }
+    }
+    
+    setExpandedNodes(newExpanded);
   };
 
-  const getChildLocalities = (level: string, parentId: string) =>
-    localities?.filter(l => l.level == level && l.parent == parentId) || [];
+  // Handle selection of a locality
+  const handleLocalitySelect = (locality: LocalityI) => {
+    setSelectedLocalities(prev => {
+      const isSelected = prev.some(l => l.id == locality.id);
+      if (isSelected) {
+        return prev.filter(l => l.id !== locality.id);
+      } else {
+        return [...prev, locality];
+      }
+    });
+  };
+
+  // Check if a locality is selected
+  const isLocalitySelected = (localityId: string) => {
+    return selectedLocalities.some(l => l.id == localityId);
+  };
+
+  // Check if a locality has children (based on level)
+  const hasChildren = (locality: LocalityI) => {
+    const level = parseInt(locality.level || '0');
+    const targetLevel = parseInt(getTargetLevel());
+    
+    // If this locality's level is less than the target level, it might have children
+    return level < targetLevel;
+  };
+
+  // Get children of a locality from treeData
+  const getChildren = (parentId: string) => {
+    return treeData.filter(item => item.parent == parentId);
+  };
+
+  // Render tree node recursively
+  const renderTreeNode = (node: LocalityI, depth = 0) => {
+    const children = getChildren(node.id);
+    const isExpanded = expandedNodes.has(node.id);
+    const isSelectable = parseInt(node.level || '0') == parseInt(getTargetLevel());
+    const nodeHasChildren = hasChildren(node);
+    
+    return (
+      <div key={node.id} className="">
+        <div className="flex items-center py-1">
+          {nodeHasChildren ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 mr-1"
+              onClick={() => toggleNode(node.id)}
+            >
+              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          ) : (
+            <div className="w-6 mr-1" />
+          )}
+          
+          {isSelectable ? (
+            <div className="flex items-center space-x-2 flex-1">
+              <Checkbox
+                id={`checkbox-${node.id}`}
+                checked={isLocalitySelected(node.id)}
+                onCheckedChange={() => handleLocalitySelect(node)}
+              />
+              <Label htmlFor={`checkbox-${node.id}`} className="text-sm font-normal cursor-pointer">
+                {node.name}
+              </Label>
+            </div>
+          ) : (
+            <div 
+              className="flex-1 py-1 text-sm font-medium cursor-pointer"
+              onClick={() => nodeHasChildren && toggleNode(node.id)}
+            >
+              {node.name}
+            </div>
+          )}
+        </div>
+        
+        {isExpanded && children.length > 0 && (
+          <div className="border-l ml-3 pl-2">
+            {children.map(child => renderTreeNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Remove a selected locality
+  const removeSelectedLocality = (localityId: string) => {
+    setSelectedLocalities(prev => prev.filter(l => l.id !== localityId));
+  };
 
   // Get the target level that should be saved as locality_ids
   const getTargetLevel = (): string => {
@@ -188,7 +262,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
       case LOCALITY_LEVELS.VILLAGE:
         return LOCALITY_LEVELS.VILLAGE;
       default:
-        return '';
+        return LOCALITY_LEVELS.NATIONAL;
     }
   };
 
@@ -203,39 +277,6 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     }));
   };
 
-  // Handle single selection (for non-target levels)
-  const handleSingleSelection = (level: 'selectedRegion' | 'selectedDistrict' | 'selectedWard', value: string) => {
-    setCurrentSelection(prev => {
-      const newSelection = { ...prev };
-
-      // Reset child selections when parent changes
-      if (level === 'selectedRegion') {
-        newSelection.districts = [];
-        newSelection.wards = [];
-        newSelection.villages = [];
-        newSelection.selectedDistrict = '';
-        newSelection.selectedWard = '';
-      } else if (level === 'selectedDistrict') {
-        newSelection.wards = [];
-        newSelection.villages = [];
-        newSelection.selectedWard = '';
-      } else if (level === 'selectedWard') {
-        newSelection.villages = [];
-      }
-
-      newSelection[level] = value;
-      return newSelection;
-    });
-  };
-
-  // Update the handleMultiSelection function to properly handle multiselect
-  const handleMultiSelection = (level: 'regions' | 'districts' | 'wards' | 'villages', values: (string | number)[]) => {
-    setCurrentSelection(prev => ({
-      ...prev,
-      [level]: values
-    }));
-  };
-
   const isFormValid = (): boolean => {
     const { name, description, registration_date, authorization_date, budget, funder_ids } = formData;
 
@@ -247,7 +288,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     if (moduleLevel == LOCALITY_LEVELS.NATIONAL) return true;
 
     // For other levels, at least one locality must be selected
-    return formData.locality_ids.length > 0;
+    return selectedLocalities.length > 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -264,21 +305,25 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         registration_date: formData.registration_date,
         authorization_date: formData.authorization_date,
         budget: formData.budget,
-        module_level: moduleLevelSlug,
+        module_level: moduleLevelSlug || '',
         funder_ids: formData.funder_ids,
         locality_ids:
-          moduleLevel === LOCALITY_LEVELS.NATIONAL ? ["92"] : formData.locality_ids, // Locality ID of Tanzania is 92
+          moduleLevel == LOCALITY_LEVELS.NATIONAL 
+            ? [`${tanzaniaLocalityKey}`]
+            : selectedLocalities.map(locality => locality.id),
       };
 
-      if (!project) await mutateAsyncCreate(payload);
-      else
+      if (!project) {
+        await mutateAsyncCreate(payload);
+      } else {
         await mutateAsyncUpdate({ id: project.id, data: payload }).then(() =>
           queryClient.invalidateQueries({
             refetchType: "active",
             queryKey: [queryProjectKey],
           }),
-        )
-      navigate(redirectPath, { replace: true })
+        );
+      }
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       console.error("Failed to create project:", error);
     }
@@ -297,158 +342,96 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
       );
     }
 
-    const targetLevel = getTargetLevel();
-
     return (
       <div className="space-y-4">
-        {/* Selection Controls */}
-        <div className="border p-4 md:p-6 rounded-lg space-y-4">
-          <h4 className="font-medium text-base text-gray-700 dark:text-gray-300">
-            Select localities to add to your project
-          </h4>
+        <Dialog open={isLocalityModalOpen} onOpenChange={setIsLocalityModalOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline">
+              <MapPin className="h-4 w-4 mr-2" />
+              Select Localities
+            </Button>
+          </DialogTrigger>
 
-          <div className="grid gap-4">
-            {/* Region Selection */}
-            {moduleLevel >= LOCALITY_LEVELS.REGION && (
-              <div className="space-y-2">
-                {targetLevel === LOCALITY_LEVELS.REGION ? (
-                  <FormFieldInput
-                    type="multiselect"
-                    id="regions-multi"
-                    label="Select Regions"
-                    values={currentSelection.regions} // Pass current values
-                    options={getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => ({
-                      value: region.id,
-                      label: region.name
-                    }))}
-                    onChange={() => { }}
-                    onValuesChange={(values) => handleMultiSelection('regions', values)}
-                    placeholder="Select regions"
-                  />
+          <DialogContent aria-describedby='SetlocalityDialog' className="w-full max-w-6xl h-[80vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Select Localities</DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-1 gap-6 overflow-hidden">
+              {/* Left panel - Tree view */}
+              <div className="w-1/2 border rounded-md p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
+                <h3 className="font-medium mb-4">Localities List</h3>
+                {treeData.filter((item) => item.parent || item.parent != null).map((node) => renderTreeNode(node))}
+              </div>
+
+              {/* Right panel - Selected localities */}
+              <div className="w-1/2 border rounded-md p-4 overflow-y-auto"style={{ scrollbarWidth: 'none' }} >
+                <h3 className="font-medium mb-4">Selected Localities</h3>
+                {selectedLocalities.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No localities selected yet.
+                  </p>
                 ) : (
-                  <div>
-                    <Label htmlFor='select-region'>Select Region</Label>
-                    <Select
-                      value={currentSelection.selectedRegion}
-                      onValueChange={(value: string) => handleSingleSelection('selectedRegion', value)}
-                    >
-                      <SelectTrigger id='select-region' className='w-full'>
-                        <SelectValue placeholder="Select region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getLocalitiesByLevel(LOCALITY_LEVELS.REGION).map(region => (
-                          <SelectItem key={region.id} value={region.id}>
-                            {region.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-2">
+                    {selectedLocalities.map((locality) => (
+                      <div
+                        key={locality.id}
+                        className="flex items-center justify-between p-2 border rounded-md"
+                      >
+                        <span className="text-sm">{locality.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => removeSelectedLocality(locality.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
+            </div>
 
-            {/* District Selection */}
-            {moduleLevel >= LOCALITY_LEVELS.DISTRICT && currentSelection.selectedRegion && (
-              <div className="space-y-2">
-                {targetLevel === LOCALITY_LEVELS.DISTRICT ? (
-                  <FormFieldInput
-                    type="multiselect"
-                    id="districts-multi"
-                    label="Select Districts"
-                    values={currentSelection.districts}
-                    options={getChildLocalities(LOCALITY_LEVELS.DISTRICT, currentSelection.selectedRegion).map(district => ({
-                      value: district.id,
-                      label: district.name
-                    }))}
-                    onChange={() => { }}
-                    onValuesChange={(values) => handleMultiSelection('districts', values)}
-                    placeholder="Select districts"
-                  />
-                ) : (
-                  <div>
-                    <Label htmlFor='select-district'>Select District</Label>
-                    <Select
-                      value={currentSelection.selectedDistrict}
-                      onValueChange={(value: string) => handleSingleSelection('selectedDistrict', value)}
-                    >
-                      <SelectTrigger id='select-district' className='w-full'>
-                        <SelectValue placeholder="Select district" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getChildLocalities(LOCALITY_LEVELS.DISTRICT, currentSelection.selectedRegion).map(district => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    locality_ids: selectedLocalities.map((locality) => locality.id),
+                  }));
+                  setIsLocalityModalOpen(false);
+                }}
+              >
+                Done
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-            {/* Ward Selection */}
-            {moduleLevel >= LOCALITY_LEVELS.WARD && currentSelection.selectedDistrict && (
-              <div className="space-y-2">
-                {targetLevel === LOCALITY_LEVELS.WARD ? (
-                  <FormFieldInput
-                    type="multiselect"
-                    id="wards-multi"
-                    label="Select Wards"
-                    value=""
-                    values={currentSelection.wards}
-                    options={getChildLocalities(LOCALITY_LEVELS.WARD, currentSelection.selectedDistrict).map(ward => ({
-                      value: ward.id,
-                      label: ward.name
-                    }))}
-                    onChange={() => { }}
-                    onValuesChange={(values) => handleMultiSelection('wards', values)}
-                    placeholder="Select wards"
-                  />
-                ) : (
-                  <div>
-                    <Label htmlFor='select-ward'>Select Ward</Label>
-                    <Select
-                      value={currentSelection.selectedWard}
-                      onValueChange={(value: string) => handleSingleSelection('selectedWard', value)}
-                    >
-                      <SelectTrigger id='select-ward' className='w-full'>
-                        <SelectValue placeholder="Select ward" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getChildLocalities(LOCALITY_LEVELS.WARD, currentSelection.selectedDistrict).map(ward => (
-                          <SelectItem key={ward.id} value={ward.id}>
-                            {ward.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Village Selection */}
-            {moduleLevel >= LOCALITY_LEVELS.VILLAGE && currentSelection.selectedWard && (
-              <div className="space-y-2">
-                <FormFieldInput
-                  type="multiselect"
-                  id="villages-multi"
-                  label="Select Villages"
-                  values={currentSelection.villages}
-                  options={getChildLocalities(LOCALITY_LEVELS.VILLAGE, currentSelection.selectedWard).map(village => ({
-                    value: village.id,
-                    label: village.name
-                  }))}
-                  onChange={() => { }}
-                  onValuesChange={(values) => handleMultiSelection('villages', values)}
-                  placeholder="Select villages"
-                />
-              </div>
-            )}
+        {/* Display selected localities outside the modal */}
+        {selectedLocalities.length > 0 && (
+          <div className="mt-4">
+            <h4 className="font-medium text-sm mb-2">Selected Localities:</h4>
+            <div className="flex flex-wrap gap-2">
+              {selectedLocalities.map(locality => (
+                <Badge key={locality.id} variant="secondary" className="px-3 py-1">
+                  {locality.name}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 ml-1"
+                    onClick={() => removeSelectedLocality(locality.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -542,7 +525,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 label="Funder"
                 value=""
                 options={funders?.map(funder => ({
-                  value: funder.id,
+                  value: funder.id.toString(),
                   label: funder.name
                 })) || []}
                 onChange={() => { }}
@@ -583,7 +566,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
             type="submit"
             disabled={!isFormValid() || isPending || isPendingCreate}
           >
-            {project ? isPending || isPendingCreate ? 'Updating Project...' : 'Update Project' : isPending || isPendingCreate ? 'Creating Project...' : 'Create Project'}
+            {project ? (isPending || isPendingCreate ? 'Updating Project...' : 'Update Project') : (isPending || isPendingCreate ? 'Creating Project...' : 'Create Project')}
           </Button>
         </div>
       </form>
