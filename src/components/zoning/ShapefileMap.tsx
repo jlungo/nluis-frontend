@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Map, { NavigationControl } from 'react-map-gl/mapbox';
 import { MapLayer } from './MapLayer';
 import { LayerControl } from './LayerControl';

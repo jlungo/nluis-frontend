@@ -152,7 +152,7 @@ function FileInput({
                             <Upload className={`h-5 w-5 transition ${dragOver && !disabled ? 'text-primary' : 'text-muted-foreground/80 dark:text-muted-foreground/40 group-hover:text-muted-foreground dark:group-hover:text-muted-foreground/80'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2"><p className="text-sm font-medium text-foreground">{label}</p>{required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</div>
+                            <div className="flex items-center gap-2"><p className="text-sm font-medium text-foreground">{label}</p>{required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</div>
                             <p className="text-[10px] 2xl:text-xs text-muted-foreground">{placeholder}</p>
                             <p className="text-[9px] text-muted-foreground">
                                 ({accept ? `${accept} files` : 'Any file type'} • Max {maxSize}MB
@@ -226,7 +226,7 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
 
     return (
         <div className="gap-4 w-full">
-            {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label> : null}
+            {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
             <div className='w-full bg-muted dark:bg-input/30 aspect-video rounded shadow'>
                 {fileList.map((url, i) => {
                     const type = getFileType(url);

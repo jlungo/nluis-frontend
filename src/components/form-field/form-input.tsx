@@ -12,7 +12,7 @@ type FormInputProps = React.ComponentPropsWithoutRef<typeof Input> & {
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     ({ data, className, disabled, ...props }, ref) => (
         <div className="w-full space-y-2 md:w-[48%] xl:w-[49%]">
-            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
+            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
             <Input
                 id={data.name}
                 type={data.type}

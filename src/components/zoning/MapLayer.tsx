@@ -1,4 +1,3 @@
-import React from 'react';
 import { Source, Layer } from 'react-map-gl/mapbox';
 import type { MapLayerType } from '@/types/zoning';
 import { createLayerStyle, getGeometryType } from '@/utils/zoningUtils';

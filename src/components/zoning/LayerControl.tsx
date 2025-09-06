@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Layers, Download, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import type { MapLayerType } from '@/types/zoning';
 
@@ -29,9 +29,8 @@ export const LayerControl: React.FC<LayerControlProps> = ({
         </h2>
         <ChevronDown
           size={18}
-          className={`text-gray-500 dark:text-gray-300 transition-transform ${
-            isOpen ? 'rotate-0' : 'rotate-180'
-          }`}
+          className={`text-gray-500 dark:text-gray-300 transition-transform ${isOpen ? 'rotate-0' : 'rotate-180'
+            }`}
         />
       </button>
 
@@ -81,11 +80,10 @@ export const LayerControl: React.FC<LayerControlProps> = ({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => onToggleLayer(layer.id)}
-                      className={`p-1 rounded transition-colors ${
-                        layer.visible
+                      className={`p-1 rounded transition-colors ${layer.visible
                           ? 'text-green-600 hover:bg-green-100 dark:hover:bg-green-800'
                           : 'text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
+                        }`}
                       title={layer.visible ? 'Hide Layer' : 'Show Layer'}
                       aria-label={
                         layer.visible ? 'Hide Layer' : 'Show Layer'

@@ -5,7 +5,7 @@ import DatePicker from "./form-date-picker";
 import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
-import { InputType } from "@/types/input-types";
+import type { InputType } from "@/types/input-types";
 
 export default function Index(
     data: FieldsProps & {
@@ -36,7 +36,9 @@ export default function Index(
         case ('date'):
             return (
                 <DatePicker
-                    data={data}
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
                     disabled={data.disabled}
                     dateValue={data?.value ? new Date(data.value as string) : undefined}
                     onDateChange={(e) => data.setValue(data.form_slug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}

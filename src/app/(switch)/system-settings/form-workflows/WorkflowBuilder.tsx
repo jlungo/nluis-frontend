@@ -73,14 +73,10 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         { value: 'textarea', label: 'Text Area' },
         { value: 'select', label: 'Dropdown Select' },
         { value: 'checkbox', label: 'Checkbox' },
-        { value: 'radio', label: 'Radio Button' },
         { value: 'date', label: 'Date Picker' },
         { value: 'file', label: 'File Upload' },
-        // { value: 'switch', label: 'Toggle Switch' },
-        // { value: 'map-area', label: 'Interactive Map Area' },
-        // { value: 'gps-coordinates', label: 'GPS Coordinates' },
-        // { value: 'boundary-mapper', label: 'Boundary Drawing Tool' },
-        // { value: 'location-picker', label: 'Location Picker' }
+        { value: 'members', label: 'Memebrs Add' },
+        { value: 'zoning', label: 'Zoning' },
     ];
 
     const steps = [
@@ -445,8 +441,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 }))
             }))
         };
-
-        // console.log(workflowData)
 
         try {
             toast.promise(mutateAsync(workflowData), {
@@ -924,7 +918,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                     />
                                                                                     <Select
                                                                                         value={field.type}
-                                                                                        onValueChange={(value) => updateField(section.id, form.id, field.id, { type: value, options: [] })}
+                                                                                        onValueChange={(value) => updateField(section.id, form.id, field.id, { type: value as InputType, options: [] })}
                                                                                     >
                                                                                         <SelectTrigger className="w-full lg:w-40">
                                                                                             <SelectValue />

@@ -8,17 +8,20 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import type { ComponentPropsWithoutRef } from "react";
 
 type DatePickerProps = ComponentPropsWithoutRef<typeof Button> & {
-    data: FieldsProps;
+    label: string;
+    name: string;
+    placeholder?: string;
+    required?: boolean;
     dateValue?: Date;
     onDateChange?: (e: Date) => void;
+    fullWidth?: boolean
 };
 
 const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
-    ({ data, dateValue, onDateChange, ...props }, ref) => {
+    ({ name, label, required, placeholder, dateValue, fullWidth = false, onDateChange, ...props }, ref) => {
         const [open, setOpen] = useState(false);
         const [date, setDate] = useState<Date | undefined>(dateValue);
 
@@ -30,19 +33,19 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         };
 
         return (
-            <div className="w-full space-y-2 md:w-[48%] xl:w-[49%]">
-                <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
+            <div className={fullWidth ? "w-full space-y-2" : "w-full space-y-2 md:w-[48%] xl:w-[49%]"}>
+                <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
 
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
-                            id={data.name}
+                            id={name}
                             ref={ref}
-                            className="w-full justify-between bg-muted"
+                            className={`w-full justify-between ${fullWidth ? 'bg-accent dark:bg-input/30' : 'bg-muted'}`}
                             {...props}
                         >
-                            {date ? date.toLocaleDateString() : data.placeholder || "Select date"}
+                            {date ? date.toLocaleDateString() : placeholder || "Select date"}
                             <ChevronDownIcon />
                         </Button>
                     </PopoverTrigger>
