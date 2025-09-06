@@ -38,6 +38,8 @@ export const FeatureInfoPanel: React.FC<FeatureInfoPanelProps> = ({
           Feature Information
         </h2>
         <button
+          type='button'
+          aria-labelledby='close'
           onClick={onClose}
           className="p-1 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           aria-label="Close feature panel"

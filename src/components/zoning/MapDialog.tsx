@@ -62,7 +62,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button type="button" variant="outline">
           <Map className="h-4 w-4 hidden md:inline-block" />
           <span className="ml-2">View Map</span>
         </Button>
@@ -83,6 +83,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
           {/* Top-right controls - hidden on mobile */}
           <div className="absolute top-3 right-3 items-center gap-2 z-10 hidden sm:flex">
             <Button
+              type="button"
               onClick={toggleFullscreen}
               size="icon"
               variant="ghost"
@@ -94,6 +95,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
 
             <DialogClose asChild>
               <Button
+                type="button"
                 size="icon"
                 variant="ghost"
                 className="hover:bg-gray-100 active:scale-95 rounded-full"
@@ -145,7 +147,6 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
           >
             <ShapefileMap
               key={`${resetKey}-${mapKey}`}
-              resetKey={`${resetKey}-${mapKey}`}
               baseMapId={baseMapId}
               overlayMapsIds={overlayMapsIds}
               showLayersControl={isFullscreen}
@@ -163,6 +164,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
         >
           {/* Mobile toggle fullscreen button */}
           <Button
+            type="button"
             onClick={toggleFullscreen}
             variant="ghost"
             className="sm:hidden"
@@ -183,6 +185,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
           {/* Mobile close button (on right) */}
           <DialogClose asChild>
             <Button
+              type="button"
               variant="outline"
               className="hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 sm:ml-2"
             >

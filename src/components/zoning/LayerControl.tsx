@@ -16,9 +16,10 @@ export const LayerControl: React.FC<LayerControlProps> = ({
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <aside className="absolute top-4 right-4 z-10 w-full max-w-sm p-4 rounded-lg shadow-lg bg-white dark:bg-gray-900">
+    <aside className="absolute top-2 right-2 z-10 w-4/5 max-w-sm p-2 md:p-4 rounded-lg shadow-lg bg-white dark:bg-gray-900">
       {/* Header */}
       <button
+        type='button'
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between mb-3 text-left cursor-pointer"
         aria-label="Toggle layer panel"
@@ -78,10 +79,11 @@ export const LayerControl: React.FC<LayerControlProps> = ({
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <button
+                      type='button'
                       onClick={() => onToggleLayer(layer.id)}
                       className={`p-1 rounded transition-colors ${layer.visible
-                          ? 'text-green-600 hover:bg-green-100 dark:hover:bg-green-800'
-                          : 'text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        ? 'text-green-600 hover:bg-green-100 dark:hover:bg-green-800'
+                        : 'text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                       title={layer.visible ? 'Hide Layer' : 'Show Layer'}
                       aria-label={
@@ -92,6 +94,7 @@ export const LayerControl: React.FC<LayerControlProps> = ({
                     </button>
 
                     <button
+                      type='button'
                       onClick={() => onExportLayer(layer.id)}
                       className="p-1 rounded text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-800 transition-colors"
                       title="Export Layer"
