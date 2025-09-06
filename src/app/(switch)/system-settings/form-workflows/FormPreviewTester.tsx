@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import MapFieldRenderer from './MapFieldRenderer';
 import {
     Edit,
     Save,
@@ -36,7 +35,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import DatePicker from '@/components/form-field/form-date-picker';
-import { InputType } from '@/types/input-types';
+import type { InputType } from '@/types/input-types';
+import { ShapefileMap } from '@/components/zoning/ShapefileMap';
+import { useThemeStore } from '@/store/themeStore';
 
 export interface FieldOption {
     id: string;
@@ -249,203 +250,185 @@ export function FormPreviewTester({
     };
 
     // Render a single field component
-    const renderFieldComponent = (field: FormField) => {
-        const fieldValue = formValues[field.name];
-        const hasError = validationErrors.some(error => error.fieldId === field.id);
-        const fieldError = validationErrors.find(error => error.fieldId === field.id);
+    const renderFieldComponent = useCallback(
+        (field: FormField) => {
+            const fieldValue = formValues[field.name];
+            const fieldError = validationErrors.find(error => error.fieldId === field.id);
+            const hasError = !!fieldError && showValidation;
 
-        if (field.type === 'zoning') {
-            return (
-                <div key={field.id} className="space-y-2">
-                    <MapFieldRenderer
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        type={field.type as any}
-                        value={fieldValue}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onChange={(value: any) => updateFieldValue(field.name, value)}
-                        label={field.label}
-                        placeholder={field.placeholder}
-                        required={field.required}
-                    />
-                    {hasError && showValidation && (
-                        <Alert className="border-destructive bg-destructive/10">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription className="text-destructive">
-                                {fieldError?.message}
-                            </AlertDescription>
-                        </Alert>
-                    )}
+            const renderLabel = () => (
+                <div className="flex items-center gap-2">
+                    <Label className="flex items-center gap-2">
+                        {field.label}
+                        {field.required && <span className="text-destructive">*</span>}
+                    </Label>
                 </div>
             );
-        }
 
-        // Regular form fields
-        return (
-            <div key={field.id} className="space-y-2">
-                {field.type === 'text' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <Input
-                            placeholder={field.placeholder || 'Enter text...'}
-                            value={fieldValue || ''}
-                            onChange={(e) => updateFieldValue(field.name, e.target.value)}
-                            className={hasError && showValidation ? 'border-destructive' : ''}
-                        />
-                    </>
-                )}
-                {field.type === 'email' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <Input
-                            type="email"
-                            placeholder={field.placeholder || 'Enter email...'}
-                            value={fieldValue || ''}
-                            onChange={(e) => updateFieldValue(field.name, e.target.value)}
-                            className={hasError && showValidation ? 'border-destructive' : ''}
-                        />
-                    </>
-                )}
-                {field.type === 'number' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <Input
-                            type="number"
-                            placeholder={field.placeholder || 'Enter number...'}
-                            value={fieldValue || ''}
-                            onChange={(e) => updateFieldValue(field.name, e.target.value)}
-                            className={hasError && showValidation ? 'border-destructive' : ''}
-                        />
-                    </>
-                )}
-                {field.type === 'textarea' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <Textarea
-                            placeholder={field.placeholder || 'Enter text...'}
-                            value={fieldValue || ''}
-                            onChange={(e) => updateFieldValue(field.name, e.target.value)}
-                            className={hasError && showValidation ? 'border-destructive' : ''}
-                            rows={3}
-                        />
-                    </>
-                )}
-                {field.type === 'select' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <Select
-                            value={fieldValue || ''}
-                            onValueChange={(value) => updateFieldValue(field.name, value)}
-                        >
-                            <SelectTrigger className={hasError && showValidation ? 'border-destructive w-full' : 'w-full'}>
-                                <SelectValue placeholder={field.placeholder || 'Select option...'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {field.options?.sort((a, b) => a.order - b.order).map((option, index) => (
-                                    <SelectItem key={index} value={option.name}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </>
-                )}
-                {field.type === 'checkbox' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                checked={fieldValue || false}
-                                onCheckedChange={(checked) => updateFieldValue(field.name, checked)}
-                            />
-                            <Label>{field.placeholder || 'Check this option'}</Label>
-                        </div>
-                    </>
-                )}
-                {field.type === 'date' && (
-                    <DatePicker
-                        label={field.label}
-                        name={field.name}
-                        required={field.required}
-                        dateValue={fieldValue ? new Date(fieldValue) : undefined}
-                        onDateChange={(e) => updateFieldValue(field.name, e.toISOString().split("T")[0])}
-                        fullWidth
-                    />
-                )}
-                {field.type === 'file' && (
-                    <>
-                        <div className="flex items-center gap-2">
-                            <Label className="flex items-center gap-2">
-                                {field.label}
-                                {field.required && <span className="text-destructive">*</span>}
-                            </Label>
-                        </div>
-                        <div className={`group relative border-2 border-dashed rounded-xl overflow-hidden ${hasError && showValidation ? 'border-destructive' : 'border-input hover:border-muted-foreground/50 transition'}`}>
-                            <input
-                                type="file"
-                                onChange={(e) => updateFieldValue(field.name, e.target.files?.[0]?.name || '')}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
-                            <div className='p-3 w-full flex items-center justify-between gap-3'>
-                                <div className="rounded-md bg-accent dark:bg-input p-2">
-                                    <Upload className='h-5 w-5 text-muted-foreground' />
-                                </div>
-                                <div className='flex-grow flex flex-col gap-1'>
-                                    <p className='text-sm'>{formValues[field.name] || field.label}</p>
-                                    <p className='text-xs text-muted-foreground'>{field.placeholder}</p>
-                                </div>
-                                <Button
-                                    type='button'
-                                    size='sm'
-                                    variant='outline'
-                                    className='group-hover:bg-accent'
-                                >
-                                    Browse
-                                </Button>
-                            </div>
-                        </div>
-                    </>
-                )}
-                {hasError && showValidation && (
+            const renderError = () =>
+                hasError && (
                     <Alert className="border-destructive bg-destructive/10">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription className="text-destructive">
                             {fieldError?.message}
                         </AlertDescription>
                     </Alert>
-                )}
-            </div>
-        );
-    };
+                );
+
+            switch (field.type) {
+                case "zoning":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            <MapRenderer key={field.id} />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "text":
+                case "email":
+                case "number":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {renderLabel()}
+                            <Input
+                                type={field.type === "text" ? "text" : field.type}
+                                placeholder={field.placeholder || `Enter ${field.type}...`}
+                                value={fieldValue || ""}
+                                onChange={(e) => updateFieldValue(field.name, e.target.value)}
+                                className={hasError ? "border-destructive" : ""}
+                            />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "textarea":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {renderLabel()}
+                            <Textarea
+                                placeholder={field.placeholder || "Enter text..."}
+                                value={fieldValue || ""}
+                                onChange={(e) => updateFieldValue(field.name, e.target.value)}
+                                className={hasError ? "border-destructive" : ""}
+                                rows={3}
+                            />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "select":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {renderLabel()}
+                            <Select
+                                value={fieldValue || ""}
+                                onValueChange={(value) => updateFieldValue(field.name, value)}
+                            >
+                                <SelectTrigger
+                                    className={hasError ? "border-destructive w-full" : "w-full"}
+                                >
+                                    <SelectValue
+                                        placeholder={field.placeholder || "Select option..."}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {field.options
+                                        ?.sort((a, b) => a.order - b.order)
+                                        .map((option, index) => (
+                                            <SelectItem key={index} value={option.name}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
+                            {renderError()}
+                        </div>
+                    );
+
+                case "checkbox":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {renderLabel()}
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    checked={fieldValue || false}
+                                    onCheckedChange={(checked) =>
+                                        updateFieldValue(field.name, checked)
+                                    }
+                                />
+                                <Label>{field.placeholder || "Check this option"}</Label>
+                            </div>
+                            {renderError()}
+                        </div>
+                    );
+
+                case "date":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            <DatePicker
+                                label={field.label}
+                                name={field.name}
+                                required={field.required}
+                                dateValue={fieldValue ? new Date(fieldValue) : undefined}
+                                onDateChange={(e) =>
+                                    updateFieldValue(field.name, e.toISOString().split("T")[0])
+                                }
+                                fullWidth
+                            />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "file":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {renderLabel()}
+                            <div
+                                className={`group relative border-2 border-dashed rounded-xl overflow-hidden ${hasError
+                                    ? "border-destructive"
+                                    : "border-input hover:border-muted-foreground/50 transition"
+                                    }`}
+                            >
+                                <input
+                                    type="file"
+                                    onChange={(e) =>
+                                        updateFieldValue(field.name, e.target.files?.[0]?.name || "")
+                                    }
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <div className="p-3 w-full flex items-center justify-between gap-3">
+                                    <div className="rounded-md bg-accent dark:bg-input p-2">
+                                        <Upload className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-grow flex flex-col gap-1">
+                                        <p className="text-sm">
+                                            {formValues[field.name] || field.label}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {field.placeholder}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="group-hover:bg-accent"
+                                    >
+                                        Browse
+                                    </Button>
+                                </div>
+                            </div>
+                            {renderError()}
+                        </div>
+                    );
+
+                default:
+                    return null;
+            }
+        },
+        [formValues, validationErrors, showValidation, updateFieldValue]
+    );
+
 
     // Render form preview (read-only structure)
     const renderFormPreview = () => (
@@ -967,4 +950,13 @@ export function FormPreviewTester({
             </div>
         </div>
     );
+}
+
+const MapRenderer: React.FC = () => {
+    const { isDarkMode } = useThemeStore()
+    return (
+        <div className="w-full aspect-square lg:aspect-video max-h-[70vh]">
+            <ShapefileMap key={`${isDarkMode}`} />
+        </div>
+    )
 }

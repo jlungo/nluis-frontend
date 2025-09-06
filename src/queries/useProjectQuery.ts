@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import type { APIResponse } from "@/types/api-response";
-import {
+import type {
   CreateProjectDataI,
   LocalityLevelI,
   ProjectFunderI,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,7 @@ import { slugify } from '@/lib/utils';
 import { useRolesQuery } from '@/queries/useRolesQuery';
 import { MultiSelect } from '@/components/multiselect';
 import { Switch } from '@/components/ui/switch';
-import { Submission } from '@/types/submission';
+import type { Submission } from '@/types/submission';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
@@ -59,120 +59,113 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         version: 1.0
     });
     const [formSections, setFormSections] = useState<FormSection[]>([]);
-    const [activeSection, setActiveSection] = useState<string | null>(null);
-    const [activeForm, setActiveForm] = useState<string | null>(null);
 
     const { data: roles, isLoading: isLoadingRoles } = useRolesQuery();
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
     const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
 
-    const fieldTypes: { value: InputType, label: string }[] = [
-        { value: 'text', label: 'Text Input' },
-        { value: 'email', label: 'Email Input' },
-        { value: 'number', label: 'Number Input' },
-        { value: 'textarea', label: 'Text Area' },
-        { value: 'select', label: 'Dropdown Select' },
-        { value: 'checkbox', label: 'Checkbox' },
-        { value: 'date', label: 'Date Picker' },
-        { value: 'file', label: 'File Upload' },
-        { value: 'members', label: 'Memebrs Add' },
-        { value: 'zoning', label: 'Zoning' },
-    ];
+    const fieldTypes = useMemo<{ value: InputType; label: string }[]>(
+        () => [
+            { value: 'text', label: 'Text Input' },
+            { value: 'email', label: 'Email Input' },
+            { value: 'number', label: 'Number Input' },
+            { value: 'textarea', label: 'Text Area' },
+            { value: 'select', label: 'Dropdown Select' },
+            { value: 'checkbox', label: 'Checkbox' },
+            { value: 'date', label: 'Date Picker' },
+            { value: 'file', label: 'File Upload' },
+            { value: 'members', label: 'Memebrs Add' },
+            { value: 'zoning', label: 'Zoning' },
+        ],
+        []
+    );
 
-    const steps = [
+    const steps = useMemo(() => [
         { id: 1, name: 'Module', description: 'Choose module' },
         { id: 2, name: 'Level', description: 'Select level' },
         { id: 3, name: 'Workflow', description: 'Workflow details' },
         { id: 4, name: 'Structure', description: 'Build sections' },
         { id: 5, name: 'Preview', description: 'Test & preview' }
-    ];
+    ], []);
 
-    const progress = (currentStep / steps.length) * 100;
+    const progress = useMemo(() => (currentStep / steps.length) * 100, [currentStep, steps.length]);
 
-    const handleNext = () => {
-        if (currentStep < steps.length) {
-            setCurrentStep(currentStep + 1);
+    const handleNext = useCallback(() => {
+        setCurrentStep(prevStep => {
+            const nextStep = prevStep < steps.length ? prevStep + 1 : prevStep;
 
             // Auto-generate sections when moving to step 5
-            if (currentStep === 4 && formSections.length === 0) {
-                initializeDefaultSections();
+            if (prevStep === 4) { // step 4 → next is 5
+                setFormSections(sections => (sections.length === 0 ? [
+                    {
+                        id: `section-default-UI-${Date.now()}-1`,
+                        name: "",
+                        description: "",
+                        forms: [],
+                        approval_roles: [],
+                        order: 1,
+                    },
+                ] : sections));
             }
-        }
-    };
 
-    const handleBack = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
+            return nextStep;
+        });
+    }, [setCurrentStep, setFormSections, steps.length]);
 
-    const initializeDefaultSections = () => {
-        const defaultSections: FormSection[] = [
+    const handleBack = useCallback(() => {
+        setCurrentStep(prev => (prev > 1 ? prev - 1 : prev));
+    }, [setCurrentStep]);
+
+    const addSection = useCallback(() => {
+        setFormSections(sections => [
+            ...sections,
             {
-                id: `section-default-UI-${Date.now()}-1`,
+                id: `section-default-UI-${Date.now()}`,
                 name: ``,
                 description: '',
                 forms: [],
                 approval_roles: [],
-                order: 1
+                order: formSections.length + 1
             }
-        ]
-        setFormSections(defaultSections);
-    };
+        ]);
+    }, [setFormSections]);
 
-    const addSection = () => {
-        const newSection: FormSection = {
-            id: `section-default-UI-${Date.now()}`,
-            name: ``,
-            description: '',
-            forms: [],
-            approval_roles: [],
-            order: formSections.length + 1
-        };
-        setFormSections([...formSections, newSection]);
-        setActiveSection(newSection.id);
-    };
-
-    const updateSection = (sectionId: string, updates: Partial<FormSection>) => {
+    const updateSection = useCallback((sectionId: string, updates: Partial<FormSection>) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId ? { ...section, ...updates } : section
             )
         );
-    };
+    }, [setFormSections]);
 
-    const removeSection = (sectionId: string) => {
+    const removeSection = useCallback((sectionId: string) => {
         setFormSections(sections => sections.filter(section => section.id !== sectionId));
-        if (activeSection === sectionId) {
-            setActiveSection(null);
-        }
-    };
+    }, [setFormSections]);
 
-    const addForm = (sectionId: string) => {
-        const section = formSections.find(s => s.id === sectionId);
-        const newForm: SectionForm = {
-            id: `form-${Date.now()}`,
-            name: ``,
-            editor_roles: [],
-            description: '',
-            fields: [],
-            order: (section?.forms.length || 0) + 1
-        };
-
+    const addForm = useCallback((sectionId: string) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
                     ? {
                         ...section,
-                        forms: [...section.forms, newForm]
+                        forms: [
+                            ...section.forms,
+                            {
+                                id: `form-${Date.now()}`,
+                                name: '',
+                                editor_roles: [],
+                                description: '',
+                                fields: [],
+                                order: section.forms.length + 1,
+                            }
+                        ]
                     }
                     : section
             )
         );
-        setActiveForm(newForm.id);
-    };
+    }, [setFormSections]);
 
-    const updateForm = (sectionId: string, formId: string, updates: Partial<SectionForm>) => {
+    const updateForm = useCallback((sectionId: string, formId: string, updates: Partial<SectionForm>) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -185,9 +178,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-    };
+    }, [setFormSections]);
 
-    const removeForm = (sectionId: string, formId: string) => {
+    const removeForm = useCallback((sectionId: string, formId: string) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -198,25 +191,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-        if (activeForm === formId) {
-            setActiveForm(null);
-        }
-    };
+    }, [setFormSections]);
 
-    const addField = (sectionId: string, formId: string) => {
-        const section = formSections.find(s => s.id === sectionId);
-        if (!section) return
-        const form = section.forms.find(sf => sf.id === formId);
-        const newField: FormField = {
-            id: `field-${Date.now()}`,
-            name: '',
-            label: ``,
-            type: 'text',
-            required: false,
-            options: [],
-            order: (form?.fields.length || 0) + 1
-        };
-
+    const addField = useCallback((sectionId: string, formId: string) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -226,7 +203,18 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: [...form.fields, newField]
+                                    fields: [
+                                        ...form.fields,
+                                        {
+                                            id: `field-${Date.now()}`,
+                                            name: '',
+                                            label: '',
+                                            type: 'text',
+                                            required: false,
+                                            options: [],
+                                            order: form.fields.length + 1
+                                        }
+                                    ]
                                 }
                                 : form
                         )
@@ -234,9 +222,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-    };
+    }, [setFormSections]);
 
-    const updateField = (sectionId: string, formId: string, fieldId: string, updates: Partial<FormField>) => {
+    const updateField = useCallback((sectionId: string, formId: string, fieldId: string, updates: Partial<FormField>) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -256,9 +244,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         )
-    };
+    }, [setFormSections]);
 
-    const removeField = (sectionId: string, formId: string, fieldId: string) => {
+    const removeField = useCallback((sectionId: string, formId: string, fieldId: string) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -276,9 +264,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-    };
+    }, [setFormSections]);
 
-    const addOption = (sectionId: string, formId: string, fieldId: string) => {
+    const addOption = useCallback((sectionId: string, formId: string, fieldId: string) => {
         const section = formSections.find(s => s.id === sectionId);
         if (!section) return
         const form = section.forms.find(sf => sf.id === formId);
@@ -315,9 +303,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-    };
+    }, [formSections, setFormSections]);
 
-    const updateOption = (sectionId: string, formId: string, fieldId: string, optionId: string, updates: Partial<FormField>) => {
+    const updateOption = useCallback((sectionId: string, formId: string, fieldId: string, optionId: string, updates: Partial<FormField>) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -344,9 +332,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         )
-    };
+    }, [setFormSections]);
 
-    const removeOption = (sectionId: string, formId: string, fieldId: string, optionId: string) => {
+    const removeOption = useCallback((sectionId: string, formId: string, fieldId: string, optionId: string) => {
         setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
@@ -371,7 +359,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     : section
             )
         );
-    };
+    }, [setFormSections]);
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: Submission) => {
@@ -388,7 +376,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         },
     });
 
-    const handleComplete = () => {
+    const handleComplete = useCallback(() => {
         if (!selectedModule || !selectedLevel) {
             toast.error('Please complete all required selections');
             return;
@@ -464,7 +452,15 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             console.log(error)
             toast.error("Failed to create workflow!");
         }
-    };
+    }, [
+        selectedModule,
+        selectedLevel,
+        formDetails,
+        formSections,
+        mutateAsync,
+        previousData,
+        navigate,
+    ]);
 
     // Create form data for preview
     const createFormForPreview = (): WorkflowTemplate => {

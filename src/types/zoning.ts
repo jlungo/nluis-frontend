@@ -1,15 +1,21 @@
 export interface GeoJSONFeatureType {
-  type: 'Feature';
+  type: "Feature";
   id?: string | number;
   geometry: {
-    type: 'Point' | 'LineString' | 'Polygon' | 'MultiPoint' | 'MultiLineString' | 'MultiPolygon';
+    type:
+      | "Point"
+      | "LineString"
+      | "Polygon"
+      | "MultiPoint"
+      | "MultiLineString"
+      | "MultiPolygon";
     coordinates: number[] | number[][] | number[][][] | number[][][][];
   };
   properties: Record<string, any>;
 }
 
 export interface GeoJSONFeatureCollectionType {
-  type: 'FeatureCollection';
+  type: "FeatureCollection";
   name?: string;
   features: GeoJSONFeatureType[];
 }

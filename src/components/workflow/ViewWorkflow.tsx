@@ -26,6 +26,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
     const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflow && workflow?.results && workflow.results.length > 0 ? workflow.results[0].slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
+    const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
 
     useLayoutEffect(() => {
         setPage({
@@ -50,7 +51,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <p className='text-muted-foreground'>No project with this data found!</p>
         </div>
 
-    if (!projectLocaleName && !isLoadingWorkflow && !isLoadingValues && !isLoadingProject)
+    if ((!projectLocaleName || !projectLocaleId) && !isLoadingWorkflow && !isLoadingValues && !isLoadingProject)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>Project Locality not found!</p>
         </div>
@@ -72,6 +73,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             projectLocalityId={projectLocalityId}
             projectName={project.name}
             projectLocaleName={projectLocaleName}
+            projectLocaleId={projectLocaleId}
         />
     )
 }
