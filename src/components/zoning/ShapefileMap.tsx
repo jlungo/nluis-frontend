@@ -32,6 +32,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   resetKey,
 }) => {
   const isDarkMode = useThemeStore(state => state.isDarkMode);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [layers, setLayers] = useState<MapLayerType[]>([]);
   const [selectedFeature, setSelectedFeature] = useState<GeoJSONFeatureType | null>(null);
   const [baseMapBounds, setBaseMapBounds] = useState<[[number, number], [number, number]] | null>(null);
@@ -87,17 +88,28 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     });
 
     const bounds = calculateBounds([baseLayer]);
-    if (bounds && mapRef.current) {
-      setBaseMapBounds(bounds);
-      mapRef.current.fitBounds([
-        [bounds[0][0], bounds[0][1]],
-        [bounds[1][0], bounds[1][1]]
-      ], {
+    setBaseMapBounds(bounds ?? null);
+  }, [baseMapData, baseMapId, colors]);
+
+  // Fit the map to base map bounds
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current || !baseMapBounds) return;
+
+    mapRef.current.fitBounds(
+      [
+        [baseMapBounds[0][0], baseMapBounds[0][1]],
+        [baseMapBounds[1][0], baseMapBounds[1][1]],
+      ],
+      {
         padding: 20,
         duration: 1000,
-      });
-    }
-  }, [baseMapData, baseMapId, colors]);
+      }
+    );
+  }, [isMapLoaded, baseMapBounds]);
+
+  useEffect(() => {
+    setIsMapLoaded(false);
+  }, [resetKey]);
 
   // Add overlays when loaded
   useEffect(() => {
@@ -210,6 +222,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
       {/* Map */}
       <Map
         ref={mapRef}
+        onLoad={() => setIsMapLoaded(true)}
         {...viewport}
         style={{ width: '100%', height: '100%' }}
         onMove={handleViewportChange}
@@ -225,9 +238,9 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
           <MapLayer key={layer.id} layer={layer} />
         ))}
       </Map>
-
+      
       {/* Layers Control */}
-      {showLayersControl && layers.length > 0 && (
+      {showLayersControl && (
         <LayerControl
           layers={layers}
           onToggleLayer={toggleLayerVisibility}
