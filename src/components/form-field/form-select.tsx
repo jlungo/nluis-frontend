@@ -13,7 +13,7 @@ type FormSelectProps = React.ComponentPropsWithoutRef<typeof Select> & {
 const FormSelect = forwardRef<HTMLButtonElement, FormSelectProps>(
     ({ data, className, disabled, ...props }, ref) => (
         <div className="w-full space-y-2 md:w-[48%] xl:w-[49%]">
-            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
+            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
             <Select name={data.name} disabled={disabled} {...props}>
                 <SelectTrigger ref={ref} className={cn("bg-muted w-full", className)}>
                     <SelectValue placeholder={data.placeholder || "Select..."} />

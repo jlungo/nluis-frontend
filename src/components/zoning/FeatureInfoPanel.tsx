@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, MapPin, Info } from 'lucide-react';
 import type { GeoJSONFeatureType } from '@/types/zoning';
 

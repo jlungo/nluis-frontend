@@ -20,7 +20,7 @@ export default function FormCheckbox({ data, checked, onValueChange, ...rest }: 
                 onCheckedChange={(val) => onValueChange?.(val === true)} // normalize to boolean
                 {...rest}
             />
-            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
+            <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
         </div>
     );
 }

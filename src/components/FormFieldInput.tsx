@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
 import MultiSelectShowListInput from './MultiSelectShowListInput';
-import DatePicker from './FormDateSelect';
+import DatePicker from './form-field/form-date-picker';
 
 type FormFieldInputProps =
   | {

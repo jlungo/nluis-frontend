@@ -7,9 +7,5 @@ export type InputType =
   | "date"
   | "file"
   | "select"
-  | "radio";
-//   | "switch"
-//   | "map-area"
-//   | "gps-coordinates"
-//   | "boundary-mapper"
-//   | "location-picker";
+  | "members"
+  | "zoning";

@@ -12,7 +12,7 @@ const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
     ({ data, className, ...props }, ref) => {
         return (
             <div className="w-full space-y-2">
-                <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-4 w-4" /> : null}</Label>
+                <Label htmlFor={data.name}>{data.label} {data.required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                 <Textarea
                     id={data.name}
                     name={data.name}
