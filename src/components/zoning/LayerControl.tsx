@@ -33,10 +33,9 @@ export const LayerControl: React.FC<LayerControlProps> = ({
             }`}
         />
       </button>
-
       {/* Panel Content */}
       {isOpen && (
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-80 pr-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           {layers.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
               No layers loaded
