@@ -17,7 +17,7 @@ COPY . .
 # Create a .env file with build-time values
 RUN echo "VITE_API_URL=$VITE_API_URL" > .env
 
-RUN echo "VITE_MEDIA_BASEPATH=$VITE_MEDIA_BASEPATH" > .env
+RUN echo "VITE_MEDIA_PATH=$VITE_MEDIA_PATH" > .env
 
 RUN npm run build
 
