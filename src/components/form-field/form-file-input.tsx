@@ -13,7 +13,7 @@ import {
     Asterisk
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MEDIA_BASEPATH } from '@/types/constants';
+import { MEDIA_PATH } from '@/lib/env';
 import { Label } from '../ui/label';
 
 interface CompactFileUploadProps {
@@ -206,7 +206,7 @@ function FileInput({
 }
 
 const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; files: string | string[]; }> = ({ name, label, required, files }) => {
-    const fileList = Array.isArray(files) ? files.map(file => MEDIA_BASEPATH + file) : [MEDIA_BASEPATH + files];
+    const fileList = Array.isArray(files) ? files.map(file => MEDIA_PATH + file) : [MEDIA_PATH + files];
 
     const officeViewerUrl = (url: string) =>
         `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;

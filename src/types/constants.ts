@@ -102,5 +102,3 @@ export const ProjectStatusColors: Record<string, string> = {
 };
 
 export const tanzaniaLocalityKey = 92;
-
-export const MEDIA_BASEPATH = import.meta.env.VITE_MEDIA_BASEPATH;
