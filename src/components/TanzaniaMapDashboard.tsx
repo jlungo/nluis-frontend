@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MapBoxMap from './MapBoxMap';
 import { FeatureSummaryPanel } from './FeatureSummaryPanel';
 
@@ -22,13 +22,22 @@ import {
 } from '@/data/tanzaniaLandUseData';
 
 const TanzaniaMapDashboard = () => {
+  // Add viewport height CSS variable for more reliable full-height layouts
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setVH();
+    window.addEventListener('resize', setVH);
+    return () => window.removeEventListener('resize', setVH);
+  }, []);
   // State for selected features
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedLandUseType, setSelectedLandUseType] = useState<string | null>(null);
-  
+
   // Map state
-  const [loading, setLoading] = useState(true);
   const [activeLayers, setActiveLayers] = useState({
     regions: true,
     districts: false,
@@ -76,7 +85,6 @@ const TanzaniaMapDashboard = () => {
   // Load initial regions data
   useEffect(() => {
     const loadInitialData = async () => {
-      setLoading(true);
       try {
         console.log('Attempting to fetch regions data...');
         const response = await fetch('https://raw.githubusercontent.com/Heed725/Tanzania_Adm_Geojson/main/Regions.geojson');
@@ -125,8 +133,6 @@ const TanzaniaMapDashboard = () => {
           ...prev,
           regions: false
         }));
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -228,7 +234,6 @@ const TanzaniaMapDashboard = () => {
     }
 
     // If we need to load the data
-    setLoading(true);
     try {
       console.log(`Starting load of ${layerName} data...`);
       const data = await loadLayerData(layerName);
@@ -265,8 +270,6 @@ const TanzaniaMapDashboard = () => {
         ...prev,
         [layerName]: null
       }));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -401,7 +404,7 @@ const TanzaniaMapDashboard = () => {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-gray-50">
+    <div className="w-full h-[100vh] flex flex-col bg-gray-50 overflow-hidden" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
       {/* Header */}
       <div className="p-4 bg-white border-b">
         <h1 className="text-2xl font-semibold">Tanzania Land Use Dashboard</h1>
@@ -493,25 +496,21 @@ const TanzaniaMapDashboard = () => {
         </div>
 
         {/* MIDDLE PANEL - Map */}
-        <div className="flex-1 bg-white relative">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <MapBoxMap 
+        <div className="flex-1 bg-white relative overflow-hidden">
+          <div className="absolute inset-0">
+            <MapBoxMap
               selectedFeature={selectedFeature}
               selectedType={selectedType}
               activeLayers={activeLayers}
               layerData={layerData}
               onFeatureClick={handleFeatureClick}
             />
-          )}
+          </div>
         </div>
 
         {/* RIGHT PANEL - Stats */}
-        <div className="w-80 bg-white border-l flex flex-col h-full overflow-hidden">
-          <div className="flex flex-col h-full">
+        <div className="w-80 bg-white border-l flex flex-col overflow-hidden">
+          <div className="h-full overflow-y-auto">
             <div className="p-4">
               {selectedFeature && selectedType ? (
                 <div>

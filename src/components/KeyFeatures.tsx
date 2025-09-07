@@ -1,4 +1,4 @@
-import { Map, BarChart3, Search, Download, HelpCircle, FileText, Award } from "lucide-react";
+import { Map, BarChart3, Download, } from "lucide-react";
 // Replace with your actual background image if needed
 const exampleMapBackground = '';
 

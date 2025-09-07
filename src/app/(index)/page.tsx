@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import TanzaniaMapDashboard from '@/components/TanzaniaMapDashboard';
 import KeyFeatures from '@/components/KeyFeatures';
 import {
@@ -51,7 +51,7 @@ export default function Page() {
   }, [lastScrollY]);
 
   // Navigation helper
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
     setIsMobileMenuOpen(false);
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
