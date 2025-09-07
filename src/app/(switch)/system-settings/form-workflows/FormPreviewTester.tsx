@@ -38,6 +38,7 @@ import DatePicker from '@/components/form-field/form-date-picker';
 import type { InputType } from '@/types/input-types';
 import { ShapefileMap } from '@/components/zoning/ShapefileMap';
 import { useThemeStore } from '@/store/themeStore';
+import FormMembers from '@/components/form-field/form-members';
 
 export interface FieldOption {
     id: string;
@@ -280,6 +281,20 @@ export function FormPreviewTester({
                     return (
                         <div key={field.id} className="space-y-2">
                             <MapRenderer key={field.id} />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "members":
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            <FormMembers
+                                label={field.label}
+                                name={field.name}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                fullWidth
+                            />
                             {renderError()}
                         </div>
                     );

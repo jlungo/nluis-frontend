@@ -89,6 +89,7 @@ export function FormFieldInput(props: FormFieldInputProps) {
           onDateChange={(e) => onChange(e.toISOString().split("T")[0])}
           required={required}
           placeholder={placeholder}
+          fullWidth
         />
       )}
 

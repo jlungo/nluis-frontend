@@ -7,6 +7,7 @@ import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
+import FormMembers from "./form-members";
 
 export default function Index(
     data: FieldsProps & {
@@ -15,7 +16,7 @@ export default function Index(
         value: any;
         setValue: (
             formSlug: string,
-            value: string | File[],
+            value: string | string[] | File[],
             type: InputType,
             field_id: number,
             project_locality_id: string
@@ -90,6 +91,18 @@ export default function Index(
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 // value={data?.value}
                 // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('members'):
+            return (
+                <FormMembers
+                    label={data.label}
+                    name={data.name}
+                    placeholder={data.placeholder}
+                    required={data.required}
+                    disabled={data.disabled}
+                    value={data?.value}
+                    setValue={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:

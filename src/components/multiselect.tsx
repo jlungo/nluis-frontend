@@ -22,10 +22,14 @@ interface MultiselectProps {
     data: { value: string; label: string }[];
     selected: string[];
     setSelected: (selected: string[]) => void;
-    isLoading: boolean
+    isLoading: boolean;
+    search?: string;
+    setSearch?: (search: string) => void
+    mutedColor?: boolean;
+    portal?: boolean;
 }
 
-export function MultiSelect({ title, data, selected, setSelected, isLoading }: MultiselectProps) {
+export function MultiSelect({ title, data, selected, setSelected, isLoading, search, setSearch, mutedColor, portal }: MultiselectProps) {
     const [open, setOpen] = useState(false)
 
     const toggleValue = (value: string) => {
@@ -43,7 +47,7 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading }: M
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full overflow-hidden justify-between bg-accent dark:bg-input/30 font-normal text-muted-foreground dark:text-muted-foreground/90"
+                    className={`w-full overflow-hidden justify-between ${mutedColor ? 'bg-muted' : 'bg-accent dark:bg-input/30'} font-normal text-muted-foreground dark:text-muted-foreground/90`}
                 >
                     {selected && selected.length > 0
                         ? data
@@ -54,9 +58,13 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading }: M
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 sm:w-96 md:w-96 xl:w-[495px] p-0">
-                <Command>
-                    <CommandInput placeholder="Search..." />
+            <PopoverContent className="w-80 sm:w-96 md:w-96 xl:w-[495px] p-0" portal={portal}>
+                <Command shouldFilter={setSearch ? false : true}>
+                    <CommandInput
+                        placeholder="Search..."
+                        value={search ?? undefined}
+                        onValueChange={setSearch ?? undefined}
+                    />
                     {isLoading ? (
                         <CommandList>
                             <CommandEmpty className="flex items-center justify-center h-20">

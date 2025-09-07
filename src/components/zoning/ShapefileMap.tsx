@@ -238,9 +238,9 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
           <MapLayer key={layer.id} layer={layer} />
         ))}
       </Map>
-      
+
       {/* Layers Control */}
-      {showLayersControl && (
+      {showLayersControl && layers.length > 0 && (
         <LayerControl
           layers={layers}
           onToggleLayer={toggleLayerVisibility}

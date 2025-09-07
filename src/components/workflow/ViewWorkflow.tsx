@@ -3,10 +3,12 @@ import { SectionedForm } from "./sectioned-form";
 import { useWorkflowsQuery } from "@/queries/useWorkflowQuery";
 import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect } from "react";
-import { getCategoryKey } from "@/lib/utils";
+import { cn, getCategoryKey } from "@/lib/utils";
 import { useFormDataQuery } from "@/queries/useFormDataQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
+import { Link } from "react-router";
+import { buttonVariants } from "../ui/button";
 
 type Props = {
     pageTitle: string;
@@ -49,6 +51,12 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
     if (!project)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>No project with this data found!</p>
+        </div>
+
+    if (project.approval_status !== 2)
+        return <div className='flex flex-col items-center justify-center h-80 gap-12'>
+            <p className='text-muted-foreground'>This project is not approved!</p>
+            <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
         </div>
 
     if ((!projectLocaleName || !projectLocaleId) && !isLoadingWorkflow && !isLoadingValues && !isLoadingProject)
