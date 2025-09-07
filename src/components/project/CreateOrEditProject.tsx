@@ -212,6 +212,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         <div className="flex items-center py-1">
           {nodeHasChildren ? (
             <Button
+              type='button'
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 mr-1"
@@ -373,17 +374,17 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               <DialogTitle>Select Localities</DialogTitle>
             </DialogHeader>
 
-            <div className="flex flex-1 gap-6 overflow-hidden">
+            <div className="flex flex-1 gap-2 md:gap-4 lg:gap-6 overflow-hidden">
               {/* Left panel - Tree view */}
-              <div className="w-1/2 border rounded-md p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
-                <h3 className="font-medium mb-4">Localities List</h3>
+              <div className="w-1/2 border rounded-md p-2 md:p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
+                <h3 className="font-medium mb-2 md:mb-4">Localities List</h3>
                 {/* Get Regions of Tanzania initially */}
                 {treeData.filter((item) => item.parent == `${tanzaniaLocalityKey}`).map((node) => renderTreeNode(node))}
               </div>
 
               {/* Right panel - Selected localities */}
-              <div className="w-1/2 border rounded-md p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
-                <h3 className="font-medium mb-4">Selected Localities</h3>
+              <div className="w-1/2 border rounded-md p-2 md:p-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }} >
+                <h3 className="font-medium mb-2 md:mb-4">Selected Localities</h3>
                 {selectedLocalities.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No localities selected yet.
@@ -397,6 +398,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                       >
                         <span className="text-sm">{locality.name}</span>
                         <Button
+                          type='button'
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0"
@@ -437,6 +439,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 <Badge key={locality.id} variant="secondary" className="px-3 py-1">
                   {locality.name}
                   <Button
+                    type='button'
                     variant="ghost"
                     size="sm"
                     className="h-4 w-4 p-0 ml-1"

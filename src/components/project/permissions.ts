@@ -17,9 +17,7 @@ export function canDeleteProject(
   projectApprovalStatus: number
 ) {
   return (
-    (userRole === "Admin" ||
-      userRole === "Project Leader" ||
-      userRole === "Dg") &&
+    (userRole === "Admin" || userRole === "Project Leader") &&
     projectApprovalStatus !== 2
   );
 }

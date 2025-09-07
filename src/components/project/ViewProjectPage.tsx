@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2 } from 'lucide-react';
+import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2, X } from 'lucide-react';
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
@@ -156,7 +156,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               <Separator className="my-6" />
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-muted-foreground">Remarks</h3>
-                <p className="text-foreground dark:text-muted-foreground bg-muted dark:bg-accent/40 p-3 rounded-md">
+                <p className="text-foreground text-sm dark:text-muted-foreground bg-muted dark:bg-input/30 p-3 rounded-md">
                   {project.remarks}
                 </p>
               </div>
@@ -180,8 +180,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   const [openDelete, setOpenDelete] = useState(false)
 
   const { mutateAsync, isPending } = useMutation({
-    // TODO : add appove project url
-    mutationFn: (e: { remarks: string | null }) => api.post(``, e),
+    mutationFn: (e: { remarks: string | null, approval_status: 1 | 2 | 3 }) => api.put(`/projects/projects/${project.id}/approval/`, e),
     onSuccess: () =>
       queryClient.invalidateQueries({
         refetchType: "active",
@@ -192,7 +191,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, status: 2 | 3) => {
     e.preventDefault()
     try {
       if (!user || !user?.role?.name) return
@@ -201,7 +200,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
       const formData = new FormData(e.currentTarget);
       const remarks = formData.get("remarks") as string;
 
-      toast.promise(mutateAsync({ remarks: remarks.length > 0 ? remarks : null }), {
+      toast.promise(mutateAsync({ remarks: remarks.length > 0 ? remarks : null, approval_status: status }), {
         loading: "Approving...",
         success: () => {
           setOpen(false)
@@ -289,7 +288,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
             </Button>
           </DialogTrigger>
           <DialogContent >
-            <form onSubmit={handleSubmit} className='space-y-4'>
+            <form onSubmit={e => handleSubmit(e, 2)} className='space-y-4'>
               <DialogHeader className='border-b pb-4'>
                 <DialogTitle>Approve Project</DialogTitle>
                 <DialogDescription>
@@ -317,6 +316,47 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
           </DialogContent>
         </Dialog>
       ) : null}
+      {canApproveProject(user.role.name, approval_status) ? (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type='button'
+              size='sm'
+              className="gap-2 w-fit bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive"
+            >
+              <X className="h-4 w-4 hidden md:inline-block" />
+              Reject Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent >
+            <form onSubmit={e => handleSubmit(e, 3)} className='space-y-4'>
+              <DialogHeader className='border-b pb-4'>
+                <DialogTitle>Reject Project</DialogTitle>
+                <DialogDescription>
+                  {project.name}
+                </DialogDescription>
+              </DialogHeader>
+              <div>
+                <Label htmlFor="name-1">Remarks</Label>
+                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
+              </div>
+              <DialogFooter className='flex-row justify-end'>
+                <DialogClose asChild>
+                  <Button type='button' variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className='bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive'
+                >
+                  <X />
+                  Reject
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   )
 }
@@ -333,10 +373,10 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
             Coverage Areas ({project.localities?.length || 0})
           </div>
           {project.localities && project.localities.length > 0 && (
-          <MapDialog
-            title={project.name}
-            overlayMapsIds={project.localities?.map((loc) => loc.locality__id)}
-          />
+            <MapDialog
+              title={project.name}
+              overlayMapsIds={project.localities?.map((loc) => loc.locality__id)}
+            />
           )}
         </CardTitle>
       </CardHeader>
@@ -347,13 +387,14 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
             data={project.localities}
             enableGlobalFilter={true}
             searchPlaceholder="Search localities..."
-            onRowClick={(locality) => navigate(`${locality.id}/workflow`)}
+            onRowClick={project.approval_status === 2 ? (locality) => navigate(`${locality.id}/workflow`) : undefined}
             showRowNumbers={true}
             shadowed={false}
             rowActions={(locality) => (
               <Button
                 variant="outline"
-                className="btn-sm mx-4"
+                className={"btn-sm mx-4 disabled:opacity-10"}
+                disabled={project.approval_status !== 2}
                 onClick={() => navigate(`${locality.id}/workflow`)}
               >
                 Workflow

@@ -102,3 +102,12 @@ export const ProjectStatusColors: Record<string, string> = {
 };
 
 export const tanzaniaLocalityKey = 92;
+
+export const Specializations: Record<number, string> = {
+  1: "Land Use Planning",
+  2: "GIS Mapping",
+  3: "Community Engagement",
+  4: "Legal Affairs",
+  5: "Environmental Assesment",
+  6: "Survey",
+};

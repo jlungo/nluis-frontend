@@ -38,7 +38,6 @@ export const useUpdateProject = () => {
       id: string;
       data: CreateProjectDataI;
     }) => {
-      console.log("Updating project with data:", data);
       const response = await api.put(`/projects/${id}/update/`, data);
       return response.data;
     },
@@ -72,8 +71,6 @@ export const useCreateProject = () => {
     mutationFn: async (
       projectData: CreateProjectDataI
     ): Promise<APIResponse<ProjectI>> => {
-      console.log("Creating project with data:", projectData);
-
       const response = await api.post<APIResponse<ProjectI>>(
         "/projects/create/",
         projectData
