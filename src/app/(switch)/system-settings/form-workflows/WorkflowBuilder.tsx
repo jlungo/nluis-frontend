@@ -1022,11 +1022,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         }
     };
 
-    // Don't show normal layout for step 6 (preview)
-    if (currentStep === 6) return renderStepContent();
-
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background mb-10">
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">

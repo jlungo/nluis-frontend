@@ -1,4 +1,4 @@
-import { FormEvent, useEffect } from 'react';
+import { type FormEvent, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import type { FormProps, SectionProps, WorkflowProps } from '@/queries/useWorkflowQuery';
 import { useState } from 'react';
@@ -14,11 +14,11 @@ import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
-import { AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 
 interface FieldValue {
-    value?: string | File[];
+    value?: string | File[] | string[];
     type: InputType;
     field_id: number;
     project_locality_id: string;
@@ -47,7 +47,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[], type: InputType, field_id: number, project_locality_id: string) => {
+    const updateFieldValue = (formSlug: string, value: string | File[] | string[], type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -57,12 +57,24 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) =>
-            // TODO: post to form endpoint
             api.post(`/form-management/submit-form-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
             }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [formDataQueryKey],
+            }),
+        onError: (e) => {
+            console.log(e);
+        },
+    });
+
+    const { mutateAsync: mutateAsyncApproval, isPending: isPendingApproval } = useMutation({
+        mutationFn: (e: { is_approved: "0" | "1", form_data_ids: number[] }) =>
+            api.post(`/form-management/form-data/approval/`, e),
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
@@ -131,6 +143,27 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         } finally {
             setIsLoading(false)
         }
+    }
+
+    const approveOrDisapproveForms = (form_data_ids: number[], is_approved: "0" | "1") => {
+        toast.promise(mutateAsyncApproval({ is_approved, form_data_ids }), {
+            loading: "Approving...",
+            success: () => {
+                const active = searchParams.get("form");
+                if (active) navigate(`${location.pathname}`, { replace: true });
+                else navigate(-1)
+                return `Section approved`
+            },
+            error: (e: AxiosError) => {
+                const detail =
+                    e?.response?.data &&
+                        typeof e.response.data === "object" &&
+                        "detail" in e.response.data
+                        ? (e.response.data as { detail?: string }).detail
+                        : undefined;
+                return `${detail || "Network error!"}`;
+            }
+        })
     }
 
     const toggleSection = (sectionId: string) => {
@@ -245,7 +278,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}>
+                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isPendingApproval || isLoading}>
                                 {isPending || isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -486,7 +519,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             <Button
                                                 type='button'
                                                 size='sm'
-                                                disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isLoading}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "1")}
+                                                disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isPendingApproval || isLoading}
                                                 className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
                                             >
                                                 {isPending || isLoading ? (
@@ -508,7 +542,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                 type='button'
                                                 variant='outline'
                                                 size='sm'
-                                                disabled={disabled || !isSectionApproved(section) || isPending || isLoading}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "0")}
+                                                disabled={disabled || !isSectionApproved(section) || isPending || isPendingApproval || isLoading}
                                                 className='border-destructive'
                                             >
                                                 {isPending || isLoading ? (

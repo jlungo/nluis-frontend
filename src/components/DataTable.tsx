@@ -55,6 +55,7 @@ export type DataTableProps<TData, TValue> = {
   rowCount?: number; // total rows from server (for "Showing x–y of z")
   /** Table has shadow */
   shadowed?: boolean;
+  showPagination?: boolean;
 };
 
 export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
@@ -78,7 +79,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     pagination,
     onPaginationChange,
     rowCount,
-    shadowed = true
+    shadowed = true,
+    showPagination = true
   } = props;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -310,69 +312,71 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground">
-          {totalRows ? (
-            <>
-              Showing <span className="font-medium">{start}</span>–
-              <span className="font-medium">{end}</span> of{" "}
-              <span className="font-medium">{totalRows}</span>
-            </>
-          ) : (
-            "No rows"
-          )}
-        </div>
+      {showPagination ? (
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm text-muted-foreground">
+            {totalRows ? (
+              <>
+                Showing <span className="font-medium">{start}</span>–
+                <span className="font-medium">{end}</span> of{" "}
+                <span className="font-medium">{totalRows}</span>
+              </>
+            ) : (
+              "No rows"
+            )}
+          </div>
 
-        <div className="flex items-center gap-2">
-          <span className="hidden md:inline text-sm">Rows per page</span>
-          <select
-            className="h-9 rounded-md border bg-transparent px-2 text-sm"
-            value={pag.pageSize}
-            onChange={(e) => changePageSize(Number(e.target.value))}
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <span className="hidden md:inline text-sm">Rows per page</span>
+            <select
+              className="h-9 rounded-md border bg-transparent px-2 text-sm"
+              value={pag.pageSize}
+              onChange={(e) => changePageSize(Number(e.target.value))}
+            >
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goFirst}
-              disabled={!canPrev}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goPrev}
-              disabled={!canPrev}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goNext}
-              disabled={!canNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goLast}
-              disabled={manualPagination ? !canNext : !table.getCanNextPage()}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goFirst}
+                disabled={!canPrev}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goPrev}
+                disabled={!canPrev}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goNext}
+                disabled={!canNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goLast}
+                disabled={manualPagination ? !canNext : !table.getCanNextPage()}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
