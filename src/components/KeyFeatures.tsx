@@ -12,7 +12,7 @@ const KeyFeatures = () => {
     },
     {
       icon: BarChart3,
-      title: "Real-time Statistics & Analytics", 
+      title: "Real-time Statistics & Analytics",
       color: "bg-chart-2/10 border-chart-2/20",
       iconColor: "text-chart-2"
     },
@@ -43,7 +43,7 @@ const KeyFeatures = () => {
   ];
 
   return (
-    <div 
+    <div
       className="relative w-full py-12 flex justify-center overflow-hidden"
       style={{
         backgroundImage: exampleMapBackground ? `url(${exampleMapBackground})` : undefined,
@@ -54,17 +54,17 @@ const KeyFeatures = () => {
     >
       {/* Faded overlay to make background image subtle */}
       <div className="absolute inset-0 bg-background/90 backdrop-blur-sm"></div>
-      
+
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto p-6">
         <h2 className="text-4xl font-bold text-center mb-16 text-foreground">
           Key Features
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 max-w-5xl mx-auto">
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
-            
+
             return (
               <div
                 key={index}
@@ -84,7 +84,7 @@ const KeyFeatures = () => {
                 `}>
                   <IconComponent size={72} strokeWidth={1.5} className="md:w-20 md:h-20" />
                 </div>
-                
+
                 <h3 className="text-base md:text-lg font-semibold text-foreground text-center leading-tight">
                   {feature.title}
                 </h3>

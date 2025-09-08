@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import { JSX, useCallback, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON, LayersControl, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FeatureCollection } from 'geojson';
@@ -26,6 +26,8 @@ interface MapBoxMapProps {
   layerData: Record<string, any>;
   geojson?: any;
   onFeatureClick?: (name: string, type: string, properties: any) => void;
+  selectedFeature: string | null;
+  selectedType: string | null
 }
 
 // Constants and styles
@@ -65,16 +67,16 @@ const MapUpdater: React.FC<{ selectedRegion: string | null }> = ({ selectedRegio
   return null;
 };
 
-function MapBoxMap({ 
-  onRegionClick, 
-  selectedRegion, 
-  activeLayers, 
-  layerData, 
-  geojson, 
-  onFeatureClick 
+function MapBoxMap({
+  onRegionClick,
+  selectedRegion,
+  activeLayers,
+  layerData,
+  geojson,
+  onFeatureClick
 }: MapBoxMapProps): JSX.Element {
   // Combine layerData with legacy geojson prop
-  const effectiveLayerData = React.useMemo(() => ({
+  const effectiveLayerData = useMemo(() => ({
     ...layerData,
     ...(geojson ? { regions: geojson } : {})
   }), [layerData, geojson]);
@@ -132,8 +134,8 @@ function MapBoxMap({
         <LayersControl position="topright">
           {Object.entries(effectiveLayerData).map(([layerType, data]) => (
             activeLayers[layerType as keyof ActiveLayers] && data && (
-              <LayersControl.Overlay 
-                key={layerType} 
+              <LayersControl.Overlay
+                key={layerType}
                 name={layerType.charAt(0).toUpperCase() + layerType.slice(1)}
                 checked={true}
               >

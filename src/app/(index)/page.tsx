@@ -12,11 +12,14 @@ import {
   ShoppingCart,
   X,
   Menu,
-  ExternalLink
+  ExternalLink,
+  LayoutDashboard
 } from 'lucide-react';
 
 import logo from '@/assets/nluis.png';
 import bibiNaBwana from '@/assets/bibi_na_bwana.png';
+import { Link } from 'react-router';
+import { useAuth } from '@/store/auth';
 
 const backgroundImage = '/landing.png';
 
@@ -27,16 +30,15 @@ export default function Page() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const { user } = useAuth()
+
   // Set document title
   useEffect(() => {
     document.title = "National Land Use Information System - NLUPC";
   }, []);
 
   // Navigation handlers
-  const handleLogin = () => window.location.href = '/auth/signin';
   const handleExplore = () => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-  const handleCreateAccount = () => window.location.href = '/auth/signup';
-  const handleMapShop = () => window.location.href = '/mapshop';
 
   // Header visibility on scroll
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function Page() {
       setIsHeaderVisible(currentScrollY <= lastScrollY || currentScrollY <= 100);
       setLastScrollY(currentScrollY);
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
@@ -61,7 +63,7 @@ export default function Page() {
     { id: 'home', label: 'HOME' },
     { id: 'key-features', label: 'KEY FEATURES' },
     { id: 'land-mapping', label: 'LAND MAPPING' },
-    
+
   ];
 
   const stats = [
@@ -75,9 +77,8 @@ export default function Page() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-chart-2/5">
       {/* Header */}
       <header
-        className={`fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border z-50 transition-transform duration-300 shadow-lg ${
-          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        className={`fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border z-50 transition-transform duration-300 shadow-lg ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+          }`}
       >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -99,7 +100,7 @@ export default function Page() {
                   </div>
                 </div>
               </div>
-              
+
               {/* NLUPC Logo */}
               <div className="flex items-center gap-3">
                 <img
@@ -120,27 +121,27 @@ export default function Page() {
             <nav className="hidden md:flex items-center gap-6">
               {navigationItems.map((item) => (
                 <button
+                  type='button'
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    activeSection === item.id ? 'text-primary' : 'text-muted-foreground'
-                  }`}
+                  className={`cursor-pointer text-sm font-medium transition-colors hover:text-primary ${activeSection === item.id ? 'text-primary' : 'text-muted-foreground'
+                    }`}
                 >
                   {item.label}
                 </button>
               ))}
-              <button
-                onClick={handleMapShop}
+              <Link
+                to='/mapshop'
                 className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
               >
                 MAPSHOP
-              </button>
+              </Link>
             </nav>
 
             {/* Action buttons and controls */}
             <div className="flex items-center gap-3">
               {/* Search - Desktop Only */}
-              <div className="hidden md:block">
+              <div className="hidden md:block opacity-0">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
@@ -154,22 +155,34 @@ export default function Page() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCreateAccount}
-                  className="hidden sm:flex items-center gap-1 px-3 py-2 bg-chart-2 text-white rounded-lg hover:bg-chart-2/90 transition-colors text-sm"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  <span>Register</span>
-                </button>
-                <button
-                  onClick={handleLogin}
-                  className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Login</span>
-                </button>
-              </div>
+              {!user ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to='/auth/signup'
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-chart-2 text-white rounded-lg hover:bg-chart-2/90 transition-colors text-sm"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Register</span>
+                  </Link>
+                  <Link
+                    to='/auth/signin'
+                    className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Login</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 md:min-w-60 justify-end">
+                  <Link
+                    to='/board'
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Access System</span>
+                  </Link>
+                </div>
+              )}
 
               {/* Mobile menu button */}
               <button
@@ -191,30 +204,29 @@ export default function Page() {
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                      activeSection === item.id
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-muted'
-                    }`}
+                    className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${activeSection === item.id
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted'
+                      }`}
                   >
                     {item.label}
                   </button>
                 ))}
                 <div className="pt-2 border-t border-border">
-                  <button
-                    onClick={handleCreateAccount}
+                  <Link
+                    to='/auth/signup'
                     className="flex items-center gap-2 w-full px-4 py-2 text-chart-2 hover:bg-chart-2/10 rounded-lg transition-colors"
                   >
                     <UserPlus className="h-4 w-4" />
                     Create Account
-                  </button>
-                  <button
-                    onClick={handleMapShop}
+                  </Link>
+                  <Link
+                    to='/mapshop'
                     className="flex items-center gap-2 w-full px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
                   >
                     <ShoppingCart className="h-4 w-4" />
                     MapShop
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -256,13 +268,14 @@ export default function Page() {
 
               {/* Call to Action */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={handleLogin}
-                  className="bg-primary text-primary-foreground px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                <Link
+                  to={user ? '/board' : '/auth/signin'}
+                  className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium"
                 >
                   Access System
-                </button>
+                </Link>
                 <button
+                  type='button'
                   onClick={handleExplore}
                   className="bg-white/20 text-white border border-white/30 px-8 py-3 rounded-lg hover:bg-white/30 transition-colors font-medium"
                 >
@@ -293,38 +306,38 @@ export default function Page() {
               Explore Tanzania's land use patterns, regional statistics, and CCRO data through our interactive mapping dashboard
             </p>
           </div>
-          
+
           <div className="w-full flex-1">
             <TanzaniaMapDashboard />
           </div>
         </section>
 
         {/* MapShop CTA Section */}
-        <section className="relative py-20 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200">
-          <div className="container mx-auto px-4 text-center">
+        <section className="relative py-20 dark:bg-zinc-900 border-t border-border">
+          <div className="container mx-auto px-4 text-center mt-20">
             <div className="max-w-2xl mx-auto">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <ShoppingCart className="h-4 w-4" />
                 Purchase Land Use Data
               </div>
-              
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
+
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-primary mb-4">
                 Need Detailed Land Use Plans and Maps?
               </h2>
-              
-              <p className="text-lg text-slate-600 mb-8">
+
+              <p className="text-lg text-slate-600 dark:text-muted-foreground mb-8">
                 Access land use plans, detailed maps, and geospatial data for your projects through our MapShop platform. Get official, up-to-date land use information for any region in Tanzania.
               </p>
-              
-              <button
-                onClick={handleMapShop}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105 font-medium text-lg shadow-lg"
+
+              <Link
+                to='/mapshop'
+                className="inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105 font-medium text-lg shadow-lg"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Visit MapShop
                 <ExternalLink className="h-4 w-4" />
-              </button>
-              
+              </Link>
+
               <div className="mt-8 text-sm text-slate-500">
                 Official land use data • Verified mapping • Instant download
               </div>

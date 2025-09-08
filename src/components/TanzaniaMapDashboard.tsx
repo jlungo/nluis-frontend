@@ -44,7 +44,7 @@ const TanzaniaMapDashboard = () => {
     wards: false,
     villages: false
   });
-  const [layerData, setLayerData] = useState<{[key: string]: any}>({
+  const [layerData, setLayerData] = useState<{ [key: string]: any }>({
     regions: null,
     districts: null,
     wards: null,
@@ -56,7 +56,7 @@ const TanzaniaMapDashboard = () => {
     console.log('=== DASHBOARD FEATURE CLICK ===');
     console.log('Clicked:', { name, type, properties });
     console.log('Current state:', { selectedFeature, selectedType });
-    
+
     // Always update selection, this ensures the selectedType is accurate
     if (name === selectedFeature && type === selectedType) {
       console.log('Deselecting feature');
@@ -93,21 +93,21 @@ const TanzaniaMapDashboard = () => {
         if (!data.features || data.features.length === 0) {
           throw new Error('No features found in regions data');
         }
-        
+
         console.log('Loaded regions data:', data);
-        
+
         // Log the first feature to see what properties we have
         console.log('First feature properties:', data.features[0]?.properties);
-        
+
         // Ensure each feature has the required properties
         const processedData = {
           ...data,
           features: data.features.map((feature: any, index: number) => {
-            const name = feature.properties.Region_Nam || 
-                        feature.properties.Region || 
-                        feature.properties.NAME_1 || 
-                        feature.properties.name || 
-                        `Region ${index}`;
+            const name = feature.properties.Region_Nam ||
+              feature.properties.Region ||
+              feature.properties.NAME_1 ||
+              feature.properties.name ||
+              `Region ${index}`;
             return {
               ...feature,
               id: name,
@@ -119,9 +119,9 @@ const TanzaniaMapDashboard = () => {
             };
           })
         };
-        
+
         console.log('Processed regions data:', processedData);
-        
+
         setLayerData(prev => ({
           ...prev,
           regions: processedData
@@ -149,7 +149,7 @@ const TanzaniaMapDashboard = () => {
     };
 
     console.log(`Fetching ${layerName} data from ${githubUrls[layerName]}`);
-    
+
     const response = await fetch(githubUrls[layerName]);
     if (!response.ok) {
       console.error(`Failed to load ${layerName} data:`, response.statusText);
@@ -171,30 +171,30 @@ const TanzaniaMapDashboard = () => {
       let name = '';
       switch (layerName) {
         case 'regions':
-          name = feature.properties.Region_Nam || 
-                 feature.properties.Region || 
-                 feature.properties.NAME_1 || 
-                 feature.properties.name || 
-                 `Region ${index}`;
+          name = feature.properties.Region_Nam ||
+            feature.properties.Region ||
+            feature.properties.NAME_1 ||
+            feature.properties.name ||
+            `Region ${index}`;
           break;
         case 'districts':
-          name = feature.properties.DCouncil_N || 
-                 feature.properties.District_N ||
-                 feature.properties.District ||
-                 feature.properties.name ||
-                 `District ${index}`;
+          name = feature.properties.DCouncil_N ||
+            feature.properties.District_N ||
+            feature.properties.District ||
+            feature.properties.name ||
+            `District ${index}`;
           break;
         case 'wards':
-          name = feature.properties.Ward_Name || 
-                 feature.properties.Ward ||
-                 feature.properties.name ||
-                 `Ward ${index}`;
+          name = feature.properties.Ward_Name ||
+            feature.properties.Ward ||
+            feature.properties.name ||
+            `Ward ${index}`;
           break;
         case 'villages':
           name = feature.properties.Village_Na ||
-                 feature.properties.Village ||
-                 feature.properties.name ||
-                 `Village ${index}`;
+            feature.properties.Village ||
+            feature.properties.name ||
+            `Village ${index}`;
           break;
       }
       return {
@@ -237,7 +237,7 @@ const TanzaniaMapDashboard = () => {
     try {
       console.log(`Starting load of ${layerName} data...`);
       const data = await loadLayerData(layerName);
-      
+
       if (!data.features?.length) {
         throw new Error(`No features found in ${layerName} data`);
       }
@@ -321,7 +321,7 @@ const TanzaniaMapDashboard = () => {
   const renderLandUseBreakdown = (name: string, type: string) => {
     let landUseData: Record<string, Record<string, number>>;
     let areaData: Record<string, number>;
-    
+
     switch (type) {
       case 'regions':
         landUseData = tanzaniaRegionLandUse;
@@ -347,9 +347,9 @@ const TanzaniaMapDashboard = () => {
     const totalHa = name in areaData ? areaData[name] : null;
 
     const typeLabel = type === 'regions' ? 'region' :
-                    type === 'districts' ? 'district' :
-                    type === 'wards' ? 'ward' :
-                    type === 'villages' ? 'village' : '';
+      type === 'districts' ? 'district' :
+        type === 'wards' ? 'ward' :
+          type === 'villages' ? 'village' : '';
 
     return (
       <div>
@@ -404,12 +404,12 @@ const TanzaniaMapDashboard = () => {
   };
 
   return (
-    <div className="w-full h-[100vh] flex flex-col bg-gray-50 overflow-hidden" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
+    <div className="w-full h-[100vh] flex flex-col bg-gray-50 dark:bg-zinc-950 overflow-hidden" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
       {/* Header */}
-      <div className="p-4 bg-white border-b">
+      <div className="p-4 bg-background border-b w-fit mx-auto mt-10">
         <h1 className="text-2xl font-semibold">Tanzania Land Use Dashboard</h1>
         {/* Debug info */}
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="text-xs text-gray-500 mt-2 mb-4 w-fit mx-auto">
           Selected: {selectedFeature ? `${selectedFeature} (${selectedType})` : 'None'}
         </div>
       </div>
@@ -417,8 +417,8 @@ const TanzaniaMapDashboard = () => {
       {/* Main Content - Three Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT PANEL - Legend */}
-        <div className="w-72 bg-white border-r flex flex-col">
-          <div className="p-4 border-b bg-gray-50">
+        <div className="w-72 border-r flex flex-col">
+          <div className="p-4 border-b">
             <h3 className="font-semibold text-lg">Legend</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
@@ -426,11 +426,10 @@ const TanzaniaMapDashboard = () => {
             <div className="mb-6">
               <h4 className="font-medium mb-3 text-sm text-gray-600">Land Use Types</h4>
               {tanzaniaLandUseLegend.map((item: LandUseLegendItem) => (
-                <div 
-                  key={item.swahili} 
-                  className={`flex items-center gap-2 mb-2 hover:bg-gray-100 p-2 rounded cursor-pointer ${
-                    selectedLandUseType === item.swahili ? 'bg-blue-50 border border-blue-200' : ''
-                  }`}
+                <div
+                  key={item.swahili}
+                  className={`flex items-center gap-2 mb-2 hover:bg-gray-100 p-2 rounded cursor-pointer ${selectedLandUseType === item.swahili ? 'bg-blue-50 border border-blue-200' : ''
+                    }`}
                   onClick={() => {
                     setSelectedLandUseType(item.swahili);
                     setSelectedFeature(null);
@@ -496,7 +495,7 @@ const TanzaniaMapDashboard = () => {
         </div>
 
         {/* MIDDLE PANEL - Map */}
-        <div className="flex-1 bg-white relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden">
           <div className="absolute inset-0">
             <MapBoxMap
               selectedFeature={selectedFeature}
@@ -504,12 +503,14 @@ const TanzaniaMapDashboard = () => {
               activeLayers={activeLayers}
               layerData={layerData}
               onFeatureClick={handleFeatureClick}
+              onRegionClick={() => { }}
+              selectedRegion={null}
             />
           </div>
         </div>
 
         {/* RIGHT PANEL - Stats */}
-        <div className="w-80 bg-white border-l flex flex-col overflow-hidden">
+        <div className="w-80 border-l flex flex-col overflow-hidden">
           <div className="h-full overflow-y-auto">
             <div className="p-4">
               {selectedFeature && selectedType ? (
@@ -521,7 +522,7 @@ const TanzaniaMapDashboard = () => {
                   {renderNationalLandUseSummary(selectedLandUseType)}
                 </div>
               ) : (
-                <FeatureSummaryPanel 
+                <FeatureSummaryPanel
                   selectedFeature={selectedFeature}
                   selectedType={selectedType}
                 />
