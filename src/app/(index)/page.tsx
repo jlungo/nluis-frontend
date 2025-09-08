@@ -1,416 +1,350 @@
-import { buttonVariants } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import TanzaniaMapDashboard from '@/components/TanzaniaMapDashboard';
+import KeyFeatures from '@/components/KeyFeatures';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowRight,
-  Users,
-  FileText,
-  MapPin,
+  FileCheck,
   Map,
-  ShoppingBag,
-  Shield,
-  CheckCircle,
-  Globe,
+  Network,
+  Home,
+  Users,
   Search,
-} from "lucide-react";
-import { Link } from "react-router";
-import { cn } from "@/lib/utils";
-import logo from "@/assets/nluis.png"
+  UserPlus,
+  ShoppingCart,
+  X,
+  Menu,
+  ExternalLink,
+  LayoutDashboard
+} from 'lucide-react';
+
+import logo from '@/assets/nluis.png';
+import bibiNaBwana from '@/assets/bibi_na_bwana.png';
+import { Link } from 'react-router';
+import { useAuth } from '@/store/auth';
+
+const backgroundImage = '/landing.png';
 
 export default function Page() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10">
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSection, setActiveSection] = useState('home');
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-      {/* Hero Section */}
-      <section className="xl:container mx-auto px-4 py-16">
-        <div className="text-center space-y-8">
-          {/* Official Government Header */}
-          <div className="space-y-4">
-            <div className="flex justify-center items-center gap-4 mb-6">
-              <img
-                src={logo}
-                alt="NLUPC Logo"
-                className="h-40 w-40 object-contain"
-              />
+  const { user } = useAuth()
+
+  // Set document title
+  useEffect(() => {
+    document.title = "National Land Use Information System - NLUPC";
+  }, []);
+
+  // Navigation handlers
+  const handleExplore = () => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+
+  // Header visibility on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsHeaderVisible(currentScrollY <= lastScrollY || currentScrollY <= 100);
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  // Navigation helper
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    setIsMobileMenuOpen(false);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const navigationItems = [
+    { id: 'home', label: 'HOME' },
+    { id: 'key-features', label: 'KEY FEATURES' },
+    { id: 'land-mapping', label: 'LAND MAPPING' },
+
+  ];
+
+  const stats = [
+    { number: '94.7%', label: 'CCROs Offered', icon: <FileCheck className="h-6 w-6" /> },
+    { number: '37600', label: 'Land use plans', icon: <Map className="h-6 w-6" /> },
+    { number: '156', label: 'Districts Connected', icon: <Network className="h-6 w-6" /> },
+    { number: '24500', label: 'Total Villages', icon: <Home className="h-6 w-6" /> }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-chart-2/5">
+      {/* Header */}
+      <header
+        className={`fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border z-50 transition-transform duration-300 shadow-lg ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+          }`}
+      >
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Branding */}
+            <div className="flex items-center gap-3 md:gap-6">
+              {/* Tanzania Coat of Arms */}
+              <div className="flex items-center gap-3">
+                <img
+                  src={bibiNaBwana}
+                  alt="Tanzania Coat of Arms"
+                  className="h-9 w-9 lg:h-12 lg:w-12 object-contain"
+                />
+                <div className="border-l border-border pl-3 hidden lg:block">
+                  <div className="text-sm font-medium text-primary">
+                    United Republic of Tanzania
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Ministry of Lands
+                  </div>
+                </div>
+              </div>
+
+              {/* NLUPC Logo */}
+              <div className="flex items-center gap-3">
+                <img
+                  src={logo}
+                  alt="National Land Use Planning Commission"
+                  className="h-9 w-9 lg:h-12 lg:w-12 object-contain scale-150"
+                />
+                <div className="hidden lg:block">
+                  <div className="text-sm font-medium text-primary">NLUPC</div>
+                  <div className="text-xs text-muted-foreground">
+                    National Land Use Planning Commission
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <Badge
-              variant="outline"
-              className="text-primary border-primary/30 bg-primary/5 px-4 py-2"
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Official Government System
-            </Badge>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
+              {navigationItems.map((item) => (
+                <button
+                  type='button'
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`cursor-pointer text-sm font-medium transition-colors hover:text-primary ${activeSection === item.id ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <Link
+                to='/mapshop'
+                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              >
+                MAPSHOP
+              </Link>
+            </nav>
 
-            <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              National Land Use Information System
-            </h1>
+            {/* Action buttons and controls */}
+            <div className="flex items-center gap-3">
+              {/* Search - Desktop Only */}
+              <div className="hidden md:block opacity-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-40 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm bg-background"
+                  />
+                </div>
+              </div>
 
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Tanzania's comprehensive digital platform for land use planning,
-              management, and monitoring. Supporting sustainable development
-              from village to national levels through the official 23-step NLUPC
-              process.
+              {/* Action Buttons */}
+              {!user ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to='/auth/signup'
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-chart-2 text-white rounded-lg hover:bg-chart-2/90 transition-colors text-sm"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Register</span>
+                  </Link>
+                  <Link
+                    to='/auth/signin'
+                    className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Login</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 md:min-w-60 justify-end">
+                  <Link
+                    to='/board'
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Access System</span>
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-background border-t border-border">
+            <div className="container mx-auto px-4 py-3">
+              <div className="space-y-2">
+                {navigationItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${activeSection === item.id
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted'
+                      }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <div className="pt-2 border-t border-border">
+                  <Link
+                    to='/auth/signup'
+                    className="flex items-center gap-2 w-full px-4 py-2 text-chart-2 hover:bg-chart-2/10 rounded-lg transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Create Account
+                  </Link>
+                  <Link
+                    to='/mapshop'
+                    className="flex items-center gap-2 w-full px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    MapShop
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <div className="pt-16">
+        {/* Hero Section */}
+        <section id="home" className="relative min-h-screen flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3)), url('${backgroundImage}')`
+            }}
+          />
+          <div className="relative container mx-auto px-4 py-20 text-center text-white">
+            <div className="max-w-3xl mx-auto">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                National Land Use Information System
+              </h1>
+              <p className="text-lg md:text-xl mb-8 opacity-90">
+                National land use planning and management system for the United Republic of Tanzania
+              </p>
+
+              {/* Statistics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                {stats.map((stat, index) => (
+                  <div key={index} className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/30">
+                    <div className="flex items-center justify-center mb-2">
+                      {stat.icon}
+                    </div>
+                    <div className="font-bold text-xl">{stat.number}</div>
+                    <div className="text-sm text-white/80">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Call to Action */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to={user ? '/board' : '/auth/signin'}
+                  className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                >
+                  Access System
+                </Link>
+                <button
+                  type='button'
+                  onClick={handleExplore}
+                  className="bg-white/20 text-white border border-white/30 px-8 py-3 rounded-lg hover:bg-white/30 transition-colors font-medium"
+                >
+                  Explore Features
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Key Features Section */}
+        <section id="key-features" className="relative">
+          <KeyFeatures />
+        </section>
+
+        {/* Land Mapping Section */}
+        <section
+          id="land-mapping"
+          className="relative w-full min-h-screen flex flex-col items-center justify-center bg-background"
+          style={{ minHeight: '100vh', height: '100vh', padding: 0 }}
+        >
+          {/* Map Dashboard Title */}
+          <div className="text-center mb-6 px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              Interactive Land Use Map
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Explore Tanzania's land use patterns, regional statistics, and CCRO data through our interactive mapping dashboard
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/auth/signin"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "gap-3 px-8 py-6 text-lg"
-              )}
-            >
-              <Shield className="h-5 w-5" />
-              Access NLUIS Platform
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-
-            <Link
-              to="/mapshop"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "gap-3 px-8 py-6 text-lg"
-              )}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              Browse MapShop
-              <Map className="h-5 w-5" />
-            </Link>
+          <div className="w-full flex-1">
+            <TanzaniaMapDashboard />
           </div>
+        </section>
 
-          {/* Key Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto mt-12">
-            <div className="text-center">
-              <div className="font-bold text-2xl text-primary">1,200+</div>
-              <div className="text-sm text-muted-foreground">
-                Villages Mapped
+        {/* MapShop CTA Section */}
+        <section className="relative py-20 dark:bg-zinc-900 border-t border-border">
+          <div className="container mx-auto px-4 text-center mt-20">
+            <div className="max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <ShoppingCart className="h-4 w-4" />
+                Purchase Land Use Data
               </div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-2xl text-primary">31</div>
-              <div className="text-sm text-muted-foreground">
-                Regions Covered
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-2xl text-primary">169</div>
-              <div className="text-sm text-muted-foreground">
-                Districts Covered
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-2xl text-primary">500+</div>
-              <div className="text-sm text-muted-foreground">
-                Maps Available
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section id="features" className="xl:container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Comprehensive Land Use Management
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            From village-level planning to national policy implementation, NLUIS
-            supports all levels of Tanzania's land use planning hierarchy.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Land Use Planning */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <MapPin className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">Land Use Planning</CardTitle>
-              <CardDescription>
-                Complete 23-step NLUPC process from village to national level
-                planning with official workflows and documentation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Village Land Use Plans</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>District & Regional Planning</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>National Land Use Framework</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Zonal Development Plans</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* CCRO Management */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">CCRO Management</CardTitle>
-              <CardDescription>
-                Streamlined Certificate of Customary Right of Occupancy
-                processing with digital workflows and tracking.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Application Processing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Document Management</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Status Tracking</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Compliance Monitoring</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* MapShop */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <ShoppingBag className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">Official MapShop</CardTitle>
-              <CardDescription>
-                Purchase official land use maps and shapefiles directly from
-                government sources with guaranteed authenticity.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Verified Shapefiles</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Official Land Use Maps</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Multiple Format Options</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Instant Digital Delivery</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Organizations */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">
-                Organization Management
-              </CardTitle>
-              <CardDescription>
-                Register and manage land use planning organizations,
-                consultants, and stakeholder groups.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Organization Registration</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Member Management</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Certification Tracking</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Performance Monitoring</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Compliance */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">
-                Compliance Monitoring
-              </CardTitle>
-              <CardDescription>
-                Ensure adherence to land use regulations and policies with
-                automated compliance tracking and reporting.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Regulatory Compliance</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Automated Monitoring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Violation Tracking</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Enforcement Support</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Management & Evaluation */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
-            <CardHeader>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Globe className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-primary">
-                Management & Evaluation
-              </CardTitle>
-              <CardDescription>
-                Comprehensive monitoring and evaluation of land use planning
-                outcomes and implementation effectiveness.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Impact Assessment</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Performance Metrics</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Progress Tracking</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Strategic Planning</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* MapShop CTA Section */}
-      <section className="bg-primary/5 border-y border-primary/10">
-        <div className="xl:container mx-auto px-4 py-16">
-          <div className="text-center space-y-8">
-            <div className="space-y-4">
-              <Badge
-                variant="outline"
-                className="text-primary border-primary/30 bg-primary/10 px-4 py-2"
-              >
-                <Map className="h-4 w-4 mr-2" />
-                Tanzania MapShop Portal
-              </Badge>
-
-              <h2 className="text-3xl font-bold text-foreground">
-                Access Official Land Use Maps & Shapefiles
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-primary mb-4">
+                Need Detailed Land Use Plans and Maps?
               </h2>
 
-              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Purchase authenticated, survey-grade land use maps and
-                geospatial data directly from government sources. Available in
-                multiple formats with instant digital delivery and hardcopy
-                options.
+              <p className="text-lg text-slate-600 dark:text-muted-foreground mb-8">
+                Access land use plans, detailed maps, and geospatial data for your projects through our MapShop platform. Get official, up-to-date land use information for any region in Tanzania.
               </p>
-            </div>
 
-            {/* MapShop Features */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="bg-background rounded-lg p-6 border border-primary/10">
-                <Search className="h-8 w-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Search & Filter</h3>
-                <p className="text-sm text-muted-foreground">
-                  Find maps by village, district, region, or land use type with
-                  advanced filtering options.
-                </p>
-              </div>
+              <Link
+                to='/mapshop'
+                className="inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105 font-medium text-lg shadow-lg"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Visit MapShop
+                <ExternalLink className="h-4 w-4" />
+              </Link>
 
-              <div className="bg-background rounded-lg p-6 border border-primary/10">
-                <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Official & Verified</h3>
-                <p className="text-sm text-muted-foreground">
-                  All maps are survey-grade and officially verified by Tanzania
-                  government agencies.
-                </p>
-              </div>
-
-              <div className="bg-background rounded-lg p-6 border border-primary/10">
-                <FileText className="h-8 w-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Multiple Formats</h3>
-                <p className="text-sm text-muted-foreground">
-                  Download as shapefiles, PDFs, or order professional hardcopy
-                  prints.
-                </p>
+              <div className="mt-8 text-sm text-slate-500">
+                Official land use data • Verified mapping • Instant download
               </div>
             </div>
-
-            <Link
-              to="/mapshop"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "gap-3 px-8 py-6 text-lg"
-              )}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              Enter MapShop Portal
-              <ArrowRight className="h-5 w-5" />
-            </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
