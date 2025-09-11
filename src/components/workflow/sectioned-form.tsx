@@ -178,7 +178,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug)
         const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -188,7 +188,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug && value.is_approved === true)
         const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -263,7 +263,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
                         <CardContent>
                             <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                {form.fields.slice().sort((a, b) => a.position - b.position).map((field) =>
+                                {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) =>
                                     <FormField
                                         key={field.id}
                                         disabled={disabled || !canClickForm(form) || isFilled}
@@ -318,7 +318,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
                             <CardContent>
                                 <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                    {form.fields.slice().sort((a, b) => a.position - b.position).map((field) => (
+                                    {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
                                             disabled={disabled || !canClickForm(form) || isFilled}
@@ -519,7 +519,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             <Button
                                                 type='button'
                                                 size='sm'
-                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "1")}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "1")}
                                                 disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isPendingApproval || isLoading}
                                                 className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
                                             >
@@ -542,7 +542,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                 type='button'
                                                 variant='outline'
                                                 size='sm'
-                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "0")}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "0")}
                                                 disabled={disabled || !isSectionApproved(section) || isPending || isPendingApproval || isLoading}
                                                 className='border-destructive'
                                             >
