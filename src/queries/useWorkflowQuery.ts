@@ -4,7 +4,7 @@ import type { APIResponse } from "@/types/api-response";
 import type { WorkflowCategoryKey } from "@/types/constants";
 import type { InputType } from "@/types/input-types";
 
-export type RoleT = {
+type RoleT = {
   id: number;
   role_id: string;
   role_name: string;
@@ -54,7 +54,7 @@ export interface FormProps {
   module_name: string;
   position: number;
   editor_roles: RoleT[];
-  fields: FieldsProps[];
+  form_fields: FieldsProps[];
 }
 
 export interface SectionProps {

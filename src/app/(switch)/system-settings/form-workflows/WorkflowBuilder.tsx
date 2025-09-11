@@ -93,24 +93,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     const handleNext = useCallback(() => {
         setCurrentStep(prevStep => {
             const nextStep = prevStep < steps.length ? prevStep + 1 : prevStep;
-
-            // Auto-generate sections when moving to step 5
-            if (prevStep === 4) { // step 4 → next is 5
-                setFormSections(sections => (sections.length === 0 ? [
-                    {
-                        id: `section-default-UI-${Date.now()}-1`,
-                        name: "",
-                        description: "",
-                        forms: [],
-                        approval_roles: [],
-                        order: 1,
-                    },
-                ] : sections));
-            }
-
             return nextStep;
         });
-    }, [setCurrentStep, setFormSections, steps.length]);
+    }, [setCurrentStep, steps.length]);
 
     const handleBack = useCallback(() => {
         setCurrentStep(prev => (prev > 1 ? prev - 1 : prev));
@@ -125,7 +110,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 description: '',
                 forms: [],
                 approval_roles: [],
-                order: formSections.length + 1
+                order: formSections.length + 1,
+                is_active: true
             }
         ]);
     }, [setFormSections]);
@@ -139,7 +125,12 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     }, [setFormSections]);
 
     const removeSection = useCallback((sectionId: string) => {
-        setFormSections(sections => sections.filter(section => section.id !== sectionId));
+        if (sectionId.startsWith("section-default-UI-")) setFormSections(sections => sections.filter(section => section.id !== sectionId));
+        else setFormSections(sections =>
+            sections.map(section =>
+                section.id === sectionId ? { ...section, is_active: false } : section
+            )
+        );
     }, [setFormSections]);
 
     const addForm = useCallback((sectionId: string) => {
@@ -151,12 +142,13 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                         forms: [
                             ...section.forms,
                             {
-                                id: `form-${Date.now()}`,
+                                id: `form-default-UI-${Date.now()}`,
                                 name: '',
                                 editor_roles: [],
                                 description: '',
-                                fields: [],
+                                form_fields: [],
                                 order: section.forms.length + 1,
+                                is_active: true
                             }
                         ]
                     }
@@ -181,12 +173,24 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     }, [setFormSections]);
 
     const removeForm = useCallback((sectionId: string, formId: string) => {
-        setFormSections(sections =>
+        if (sectionId.startsWith("form-default-UI-")) setFormSections(sections =>
             sections.map(section =>
                 section.id === sectionId
                     ? {
                         ...section,
                         forms: section.forms.filter(form => form.id !== formId)
+                    }
+                    : section
+            )
+        );
+        else setFormSections(sections =>
+            sections.map(section =>
+                section.id === sectionId
+                    ? {
+                        ...section,
+                        forms: section.forms.map(form =>
+                            form.id === formId ? { ...form, is_active: false } : form
+                        ),
                     }
                     : section
             )
@@ -203,16 +207,17 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: [
-                                        ...form.fields,
+                                    form_fields: [
+                                        ...form.form_fields,
                                         {
-                                            id: `field-${Date.now()}`,
+                                            id: `field-default-UI-${Date.now()}`,
                                             name: '',
                                             label: '',
                                             type: 'text',
                                             required: false,
                                             options: [],
-                                            order: form.fields.length + 1
+                                            order: form.form_fields.length + 1,
+                                            is_active: true
                                         }
                                     ]
                                 }
@@ -234,7 +239,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: form.fields.map(field =>
+                                    form_fields: form.form_fields.map(field =>
                                         field.id === fieldId ? { ...field, ...updates } : field
                                     )
                                 }
@@ -247,23 +252,44 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     }, [setFormSections]);
 
     const removeField = useCallback((sectionId: string, formId: string, fieldId: string) => {
-        setFormSections(sections =>
-            sections.map(section =>
-                section.id === sectionId
-                    ? {
-                        ...section,
-                        forms: section.forms.map(form =>
-                            form.id === formId
-                                ? {
-                                    ...form,
-                                    fields: form.fields.filter(field => field.id !== fieldId)
-                                }
-                                : form
-                        )
-                    }
-                    : section
-            )
-        );
+        if (fieldId.startsWith("form-default-UI-"))
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            forms: section.forms.map(form =>
+                                form.id === formId
+                                    ? {
+                                        ...form,
+                                        form_fields: form.form_fields.filter(field => field.id !== fieldId)
+                                    }
+                                    : form
+                            )
+                        }
+                        : section
+                )
+            );
+        else
+            setFormSections(sections =>
+                sections.map(section =>
+                    section.id === sectionId
+                        ? {
+                            ...section,
+                            forms: section.forms.map(form =>
+                                form.id === formId
+                                    ? {
+                                        ...form,
+                                        form_fields: form.form_fields.map(field =>
+                                            field.id === fieldId ? { ...field, is_active: false } : field
+                                        )
+                                    }
+                                    : form
+                            )
+                        }
+                        : section
+                )
+            );
     }, [setFormSections]);
 
     const addOption = useCallback((sectionId: string, formId: string, fieldId: string) => {
@@ -271,9 +297,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         if (!section) return
         const form = section.forms.find(sf => sf.id === formId);
         if (!form) return
-        const field = form.fields.find(sf => sf.id === fieldId);
+        const field = form.form_fields.find(sf => sf.id === fieldId);
         const newOption: FieldOption = {
-            id: `option-${Date.now()}`,
+            id: `option-default-UI-${Date.now()}`,
             label: '',
             name: '',
             order: (field?.options?.length || 0) + 1,
@@ -288,7 +314,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: form.fields.map(field =>
+                                    fields: form.form_fields.map(field =>
                                         field.id === fieldId
                                             ? {
                                                 ...field,
@@ -315,7 +341,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: form.fields.map(field =>
+                                    fields: form.form_fields.map(field =>
                                         field.id === fieldId
                                             ? {
                                                 ...field,
@@ -344,7 +370,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             form.id === formId
                                 ? {
                                     ...form,
-                                    fields: form.fields.map(field =>
+                                    fields: form.form_fields.map(field =>
                                         field.id === fieldId
                                             ? {
                                                 ...field,
@@ -363,8 +389,10 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: Submission) => {
-            if (previousData) return api.put(`/form-management/submissions/${previousData.slug}/update/`, e);
+            console.log(e)
+            if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
+            // return api.post(`/form-management/submissi/`, {})
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
@@ -404,22 +432,28 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             category: formDetails.category,
             version: `${formDetails.version}`,
             sections: formSections.map(section => ({
+                slug: section.id.startsWith('section-default-UI-') ? undefined : section.id,
                 name: section.name,
                 description: section.description,
                 position: section.order,
                 approval_roles: section.approval_roles,
+                is_active: section.is_active ? "1" : "0",
                 forms: section.forms.map(form => ({
+                    slug: form.id.startsWith('form-default-UI-') ? undefined : form.id,
                     name: form.name,
                     description: form.description,
                     position: form.order,
                     editor_roles: form.editor_roles,
-                    fields: form.fields.map(field => ({
+                    is_active: form.is_active ? '1' : '0',
+                    form_fields: form.form_fields.map(field => ({
+                        id: isNaN(Number(field.id)) ? undefined : Number(field.id),
                         label: field.label,
                         type: field.type as InputType,
                         placeholder: field.placeholder || null,
                         name: field.name,
                         required: field.required,
                         position: field.order,
+                        is_active: field.is_active ? '1' : '0',
                         select_options: field.options.map(option => ({
                             text_label: option.label,
                             value: option.name,
@@ -731,7 +765,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                             </Card>
                         ) : (
                             <div className="space-y-6">
-                                {formSections.slice().sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
+                                {formSections.filter(section => section.is_active === true).slice().sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
                                     <Card key={section.id} className="relative">
                                         <CardHeader className="pb-2">
                                             <div className="flex flex-col md:flex-row items-start gap-4">
@@ -824,7 +858,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                 </div>
                                             ) : (
                                                 <div className="space-y-4">
-                                                    {section.forms.slice().sort((a, b) => a.order - b.order).map((form, formIndex) => (
+                                                    {section.forms.filter(form => form.is_active === true).slice().sort((a, b) => a.order - b.order).map((form, formIndex) => (
                                                         <div key={form.id} className="border rounded-lg p-4 bg-muted/30">
                                                             <div className="space-y-4">
                                                                 <div className="flex flex-col md:flex-row gap-3">
@@ -884,14 +918,14 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                         Add Field
                                                                     </Button>
                                                                     <Badge variant="outline" className="text-xs">
-                                                                        {form.fields.length} fields
+                                                                        {form.form_fields.length} fields
                                                                     </Badge>
                                                                 </div>
 
                                                                 {/* Fields */}
-                                                                {form.fields.length > 0 && (
+                                                                {form.form_fields.length > 0 && (
                                                                     <div className="space-y-2 pl-4 border-l-2 border-border">
-                                                                        {form.fields.slice().sort((a, b) => a.order - b.order).map((field, fieldIndex) => (
+                                                                        {form.form_fields.filter(field => field.is_active === true).slice().sort((a, b) => a.order - b.order).map((field, fieldIndex) => (
                                                                             <div key={field.id} className='bg-background rounded border'>
                                                                                 <div className="flex flex-col lg:flex-row items-center gap-3 p-3">
                                                                                     <span className="text-xs text-muted-foreground w-6">

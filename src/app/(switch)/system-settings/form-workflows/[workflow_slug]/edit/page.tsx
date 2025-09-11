@@ -44,13 +44,15 @@ export default function Page() {
         approval_roles: section.approval_roles.map(role => ({ user_role: role.role_id })),
         description: section.description,
         order: section.position,
+        is_active: section.is_active,
         forms: section.forms.map(form => ({
             id: form.slug,
             name: form.name,
             editor_roles: form.editor_roles.map(role => ({ user_role: role.role_id })),
             description: form.description,
             order: form.position,
-            fields: form.fields.map(field => ({
+            is_active: form.is_active,
+            form_fields: form.form_fields.map(field => ({
                 id: `${field.id}`,
                 name: field.name,
                 label: field.label,
@@ -58,6 +60,7 @@ export default function Page() {
                 required: field.required,
                 placeholder: field.placeholder,
                 order: field.position,
+                is_active: field.is_active,
                 options: field.select_options.map(option => ({
                     id: option.value,
                     label: option.text_label,

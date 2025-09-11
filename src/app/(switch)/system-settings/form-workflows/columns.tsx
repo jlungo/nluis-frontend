@@ -14,7 +14,7 @@ function countAllFields(workflow: WorkflowProps): number {
     return (
       fieldCount +
       section.forms.reduce((formFieldCount, form) => {
-        return formFieldCount + form.fields.length;
+        return formFieldCount + form.form_fields.length;
       }, 0)
     );
   }, 0);
