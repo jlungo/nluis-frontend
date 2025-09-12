@@ -74,8 +74,6 @@ export default function UserEditDialog({ open, onOpenChange, user, roles, organi
     }
   };
 
-  console.log(form)
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">

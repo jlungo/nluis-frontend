@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2, X } from 'lucide-react';
+import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2, X, IdCard } from 'lucide-react';
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
@@ -50,11 +50,18 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
   if (!project) return <div className="text-center max-w-6xl mx-auto p-6">Project not found</div>;
 
+  const approval_status =
+    project?.localities && project.localities.length > 0
+      ? project.localities.every(loc => loc.approval_status === 2)
+        ? 2
+        : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
+      : 1
+
   const projectStatus = ProjectStatus[project.project_status] || 'Unknown';
-  const approvalStatus = ProjectApprovalStatus[project.approval_status] || 'Unknown';
+  const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 mb-6">
+    <div className="max-w-6xl mx-auto space-y-6 mb-10">
       {/* Main Project Card */}
       <Card className="overflow-hidden pt-0 md:pt-0 shadow-none">
         <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
@@ -67,7 +74,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               </div>
             </div>
             <div className="flex flex-col-reverse items-end gap-4">
-              <ButtonsComponent moduleLevel={moduleLevel} project={project} approval_status={project.approval_status} />
+              <ButtonsComponent moduleLevel={moduleLevel} project={project} approval_status={approval_status} />
               <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
                 <ProjectStatusBadge status={approvalStatus} />
                 <ProjectStatusBadge status={projectStatus} />
@@ -88,7 +95,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
           <Separator className="mb-4" />
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5">
             {/* Type */}
             {/* <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Project Type</h3>
@@ -96,6 +103,17 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 {project.type}
               </Badge>
             </div> */}
+
+            {/* Registration Date */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <IdCard className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-muted-foreground">Reference Number/Id</h3>
+              </div>
+              <p className="text-foreground">
+                {project.reference_number}
+              </p>
+            </div>
 
             {/* Registration Date */}
             <div className="space-y-2">
@@ -125,27 +143,25 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-medium text-muted-foreground">Budget</h3>
               </div>
-              <p className="text-lg font-semibold text-foreground">
+              <p className="text-base md:text-lg font-semibold text-foreground">
                 TZS {Number(project.budget).toLocaleString('en-UK')}
               </p>
             </div>
 
             {/* Funders */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 col-span-2 md:col-span-1">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-medium text-muted-foreground">Funders</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {project.funders && project.funders.length > 0 ? (
-                  project.funders.map(funder => (
+                {project.funders && project.funders.length > 0
+                  ? project.funders.map(funder => (
                     <Badge key={funder.id} variant="secondary" className="px-3 py-1">
                       {funder.name}
                     </Badge>
                   ))
-                ) : (
-                  <span className="text-muted-foreground italic">No funders assigned</span>
-                )}
+                  : <span className="text-muted-foreground italic">No funders assigned</span>}
               </div>
             </div>
           </div>
@@ -364,46 +380,80 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
 const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
   const navigate = useNavigate()
 
+  const [statusFilter, setStatusFilter] = useState<number | null>(null)
+
+  const localities = project?.localities ? statusFilter
+    ? project.localities.filter(loc => loc.approval_status === statusFilter)
+    : project.localities : []
+
   return (
-    <Card className='shadow-none'>
-      <CardHeader>
+    <Card className='shadow-none pt-0 md:pt-0 overflow-hidden'>
+      <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Coverage Areas ({project.localities?.length || 0})
+            Coverage Areas ({project?.localities?.length || 0})
           </div>
           {project.localities && project.localities.length > 0 && (
             <MapDialog
               title={project.name}
-              overlayMapsIds={project.localities?.map((loc) => loc.locality__id)}
+              overlayMapsIds={project?.localities.map((loc) => loc.locality__id)}
             />
           )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {project.localities && project.localities.length > 0 ? (
+        {project.localities && project.localities.length > 0 ?
           <DataTable
             columns={LocalityTableColumns}
-            data={project.localities}
+            data={localities}
             enableGlobalFilter={true}
             searchPlaceholder="Search localities..."
-            onRowClick={project.approval_status === 2 ? (locality) => navigate(`${locality.id}/workflow`) : undefined}
+            // onRowClick={approval_status === 2 ? (locality) => navigate(`${locality.id}/workflow`) : undefined}
             showRowNumbers={true}
             shadowed={false}
             rowActions={(locality) => (
               <Button
                 variant="outline"
-                className={"btn-sm mx-4 disabled:opacity-10"}
-                disabled={project.approval_status !== 2}
+                type='button'
+                size="sm"
+                className={"disabled:opacity-10 mr-5"}
+                disabled={locality.approval_status !== 2}
                 onClick={() => navigate(`${locality.id}/workflow`)}
               >
                 Workflow
               </Button>
             )}
+            rightToolbar={
+              <div className='flex gap-0.5'>
+                <Button
+                  size='sm'
+                  type='button'
+                  onClick={() => setStatusFilter(null)}
+                  className={`rounded-l-full rounded-r-md w-16 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-muted text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
+                >
+                  All
+                </Button>
+                {Object.entries(ProjectApprovalStatus).map(([k, l], index, arr) =>
+                  <Button
+                    key={k}
+                    size='sm'
+                    type='button'
+                    onClick={() => setStatusFilter(Number(k))}
+                    className={`
+                      ${index === arr.length - 1
+                        ? 'rounded-r-full'
+                        : 'rounded'}
+                      ${statusFilter === Number(k) ? 'bg-primary' : 'bg-accent dark:bg-muted text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}
+                    `}
+                  >
+                    {l}
+                  </Button>)
+                }
+              </div>
+            }
           />
-        ) : (
-          <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>
-        )}
+          : <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>}
       </CardContent>
     </Card>
   )

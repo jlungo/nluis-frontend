@@ -2,7 +2,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn, formatDate } from '@/lib/utils';
 import { ProjectI } from "@/types/projects";
 import { Badge } from "../ui/badge";
-import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors } from "@/types/constants";
+import { ProjectStatus, ProjectApprovalStatus, ProjectStatusColors, ProjectApprovalStatusColors } from "@/types/constants";
+import { Progress } from "../ui/progress";
 
 export const ProjectStatusBadge = ({ status }: { status: string }) => (
   <Badge
@@ -20,6 +21,13 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
     header: 'Project Name',
     cell: ({ row }: { row: { original: ProjectI } }) => (
       <div className="text-sm">{row.original.name}</div>
+    ),
+  },
+  {
+    accessorKey: 'reference_number',
+    header: 'Reference Number/Id',
+    cell: ({ row }: { row: { original: ProjectI } }) => (
+      <div className="text-sm">{row.original.reference_number}</div>
     ),
   },
   {
@@ -70,7 +78,13 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
     accessorKey: 'approval_status',
     header: 'Approval Status',
     cell: ({ row }: { row: { original: ProjectI } }) => {
-      const readableApproval = ProjectApprovalStatus[row.original.approval_status as keyof typeof ProjectApprovalStatus] || "Unknown";
+      const approval_status =
+        row.original?.localities && row.original.localities.length > 0
+          ? row.original.localities.every(loc => loc.approval_status === 2)
+            ? 2
+            : row.original.localities.every(loc => loc.approval_status === 3) ? 3 : 1
+          : 1
+      const readableApproval = ProjectApprovalStatus[approval_status as keyof typeof ProjectApprovalStatus] || "Unknown";
       return (
         <div className="text-sm">
           <ProjectStatusBadge status={readableApproval} />
@@ -85,5 +99,20 @@ export const LocalityTableColumns: ColumnDef<any>[] = [
   {
     accessorKey: 'locality__name',
     header: 'Name',
+  },
+  {
+    accessorKey: 'approval_status',
+    header: 'Approval Status',
+    cell: ({ row }: { row: { original: NonNullable<ProjectI['localities']>[number] } }) => <Badge className={`${ProjectApprovalStatusColors[row.original.approval_status]}`}>{ProjectApprovalStatus[row.original.approval_status]}</Badge>,
+  },
+  {
+    accessorKey: 'progress',
+    header: 'Progress',
+    cell: ({ row }: { row: { original: NonNullable<ProjectI['localities']>[number] } }) => (
+      <div className="flex flex-col-reverse lg:flex-row items-center gap-1">
+        <Progress value={row.original.progress} className="min-w-32 max-w-48" />
+        <p className="text-xs md:text-sm text-center lg:text-end min-w-24 shrink-0">{row.original.progress}% Complete</p>
+      </div>
+    ),
   },
 ];

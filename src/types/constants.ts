@@ -79,6 +79,13 @@ export const ProjectApprovalStatus: Record<number, string> = {
   3: "Rejected",
 };
 
+export const ProjectApprovalStatusColors: Record<string, string> = {
+  1: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+  "In Process": "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
+  2: "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
+  3: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+};
+
 export const ProjectStatusFilters: Record<string, string> = {
   all: "All Statuses",
   draft: "Draft",

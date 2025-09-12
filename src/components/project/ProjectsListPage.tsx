@@ -12,10 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ProjectI, ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
-import { ProjectApprovalStatus, ProjectStatusFilters } from '@/types/constants';
+import { ProjectStatusFilters } from '@/types/constants';
 import { canCreateProject, canDeleteProject } from './permissions';
 import { useAuth } from '@/store/auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
   const navigate = useNavigate();
@@ -54,9 +53,17 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
       state: { type: pageTitle, from: location.pathname },
     });
 
+
+
   const handleDelete = (project: ProjectI) => {
     if (!user || !user.role?.name) return
-    const canDelete = canDeleteProject(user.role.name, project.approval_status)
+    const approval_status =
+      project?.localities && project.localities.length > 0
+        ? project.localities.every(loc => loc.approval_status === 2)
+          ? 2
+          : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
+        : 1
+    const canDelete = canDeleteProject(user.role.name, approval_status)
     if (!canDelete) return
     mutateAsync(project.id).then(() => refetch());
   };
@@ -113,7 +120,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
                 onValueChange={(val) => handleChange('status', val)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select Progress status" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(ProjectStatusFilters).map(([value, label]) => (
@@ -132,7 +139,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         </CardContent>
       </Card>
 
-      <Tabs value={filters.approval_status} onValueChange={e => handleChange('approval_status', e)}>
+      {/* <Tabs value={filters.approval_status} onValueChange={e => handleChange('approval_status', e)}>
         <TabsList className='rounded-full w-full'>
           <TabsTrigger value="" className='cursor-pointer rounded-full text-xs md:text-sm'>All</TabsTrigger>
           {Object.entries(ProjectApprovalStatus).map(([key, label]) => (
@@ -141,28 +148,28 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
             </TabsTrigger>
           ))}
         </TabsList>
-        <TabsContent value={filters.approval_status}>
-          <DataTable<ProjectI, unknown>
-            columns={ProjectsDataTableColumn}
-            data={data?.results || []}
-            isLoading={isLoading}
-            showRowNumbers
-            enableGlobalFilter={false}
-            onRowClick={handleRowClick}
-            initialPageSize={10}
-            pageSizeOptions={[5, 10, 20, 50]}
-            rowActions={(row) => (
-              <ActionButtons
-                entity={row}
-                entityName="Project"
-                onView={e => navigate(`${e.id}`)}
-                onEdit={e => navigate(`${e.id}/edit`)}
-                deleteFunction={() => handleDelete(row)}
-              />
-            )}
+        <TabsContent value={filters.approval_status}> */}
+      <DataTable<ProjectI, unknown>
+        columns={ProjectsDataTableColumn}
+        data={data?.results || []}
+        isLoading={isLoading}
+        showRowNumbers
+        enableGlobalFilter={false}
+        onRowClick={handleRowClick}
+        initialPageSize={10}
+        pageSizeOptions={[5, 10, 20, 50]}
+        rowActions={(row) => (
+          <ActionButtons
+            entity={row}
+            entityName="Project"
+            onView={e => navigate(`${e.id}`)}
+            onEdit={e => navigate(`${e.id}/edit`)}
+            deleteFunction={() => handleDelete(row)}
           />
-        </TabsContent>
-      </Tabs>
+        )}
+      />
+      {/* </TabsContent>
+      </Tabs> */}
     </>
   );
 }
