@@ -484,7 +484,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               id="reference-number"
               label="Project Reference Number/Id"
               value={formData.reference_number}
-              onChange={(val) => handleInputChange('name', val)}
+              onChange={(val) => handleInputChange('reference_number', val)}
               required
               placeholder="Enter project reference number/id"
             />
