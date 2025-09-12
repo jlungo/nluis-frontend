@@ -200,7 +200,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   return (
     <div className="space-y-3">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 xl:justify-between">
 
         {/* Centered search */}
         <div className="justify-self-end w-full sm:w-[360px] md:w-[500px]">
