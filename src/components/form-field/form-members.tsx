@@ -68,7 +68,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
     }, [setAccounts])
 
     return (
-        <div>
+        <div className="w-full space-y-2">
             <div className="flex items-center justify-between">
                 <div className="flex flex-col">
                     <p className="text-sm md:text-base flex items-center gap-2 font-semibold">{label} {required ? <Asterisk className="text-destructive h-3 w-3 mb-1" /> : null}</p>
@@ -88,7 +88,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             <DialogTitle>Add Team Member</DialogTitle>
                         </DialogHeader>
                         <DialogDescription>
-                            Add a new team member with their details and role.
+                            Add member with details and role.
                         </DialogDescription>
                         <div className="w-full space-y-2">
                             <Label htmlFor="account">User Account {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
@@ -123,7 +123,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             />
                         </div>
                         <div className="w-full space-y-2">
-                            <Label htmlFor="position">Position/Role {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                            <Label htmlFor="position">Title {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <Input
                                 id="position"
                                 placeholder="Add position or Role"
@@ -137,7 +137,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             />
                         </div>
                         <div className="w-full space-y-2">
-                            <Label htmlFor="specialization">Specialization Area {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                            <Label htmlFor="specialization">Specialization {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <Select
                                 name="specialization"
                                 disabled={disabled || !account}
@@ -163,14 +163,15 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                 </Dialog>
             </div>
 
-            <DataTable
-                columns={columns}
-                data={accounts}
-                shadowed={false}
-                enableGlobalFilter={false}
-                showPagination={false}
-                rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
-            />
+            {accounts.length > 0 ?
+                <DataTable
+                    columns={columns}
+                    data={accounts}
+                    shadowed={false}
+                    enableGlobalFilter={false}
+                    showPagination={false}
+                    rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
+                /> : null}
         </div>
     )
 }

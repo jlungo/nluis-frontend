@@ -103,6 +103,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
   // Initialize form data with project data if editing, or empty values if creating
   const [formData, setFormData] = useState<CreateProjectDataI>({
     name: project?.name || '',
+    reference_number: project?.reference_number || '',
     organization: organizationId,
     description: project?.description || '',
     registration_date: project?.registration_date || '',
@@ -317,6 +318,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
 
       const payload: CreateProjectDataI = {
         name: formData.name,
+        reference_number: formData.reference_number,
         organization: formData.organization,
         description: formData.description,
         registration_date: formData.registration_date,
@@ -476,6 +478,15 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               onChange={(val) => handleInputChange('name', val)}
               required
               placeholder="Enter project name"
+            />
+            <FormFieldInput
+              type="text"
+              id="reference-number"
+              label="Project Reference Number/Id"
+              value={formData.reference_number}
+              onChange={(val) => handleInputChange('name', val)}
+              required
+              placeholder="Enter project reference number/id"
             />
             <FormFieldInput
               type="textarea"
