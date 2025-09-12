@@ -1,6 +1,7 @@
 export interface ProjectI {
   id: string;
   name: string;
+  reference_number: string;
   organization: string;
   type: string | null;
   description: string | null;
@@ -14,6 +15,7 @@ export interface ProjectI {
   total_funders: string | null;
   funders: Array<{ id: string; name: string; category: string }> | null;
   localities: Array<{
+    approval_status: number;
     id: string;
     locality__id: string;
     locality__name: string;
@@ -96,6 +98,7 @@ export interface ProjectQueryParamsI {
 
 export interface CreateProjectDataI {
   name: string;
+  reference_number: string;
   organization: string;
   description: string;
   registration_date: string;
