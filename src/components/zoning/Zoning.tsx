@@ -1,27 +1,13 @@
-// ZoningMapCore.tsx
+// src/components/zoning/ZoningMapCore.tsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
-  Layers,
-  Eye,
-  EyeOff,
-  Settings,
-  Square,
-  Edit3,
-  Maximize,
-  Minimize,
-  Palette,
-  Upload as UploadIcon,
-  Download as DownloadIcon,
-  Pencil,
-  Save as SaveIcon,
-  Trash2,
+  Layers, Eye, EyeOff, Settings, Square, Edit3, Trash2,
+  Maximize, Minimize, Palette, Pencil, Save as SaveIcon,
 } from "lucide-react";
-
 import { ZoneDetailsPanel } from "./components/ZoneDetailsPanel";
 import { ConflictsPanel } from "./components/ConflictsPanel";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { ZoneLegend } from "./components/ZoneLegend";
-
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
@@ -31,12 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 import { useLocalityShapefileQuery } from "@/queries/useLocalityQuery";
 import { useZoneDetailQuery, useUpdateZoneStatus } from "@/queries/useZoningQuery";
+import { useLandUsesQuery, LandUseDto } from "@/queries/useSetupQuery";
 
 import api, { getAccessToken, refreshAccessToken } from "@/lib/axios";
-
 import MapGL, { Source, Layer, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-
+// @ts-ignore
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
@@ -54,8 +40,10 @@ const fcToBounds = (fc: any): [[number, number], [number, number]] | null => {
       if (typeof coords?.[0] === "number") {
         const [x, y] = coords;
         if (Number.isFinite(x) && Number.isFinite(y)) {
-          minX = Math.min(minX, x); minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
         }
       } else if (Array.isArray(coords)) coords.forEach(each);
     };
@@ -71,7 +59,8 @@ const getOuterRing = (geom: any): number[][] => {
   if (!geom) return [];
   if (geom.type === "Polygon") return geom.coordinates?.[0] ?? [];
   if (geom.type === "MultiPolygon") {
-    let best: number[][] = []; let bestLen = 0;
+    let best: number[][] = [];
+    let bestLen = 0;
     (geom.coordinates || []).forEach((poly: number[][][]) => {
       const ring = poly?.[0] || [];
       if (ring.length > bestLen) { best = ring; bestLen = ring.length; }
@@ -81,64 +70,213 @@ const getOuterRing = (geom: any): number[][] => {
   return [];
 };
 
-/* ------------------------------ Types & helpers ----------------------------- */
+/* ------------------------------ Draw state types ---------------------------- */
 type DrawState = "added" | "edited" | "deleted";
-type DrawFeatureState = {
-  feature: any;
-  state: DrawState;
-  original?: any | null;
+type DrawFeatureState = { feature: any; state: DrawState; original?: any | null };
+
+/* ---------------------- GeoJSON normalization helpers ---------------------- */
+const closeRing = (ring: number[][]) => {
+  if (!ring?.length) return ring;
+  const [fx, fy] = ring[0];
+  const [lx, ly] = ring[ring.length - 1];
+  return fx === lx && fy === ly ? ring : [...ring, ring[0]];
 };
-const toFeatureCollection = (features: any[]) => ({ type: "FeatureCollection", features });
 
-const DRAW_LAYER_IDS = [
-  "gl-draw-polygon-fill-inactive",
-  "gl-draw-polygon-fill-active",
-  "gl-draw-polygon-stroke-inactive",
-  "gl-draw-polygon-stroke-active",
-  "gl-draw-line-inactive",
-  "gl-draw-line-active",
-  "gl-draw-point-inactive",
-  "gl-draw-point-active",
-  "gl-draw-polygon-and-line-vertex-halo-inactive",
-  "gl-draw-polygon-and-line-vertex-halo-active",
-  "gl-draw-polygon-and-line-vertex-stroke-inactive",
-  "gl-draw-polygon-and-line-vertex-stroke-active",
-  "gl-draw-polygon-and-line-vertex-inactive",
-  "gl-draw-polygon-and-line-vertex-active",
-  "gl-draw-midpoint-halo",
-  "gl-draw-midpoint",
-];
+const ensureMultiPolygon = (geometry: any) => {
+  if (!geometry) return geometry;
+  if (geometry.type === "Polygon") {
+    const coords = (geometry.coordinates || []).map(closeRing);
+    return { type: "MultiPolygon", coordinates: [coords] };
+  }
+  if (geometry.type === "MultiPolygon") {
+    return {
+      type: "MultiPolygon",
+      coordinates: (geometry.coordinates || []).map(
+        (poly: number[][][]) => poly.map(closeRing)
+      ),
+    };
+  }
+  throw new Error("Only Polygon/MultiPolygon supported");
+};
 
-/* ------------------------------ Component props ----------------------------- */
+/* ----------------------------- Id helpers ---------------------------------- */
+const isServerId = (id: string | null): boolean => !!id && Number.isFinite(Number(id));
+
+/* ------------------------------ Style helpers ------------------------------ */
+type HatchParams = { fg: string; bg?: string|null; angle?: number; width?: number; spacing?: number; opacity?: number };
+type DotsParams  = { fg: string; bg?: string|null; size?: number; spacing?: number; opacity?: number };
+
+function makeCanvas(w = 32, h = 32) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+
+// note: we multiply pattern alpha into fill-opacity via map expressions; this just draws opaque art
+function drawHatchPattern(canvas: HTMLCanvasElement, p: HatchParams) {
+  const ctx = canvas.getContext("2d")!;
+  const step = Math.max(4, p.spacing ?? 8);
+  const W = step * 2;
+  canvas.width = W; canvas.height = W;
+  if (p.bg) { ctx.fillStyle = p.bg; ctx.fillRect(0, 0, W, W); }
+  ctx.strokeStyle = p.fg; ctx.lineWidth = Math.max(1, p.width ?? 1);
+  const ang = ((p.angle ?? 45) * Math.PI) / 180;
+  const diag = W * 1.5;
+  ctx.translate(W/2, W/2); ctx.rotate(ang);
+  for (let x = -W; x <= W; x += step) { ctx.beginPath(); ctx.moveTo(x, -diag); ctx.lineTo(x, diag); ctx.stroke(); }
+  ctx.setTransform(1,0,0,1,0,0);
+}
+
+function drawDotsPattern(canvas: HTMLCanvasElement, p: DotsParams) {
+  const size = Math.max(2, p.size ?? 2);
+  const spacing = Math.max(size * 2, p.spacing ?? 6);
+  const W = spacing;
+  canvas.width = W; canvas.height = W;
+  const ctx = canvas.getContext("2d")!;
+  if (p.bg) { ctx.fillStyle = p.bg; ctx.fillRect(0, 0, W, W); }
+  ctx.fillStyle = p.fg;
+  ctx.beginPath(); ctx.arc(W/2, W/2, size, 0, Math.PI*2); ctx.fill();
+}
+
+function drawImagePattern(canvas: HTMLCanvasElement, url: string, bg?: string|null) {
+  const ctx = canvas.getContext("2d")!;
+  const W = 64; canvas.width = W; canvas.height = W;
+  if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, W, W); }
+  const img = new Image(); img.crossOrigin = "anonymous"; img.src = url;
+  img.onload = () => { ctx.drawImage(img, 0, 0, W, W); };
+}
+
+type ParsedStyles = {
+  solidColorByLU: Map<number, string>;
+  fillOpacityByLU: Map<number, number>;
+  patternByLU: Map<number, { key: string; draw: (c: HTMLCanvasElement)=>void }>;
+  strokeColorByLU: Map<number, string>;
+  strokeWidthByLU: Map<number, number>;
+  badgeByLU: Map<number, { text: string; textStyle?: any; box?: any }>;
+};
+
+function parseLandUseStyles(landUses: LandUseDto[]): ParsedStyles {
+  const solidColorByLU = new Map<number, string>();
+  const fillOpacityByLU = new Map<number, number>();
+  const patternByLU = new Map<number, { key: string; draw: (c: HTMLCanvasElement)=>void }>();
+  const strokeColorByLU = new Map<number, string>();
+  const strokeWidthByLU = new Map<number, number>();
+  const badgeByLU = new Map<number, { text: string; textStyle?: any; box?: any }>();
+
+  const asHex = (c?: string|null) => (typeof c === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c) ? c : undefined);
+  const asNum = (v: any, d: number) => Number.isFinite(Number(v)) ? Number(v) : d;
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+  for (const lu of landUses) {
+    // legacy fallback first (used only if no style)
+    if (lu.color) solidColorByLU.set(lu.id, lu.color);
+
+    const s = lu.style;
+    if (!s || !Array.isArray(s.layers)) continue;
+
+    // Gather all polygon layers in order; allow stacked fills (solid base + pattern on top)
+    const polys = s.layers.filter((L: any) => L?.type === "polygon");
+    const badge = s.layers.find((L: any) => L?.type === "badge");
+    if (badge?.text) badgeByLU.set(lu.id, { text: String(badge.text), textStyle: badge.textStyle || {}, box: badge.box || {} });
+
+    // Stroke (take from the first polygon that defines it)
+    for (const poly of polys) {
+      if (poly?.stroke?.color && asHex(poly.stroke.color)) {
+        strokeColorByLU.set(lu.id, poly.stroke.color);
+      }
+      if (poly?.stroke?.width != null) {
+        strokeWidthByLU.set(lu.id, Math.max(0, asNum(poly.stroke.width, 1)));
+      }
+      if (strokeColorByLU.has(lu.id) && strokeWidthByLU.has(lu.id)) break;
+    }
+
+    // Compute a base solid color (first solid layer with color)
+    let baseSolidColor: string | undefined;
+    for (const poly of polys) {
+      const fill = poly?.fill;
+      if (fill?.type === "solid" && asHex(fill.color)) {
+        baseSolidColor = fill.color;
+        const op = clamp01(asNum(fill.opacity, 1));
+        solidColorByLU.set(lu.id, baseSolidColor);
+        if (!fillOpacityByLU.has(lu.id)) fillOpacityByLU.set(lu.id, op);
+        break;
+      }
+    }
+
+    // If there is any pattern layer, register it; if its bg is missing, use the base solid color
+    for (const poly of polys) {
+      const fill = poly?.fill;
+      if (!fill || fill.type !== "pattern") continue;
+
+      // base opacity (fallback 1)
+      const op = clamp01(asNum(fill.opacity, fillOpacityByLU.get(lu.id) ?? 1));
+      fillOpacityByLU.set(lu.id, op);
+
+      if (fill.pattern === "hatch") {
+        const p: HatchParams = {
+          fg: asHex(fill.fg) || "#000",
+          bg: asHex(fill.bg) || baseSolidColor || null,
+          angle: asNum(fill.angle, 45),
+          width: asNum(fill.width, 1),
+          spacing: asNum(fill.spacing, 8),
+        };
+        const key = `hatch:${p.fg}:${p.bg || "none"}:${p.angle}:${p.width}:${p.spacing}`;
+        patternByLU.set(lu.id, { key, draw: (canvas)=> drawHatchPattern(canvas, p) });
+      } else if (fill.pattern === "dots") {
+        const p: DotsParams = {
+          fg: asHex(fill.fg) || "#000",
+          bg: asHex(fill.bg) || baseSolidColor || null,
+          size: asNum(fill.size, 2),
+          spacing: asNum(fill.spacing, 6),
+        };
+        const key = `dots:${p.fg}:${p.bg || "none"}:${p.size}:${p.spacing}`;
+        patternByLU.set(lu.id, { key, draw: (canvas)=> drawDotsPattern(canvas, p) });
+      } else if (fill.pattern === "image" && typeof fill.url === "string") {
+        const key = `img:${fill.url}:${asHex(fill.bg) || baseSolidColor || "none"}`;
+        const bg = asHex(fill.bg) || baseSolidColor || null;
+        patternByLU.set(lu.id, { key, draw: (canvas)=> drawImagePattern(canvas, fill.url, bg) });
+      }
+    }
+
+    // If we had solids but no explicit opacity captured yet
+    if (!fillOpacityByLU.has(lu.id)) fillOpacityByLU.set(lu.id, 1);
+  }
+
+  return { solidColorByLU, fillOpacityByLU, patternByLU, strokeColorByLU, strokeWidthByLU, badgeByLU };
+}
+
+/** Build draw preview GeoJSON from current drawStates */
+function buildDrawPreviewFC(drawStates: Map<string, DrawFeatureState>) {
+  const feats: any[] = [];
+  drawStates.forEach((s, key) => {
+    if (s.state === "deleted") return; // don't preview deletes
+    const geom = ensureMultiPolygon(s.feature.geometry);
+    const props = {
+      id: typeof s.feature.id === "number" ? s.feature.id : key,
+      land_use: s.feature.properties?.land_use,
+      land_use_name: s.feature.properties?.land_use_name,
+      status: s.feature.properties?.status ?? "Draft",
+      color: s.feature.properties?.color, // legacy fallback
+      __draw: true, // marker
+    };
+    feats.push({ type: "Feature", id: props.id, properties: props, geometry: geom });
+  });
+  return { type: "FeatureCollection", features: feats };
+}
+
+/* --------------------------------- Props ----------------------------------- */
 interface ZoningMapCoreProps {
   project: any;
   isMaximized?: boolean;
   onMaximizeToggle?: () => void;
   colorMode: "type" | "status";
   onColorModeChange: (m: "type" | "status") => void;
-
-  /** Locality (basemap) used for fit/boundary fetch; usually a string */
   baseMapId?: string;
-
-  /** The REAL DB id for Locality. We will ALWAYS use this for new polygons. */
-  localityDbId?: number;
-
-  /** Required for creating new zones (if your model requires plan). */
-  planId?: number;
-
-  /** Default land use to apply to newly drawn polygons. */
   defaultLandUseId?: number;
 }
 
-/* --------------------------------- Component -------------------------------- */
 export function ZoningMapCore({
   baseMapId,
-  localityDbId,
   isMaximized = false,
   onMaximizeToggle,
   colorMode,
   onColorModeChange,
-  planId,
   defaultLandUseId,
 }: ZoningMapCoreProps) {
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -151,26 +289,15 @@ export function ZoningMapCore({
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelTab, setRightPanelTab] = useState("details");
 
-  // NEW: choose land use for new polygons (replace with your real select UI)
-  const [newZoneLandUseId, setNewZoneLandUseId] = useState<number | undefined>(
-    defaultLandUseId
-  );
-
-  // Map refs/state
   const mapGLRef = useRef<any>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [baseMapBounds, setBaseMapBounds] =
-    useState<[[number, number], [number, number]] | null>(null);
+  const [baseMapBounds, setBaseMapBounds] = useState<[[number, number], [number, number]] | null>(null);
 
-  // Draw refs/state
   const drawRef = useRef<any>(null);
-  const [drawStates, setDrawStates] =
-    useState<Map<string, DrawFeatureState>>(new globalThis.Map());
+  const [drawStates, setDrawStates] = useState<Map<string, DrawFeatureState>>(new globalThis.Map());
 
-  const API_BASE = useMemo(
-    () => (api.defaults.baseURL || "").replace(/\/$/, ""),
-    []
-  );
+  const API_BASE = useMemo(() => (api.defaults.baseURL || "").replace(/\/$/, ""), []);
+  const { data: landUses = [] } = useLandUsesQuery();
 
   const zonesTilesTemplate = useMemo(() => {
     const q = new URLSearchParams();
@@ -178,41 +305,24 @@ export function ZoningMapCore({
     return `${API_BASE}/zoning/zones/tiles/{z}/{x}/{y}.mvt?${q.toString()}`;
   }, [API_BASE, baseMapId]);
 
-  /* ------------------------- Protected tiles: auth header ------------------------- */
   const transformRequest = useCallback((url: string) => {
-    if (!API_BASE) return { url };
-    const isApiCall =
-      url.startsWith(API_BASE) || url.startsWith(API_BASE.replace(/^https?/, ""));
+    const isApiCall = url.startsWith(API_BASE) || url.startsWith(API_BASE.replace(/^https?:\/\//, ""));
     if (!isApiCall) return { url };
-    const token =
-      typeof getAccessToken === "function"
-        ? getAccessToken()
-        : localStorage.getItem("accessToken") || "";
+    const token = getAccessToken();
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
     return { url, headers } as any;
   }, [API_BASE]);
 
-  // Auto refresh on tile 401s
   useEffect(() => {
     const mapRef = mapGLRef.current;
     if (!mapRef) return;
     const map = mapRef.getMap ? mapRef.getMap() : mapRef;
-
     const onError = async (e: any) => {
       const status = e?.error?.status || e?.error?.cause?.status;
       if (status !== 401) return;
       try {
-        if (typeof refreshAccessToken === "function") {
-          await refreshAccessToken();
-        } else {
-          const refresh = localStorage.getItem("refreshToken");
-          if (refresh) {
-            const res = await api.post("/auth/token/refresh/", { refresh });
-            const newAccess = (res as any)?.data?.access;
-            if (newAccess) localStorage.setItem("accessToken", newAccess);
-          }
-        }
+        await refreshAccessToken();
         const src: any = map.getSource("zones-tiles");
         if (src?.setTiles) {
           const v = Date.now();
@@ -221,27 +331,15 @@ export function ZoningMapCore({
         } else {
           map.triggerRepaint();
         }
-      } catch { /* ignore */ }
+      } catch {}
     };
-
     map.on("error", onError);
     return () => map.off("error", onError);
   }, [zonesTilesTemplate]);
 
-  /* --------------------------- Basemap boundary (fit) --------------------------- */
-  const {
-    data: baseMapData,
-    isLoading: baseMapLoading,
-    error: baseMapError,
-  } = useLocalityShapefileQuery(baseMapId);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      mapGLRef.current?.resize?.();
-    }, 50);
-    return () => clearTimeout(t);
-  }, [isMaximized]);
-
+  // Basemap
+  const { data: baseMapData, isLoading: baseMapLoading, error: baseMapError } = useLocalityShapefileQuery(baseMapId);
+  useEffect(() => { const t = setTimeout(() => mapGLRef.current?.resize?.(), 50); return () => clearTimeout(t); }, [isMaximized]);
   useEffect(() => {
     setIsLoading(true);
     setLoadingProgress(10);
@@ -251,256 +349,25 @@ export function ZoningMapCore({
     const t4 = setTimeout(() => setIsLoading(false), 1200);
     return () => [t1, t2, t3, t4].forEach(clearTimeout);
   }, [baseMapId]);
-
-  useEffect(() => {
-    if (!baseMapData) return;
-    setBaseMapBounds(fcToBounds(baseMapData));
-  }, [baseMapData]);
-
+  useEffect(() => { if (baseMapData) setBaseMapBounds(fcToBounds(baseMapData)); }, [baseMapData]);
   useEffect(() => {
     const mapRef = mapGLRef.current;
     if (!isMapLoaded || !mapRef || !baseMapBounds) return;
     (mapRef.fitBounds || mapRef.getMap()?.fitBounds)?.(
-      [
-        [baseMapBounds[0][0], baseMapBounds[0][1]],
-        [baseMapBounds[1][0], baseMapBounds[1][1]],
-      ],
+      [[baseMapBounds[0][0], baseMapBounds[0][1]],[baseMapBounds[1][0], baseMapBounds[1][1]]],
       { padding: 24, duration: 800 }
     );
   }, [isMapLoaded, baseMapBounds]);
 
-  /* --------------------------------- Draw helpers -------------------------------- */
-  const bringDrawLayersToFront = useCallback(() => {
-    const mapRef = mapGLRef.current;
-    const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-    if (!map) return;
-    DRAW_LAYER_IDS.forEach((id) => {
-      if (map.getLayer(id)) {
-        try { map.moveLayer(id); } catch {}
-      }
-    });
-  }, []);
+  const zoneIdForQuery = useMemo(() => (isServerId(activeZone) ? activeZone! : undefined), [activeZone]);
+  const { data: zoneDetail } = useZoneDetailQuery(zoneIdForQuery);
 
-  const initDraw = useCallback(() => {
-    const mapRef = mapGLRef.current;
-    if (!mapRef || drawRef.current) return;
-    const map = mapRef.getMap ? mapRef.getMap() : mapRef;
-
-    const draw = new MapboxDraw({
-      displayControlsDefault: false,
-      controls: {},
-      defaultMode: "simple_select",
-    });
-
-    map.addControl(draw as any, "top-left");
-    drawRef.current = draw;
-    bringDrawLayersToFront();
-
-    map.on("draw.create", (e: any) => {
-      const feats = e.features || [];
-      setDrawStates((prev) => {
-        const next = new globalThis.Map(prev);
-        feats.forEach((f: any) => {
-          const id = String(f.id || f.properties?.id || Date.now());
-          next.set(id, { feature: f, state: "added", original: null });
-        });
-        return next;
-      });
-      if (feats.length) toast.success("Polygon created. Double-click finishes.");
-      bringDrawLayersToFront();
-    });
-
-    map.on("draw.update", (e: any) => {
-      const feats = e.features || [];
-      setDrawStates((prev) => {
-        const next = new globalThis.Map(prev);
-        feats.forEach((f: any) => {
-          const id = String(f.id || f.properties?.id || Date.now());
-          const existing = next.get(id) || prev.get(id);
-          if (existing?.state === "added") {
-            next.set(id, { feature: f, state: "added", original: existing.original });
-          } else {
-            next.set(id, { feature: f, state: "edited", original: existing?.original || f });
-          }
-        });
-        return next;
-      });
-      bringDrawLayersToFront();
-    });
-
-    map.on("draw.delete", (e: any) => {
-      const feats = e.features || [];
-      setDrawStates((prev) => {
-        const next = new globalThis.Map(prev);
-        feats.forEach((f: any) => {
-          const id = String(f.id || f.properties?.id || Date.now());
-          const existing = next.get(id);
-          if (existing?.state === "added") {
-            next.delete(id);
-          } else {
-            next.set(id, { feature: f, state: "deleted", original: existing?.original || f });
-          }
-        });
-        return next;
-      });
-      bringDrawLayersToFront();
-    });
-  }, [bringDrawLayersToFront]);
-
-  const setDrawMode = useCallback((
-    mode: "simple_select" | "draw_polygon" | "direct_select" | "trash"
-  ) => {
-    const draw = drawRef.current;
-    const mapRef = mapGLRef.current;
-    const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-    if (!draw || !map) return;
-
-    const canvas: HTMLCanvasElement | undefined = map.getCanvas?.();
-    if (mode === "draw_polygon") {
-      canvas && (canvas.style.cursor = "crosshair");
-    } else {
-      canvas && (canvas.style.cursor = "");
-    }
-
-    if (mode === "trash") draw.trash();
-    else (draw as any).changeMode(mode);
-
-    setTimeout(bringDrawLayersToFront, 0);
-  }, [bringDrawLayersToFront]);
-
-  /* --------------------------------- Details / edit -------------------------------- */
-  const { data: zoneDetail } = useZoneDetailQuery(activeZone || undefined);
-
-  const editActiveZoneInDraw = useCallback(async () => {
-    if (!activeZone) return;
-    const draw = drawRef.current;
-    const mapRef = mapGLRef.current;
-    if (!draw || !mapRef) return;
-    if (!zoneDetail) {
-      toast.error("Zone detail not loaded yet");
-      return;
-    }
-    const numericId = Number(activeZone);
-    const feature = {
-      type: "Feature",
-      id: Number.isFinite(numericId) ? numericId : activeZone, // keep DB id numeric if possible
-      properties: {
-        id: Number.isFinite(numericId) ? numericId : activeZone,
-        land_use: zoneDetail.land_use,
-        plan: zoneDetail.plan,
-        locality: zoneDetail.locality, // DB id from backend
-        status: zoneDetail.status,
-      },
-      geometry: zoneDetail.geom,
-    };
-    try {
-      draw.add(feature as any);
-      (draw as any).changeMode("direct_select", { featureId: feature.id });
-      setDrawStates((prev) => {
-        const next = new globalThis.Map(prev);
-        next.set(String(feature.id), { feature, state: "edited", original: feature });
-        return next;
-      });
-      setSelectedTool("edit");
-      bringDrawLayersToFront();
-    } catch {
-      toast.error("Failed to add feature to editor");
-    }
-  }, [activeZone, zoneDetail, bringDrawLayersToFront]);
-
-  /* ------------------------------ Save changes (bulk) ------------------------------ */
-  const onSaveDrawChanges = useCallback(async () => {
-    const arr = Array.from(drawStates.entries());
-    if (!arr.length) {
-      toast.info("No changes to save");
-      return;
-    }
-
-    const locId = Number(localityDbId ?? baseMapId);
-    const hasValidLocality = Number.isFinite(locId);
-
-    const features = arr.map(([clientId, s]) => {
-      const rawId = s.feature?.id ?? clientId;
-      const rawProps = s.feature?.properties ?? {};
-      const numericId = Number(rawId);
-      const isExisting = s.state !== "added" && Number.isFinite(numericId);
-
-      // land_use for NEW polygons: from feature if present, else from UI/default
-      const landUseForNew =
-        rawProps.land_use ?? newZoneLandUseId;
-
-      const props: any = {
-        // include id ONLY for edited/deleted AND numeric
-        ...(isExisting ? { id: numericId } : {}),
-        // include plan only if provided (your model may require it)
-        ...(Number.isFinite(planId) ? { plan: planId } : {}),
-        // land_use: prefer existing property; otherwise use chosen default
-        ...(s.state === "added"
-          ? { land_use: landUseForNew }
-          : { land_use: rawProps.land_use }),
-        // locality: always the DB id you pass in props (for NEW)
-        ...(s.state === "added" && hasValidLocality ? { locality: locId } : {}),
-        // carry status if present, else default to Draft on create
-        status: rawProps.status ?? (s.state === "added" ? "Draft" : undefined),
-      };
-
-      return {
-        type: "Feature",
-        // do NOT set top-level id for NEW features (Mapbox string ids break DRF integer field)
-        ...(isExisting ? { id: numericId } : {}),
-        properties: props,
-        geometry: s.feature.geometry,
-      };
-    });
-
-    // Validate NEW features have minimum metadata
-    const missingMeta = features.some((f) => {
-      const isNew = typeof (f as any).id === "undefined";
-      if (!isNew) return false;
-      const p = (f as any).properties || {};
-      return !p.land_use || !p.locality || (!Number.isFinite(planId) && p.plan == null);
-    });
-
-    if (missingMeta) {
-      toast.error(
-        "New polygons need at least land_use and locality (and plan if your model requires it)."
-      );
-      return;
-    }
-
-    const body = toFeatureCollection(features);
-
-    try {
-      await api.post("/zoning/zones/bulk/", body);
-      toast.success("Changes saved");
-
-      // clear draw + local state
-      setDrawStates(new globalThis.Map());
-      try { drawRef.current?.deleteAll(); } catch {}
-
-      // refresh tiles
-      const mapRef = mapGLRef.current;
-      const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-      const src: any = map?.getSource("zones-tiles");
-      if (src?.setTiles) {
-        const v = Date.now();
-        const [base, qs = ""] = zonesTilesTemplate.split("?");
-        src.setTiles([`${base}?${qs}&v=${v}`]);
-      }
-    } catch (e: any) {
-      toast.error(e?.response?.data?.detail || "Save failed");
-    }
-  }, [drawStates, planId, newZoneLandUseId, localityDbId, baseMapId, zonesTilesTemplate]);
-
-  /* ------------------------------ Status actions ------------------------------ */
   const updateStatus = useUpdateZoneStatus({
     onDone: () => {
-      const mapRef = mapGLRef.current;
-      const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+      const mapRef = mapGLRef.current; const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
       const src: any = map?.getSource("zones-tiles");
       if (src?.setTiles) {
-        const v = Date.now();
-        const [base, qs = ""] = zonesTilesTemplate.split("?");
+        const v = Date.now(); const [base, qs = ""] = zonesTilesTemplate.split("?");
         src.setTiles([`${base}?${qs}&v=${v}`]);
       }
     },
@@ -508,73 +375,382 @@ export function ZoningMapCore({
 
   const approve = useCallback(() => {
     if (!activeZone) return;
-    const mapRef = mapGLRef.current;
-    const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-    map?.setFeatureState(
-      { source: "zones-tiles", sourceLayer: "zones", id: Number(activeZone) || activeZone },
-      { status: "Approved" }
-    );
+    const mapRef = mapGLRef.current; const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+    map?.setFeatureState({ source: "zones-tiles", sourceLayer: "zones", id: Number(activeZone) || activeZone }, { status: "Approved" });
     updateStatus.mutate({ id: activeZone, status: "Approved" });
   }, [activeZone, updateStatus]);
 
   const reject = useCallback(() => {
     if (!activeZone) return;
-    const mapRef = mapGLRef.current;
-    const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-    map?.setFeatureState(
-      { source: "zones-tiles", sourceLayer: "zones", id: Number(activeZone) || activeZone },
-      { status: "Rejected" }
-    );
+    const mapRef = mapGLRef.current; const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+    map?.setFeatureState({ source: "zones-tiles", sourceLayer: "zones", id: Number(activeZone) || activeZone }, { status: "Rejected" });
     updateStatus.mutate({ id: activeZone, status: "Rejected" });
   }, [activeZone, updateStatus]);
 
-  /* --------------------------------- Map events -------------------------------- */
-  const onMapLoad = useCallback(() => {
-    setIsMapLoaded(true);
-    initDraw();
-    setTimeout(bringDrawLayersToFront, 0);
-  }, [initDraw, bringDrawLayersToFront]);
+  /* ------------------------------ Draw: setup/modes ------------------------------ */
+  const initDraw = useCallback(() => {
+    const mapRef = mapGLRef.current; if (!mapRef) return;
+    const map = mapRef.getMap ? mapRef.getMap() : mapRef;
+    if (drawRef.current) return;
+    const draw = new MapboxDraw({ displayControlsDefault: false, controls: {}, defaultMode: "simple_select" });
+    map.addControl(draw as any, "top-left");
+    drawRef.current = draw;
 
+    map.on("draw.create", (e: any) => {
+      const feats = e.features || [];
+      setDrawStates((prev) => {
+        const next = new globalThis.Map(prev);
+        feats.forEach((f: any) => {
+          const id = String(f.id || f.properties?.id || Date.now());
+          f.properties = {
+            ...(f.properties || {}),
+            status: f.properties?.status || "Draft",
+            locality: baseMapId ? Number(baseMapId) : undefined,
+            land_use: f.properties?.land_use ?? defaultLandUseId ?? undefined,
+          };
+          next.set(id, { feature: f, state: "added", original: null });
+          setActiveZone(id);
+        });
+        return next;
+      });
+    });
+
+    map.on("draw.update", (e: any) => {
+      const feats = e.features || [];
+      setDrawStates((prev) => {
+        const next = new Map(prev);
+        feats.forEach((f: any) => {
+          const id = String(f.id || f.properties?.id || Date.now());
+          const existing = next.get(id) || prev.get(id);
+          if (existing?.state === "added") next.set(id, { feature: f, state: "added", original: existing.original });
+          else next.set(id, { feature: f, state: "edited", original: existing?.original || f });
+        });
+        return next;
+      });
+    });
+
+    map.on("draw.delete", (e: any) => {
+      const feats = e.features || [];
+      setDrawStates((prev) => {
+        const next = new Map(prev);
+        feats.forEach((f: any) => {
+          const id = String(f.id || f.properties?.id || Date.now());
+          const existing = next.get(id);
+          if (existing?.state === "added") next.delete(id);
+          else next.set(id, { feature: f, state: "deleted", original: existing?.original || f });
+        });
+        return next;
+      });
+    });
+  }, [baseMapId, defaultLandUseId]);
+
+  const setDrawMode = useCallback((mode: "simple_select" | "draw_polygon" | "direct_select" | "trash") => {
+    const draw = drawRef.current; if (!draw) return;
+    if (mode === "trash") { draw.trash(); return; }
+    (draw as any).changeMode(mode);
+  }, []);
+
+  const editActiveZoneInDraw = useCallback(async () => {
+    if (!activeZone) return;
+    const draw = drawRef.current; const mapRef = mapGLRef.current;
+    if (!draw || !mapRef) return;
+    if (!zoneDetail) { toast.error("Zone detail not loaded yet"); return; }
+    const feature = {
+      type: "Feature",
+      id: Number(activeZone) || activeZone,
+      properties: {
+        id: Number(activeZone) || activeZone,
+        land_use: zoneDetail.land_use,
+        locality: zoneDetail.locality,
+        status: zoneDetail.status || "Draft",
+        color: (zoneDetail as any).color,
+      },
+      geometry: zoneDetail.geom,
+    };
+    try {
+      draw.add(feature as any);
+      (draw as any).changeMode("direct_select", { featureId: feature.id });
+      setDrawStates((prev) => {
+        const next = new Map(prev);
+        next.set(String(feature.id), { feature, state: "edited", original: feature });
+        return next;
+      });
+      setSelectedTool("edit");
+    } catch {
+      toast.error("Failed to add feature to editor");
+    }
+  }, [activeZone, zoneDetail]);
+
+  const onSaveDrawChanges = useCallback(async () => {
+    const arr = Array.from(drawStates.entries());
+    if (!arr.length) { toast.info("No changes to save"); return; }
+    const features = arr.map(([key, s]) => {
+      const props: any = {
+        ...(typeof s.feature.id === "number" ? { id: s.feature.id } : {}),
+        locality: baseMapId ? Number(baseMapId) : undefined,
+        land_use: s.feature.properties?.land_use,
+        status: s.feature.properties?.status ?? "Draft",
+      };
+      return { type: "Feature", id: props.id, properties: props, geometry: ensureMultiPolygon(s.feature.geometry) };
+    });
+    const missingMeta = features.some(f => !f.properties.land_use || !f.properties.locality);
+    if (missingMeta) { toast.error("Please choose Land Use before saving."); return; }
+    const body = { type: "FeatureCollection", features };
+    try {
+      await api.post("/zoning/zones/bulk/", body);
+      toast.success("Changes saved");
+      setDrawStates(new Map()); try { drawRef.current?.deleteAll(); } catch {}
+      const mapRef = mapGLRef.current; const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+      const src: any = map?.getSource("zones-tiles");
+      if (src?.setTiles) { const v = Date.now(); const [base, qs = ""] = zonesTilesTemplate.split("?"); src.setTiles([`${base}?${qs}&v=${v}`]); }
+    } catch (e: any) {
+      toast.error(e?.response?.data?.detail || "Save failed");
+    }
+  }, [drawStates, baseMapId, zonesTilesTemplate]);
+
+  const assignLandUseToDrawFeature = useCallback((zoneId: string | number, landUse: LandUseDto) => {
+    const idStr = String(zoneId);
+    setDrawStates(prev => {
+      const next = new Map(prev);
+      const s = next.get(idStr); if (!s) return prev;
+      const updated = {
+        ...s,
+        feature: {
+          ...s.feature,
+          properties: {
+            ...(s.feature.properties || {}),
+            land_use: landUse.id,
+            land_use_name: landUse.name,
+            color: landUse.color || s.feature.properties?.color,
+          },
+        },
+      };
+      next.set(idStr, updated);
+      try {
+        drawRef.current?.setFeatureProperty(s.feature.id, "land_use", landUse.id);
+        drawRef.current?.setFeatureProperty(s.feature.id, "land_use_name", landUse.name);
+        if (landUse.color) drawRef.current?.setFeatureProperty(s.feature.id, "color", landUse.color);
+      } catch {}
+      return next;
+    });
+    toast.success("Land Use assigned");
+  }, []);
+
+  const onMapLoad = useCallback(() => { setIsMapLoaded(true); initDraw(); }, [initDraw]);
+
+  const onMapClick = useCallback((e: any) => {
+    if (selectedTool === "draw" || selectedTool === "edit") return;
+    const mapRef = mapGLRef.current; const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+    const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill"] })?.[0];
+    if (!f) return;
+    const id = f.id ?? f.properties?.id;
+    if (id !== undefined && id !== null) setActiveZone(String(id));
+  }, [selectedTool]);
+
+  const panelZones = useMemo(() => {
+    const z: any[] = [];
+    if (zoneDetail) {
+      z.push({
+        id: zoneDetail.id,
+        type: String(zoneDetail.land_use_name || zoneDetail.land_use || ""),
+        status: zoneDetail.status || "Draft",
+        color: (zoneDetail as any).color || "#888",
+        coordinates: getOuterRing(zoneDetail.geom),
+        notes: (zoneDetail as any).notes,
+        attributes: {},
+        lastModified: zoneDetail.updated_at?.slice(0, 10),
+      });
+    } else if (activeZone && drawStates.get(String(activeZone))) {
+      const s = drawStates.get(String(activeZone))!;
+      z.push({
+        id: activeZone,
+        type: s.feature?.properties?.land_use_name || "",
+        status: s.feature?.properties?.status || "Draft",
+        color: s.feature?.properties?.color || "#888",
+        coordinates: getOuterRing(s.feature?.geometry),
+        notes: "",
+        attributes: {},
+        lastModified: "",
+      });
+    }
+    return z;
+  }, [zoneDetail, activeZone, drawStates]);
+
+  const isActiveDrawFeature = useMemo(() => (!!activeZone && drawStates.has(String(activeZone))), [activeZone, drawStates]);
+
+  /** ---------------------- LAND-USE STYLE REGISTRATION --------------------- **/
+  // parse styles once per landUses change
+  const parsedStyles = useMemo(() => parseLandUseStyles(landUses), [landUses]);
+
+  // keep a memoized draw preview FC
+  const drawPreviewFC = useMemo(() => buildDrawPreviewFC(drawStates), [drawStates]);
+
+  // Register pattern images & wire styles for BOTH the server tiles and the draw preview layers
   useEffect(() => {
     if (!isMapLoaded) return;
-    const t = setTimeout(bringDrawLayersToFront, 0);
-    return () => clearTimeout(t);
-  }, [isMapLoaded, bringDrawLayersToFront, layerVisibility]);
+    const mapRef = mapGLRef.current;
+    const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
+    if (!map) return;
 
-  const onMapClick = useCallback(
-    (e: any) => {
-      if (selectedTool === "draw" || selectedTool === "edit") return;
-      const mapRef = mapGLRef.current;
-      const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-      const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill"] })?.[0];
-      if (!f) return;
-      const id = f.id ?? f.properties?.id;
-      if (id !== undefined && id !== null) setActiveZone(String(id));
-    },
-    [selectedTool]
-  );
+    const {
+      solidColorByLU, fillOpacityByLU, patternByLU,
+      strokeColorByLU, strokeWidthByLU, badgeByLU
+    } = parsedStyles;
+
+    // 1) Register pattern images (once per key)
+    for (const [, patt] of patternByLU.entries()) {
+      const name = `lu-pattern-${patt.key}`;
+      if (!map.hasImage(name)) {
+        const canvas = makeCanvas(32, 32);
+        patt.draw(canvas);
+        map.addImage(name, canvas, { pixelRatio: 1 });
+      }
+    }
+
+    // 2) Build expressions shared by zones + draw layers
+    const colorPairs: any[] = [];
+    solidColorByLU.forEach((color, id) => colorPairs.push(id, color));
+    const baseColorExpr =
+      colorPairs.length
+        ? ["match", ["get", "land_use"], ...colorPairs, ["coalesce", ["get","color"], "#6b7280"]]
+        : ["coalesce", ["get","color"], "#6b7280"];
+
+    const opacityPairs: any[] = [];
+    fillOpacityByLU.forEach((op, id) => opacityPairs.push(id, op));
+    const baseOpacityExpr =
+      opacityPairs.length ? ["match", ["get","land_use"], ...opacityPairs, 0.5] : 0.5;
+
+    const patternPairs: any[] = [];
+    patternByLU.forEach((patt, id) => patternPairs.push(id, `lu-pattern-${patt.key}`));
+    const patternExpr = patternPairs.length ? ["match", ["get", "land_use"], ...patternPairs, ""] : "";
+
+    const strokeColorPairs: any[] = [];
+    strokeColorByLU.forEach((c, id) => strokeColorPairs.push(id, c));
+    const lineColorExpr =
+      strokeColorPairs.length ? ["match", ["get","land_use"], ...strokeColorPairs, "#1f2937"] : "#1f2937";
+
+    const strokeWidthPairs: any[] = [];
+    strokeWidthByLU.forEach((w, id) => strokeWidthPairs.push(id, w));
+    const lineWidthExpr =
+      strokeWidthPairs.length ? ["match", ["get","land_use"], ...strokeWidthPairs, 0.75] : 0.75;
+
+    // Status override color (server tiles + draw preview)
+    const statusColorExpr = [
+      "case",
+      ["==", ["feature-state", "status"], "Approved"], "#22c55e",
+      ["==", ["feature-state", "status"], "Rejected"], "#dc2626",
+      ["==", ["get", "status"], "Approved"], "#22c55e",
+      ["==", ["get", "status"], "Rejected"], "#dc2626",
+      ["==", ["get", "status"], "In Review"], "#f59e0b",
+      baseColorExpr
+    ];
+
+    // 3) Apply to server MVT layers
+    try {
+      map.setPaintProperty("zones-fill", "fill-color", statusColorExpr);
+      map.setPaintProperty("zones-fill", "fill-opacity", baseOpacityExpr);
+      map.setPaintProperty("zones-fill", "fill-pattern", patternExpr); // pattern (if any) wins
+      map.setPaintProperty("zones-line", "line-color", lineColorExpr);
+      map.setPaintProperty("zones-line", "line-width", lineWidthExpr);
+    } catch {}
+
+    // 4) Badges for server MVT
+    if (!map.getLayer("zones-badges")) {
+      map.addLayer({
+        id: "zones-badges",
+        type: "symbol",
+        source: "zones-tiles",
+        "source-layer": "zones",
+        layout: {
+          "text-field": "",
+          "text-size": 11,
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "symbol-placement": "point",
+        },
+        paint: { "text-halo-color": "#fff", "text-halo-width": 1.2, "text-color": "#083F2A" },
+      }, "zones-line");
+    }
+    const badgePairs: any[] = [];
+    badgeByLU.forEach((b, id) => { if (b.text) badgePairs.push(id, String(b.text)); });
+    const textExpr = badgePairs.length ? ["match", ["get","land_use"], ...badgePairs, ""] : "";
+    try { map.setLayoutProperty("zones-badges", "text-field", textExpr); } catch {}
+
+    // 5) DRAW PREVIEW layers (mirror styles)
+    // Create layers once
+    if (!map.getLayer("draw-fill")) {
+      map.addLayer({
+        id: "draw-fill",
+        type: "fill",
+        source: "draw-preview",
+        paint: {
+          "fill-color": statusColorExpr,
+          "fill-opacity": baseOpacityExpr,
+          "fill-pattern": patternExpr,
+        },
+      }, "zones-line"); // put above zones lines for clarity
+    } else {
+      try {
+        map.setPaintProperty("draw-fill", "fill-color", statusColorExpr);
+        map.setPaintProperty("draw-fill", "fill-opacity", baseOpacityExpr);
+        map.setPaintProperty("draw-fill", "fill-pattern", patternExpr);
+      } catch {}
+    }
+
+    if (!map.getLayer("draw-line")) {
+      map.addLayer({
+        id: "draw-line",
+        type: "line",
+        source: "draw-preview",
+        paint: {
+          "line-color": lineColorExpr,
+          "line-width": lineWidthExpr,
+        },
+      }, "draw-fill");
+    } else {
+      try {
+        map.setPaintProperty("draw-line", "line-color", lineColorExpr);
+        map.setPaintProperty("draw-line", "line-width", lineWidthExpr);
+      } catch {}
+    }
+
+    if (!map.getLayer("draw-badges")) {
+      map.addLayer({
+        id: "draw-badges",
+        type: "symbol",
+        source: "draw-preview",
+        layout: {
+          "text-field": textExpr,
+          "text-size": 11,
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "symbol-placement": "point",
+        },
+        paint: { "text-halo-color": "#fff", "text-halo-width": 1.2, "text-color": "#083F2A" },
+      }, "draw-line");
+    } else {
+      try { map.setLayoutProperty("draw-badges", "text-field", textExpr); } catch {}
+    }
+
+  }, [isMapLoaded, parsedStyles]);
 
   /* ------------------------------------ UI ------------------------------------ */
   return (
     <div className="relative w-full h-full overflow-hidden flex flex-col">
-      {/* Loading bar */}
       {isLoading && (
         <div className="h-1 bg-muted relative overflow-hidden shrink-0">
           <div className="h-full bg-primary transition-all duration-300 ease-out" style={{ width: `${loadingProgress}%` }} />
         </div>
       )}
 
-      {/* Ribbon */}
+      {/* Toolbar */}
       <div className="flex items-center gap-1 px-4 py-2 border-b bg-muted/30 shrink-0">
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground mr-2">Selection:</span>
-          <Button
-            type="button"
-            variant={selectedTool === "select" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => { setSelectedTool("select"); setDrawMode("simple_select"); }}
-            className="h-8 px-2"
-          >
+          <Button type="button" variant={selectedTool === "select" ? "default" : "ghost"} size="sm"
+            onClick={() => { setSelectedTool("select"); setDrawMode("simple_select"); }} className="h-8 px-2">
             <Settings className="w-4 h-4 mr-1" /> Select
           </Button>
         </div>
@@ -583,88 +759,38 @@ export function ZoningMapCore({
 
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground mr-2">Draw:</span>
-          <Button
-            type="button"
-            variant={selectedTool === "draw" ? "default" : "ghost"}
-            size="sm"
-            disabled={!isMapLoaded || !drawRef.current}
-            onClick={() => { setSelectedTool("draw"); setDrawMode("draw_polygon"); }}
-            className="h-8 px-2"
-          >
+          <Button type="button" variant={selectedTool === "draw" ? "default" : "ghost"} size="sm"
+            onClick={() => { setSelectedTool("draw"); setDrawMode("draw_polygon"); }} className="h-8 px-2">
             <Square className="w-4 h-4 mr-1" /> Polygon
           </Button>
-          <Button
-            type="button"
-            variant={selectedTool === "edit" ? "default" : "ghost"}
-            size="sm"
-            disabled={!isMapLoaded || !drawRef.current}
-            onClick={() => { setSelectedTool("edit"); setDrawMode("direct_select"); }}
-            className="h-8 px-2"
-          >
+          <Button type="button" variant={selectedTool === "edit" ? "default" : "ghost"} size="sm"
+            onClick={() => { setSelectedTool("edit"); setDrawMode("direct_select"); }} className="h-8 px-2">
             <Edit3 className="w-4 h-4 mr-1" /> Vertices
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={!isMapLoaded || !drawRef.current}
-            onClick={() => setDrawMode("trash")}
-            className="h-8 px-2"
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={() => setDrawMode("trash")} className="h-8 px-2">
             <Trash2 className="w-4 h-4 mr-1" /> Delete
           </Button>
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-2" />
 
-        {/* NEW: quick inputs for meta on new zones */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Land Use (new):</span>
-            <input
-              type="number"
-              className="h-8 w-24 rounded border px-2 text-sm"
-              value={newZoneLandUseId ?? ""}
-              onChange={(e) => setNewZoneLandUseId(e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="ID"
-              title="Default land_use id for newly drawn polygons"
-            />
-          </div>
-          {/* If you want: add similar input for plan id, or keep it as prop */}
-        </div>
-
-        <Separator orientation="vertical" className="h-6 mx-2" />
-
-        {/* Edit existing zone from tiles + Save */}
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!activeZone}
-            onClick={editActiveZoneInDraw}
-            className="h-8 px-2"
-            title={activeZone ? "Load selected zone into editor" : "Select a zone on the map first"}
-          >
+          <Button type="button" variant="outline" size="sm"
+            disabled={!activeZone || !!Number(activeZone) === false}
+            onClick={editActiveZoneInDraw} className="h-8 px-2"
+            title={activeZone ? "Load selected zone into editor" : "Select a zone on the map first"}>
             <Pencil className="w-4 h-4 mr-1" /> Edit Selected
           </Button>
 
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={onSaveDrawChanges}
-            className="h-8 px-2"
-            disabled={Array.from(drawStates.values()).length === 0}
-            title="Save added/edited/deleted polygons"
-          >
+          <Button type="button" variant="default" size="sm" onClick={onSaveDrawChanges}
+            className="h-8 px-2" disabled={Array.from(drawStates.values()).length === 0}
+            title="Save added/edited/deleted polygons">
             <SaveIcon className="w-4 h-4 mr-1" /> Save ({Array.from(drawStates.values()).length})
           </Button>
         </div>
 
         <div className="flex-1" />
 
-        {/* Color Mode */}
         <div className="flex items-center gap-3">
           <Palette className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Type</span>
@@ -690,36 +816,17 @@ export function ZoningMapCore({
                 <EyeOff className="w-4 h-4" />
               </Button>
             </div>
-
             <ZoneLegend colorMode={colorMode} />
-
             <Separator className="my-4" />
-
-            <div className="space-y-4">
-              <h4>Quick Actions</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => toast.info("Import coming soon")}>
-                  <UploadIcon className="w-4 h-4 mr-2" /> Import
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => toast.info("Export coming soon")}>
-                  <DownloadIcon className="w-4 h-4 mr-2" /> Export
-                </Button>
-              </div>
-
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div>Added: {Array.from(drawStates.values()).filter(s => s.state === "added").length}</div>
-                <div>Edited: {Array.from(drawStates.values()).filter(s => s.state === "edited").length}</div>
-                <div>Deleted: {Array.from(drawStates.values()).filter(s => s.state === "deleted").length}</div>
-                <div>Total: {Array.from(drawStates.values()).length}</div>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Map Canvas */}
         <div className="flex-1 relative min-h-0 overflow-hidden">
           {!leftPanelOpen && (
-            <Button type="button" variant="outline" size="sm" className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm shadow-lg" onClick={() => setLeftPanelOpen(true)}>
+            <Button type="button" variant="outline" size="sm"
+              className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm shadow-lg"
+              onClick={() => setLeftPanelOpen(true)}>
               <Settings className="w-4 h-4 mr-2" /> Tools
             </Button>
           )}
@@ -732,7 +839,8 @@ export function ZoningMapCore({
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" /> Layers
                   </CardTitle>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setLayersOpen(!layersOpen)} className="p-0">
+                  <Button type="button" variant="ghost" size="sm"
+                    onClick={() => setLayersOpen(!layersOpen)} className="p-0">
                     {layersOpen ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   </Button>
                 </div>
@@ -742,7 +850,8 @@ export function ZoningMapCore({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Basemap</span>
-                      <Switch checked={layerVisibility.basemap} onCheckedChange={() => setLayerVisibility((p) => ({ ...p, basemap: !p.basemap }))} />
+                      <Switch checked={layerVisibility.basemap}
+                        onCheckedChange={() => setLayerVisibility((p) => ({ ...p, basemap: !p.basemap }))} />
                     </div>
                   </div>
                 </CardContent>
@@ -750,7 +859,7 @@ export function ZoningMapCore({
             </Card>
           </div>
 
-          {/* The actual map */}
+          {/* The map */}
           <div className="absolute inset-0">
             <MapGL
               ref={mapGLRef}
@@ -765,44 +874,36 @@ export function ZoningMapCore({
             >
               <NavigationControl position="top-left" />
 
-              {/* Basemap boundary (optional) */}
               {baseMapData && (
                 <Source id="basemap-src" type="geojson" data={baseMapData}>
-                  <Layer
-                    id="basemap-fill"
-                    type="fill"
+                  <Layer id="basemap-fill" type="fill"
                     layout={{ visibility: layerVisibility.basemap ? "visible" : "none" }}
-                    paint={{ "fill-color": "#3b82f6", "fill-opacity": (layerOpacity.basemap ?? 30) / 100 }}
-                  />
-                  <Layer
-                    id="basemap-line"
-                    type="line"
+                    paint={{ "fill-color": "#3b82f6", "fill-opacity": (layerOpacity.basemap ?? 30) / 100 }} />
+                  <Layer id="basemap-line" type="line"
                     layout={{ visibility: layerVisibility.basemap ? "visible" : "none" }}
-                    paint={{ "line-color": "#2563eb", "line-width": 1.2, "line-opacity": 0.9 }}
-                  />
+                    paint={{ "line-color": "#2563eb", "line-width": 1.2, "line-opacity": 0.9 }} />
                 </Source>
               )}
 
-              {/* ZONES VIA MVT (protected) */}
-              <Source id="zones-tiles" type="vector" tiles={[zonesTilesTemplate]} minzoom={10} maxzoom={22} promoteId="id">
+              {/* ZONES VIA MVT */}
+              <Source id="zones-tiles" type="vector" tiles={[zonesTilesTemplate]} minzoom={1} maxzoom={22} promoteId="id">
                 <Layer
                   id="zones-fill"
                   type="fill"
                   source-layer="zones"
                   paint={{
-                    "fill-color": [
-                      "case",
-                      ["==", ["feature-state", "status"], "Approved"], "#22c55e",
-                      ["==", ["feature-state", "status"], "Rejected"], "#dc2626",
-                      ["==", ["get", "status"], "Approved"], "#22c55e",
-                      ["==", ["get", "status"], "Rejected"], "#dc2626",
-                      ["==", ["get", "status"], "In Review"], "#f59e0b",
-                      ["coalesce", ["get", "color"], "#6b7280"],
-                    ],
+                    // These are placeholders; real paint is set in the effect after styles are parsed
+                    "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
                     "fill-opacity": 0.5,
                   }}
                 />
-                <Layer id="zones-line" type="line" source-layer="zones" paint={{ "line-color": "#1f2937", "line-width": 0.75 }} />
+                <Layer id="zones-line" type="line" source-layer="zones"
+                  paint={{ "line-color": "#1f2937", "line-width": 0.75 }} />
+              </Source>
+
+              {/* DRAW PREVIEW: mirrors style logic for features being added/edited */}
+              <Source id="draw-preview" type="geojson" data={drawPreviewFC}>
+                {/* Layers are added/configured in the effect so expressions can be reused */}
               </Source>
             </MapGL>
 
@@ -816,21 +917,17 @@ export function ZoningMapCore({
                 <div className="text-xs text-muted-foreground">
                   Basemap: {baseMapLoading ? "Loading…" : baseMapError ? "Error" : "Loaded"}
                 </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>Pending changes: {Array.from(drawStates.values()).length}</div>
+                </div>
               </div>
             </div>
-
-            {/* Draw hint pill */}
-            {selectedTool === "draw" && (
-              <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded px-3 py-2 text-xs shadow">
-                Click to add vertices, <b>double-click</b> to finish. Press <b>Esc</b> to cancel.
-              </div>
-            )}
           </div>
         </div>
 
         {/* Right Panel */}
         <div className="w-72 border-l bg-card shrink-0 flex flex-col min-h-0">
-          <Tabs value={rightPanelTab} onValueChange={setRightPanelTab} className="flex-1 flex flex-col min-h-0">
+          <Tabs value={rightPanelTab} onValueChange={setRightPanelTab} className="flex-1 flex flex-col min_h-0">
             <TabsList className="grid w-full grid-cols-3 shrink-0">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="conflicts">Conflicts</TabsTrigger>
@@ -842,22 +939,39 @@ export function ZoningMapCore({
                 <div className="h-full overflow-y-auto">
                   <ZoneDetailsPanel
                     activeZone={activeZone}
-                    zones={
-                      zoneDetail
-                        ? [{
-                            id: zoneDetail.id,
-                            type: String(zoneDetail.land_use ?? ""),
-                            status: zoneDetail.status,
-                            color: zoneDetail.color,
-                            coordinates: getOuterRing(zoneDetail.geom),
-                            notes: zoneDetail.notes,
-                          }]
-                        : []
-                    }
+                    zones={(() => {
+                      const z: any[] = [];
+                      if (zoneDetail) {
+                        z.push({
+                          id: zoneDetail.id,
+                          type: String(zoneDetail.land_use_name || zoneDetail.land_use || ""),
+                          status: zoneDetail.status || "Draft",
+                          color: (zoneDetail as any).color || "#888",
+                          coordinates: getOuterRing(zoneDetail.geom),
+                          notes: (zoneDetail as any).notes,
+                          attributes: {},
+                          lastModified: zoneDetail.updated_at?.slice(0, 10),
+                        });
+                      } else if (activeZone && drawStates.get(String(activeZone))) {
+                        const s = drawStates.get(String(activeZone))!;
+                        z.push({
+                          id: activeZone,
+                          type: s.feature?.properties?.land_use_name || "",
+                          status: s.feature?.properties?.status || "Draft",
+                          color: s.feature?.properties?.color || "#888",
+                          coordinates: getOuterRing(s.feature?.geometry),
+                          notes: "",
+                          attributes: {},
+                          lastModified: "",
+                        });
+                      }
+                      return z;
+                    })()}
                     onUpdateZone={() => {}}
                     conflicts={[]}
-                    onApprove={approve}
-                    onReject={reject}
+                    landUses={landUses}
+                    onAssignLandUse={assignLandUseToDrawFeature}
+                    isNewZone={!!(activeZone && drawStates.get(String(activeZone)))}
                   />
                 </div>
               </TabsContent>
