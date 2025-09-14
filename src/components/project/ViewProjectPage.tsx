@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
-import { queryProjectKey, useDeleteProject, useProjectQuery } from '@/queries/useProjectQuery';
+import { useDeleteProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2, X, IdCard } from 'lucide-react';
+import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Trash2, Loader2, IdCard } from 'lucide-react';
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,15 +15,11 @@ import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { MapDialog } from '../zoning/MapDialog';
+import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -32,12 +28,11 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   const { data: project, isLoading } = useProjectQuery(project_id);
 
   useEffect(() => {
-    if (project) {
+    if (project)
       setPage({
         module: 'land-uses',
         title: project.name,
       });
-    }
   }, [project, setPage]);
 
   if (isLoading)
@@ -57,6 +52,15 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
         : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
       : 1
 
+  const approval_status_atleast_one =
+    project?.localities && project.localities.length > 0
+      ? project.localities.some(loc => loc.approval_status === 2)
+        ? 2
+        : project.localities.some(loc => loc.approval_status === 3)
+          ? 3
+          : 1
+      : 1
+
   const projectStatus = ProjectStatus[project.project_status] || 'Unknown';
   const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
 
@@ -74,7 +78,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               </div>
             </div>
             <div className="flex flex-col-reverse items-end gap-4">
-              <ButtonsComponent moduleLevel={moduleLevel} project={project} approval_status={approval_status} />
+              <ButtonsComponent
+                moduleLevel={moduleLevel}
+                project={project}
+                approval_status={approval_status}
+                approval_status_atleast_one={approval_status_atleast_one}
+              />
               <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
                 <ProjectStatusBadge status={approvalStatus} />
                 <ProjectStatusBadge status={projectStatus} />
@@ -186,48 +195,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   );
 }
 
-const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number }> = ({ moduleLevel, project, approval_status }) => {
+const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ moduleLevel, project, approval_status }) => {
   const { user } = useAuth()
   const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  const [open, setOpen] = useState(false)
   const [openDelete, setOpenDelete] = useState(false)
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (e: { remarks: string | null, approval_status: 1 | 2 | 3 }) => api.put(`/projects/projects/${project.id}/approval/`, e),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        refetchType: "active",
-        queryKey: [queryProjectKey],
-      }),
-    onError: (e) => {
-      console.log(e);
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, status: 2 | 3) => {
-    e.preventDefault()
-    try {
-      if (!user || !user?.role?.name) return
-      if (!canApproveProject(user.role.name, approval_status)) return
-
-      const formData = new FormData(e.currentTarget);
-      const remarks = formData.get("remarks") as string;
-
-      toast.promise(mutateAsync({ remarks: remarks.length > 0 ? remarks : null, approval_status: status }), {
-        loading: "Approving...",
-        success: () => {
-          setOpen(false)
-          return `Project approved successfully`
-        },
-        error: (err: AxiosError | any) => `${err?.message || err?.response?.data?.message || "Failed to approve project!"}`
-      });
-    } catch (err: any) {
-      console.log(err)
-    }
-  }
 
   const handleDelete = () => {
     try {
@@ -237,7 +210,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
       toast.promise(mutateAsyncDelete(project.id), {
         loading: "Deleting project...",
         success: () => {
-          setOpen(false)
+          setOpenDelete(false)
           navigate(`/land-uses/${moduleLevel}`, { replace: true })
           return `Project deleted successfully`
         },
@@ -285,94 +258,17 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
           </AlertDialogContent>
         </AlertDialog>
         : null}
+
       {canEditProject(user.role.name, approval_status) ?
         <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />
           Edit Project
         </Link>
         : null}
-      {canApproveProject(user.role.name, approval_status) ? (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type='button'
-              size='sm'
-              className="gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90"
-            >
-              <Check className="h-4 w-4 hidden md:inline-block" />
-              Approve Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent >
-            <form onSubmit={e => handleSubmit(e, 2)} className='space-y-4'>
-              <DialogHeader className='border-b pb-4'>
-                <DialogTitle>Approve Project</DialogTitle>
-                <DialogDescription>
-                  {project.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div>
-                <Label htmlFor="name-1">Remarks</Label>
-                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
-              </div>
-              <DialogFooter className='flex-row justify-end'>
-                <DialogClose asChild>
-                  <Button type='button' variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className='bg-green-700 hover:opacity-90 hover:bg-green-800 dark:bg-green-900'
-                >
-                  <Check />
-                  Approve
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      ) : null}
-      {canApproveProject(user.role.name, approval_status) ? (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type='button'
-              size='sm'
-              className="gap-2 w-fit bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive"
-            >
-              <X className="h-4 w-4 hidden md:inline-block" />
-              Reject Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent >
-            <form onSubmit={e => handleSubmit(e, 3)} className='space-y-4'>
-              <DialogHeader className='border-b pb-4'>
-                <DialogTitle>Reject Project</DialogTitle>
-                <DialogDescription>
-                  {project.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div>
-                <Label htmlFor="name-1">Remarks</Label>
-                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
-              </div>
-              <DialogFooter className='flex-row justify-end'>
-                <DialogClose asChild>
-                  <Button type='button' variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className='bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive'
-                >
-                  <X />
-                  Reject
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      ) : null}
+
+      {canApproveProject(user.role.name, approval_status) ? <ProjectLocalitiesApproval project={project} isApproval /> : null}
+
+      {canApproveProject(user.role.name, approval_status) ? <ProjectLocalitiesApproval project={project} isApproval={false} /> : null}
     </div>
   )
 }
@@ -430,7 +326,7 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
                   size='sm'
                   type='button'
                   onClick={() => setStatusFilter(null)}
-                  className={`rounded-l-full rounded-r-md w-16 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-muted text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
+                  className={`font-normal rounded-l-md rounded-r-xs w-16 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
                 >
                   All
                 </Button>
@@ -440,11 +336,11 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
                     size='sm'
                     type='button'
                     onClick={() => setStatusFilter(Number(k))}
-                    className={`
+                    className={`font-normal
                       ${index === arr.length - 1
-                        ? 'rounded-r-full'
-                        : 'rounded'}
-                      ${statusFilter === Number(k) ? 'bg-primary' : 'bg-accent dark:bg-muted text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}
+                        ? 'rounded-r-md rounded-l-xs'
+                        : 'rounded-xs'}
+                      ${statusFilter === Number(k) ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}
                     `}
                   >
                     {l}
