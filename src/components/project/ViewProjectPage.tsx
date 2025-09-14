@@ -20,6 +20,7 @@ import { AxiosError } from 'axios';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { MapDialog } from '../zoning/MapDialog';
 import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
+import { Progress } from '../ui/progress';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -61,6 +62,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
           : 1
       : 1
 
+  const progress =
+    project?.localities && project.localities.length > 0
+      ? project.localities.reduce((sum, locality) => sum + locality.progress, 0) /
+      project.localities.length
+      : 0;
+
   const projectStatus = ProjectStatus[project.project_status] || 'Unknown';
   const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
 
@@ -76,18 +83,22 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 <Building className="h-4 w-4" />
                 <span className="text-sm lg:text-base">{project.organization}</span>
               </div>
+              <div className="flex flex-col md:flex-row-reverse md:items-center gap-3 md:gap-1">
+                <p className="text-xs md:text-sm text-start lg:text-end w-fit shrink-0">{progress}% Complete</p>
+                <Progress value={progress} className="min-w-32" />
+              </div>
             </div>
-            <div className="flex flex-col-reverse items-end gap-4">
+            <div className="flex flex-col items-end gap-4">
+              <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
+                <ProjectStatusBadge status={approvalStatus} />
+                <ProjectStatusBadge status={projectStatus} />
+              </div>
               <ButtonsComponent
                 moduleLevel={moduleLevel}
                 project={project}
                 approval_status={approval_status}
                 approval_status_atleast_one={approval_status_atleast_one}
               />
-              <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
-                <ProjectStatusBadge status={approvalStatus} />
-                <ProjectStatusBadge status={projectStatus} />
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -99,7 +110,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               <FileText className="h-3.5 w-3.5 text-muted-foreground" />
               <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
             </div>
-            <p className="text-foreground leading-relaxed">{project.description}</p>
+            {project?.description ? <p className="text-foreground leading-relaxed">{project?.description}</p> : null}
           </div>
 
           <Separator className="mb-4" />
@@ -205,7 +216,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   const handleDelete = () => {
     try {
       if (!user || !user?.role?.name) return
-      if (!canDeleteProject(user.role.name, approval_status)) return
+      if (!canDeleteProject(user.role.name, approval_status_atleast_one)) return
 
       toast.promise(mutateAsyncDelete(project.id), {
         loading: "Deleting project...",
