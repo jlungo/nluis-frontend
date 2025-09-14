@@ -80,10 +80,9 @@ export const ProjectApprovalStatus: Record<number, string> = {
 };
 
 export const ProjectApprovalStatusColors: Record<string, string> = {
-  1: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-  "In Process": "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
-  2: "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
-  3: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+  1: "bg-yellow-100 text-yellow-800 dark:bg-yellow-200/20 dark:text-yellow-500",
+  2: "bg-green-100 text-green-800 dark:bg-green-400/20 dark:text-green-500",
+  3: "bg-red-100 text-red-800 dark:bg-red-400/20 dark:text-red-400",
 };
 
 export const ProjectStatusFilters: Record<string, string> = {

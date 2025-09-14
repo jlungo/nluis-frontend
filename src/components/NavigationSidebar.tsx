@@ -14,9 +14,6 @@ import {
 } from "@/components/ui/collapsible";
 import {
   Home,
-  MapIcon,
-  Users,
-  Building,
   Shield,
   BarChart3,
   AlertTriangle,
@@ -27,8 +24,13 @@ import {
   LayoutDashboard,
   ClipboardPlus,
   ClipboardList,
+  Flag,
+  Map,
+  LandPlot,
+  Layers,
+  Building2,
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
 import { cn } from "@/lib/utils";
 
@@ -98,40 +100,35 @@ export function NavigationSidebar({
             {
               id: "land-uses",
               label: "Land Uses Overview",
-              icon: <MapIcon className="h-4 w-4" />
-            },
-            {
-              id: "land-uses-overview",
-              label: "Land Uses Overview",
-              icon: <MapIcon className="h-4 w-4" />
+              icon: <LayoutDashboard className="h-4 w-4" />
             },
             {
               id: "national-land-use",
               label: "National Land Use",
-              icon: <Building className="h-4 w-4" />,
-              badge: "3"
+              icon: <Flag className="h-4 w-4" />,
+              // badge: "3"
             },
             {
               id: "zonal-land-use",
               label: "Zonal Land Use",
-              icon: <Building className="h-4 w-4" />,
-              badge: "7"
+              icon: <LandPlot className="h-4 w-4" />,
+              // badge: "7"
             },
             {
               id: "regional-land-use",
               label: "Regional Land Use",
-              icon: <Building className="h-4 w-4" />
+              icon: <Map className="h-4 w-4" />
             },
             {
               id: "district-land-use",
               label: "District Land Use",
-              icon: <Building className="h-4 w-4" />
+              icon: <Layers className="h-4 w-4" />
             },
             {
               id: "village-land-use",
               label: "Village Land Use",
-              icon: <Users className="h-4 w-4" />,
-              badge: "12"
+              icon: <Building2 className="h-4 w-4" />,
+              // badge: "12"
             },
           ];
         case "ccro-management":
@@ -140,7 +137,7 @@ export function NavigationSidebar({
               id: "overview",
               label: "CCRO Overview",
               icon: <Shield className="h-4 w-4" />,
-              badge: "8"
+              // badge: "8"
             },
             {
               id: "land-formalization",
@@ -172,7 +169,7 @@ export function NavigationSidebar({
               id: "overview",
               label: "M&E Dashboard",
               icon: <BarChart3 className="h-4 w-4" />,
-              badge: "5"
+              // badge: "5"
             },
             {
               id: "reports",
@@ -299,22 +296,21 @@ export function NavigationSidebar({
 
   const renderNavigationItem = (item: NavigationItem, group?: NavigationGroup) => {
     const link = group ? group.id === item.id ? group.id : `${group.id}/${item.id}` : item.id
-    const isPathnameActive = pathname.endsWith(link)
+    const parts = link.split("/");
+    const isPathnameActive = parts[0] === page?.module ? pathname.endsWith(page.module) : pathname.includes(link)
 
     const buttonContent = (
-      <NavLink
+      <Link
         key={item.id}
         to={navigateTo(link)}
-        end
-        className={({ isActive, isPending }) => cn(
-          buttonVariants({ variant: isActive || isPathnameActive ? "default" : "ghost" }),
-          `${isPending ? 'animate-pulse' : null}`,
+        className={cn(
+          buttonVariants({ variant: isPathnameActive ? "default" : "ghost" }),
           `w-full ${collapsed
             ? "px-2 justify-center"
             : group
               ? "justify-start px-4"
               : "justify-start px-3"
-          } h-8 ${isActive || isPathnameActive
+          } h-8 ${isPathnameActive
             ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           }`
@@ -346,7 +342,7 @@ export function NavigationSidebar({
             </Badge>
           )}
         </div>
-      </NavLink>
+      </Link>
     );
 
     if (collapsed) {
@@ -417,7 +413,7 @@ export function NavigationSidebar({
                 </div>
                 <div className="space-y-1">
                   {group.items.map((item) => (
-                    <NavLink
+                    <Link
                       key={item.id}
                       className={cn(
                         buttonVariants({
@@ -426,7 +422,7 @@ export function NavigationSidebar({
                             : "ghost",
                           size: "sm",
                         }),
-                        `w-full justify-start h-8 ${(pathname.includes(item.id) || (pathname === '/land-uses' && item.id === 'land-uses-dashboard'))
+                        `w-full justify-start h-8 ${pathname.includes(item.id)
                           ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
                           : "hover:bg-accent"
                         }`
@@ -445,7 +441,7 @@ export function NavigationSidebar({
                           </Badge>
                         )}
                       </div>
-                    </NavLink>
+                    </Link>
                   ))}
                 </div>
               </div>
