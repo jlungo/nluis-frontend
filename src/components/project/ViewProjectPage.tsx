@@ -195,7 +195,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   );
 }
 
-const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ moduleLevel, project, approval_status }) => {
+const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ moduleLevel, project, approval_status, approval_status_atleast_one }) => {
   const { user } = useAuth()
   const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
   const navigate = useNavigate()
@@ -224,7 +224,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   if (!user || !user?.role?.name) return
   return (
     <div className='flex gap-2 flex-col md:flex-row items-end'>
-      {canDeleteProject(user.role.name, approval_status) ?
+      {canDeleteProject(user.role.name, approval_status_atleast_one) ?
         <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
           <AlertDialogTrigger asChild>
             <Button
@@ -259,7 +259,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
         </AlertDialog>
         : null}
 
-      {canEditProject(user.role.name, approval_status) ?
+      {canEditProject(user.role.name, approval_status_atleast_one) ?
         <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />
           Edit Project

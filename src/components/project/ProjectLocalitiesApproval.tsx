@@ -17,23 +17,25 @@ import { Label } from "../ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryProjectKey } from "@/queries/useProjectQuery";
 import api from "@/lib/axios";
-// import { useAuth } from "@/store/auth";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
+import { Badge } from "../ui/badge";
+import { ProjectApprovalStatus, ProjectApprovalStatusColors } from "@/types/constants";
+import { useAuth } from "@/store/auth";
 
 type ApprovalProps = { locality_id: string; approval_status: 2 | 3; remarks: string }
 
 export default function ProjectLocalitiesApproval({ project, isApproval }: { project: ProjectI; isApproval: boolean }) {
-    //   const { user } = useAuth();
     const queryClient = useQueryClient();
+    const { user } = useAuth()
 
     const [open, setOpen] = useState(false);
     const [generalRemarks, setGeneralRemarks] = useState<string>('');
     const [selected, setSelected] = useState<ApprovalProps[]>([]);
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: ApprovalProps[]) => api.put(`/projects/projects/${project.id}/approval/`, e),
+        mutationFn: (e: ApprovalProps[]) => api.post(`/projects/locality-projects/approval-update/`, e),
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
@@ -58,6 +60,7 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
 
     const handleApprove = async () => {
         try {
+            if (!user) return
             if (selected.length === 0) {
                 toast.error("Please select at least one locality");
                 return;
@@ -78,6 +81,8 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
             console.log(err);
         }
     };
+
+    if (!user) return
 
     return (
         <Dialog
@@ -115,12 +120,12 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
                 {project?.localities && project.localities.length > 0 ? (
                     <div className="space-y-2 max-h-[70vh] overflow-y-auto overflow-x-visible p-2">
                         <div className="mb-4">
-                            <Label htmlFor={`general-remarks`} className="font-bold">General Remarks</Label>
+                            <Label htmlFor={`general-remarks`} className="font-bold">Overall Remarks</Label>
                             <Textarea
                                 id={`general-remarks`}
                                 value={generalRemarks}
                                 onChange={e => setGeneralRemarks(e.target.value)}
-                                placeholder="General remarks..."
+                                placeholder="General remarks to apply for all..."
                                 className="mt-1"
                             />
                         </div>
@@ -144,6 +149,7 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
                                                 className="cursor-pointer font-medium mt-2.5"
                                             >
                                                 {locality.locality__name}
+                                                <Badge className={`scale-90 ${ProjectApprovalStatusColors[locality.approval_status]}`}>{ProjectApprovalStatus[locality.approval_status]}</Badge>
                                             </Label>
                                         </div>
                                         {isChecked && (
@@ -187,6 +193,7 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
                         : <Button
                             type="submit"
                             disabled={isPending || selected.length === 0}
+                            onClick={handleApprove}
                             className='bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive'
                         >
                             <X />

@@ -21,6 +21,7 @@ export interface ProjectI {
     locality__name: string;
     locality__level: string;
     progress: number;
+    remarks?: string | null;
   }> | null;
   created_at: string;
 }

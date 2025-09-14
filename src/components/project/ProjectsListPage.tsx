@@ -75,6 +75,8 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
 
   if (!user) return
 
+  console.log(data?.results)
+
   return (
     <>
       <ErrorDialog
