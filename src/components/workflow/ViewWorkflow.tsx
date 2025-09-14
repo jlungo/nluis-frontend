@@ -46,8 +46,6 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
         });
     }, [setPage]);
 
-    console.log(projectLocaleProgress)
-
     useEffect(() => {
         if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
     }, [approval_status])
@@ -67,7 +65,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <p className='text-muted-foreground'>No project with this data found!</p>
         </div>
 
-    if (project.approval_status !== 2)
+    if (approval_status !== 2)
         return <div className='flex flex-col items-center justify-center h-80 gap-12'>
             <p className='text-muted-foreground'>This project is not approved!</p>
             <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
