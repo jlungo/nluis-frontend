@@ -218,7 +218,7 @@ export default function Layout() {
                           Back
                         </Button>
                         <div className="h-4 w-px bg-border -ml-3" />
-                        {page && page.pageActions !== false && <DynamicBreadcrums />}
+                        {page && page.showBreadcrums !== false && <DynamicBreadcrums />}
                         {page ?
                           <p className="text-base lg:text-lg font-semibold text-primary line-clamp-1 lg:-ml-4">
                             {page.title}

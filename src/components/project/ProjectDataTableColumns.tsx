@@ -2,14 +2,14 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn, formatDate } from '@/lib/utils';
 import { ProjectI } from "@/types/projects";
 import { Badge } from "../ui/badge";
-import { ProjectApprovalStatus, ProjectStatusColors, ProjectApprovalStatusColors } from "@/types/constants";
+import { ProjectApprovalStatus, ProjectApprovalStatusColors } from "@/types/constants";
 import { Progress } from "../ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Button } from "../ui/button";
 
-export const ProjectStatusBadge = ({ status }: { status: string }) => (
+export const ProjectStatusBadge = ({ id, status }: { id: number; status: string; }) => (
   <Badge
-    className={cn(`border border-accent font-medium ${ProjectStatusColors[status]}`)}
+    className={cn(`border border-accent font-medium ${ProjectApprovalStatusColors[id]}`)}
     variant='outline'
   >
     {status}
@@ -107,7 +107,7 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
       const readableApproval = ProjectApprovalStatus[approval_status as keyof typeof ProjectApprovalStatus] || "Unknown";
       return (
         <div className="text-sm">
-          <ProjectStatusBadge status={readableApproval} />
+          <ProjectStatusBadge id={approval_status} status={readableApproval} />
         </div>
       );
     },
