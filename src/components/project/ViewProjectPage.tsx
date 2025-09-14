@@ -11,7 +11,7 @@ import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
 import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/ProjectDataTableColumns';
-import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
+import { ProjectApprovalStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
@@ -68,8 +68,17 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
       project.localities.length
       : 0;
 
-  const projectStatus = ProjectStatus[project.project_status] || 'Unknown';
   const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
+
+  const renderProgress = () => (
+    <div className='flex flex-col md:flex-row-reverse md:items-end lg:items-start gap-2'>
+      <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+      <div className="flex flex-row items-center gap-1 md:gap-1">
+        <p className="text-xs md:text-sm w-fit shrink-0">{progress}% Complete</p>
+        <Progress value={progress} className="w-full min-w-32 max-min-w-44" />
+      </div>
+    </div>
+  )
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 mb-10">
@@ -83,15 +92,20 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 <Building className="h-4 w-4" />
                 <span className="text-sm lg:text-base">{project.organization}</span>
               </div>
-              <div className="flex flex-col md:flex-row-reverse md:items-center gap-3 md:gap-1">
-                <p className="text-xs md:text-sm text-start lg:text-end w-fit shrink-0">{progress}% Complete</p>
-                <Progress value={progress} className="min-w-32" />
+              <div className='md:hidden'>
+                {renderProgress()}
               </div>
             </div>
             <div className="flex flex-col items-end gap-4">
-              <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
-                <ProjectStatusBadge status={approvalStatus} />
-                <ProjectStatusBadge status={projectStatus} />
+              {/* <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
+                <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+                <div className="flex flex-col md:flex-row-reverse md:items-center gap-1 md:gap-1">
+                  <Progress value={progress} className="min-w-32 lg:min-w-44" />
+                  <p className="text-xs md:text-sm ml-auto w-fit shrink-0">{progress}% Complete</p>
+                </div>
+              </div> */}
+              <div className='hidden md:block'>
+                {renderProgress()}
               </div>
               <ButtonsComponent
                 moduleLevel={moduleLevel}
@@ -274,8 +288,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
         <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />
           Edit Project
-        </Link>
-        : null}
+        </Link> : null}
 
       {canApproveProject(user.role.name, approval_status) ? <ProjectLocalitiesApproval project={project} isApproval /> : null}
 
@@ -337,7 +350,7 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
                   size='sm'
                   type='button'
                   onClick={() => setStatusFilter(null)}
-                  className={`font-normal rounded-l-md rounded-r-xs w-16 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
+                  className={`font-normal rounded-l-md rounded-r-xs w-12 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
                 >
                   All
                 </Button>

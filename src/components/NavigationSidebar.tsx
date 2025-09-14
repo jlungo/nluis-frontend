@@ -134,7 +134,7 @@ export function NavigationSidebar({
         case "ccro-management":
           return [
             {
-              id: "overview",
+              id: "ccro-management",
               label: "CCRO Overview",
               icon: <Shield className="h-4 w-4" />,
               // badge: "8"
