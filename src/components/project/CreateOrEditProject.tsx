@@ -434,7 +434,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
 
         {/* Display selected localities outside the modal */}
         {selectedLocalities.length > 0 && (
-          <div className="mt-4">
+          <div>
             <h4 className="font-medium text-sm mb-2">Selected Localities:</h4>
             <div className="flex flex-wrap gap-2">
               {selectedLocalities.map(locality => (
@@ -462,8 +462,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     <div className="max-w-4xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Project Details Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Project Details
@@ -501,8 +501,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Timeline Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Timeline
@@ -531,8 +531,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Budget & Funders Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
               Budget & Funding
@@ -569,8 +569,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Coverage Area Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
               Coverage Area ({LOCALITY_LEVEL_NAMES[moduleLevel as keyof typeof LOCALITY_LEVEL_NAMES]} Level)
