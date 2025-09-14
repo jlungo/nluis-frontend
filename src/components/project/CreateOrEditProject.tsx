@@ -239,6 +239,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 checked={isLocalitySelected(node.id)}
                 onCheckedChange={() => handleLocalitySelect(node)}
                 disabled={isLoading}
+                className='-mt-2.5'
               />
               <Label htmlFor={`checkbox-${node.id}`} className="text-sm font-normal cursor-pointer">
                 {node.name}
@@ -485,7 +486,6 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               label="Project Reference Number/Id"
               value={formData.reference_number}
               onChange={(val) => handleInputChange('reference_number', val)}
-              required
               placeholder="Enter project reference number/id"
             />
             <FormFieldInput
@@ -555,6 +555,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 id="funder-select"
                 label="Funder"
                 value=""
+                required
                 options={funders?.map(funder => ({
                   value: funder.id.toString(),
                   label: funder.name

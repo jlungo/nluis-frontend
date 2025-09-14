@@ -329,7 +329,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
 
           <div className="flex items-center gap-2">
             <Select value={`${pag.pageSize}`} onValueChange={(e) => changePageSize(Number(e))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="Page size" />
               </SelectTrigger>
               <SelectContent>
