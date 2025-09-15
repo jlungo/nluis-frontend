@@ -110,7 +110,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 description: '',
                 forms: [],
                 approval_roles: [],
-                order: formSections.length + 1,
+                order: sections.length + 1,
                 is_active: true
             }
         ]);
@@ -389,10 +389,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: Submission) => {
-            console.log(e)
             if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
-            // return api.post(`/form-management/submissi/`, {})
         },
         onSuccess: () =>
             queryClient.invalidateQueries({

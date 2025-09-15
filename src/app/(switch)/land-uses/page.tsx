@@ -127,6 +127,7 @@ export default function DashboardPage() {
 
   const { data: projects, isLoading: isLoadingProjects } = useProjectsQuery({
     organization: user?.organization?.id,
+    // module_level: "regional-land-use",
     // approval_status: string,
     // registration_date: string,
     // authorization_date: string,
@@ -158,13 +159,21 @@ export default function DashboardPage() {
 
   if (isLoadingProjects) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner className="scale-125" />
+      <div className='flex flex-col items-center justify-center h-60 gap-5'>
+        <Spinner className="scale-150" />
+        <p className="text-muted-foreground mt-4">Loading data...</p>
       </div>
     );
   }
 
-  if (!projects) return
+  if (!projects) {
+    return (
+      <div className='flex flex-col items-center justify-center h-60'>
+        <p className="text-muted-foreground mt-4">Error loading projects</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 lg:space-y-6 mb-20">
       {/* Statistics Cards */}
