@@ -67,7 +67,7 @@ export default function AreaChartComponent({ chartConfig, data }: { chartConfig:
                     <Area
                         dataKey={key}
                         type="natural"
-                        fill={`url(#fill${value})`}
+                        fill={`url(#fill${value.label})`}
                         stroke={`var(--color-${key})`}
                         stackId="a"
                     />
