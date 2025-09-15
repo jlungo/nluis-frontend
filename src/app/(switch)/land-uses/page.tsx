@@ -8,9 +8,8 @@ import { ChartConfig } from "@/components/ui/chart";
 import { Spinner } from "@/components/ui/spinner";
 import AreaChartComponent from "./area-chart";
 import BarChartComponent from "./bar-chart";
+import LineChartComponent from "./line-chart";
 
-
-export const description = "An interactive area chart"
 const chartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -118,9 +117,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-type ChartTypeProps = 'line' | 'bar' | 'area'
+type ChartTypeProps = 'area' | 'bar' | 'line'
 
-const chartType: ChartTypeProps[] = ['line', 'bar', 'area']
+const chartType: ChartTypeProps[] = ['area', 'bar', 'line']
 
 export default function DashboardPage() {
   const { setPage } = usePageStore();
@@ -255,6 +254,7 @@ export default function DashboardPage() {
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
           {type === 'area' ? <AreaChartComponent chartConfig={chartConfig} data={filteredData} /> : null}
           {type === 'bar' ? <BarChartComponent chartConfig={chartConfig} data={filteredData} /> : null}
+          {type === 'line' ? <LineChartComponent chartConfig={chartConfig} data={filteredData} /> : null}
         </CardContent>
       </Card>
     </div>

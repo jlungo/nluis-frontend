@@ -159,7 +159,7 @@ export const LocalityTableColumns: ColumnDef<any>[] = [
               </DialogDescription>
             </DialogHeader>
             {row.original?.remarks && row.original.remarks.length > 0
-              ? <p>row.original?.remarks</p>
+              ? <p>{row.original?.remarks}</p>
               : (
                 <div className="h-32 italic text-center flex flex-col items-center justify-center">
                   <p className="font-light text-xs md:text-sm">No remarks</p>

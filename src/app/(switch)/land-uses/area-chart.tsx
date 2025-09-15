@@ -65,6 +65,7 @@ export default function AreaChartComponent({ chartConfig, data }: { chartConfig:
                 />
                 {Object.entries(chartConfig).map(([key, value]) => (
                     <Area
+                        key={key}
                         dataKey={key}
                         type="natural"
                         fill={`url(#fill${value.label})`}
@@ -72,20 +73,6 @@ export default function AreaChartComponent({ chartConfig, data }: { chartConfig:
                         stackId="a"
                     />
                 ))}
-                {/* <Area
-                    dataKey="mobile"
-                    type="natural"
-                    fill="url(#fillMobile)"
-                    stroke="var(--color-mobile)"
-                    stackId="a"
-                />
-                <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="url(#fillDesktop)"
-                    stroke="var(--color-desktop)"
-                    stackId="a"
-                /> */}
                 <ChartLegend content={<ChartLegendContent />} />
             </AreaChart>
         </ChartContainer>

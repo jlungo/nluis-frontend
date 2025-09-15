@@ -1,13 +1,13 @@
 import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
 
-export default function BarChartComponent({ chartConfig, data }: { chartConfig: ChartConfig; data: any }) {
+export default function LineChartComponent({ chartConfig, data }: { chartConfig: ChartConfig; data: any }) {
     return (
         <ChartContainer
             config={chartConfig}
             className="aspect-auto h-[250px] w-full"
         >
-            <BarChart
+            <LineChart
                 accessibilityLayer
                 data={data}
                 margin={{
@@ -46,14 +46,17 @@ export default function BarChartComponent({ chartConfig, data }: { chartConfig: 
                     }
                 />
                 {Object.entries(chartConfig).map(([key]) => (
-                    <Bar
+                    <Line
                         key={key}
                         dataKey={key}
-                        fill={`var(--color-${key})`}
+                        type="monotone"
+                        stroke={`var(--color-${key})`}
+                        strokeWidth={2}
+                        dot={false}
                     />
                 ))}
                 <ChartLegend content={<ChartLegendContent />} />
-            </BarChart>
+            </LineChart>
         </ChartContainer>
     )
 }
