@@ -19,7 +19,7 @@ const FormZoning: React.FC<FormZoningProps> = ({
   required,
   baseMapId,
 }) => {
-  const { isDarkMode } = useThemeStore();
+  useThemeStore();
   const [colorMode, setColorMode] = useState<"type" | "status">("type");
 
   // maximize state

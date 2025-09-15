@@ -289,7 +289,7 @@ export function HistoryPanel({ zones, activeZone }: HistoryPanelProps) {
         {/* Upload History */}
         <ScrollArea className="h-[calc(100vh-250px)]">
           <div className="space-y-3">
-            {mockDataCollectorUploads.map((upload, index) => {
+            {mockDataCollectorUploads.map((upload, _index) => {
               const StatusIcon = getUploadStatusIcon(upload.status);
               const statusColor = getUploadStatusColor(upload.status);
               

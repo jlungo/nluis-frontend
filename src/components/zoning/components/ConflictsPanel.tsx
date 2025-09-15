@@ -38,19 +38,19 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
     }
   };
 
-  const handleTrimZone = (conflictId: string, zoneId: string) => {
+  const handleTrimZone = (_conflictId: string, zoneId: string) => {
     toast.success(`Trimming zone ${zoneId} to resolve overlap`);
   };
 
-  const handleSplitOverlap = (conflictId: string) => {
+  const handleSplitOverlap = (_conflictId: string) => {
     toast.success('Splitting overlap area into separate zone');
   };
 
-  const handleIgnoreConflict = (conflictId: string) => {
+  const handleIgnoreConflict = (_conflictId: string) => {
     toast.info('Conflict marked as ignored - zones kept as draft');
   };
 
-  const handleViewConflict = (conflictId: string) => {
+  const handleViewConflict = (_conflictId: string) => {
     toast.info('Zooming to conflict area on map');
   };
 

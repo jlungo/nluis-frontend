@@ -1,8 +1,13 @@
-// src/components/zoning/ZoneDetailsPanel.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Save, Edit, Trash2, MapPin, CheckCircle, AlertTriangle,
-  ThumbsUp, ThumbsDown
+  Save,
+  Edit,
+  Trash2,
+  MapPin,
+  CheckCircle,
+  AlertTriangle,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -11,14 +16,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useLandUsesQuery, LandUseDto } from "@/queries/useSetupQuery";
 
 export interface Zone {
   id: string | number;
-  type: string;
+  type: string; // might hold LU id or name
   color: string;
   coordinates: number[][];
   status: string;
@@ -31,10 +40,20 @@ interface ZoneDetailsPanelProps {
   activeZone: string | null;
   zones: Zone[];
   onUpdateZone: (zones: Zone[]) => void;
-  conflicts?: Array<{ id: string; zones: (string | number)[]; overlapArea: string; severity: string }>;
+  conflicts?: Array<{
+    id: string;
+    zones: (string | number)[];
+    overlapArea: string;
+    severity: string;
+  }>;
   landUses?: LandUseDto[];
   onAssignLandUse?: (zoneId: string | number, landUse: LandUseDto) => void;
   isNewZone?: boolean;
+
+  // NEW: parent-provided API actions
+  onApprove?: () => void;
+  onReject?: () => void;
+  onDelete?: () => void;
 }
 
 const defaultConflicts: ZoneDetailsPanelProps["conflicts"] = [];
@@ -47,6 +66,9 @@ export function ZoneDetailsPanel({
   landUses = [],
   onAssignLandUse,
   isNewZone = false,
+  onApprove,
+  onReject,
+  onDelete,
 }: ZoneDetailsPanelProps) {
   const zone = useMemo(
     () => zones.find((z) => String(z.id) === String(activeZone)),
@@ -67,7 +89,6 @@ export function ZoneDetailsPanel({
 
   // --- form state ---
   type EditForm = {
-    name: string;
     type: string;
     color: string;
     notes: string;
@@ -76,7 +97,6 @@ export function ZoneDetailsPanel({
   };
 
   const [editForm, setEditForm] = useState<EditForm>({
-    name: zone?.attributes?.name || zone?.type || "",
     type: zone?.type || "",
     color: zone?.color || "",
     notes: zone?.notes || "",
@@ -95,13 +115,17 @@ export function ZoneDetailsPanel({
     if (!switchingZones) return;
     prevZoneKey.current = zoneKey;
 
-    const match = availableLUs.find(
+    // Try match zone.type as name; else as id
+    const matchByName = availableLUs.find(
       (lu) => lu.name.toLowerCase() === (zone.type || "").toLowerCase()
     );
+    const matchById = availableLUs.find(
+      (lu) => String(lu.id) === String(zone.type)
+    );
+    const match = matchByName ?? matchById;
 
     setEditForm({
-      name: zone.attributes?.name || zone.type || "",
-      type: zone.type,
+      type: match?.name ?? zone.type,
       color: match?.color || zone.color || "#888",
       notes: zone.notes || "",
       attributes: zone.attributes || {},
@@ -125,17 +149,27 @@ export function ZoneDetailsPanel({
     }
   };
 
-  // Robust select handler (works for numeric ids like [{id:1,...}])
+  // Resolve land-use *name* for view mode
+  const getLandUseName = (z: Zone | undefined): string => {
+    if (!z) return "";
+    const luById = availableLUs.find((l) => String(l.id) === String(z.type));
+    const luByName = availableLUs.find(
+      (l) => l.name.toLowerCase() === String(z.type || "").toLowerCase()
+    );
+    return luById?.name ?? luByName?.name ?? (z.type ?? "");
+  };
+
+  // Robust select handler (works for numeric ids)
   const selectLandUse = (value: string) => {
     const lu = availableLUs.find((l) => String(l.id) === value);
     setEditForm((prev) => ({
       ...prev,
       type: lu?.name ?? prev.type,
       color: lu?.color ?? prev.color,
-      landUseId: lu?.id, // preserve the real id (number here)
+      landUseId: lu?.id,
     }));
     if (zone && lu && onAssignLandUse) {
-      onAssignLandUse(zone.id, lu); // updates map + draw feature props in parent
+      onAssignLandUse(zone.id, lu); // updates parent/draw props
     }
   };
 
@@ -159,6 +193,10 @@ export function ZoneDetailsPanel({
 
   const handleDelete = () => {
     if (!zone) return;
+    if (onDelete) {
+      onDelete();
+      return;
+    }
     const updatedZones = zones.filter((z) => String(z.id) !== String(zone.id));
     onUpdateZone(updatedZones);
     toast.success("Zone deleted");
@@ -166,6 +204,10 @@ export function ZoneDetailsPanel({
 
   const handleApprove = () => {
     if (!zone) return;
+    if (onApprove) {
+      onApprove();
+      return;
+    }
     const updatedZones = zones.map((z) =>
       String(z.id) === String(zone.id) ? { ...z, status: "Approved" } : z
     );
@@ -175,6 +217,10 @@ export function ZoneDetailsPanel({
 
   const handleReject = () => {
     if (!zone) return;
+    if (onReject) {
+      onReject();
+      return;
+    }
     const updatedZones = zones.map((z) =>
       String(z.id) === String(zone.id) ? { ...z, status: "Rejected" } : z
     );
@@ -205,7 +251,6 @@ export function ZoneDetailsPanel({
   return (
     <div
       className="p-3 h-full overflow-y-auto max-h-full"
-      // avoid bubbling pointer events to the map (helps on some setups)
       onPointerDownCapture={(e) => e.stopPropagation()}
     >
       <div className="space-y-3">
@@ -222,43 +267,27 @@ export function ZoneDetailsPanel({
         <Separator />
 
         <div className="space-y-2">
-          {/* Name */}
-          <div className="grid grid-cols-5 gap-2">
-            {isEditing ? (
-              <>
-                <span className="text-muted-foreground col-span-2 text-xs">Name:</span>
-                <Input
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, name: e.target.value }))
-                  }
-                  className="col-span-3 h-6 text-xs"
-                  placeholder="Enter zone name..."
-                />
-              </>
-            ) : (
-              <>
-                <span className="text-muted-foreground col-span-2 text-xs">Name:</span>
-                <span className="col-span-3 text-xs">
-                  {zone.attributes?.name || zone.type}
-                </span>
-              </>
-            )}
-          </div>
+
 
           {/* Land Use */}
           <div className="grid grid-cols-5 gap-2">
             {isEditing ? (
               <>
-                <span className="text-muted-foreground col-span-2 text-xs">Land Use:</span>
+                <span className="text-muted-foreground col-span-2 text-xs">
+                  Land Use:
+                </span>
                 <Select
-                  key={zoneKey} // ensure clean mount when switching zones
+                  key={zoneKey}
                   value={landUseValue}
                   onValueChange={selectLandUse}
                   disabled={luLoading || landUseEmpty}
                 >
                   <SelectTrigger className="col-span-3 h-6 text-xs">
-                    <SelectValue placeholder={luLoading ? "Loading…" : landUseEmpty ? "No options" : "Choose…"} />
+                    <SelectValue
+                      placeholder={
+                        luLoading ? "Loading…" : landUseEmpty ? "No options" : "Choose…"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableLUs.map((lu) => (
@@ -277,10 +306,15 @@ export function ZoneDetailsPanel({
               </>
             ) : (
               <>
-                <span className="text-muted-foreground col-span-2 text-xs">Land Use:</span>
+                <span className="text-muted-foreground col-span-2 text-xs">
+                  Land Use:
+                </span>
                 <div className="col-span-3 flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: zone.color }} />
-                  <span className="text-xs">{zone.type}</span>
+                  <div
+                    className="w-3 h-3 rounded"
+                    style={{ backgroundColor: zone.color }}
+                  />
+                  <span className="text-xs">{getLandUseName(zone)}</span>
                 </div>
               </>
             )}
@@ -288,13 +322,17 @@ export function ZoneDetailsPanel({
 
           {/* Status */}
           <div className="grid grid-cols-5 gap-2">
-            <span className="text-muted-foreground col-span-2 text-xs">Status:</span>
+            <span className="text-muted-foreground col-span-2 text-xs">
+              Status:
+            </span>
             <span className="col-span-3 text-xs">{zone.status || "Draft"}</span>
           </div>
 
           {/* Points */}
           <div className="grid grid-cols-5 gap-2">
-            <span className="text-muted-foreground col-span-2 text-xs">Points:</span>
+            <span className="text-muted-foreground col-span-2 text-xs">
+              Points:
+            </span>
             <span className="col-span-3 text-xs">
               {zone.coordinates.length} coordinates
             </span>
@@ -303,7 +341,9 @@ export function ZoneDetailsPanel({
           {/* Color (visible in edit) */}
           {isEditing && (
             <div className="grid grid-cols-5 gap-2">
-              <span className="text-muted-foreground col-span-2 text-xs">Color:</span>
+              <span className="text-muted-foreground col-span-2 text-xs">
+                Color:
+              </span>
               <div className="col-span-3 flex items-center gap-1">
                 <Input
                   type="color"
@@ -361,7 +401,8 @@ export function ZoneDetailsPanel({
               variant={overlapsCount > 0 ? "destructive" : "outline"}
               className="justify-center text-xs py-1"
             >
-              <AlertTriangle className="w-2 h-2 mr-1" /> Overlaps: {overlapsCount}
+              <AlertTriangle className="w-2 h-2 mr-1" /> Overlaps:{" "}
+              {overlapsCount}
             </Badge>
           </div>
         </div>
@@ -372,27 +413,53 @@ export function ZoneDetailsPanel({
         <div className="flex gap-1 pt-2">
           {isEditing ? (
             <>
-              <Button onClick={handleSave} className="flex-1 text-xs py-1">
+              <Button type="button" onClick={handleSave} className="flex-1 text-xs py-1">
                 <Save className="w-3 h-3 mr-1" /> Save
               </Button>
-              <Button variant="outline" onClick={() => setIsEditing(false)} className="text-xs py-1">
+              <Button
+              type="button"
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="text-xs py-1"
+              >
                 Cancel
               </Button>
             </>
           ) : (
             <>
-              <Button onClick={() => setIsEditing(true)} className="flex-1 text-xs py-1">
+              <Button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="flex-1 text-xs py-1"
+              >
                 <Edit className="w-3 h-3 mr-1" /> Edit
               </Button>
-              <Button variant="destructive" onClick={handleDelete} className="text-xs py-1 px-2">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                className="text-xs py-1 px-2"
+              >
                 <Trash2 className="w-3 h-3" />
               </Button>
               {zone.status !== "Approved" && zone.status !== "Rejected" && (
                 <>
-                  <Button variant="default" size="sm" onClick={handleApprove} className="text-xs py-1">
+                  <Button
+                  type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleApprove}
+                    className="text-xs py-1"
+                  >
                     <ThumbsUp className="w-3 h-3 mr-1" /> Approve
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={handleReject} className="text-xs py-1">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleReject}
+                    className="text-xs py-1"
+                  >
                     <ThumbsDown className="w-3 h-3 mr-1" /> Reject
                   </Button>
                 </>
