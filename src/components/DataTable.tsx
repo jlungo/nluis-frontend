@@ -57,6 +57,7 @@ export type DataTableProps<TData, TValue> = {
   /** Table has shadow */
   shadowed?: boolean;
   showPagination?: boolean;
+  emptyText?: string;
 };
 
 export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
@@ -81,7 +82,8 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     onPaginationChange,
     rowCount,
     shadowed = true,
-    showPagination = true
+    showPagination = true,
+    emptyText = "No results"
   } = props;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -303,7 +305,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                     colSpan={table.getAllLeafColumns().length}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No results.
+                    {emptyText}
                   </TableCell>
                 </TableRow>
               )}

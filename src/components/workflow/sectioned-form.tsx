@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FormField from '@/components/form-field';
-import { InputType } from '@/types/input-types';
+import type { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 import { Progress } from '../ui/progress';
+import { queryProjectKey } from '@/queries/useProjectQuery';
 
 interface FieldValue {
     value?: string | File[] | string[];
@@ -64,11 +65,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     "Content-Type": "multipart/form-data",
                 }
             }),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
                 queryKey: [formDataQueryKey],
-            }),
+            })
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [queryProjectKey],
+            })
+        },
         onError: (e) => {
             console.log(e);
         },
@@ -77,11 +83,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const { mutateAsync: mutateAsyncApproval, isPending: isPendingApproval } = useMutation({
         mutationFn: (e: { is_approved: "0" | "1", form_data_ids: number[] }) =>
             api.post(`/form-management/form-data/approval/`, e),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
                 queryKey: [formDataQueryKey],
-            }),
+            })
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [queryProjectKey],
+            })
+        },
         onError: (e) => {
             console.log(e);
         },

@@ -163,15 +163,15 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                 </Dialog>
             </div>
 
-            {accounts.length > 0 ?
-                <DataTable
-                    columns={columns}
-                    data={accounts}
-                    shadowed={false}
-                    enableGlobalFilter={false}
-                    showPagination={false}
-                    rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
-                /> : null}
+            <DataTable
+                columns={columns}
+                data={accounts}
+                shadowed={false}
+                enableGlobalFilter={false}
+                showPagination={false}
+                emptyText="No member(s) added"
+                rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
+            />
         </div>
     )
 }

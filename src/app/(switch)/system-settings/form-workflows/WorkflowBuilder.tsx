@@ -389,10 +389,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: Submission) => {
-            console.log(e)
             if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
-            // return api.post(`/form-management/submissi/`, {})
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
