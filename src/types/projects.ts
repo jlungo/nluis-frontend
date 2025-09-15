@@ -23,9 +23,9 @@ export interface ProjectI {
     locality__name: string;
     locality__level: string;
     progress: number;
-    remarks?: string | null;
+    remarks: string | null;
   }> | null;
-} // Fix returning description, organization_name, localities and funders
+} // Fix returning organization_name, localities
 
 export interface ProjectsListPageProps {
   module: string;

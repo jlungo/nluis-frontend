@@ -6,6 +6,7 @@ import { ProjectApprovalStatus, ProjectApprovalStatusColors } from "@/types/cons
 import { Progress } from "../ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { approvalStatus } from "./utils";
 
 export const ProjectStatusBadge = ({ id, status }: { id: number; status: string; }) => (
   <Badge
@@ -96,21 +97,23 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
   },
   {
     accessorKey: 'approval_status',
-    header: 'Approval Status',
+    header: () => <div className="w-fit mx-auto">Approval Status</div>,
     cell: ({ row }: { row: { original: ProjectI } }) => {
-      const approval_status =
-        row.original?.localities && row.original.localities.length > 0
-          ? row.original.localities.every(loc => loc.approval_status === 2)
-            ? 2
-            : row.original.localities.every(loc => loc.approval_status === 3) ? 3 : 1
-          : 1
+      const approval_status = approvalStatus(row.original.localities)
       const readableApproval = ProjectApprovalStatus[approval_status as keyof typeof ProjectApprovalStatus] || "Unknown";
       return (
-        <div className="text-sm">
+        <div className="text-sm w-fit mx-auto">
           <ProjectStatusBadge id={approval_status} status={readableApproval} />
         </div>
       );
     },
+  },
+  {
+    accessorKey: 'organization',
+    header: 'Organization',
+    cell: ({ row }: { row: { original: ProjectI } }) => (
+      <div className="text-sm max-w-40 overflow-hidden text-ellipsis">{row.original.organization}</div>
+    ),
   },
 ];
 
@@ -156,7 +159,7 @@ export const LocalityTableColumns: ColumnDef<any>[] = [
               </DialogDescription>
             </DialogHeader>
             {row.original?.remarks && row.original.remarks.length > 0
-              ? <p>row.original?.remarks</p>
+              ? <p>{row.original?.remarks}</p>
               : (
                 <div className="h-32 italic text-center flex flex-col items-center justify-center">
                   <p className="font-light text-xs md:text-sm">No remarks</p>
