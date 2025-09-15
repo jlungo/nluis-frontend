@@ -28,7 +28,7 @@ interface MembersI {
     last_name: string;
     email: string;
     role?: string;
-    position: string | null;
+    title: string | null;
     specialization: number | null;
 }
 
@@ -77,7 +77,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button type="button" size="sm">
+                        <Button type="button" size="sm" disabled={disabled}>
                             <UserPlus className="h-4 w-4 mr-2" />
                             Add Member
                         </Button>
@@ -110,7 +110,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                                             first_name: acc.first_name,
                                             last_name: acc.last_name,
                                             role: acc?.role,
-                                            position: null,
+                                            title: null,
                                             specialization: null
                                         })
                                     }
@@ -123,15 +123,15 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             />
                         </div>
                         <div className="w-full space-y-2">
-                            <Label htmlFor="position">Title {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                            <Label htmlFor="title">Title {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <Input
-                                id="position"
-                                placeholder="Add position or Role"
+                                id="title"
+                                placeholder="Add member title"
                                 disabled={!account || disabled}
-                                value={account && account?.position ? account.position : undefined}
+                                value={account && account?.title ? account.title : undefined}
                                 onChange={(e) => setAccount(prev => {
                                     if (!prev) return null
-                                    prev.position = e.target.value
+                                    prev.title = e.target.value
                                     return prev
                                 })}
                             />
@@ -226,12 +226,12 @@ export const columns: ColumnDef<MembersI, unknown>[] = [
         enableSorting: true,
     },
     {
-        id: "position",
-        accessorKey: "position",
-        header: () => <div className="flex items-center gap-2">Position/Role</div>,
+        id: "title",
+        accessorKey: "title",
+        header: () => <div className="flex items-center gap-2">Title/Role</div>,
         cell: ({ row }) => (
             <div className="font-medium truncate max-w-[320px]">
-                {row.original.position}
+                {row.original.title}
             </div>
         ),
         enableSorting: true,

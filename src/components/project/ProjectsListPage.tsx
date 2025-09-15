@@ -8,13 +8,12 @@ import { ProjectsDataTableColumn } from '@/components/project/ProjectDataTableCo
 import type { ApiError } from '@/types/api-response';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ProjectI, ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
-// import { ProjectStatusFilters } from '@/types/constants';
 import { canCreateProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
+import { approvalStatus, approvalStatusAtleastOne } from './utils';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
   const navigate = useNavigate();
@@ -52,16 +51,9 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
       state: { type: pageTitle, from: location.pathname },
     });
 
-
-
   const handleDelete = (project: ProjectI) => {
     if (!user || !user.role?.name) return
-    const approval_status =
-      project?.localities && project.localities.length > 0
-        ? project.localities.every(loc => loc.approval_status === 2)
-          ? 2
-          : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
-        : 1
+    const approval_status = approvalStatus(project?.localities)
     const canDelete = canDeleteProject(user.role.name, approval_status)
     if (!canDelete) return
     mutateAsync(project.id).then(() => refetch());
@@ -138,16 +130,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         </CardContent>
       </Card>
 
-      {/* <Tabs value={filters.approval_status} onValueChange={e => handleChange('approval_status', e)}>
-        <TabsList className='rounded-full w-full'>
-          <TabsTrigger value="" className='cursor-pointer rounded-full text-xs md:text-sm'>All</TabsTrigger>
-          {Object.entries(ProjectApprovalStatus).map(([key, label]) => (
-            <TabsTrigger key={key} value={key} className='cursor-pointer rounded-full text-xs md:text-sm'>
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <TabsContent value={filters.approval_status}> */}
       <DataTable<ProjectI, unknown>
         columns={ProjectsDataTableColumn}
         data={data?.results || []}
@@ -159,15 +141,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         pageSizeOptions={[5, 10, 20, 50]}
         rowActions={(row) => {
 
-          const approval_status_atleast_one =
-            row?.localities && row.localities.length > 0
-              ? row.localities.some(loc => loc.approval_status === 2)
-                ? 2
-                : row.localities.some(loc => loc.approval_status === 3)
-                  ? 3
-                  : 1
-              : 1
-
+          const approval_status_atleast_one = approvalStatusAtleastOne(row?.localities)
           const canDelete = user?.role && user.role !== null ? canDeleteProject(user.role.name, approval_status_atleast_one) : false
           const canEdit = user?.role && user.role !== null ? canEditProject(user.role.name, approval_status_atleast_one) : false
 
@@ -182,8 +156,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
           )
         }}
       />
-      {/* </TabsContent>
-      </Tabs> */}
     </>
   );
 }

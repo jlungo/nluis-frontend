@@ -485,7 +485,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin")}
+                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" || user.role?.name === "Dg")}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">

@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { MapDialog } from '../zoning/MapDialog';
 import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
 import { Progress } from '../ui/progress';
+import { approvalStatus, approvalStatusAtleastOne } from './utils';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -46,21 +47,9 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
   if (!project) return <div className="text-center max-w-6xl mx-auto p-6">Project not found</div>;
 
-  const approval_status =
-    project?.localities && project.localities.length > 0
-      ? project.localities.every(loc => loc.approval_status === 2)
-        ? 2
-        : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
-      : 1
+  const approval_status = approvalStatus(project?.localities)
 
-  const approval_status_atleast_one =
-    project?.localities && project.localities.length > 0
-      ? project.localities.some(loc => loc.approval_status === 2)
-        ? 2
-        : project.localities.some(loc => loc.approval_status === 3)
-          ? 3
-          : 1
-      : 1
+  const approval_status_atleast_one = approvalStatusAtleastOne(project?.localities)
 
   const progress =
     project?.localities && project.localities.length > 0
@@ -68,11 +57,11 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
       project.localities.length
       : 0;
 
-  const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
+  const approvalStatusName = ProjectApprovalStatus[approval_status] || 'Unknown';
 
   const renderProgress = () => (
     <div className='flex flex-col md:flex-row-reverse md:items-end lg:items-start gap-2'>
-      <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+      <ProjectStatusBadge id={approval_status} status={approvalStatusName} />
       <div className="flex flex-row items-center gap-1 md:gap-1">
         <p className="text-xs md:text-sm w-fit shrink-0">{progress}% Complete</p>
         <Progress value={progress} className="w-full min-w-32 max-min-w-44" />
@@ -98,7 +87,7 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
             </div>
             <div className="flex flex-col items-end gap-4">
               {/* <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
-                <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+                <ProjectStatusBadge id={approval_status} status={approvalStatusName} />
                 <div className="flex flex-col md:flex-row-reverse md:items-center gap-1 md:gap-1">
                   <Progress value={progress} className="min-w-32 lg:min-w-44" />
                   <p className="text-xs md:text-sm ml-auto w-fit shrink-0">{progress}% Complete</p>
