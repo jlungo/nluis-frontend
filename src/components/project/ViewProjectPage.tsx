@@ -1,29 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { usePageStore } from '@/store/pageStore';
-import { queryProjectKey, useDeleteProject, useProjectQuery } from '@/queries/useProjectQuery';
+import { useDeleteProject, useProjectQuery } from '@/queries/useProjectQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Check, Trash2, Loader2, X } from 'lucide-react';
+import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Trash2, Loader2, IdCard } from 'lucide-react';
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
 import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/ProjectDataTableColumns';
-import { ProjectApprovalStatus, ProjectStatus } from '@/types/constants';
+import { ProjectApprovalStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { MapDialog } from '../zoning/MapDialog';
+import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
+import { Progress } from '../ui/progress';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -32,12 +29,11 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   const { data: project, isLoading } = useProjectQuery(project_id);
 
   useEffect(() => {
-    if (project) {
+    if (project)
       setPage({
         module: 'land-uses',
         title: project.name,
       });
-    }
   }, [project, setPage]);
 
   if (isLoading)
@@ -50,11 +46,42 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
 
   if (!project) return <div className="text-center max-w-6xl mx-auto p-6">Project not found</div>;
 
-  const projectStatus = ProjectStatus[project.project_status] || 'Unknown';
-  const approvalStatus = ProjectApprovalStatus[project.approval_status] || 'Unknown';
+  const approval_status =
+    project?.localities && project.localities.length > 0
+      ? project.localities.every(loc => loc.approval_status === 2)
+        ? 2
+        : project.localities.every(loc => loc.approval_status === 3) ? 3 : 1
+      : 1
+
+  const approval_status_atleast_one =
+    project?.localities && project.localities.length > 0
+      ? project.localities.some(loc => loc.approval_status === 2)
+        ? 2
+        : project.localities.some(loc => loc.approval_status === 3)
+          ? 3
+          : 1
+      : 1
+
+  const progress =
+    project?.localities && project.localities.length > 0
+      ? project.localities.reduce((sum, locality) => sum + locality.progress, 0) /
+      project.localities.length
+      : 0;
+
+  const approvalStatus = ProjectApprovalStatus[approval_status] || 'Unknown';
+
+  const renderProgress = () => (
+    <div className='flex flex-col md:flex-row-reverse md:items-end lg:items-start gap-2'>
+      <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+      <div className="flex flex-row items-center gap-1 md:gap-1">
+        <p className="text-xs md:text-sm w-fit shrink-0">{progress}% Complete</p>
+        <Progress value={progress} className="w-full min-w-32 max-min-w-44" />
+      </div>
+    </div>
+  )
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 mb-6">
+    <div className="max-w-6xl mx-auto space-y-6 mb-10">
       {/* Main Project Card */}
       <Card className="overflow-hidden pt-0 md:pt-0 shadow-none">
         <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
@@ -65,13 +92,27 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 <Building className="h-4 w-4" />
                 <span className="text-sm lg:text-base">{project.organization}</span>
               </div>
-            </div>
-            <div className="flex flex-col-reverse items-end gap-4">
-              <ButtonsComponent moduleLevel={moduleLevel} project={project} approval_status={project.approval_status} />
-              <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
-                <ProjectStatusBadge status={approvalStatus} />
-                <ProjectStatusBadge status={projectStatus} />
+              <div className='md:hidden'>
+                {renderProgress()}
               </div>
+            </div>
+            <div className="flex flex-col items-end gap-4">
+              {/* <div className='flex flex-col md:flex-row-reverse items-end lg:items-start gap-2'>
+                <ProjectStatusBadge id={approval_status} status={approvalStatus} />
+                <div className="flex flex-col md:flex-row-reverse md:items-center gap-1 md:gap-1">
+                  <Progress value={progress} className="min-w-32 lg:min-w-44" />
+                  <p className="text-xs md:text-sm ml-auto w-fit shrink-0">{progress}% Complete</p>
+                </div>
+              </div> */}
+              <div className='hidden md:block'>
+                {renderProgress()}
+              </div>
+              <ButtonsComponent
+                moduleLevel={moduleLevel}
+                project={project}
+                approval_status={approval_status}
+                approval_status_atleast_one={approval_status_atleast_one}
+              />
             </div>
           </div>
         </CardHeader>
@@ -83,12 +124,12 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
               <FileText className="h-3.5 w-3.5 text-muted-foreground" />
               <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
             </div>
-            <p className="text-foreground leading-relaxed">{project.description}</p>
+            {project?.description ? <p className="text-foreground leading-relaxed">{project?.description}</p> : null}
           </div>
 
           <Separator className="mb-4" />
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5">
             {/* Type */}
             {/* <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Project Type</h3>
@@ -96,6 +137,17 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 {project.type}
               </Badge>
             </div> */}
+
+            {/* Registration Date */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <IdCard className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-muted-foreground">Reference Number/Id</h3>
+              </div>
+              <p className="text-foreground">
+                {project.reference_number}
+              </p>
+            </div>
 
             {/* Registration Date */}
             <div className="space-y-2">
@@ -125,27 +177,25 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-medium text-muted-foreground">Budget</h3>
               </div>
-              <p className="text-lg font-semibold text-foreground">
+              <p className="text-base md:text-lg font-semibold text-foreground">
                 TZS {Number(project.budget).toLocaleString('en-UK')}
               </p>
             </div>
 
             {/* Funders */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 col-span-2 md:col-span-1">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-medium text-muted-foreground">Funders</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {project.funders && project.funders.length > 0 ? (
-                  project.funders.map(funder => (
+                {project.funders && project.funders.length > 0
+                  ? project.funders.map(funder => (
                     <Badge key={funder.id} variant="secondary" className="px-3 py-1">
                       {funder.name}
                     </Badge>
                   ))
-                ) : (
-                  <span className="text-muted-foreground italic">No funders assigned</span>
-                )}
+                  : <span className="text-muted-foreground italic">No funders assigned</span>}
               </div>
             </div>
           </div>
@@ -170,58 +220,22 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
   );
 }
 
-const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number }> = ({ moduleLevel, project, approval_status }) => {
+const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ moduleLevel, project, approval_status, approval_status_atleast_one }) => {
   const { user } = useAuth()
   const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  const [open, setOpen] = useState(false)
   const [openDelete, setOpenDelete] = useState(false)
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (e: { remarks: string | null, approval_status: 1 | 2 | 3 }) => api.put(`/projects/projects/${project.id}/approval/`, e),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        refetchType: "active",
-        queryKey: [queryProjectKey],
-      }),
-    onError: (e) => {
-      console.log(e);
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>, status: 2 | 3) => {
-    e.preventDefault()
-    try {
-      if (!user || !user?.role?.name) return
-      if (!canApproveProject(user.role.name, approval_status)) return
-
-      const formData = new FormData(e.currentTarget);
-      const remarks = formData.get("remarks") as string;
-
-      toast.promise(mutateAsync({ remarks: remarks.length > 0 ? remarks : null, approval_status: status }), {
-        loading: "Approving...",
-        success: () => {
-          setOpen(false)
-          return `Project approved successfully`
-        },
-        error: (err: AxiosError | any) => `${err?.message || err?.response?.data?.message || "Failed to approve project!"}`
-      });
-    } catch (err: any) {
-      console.log(err)
-    }
-  }
 
   const handleDelete = () => {
     try {
       if (!user || !user?.role?.name) return
-      if (!canDeleteProject(user.role.name, approval_status)) return
+      if (!canDeleteProject(user.role.name, approval_status_atleast_one)) return
 
       toast.promise(mutateAsyncDelete(project.id), {
         loading: "Deleting project...",
         success: () => {
-          setOpen(false)
+          setOpenDelete(false)
           navigate(`/land-uses/${moduleLevel}`, { replace: true })
           return `Project deleted successfully`
         },
@@ -235,7 +249,7 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
   if (!user || !user?.role?.name) return
   return (
     <div className='flex gap-2 flex-col md:flex-row items-end'>
-      {canDeleteProject(user.role.name, approval_status) ?
+      {canDeleteProject(user.role.name, approval_status_atleast_one) ?
         <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
           <AlertDialogTrigger asChild>
             <Button
@@ -269,94 +283,16 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
           </AlertDialogContent>
         </AlertDialog>
         : null}
-      {canEditProject(user.role.name, approval_status) ?
+
+      {canEditProject(user.role.name, approval_status_atleast_one) ?
         <Link to={`/land-uses/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />
           Edit Project
-        </Link>
-        : null}
-      {canApproveProject(user.role.name, approval_status) ? (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type='button'
-              size='sm'
-              className="gap-2 w-fit bg-green-700 dark:bg-green-900 hover:bg-green-700/90 dark:hover:bg-green-900/90"
-            >
-              <Check className="h-4 w-4 hidden md:inline-block" />
-              Approve Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent >
-            <form onSubmit={e => handleSubmit(e, 2)} className='space-y-4'>
-              <DialogHeader className='border-b pb-4'>
-                <DialogTitle>Approve Project</DialogTitle>
-                <DialogDescription>
-                  {project.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div>
-                <Label htmlFor="name-1">Remarks</Label>
-                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
-              </div>
-              <DialogFooter className='flex-row justify-end'>
-                <DialogClose asChild>
-                  <Button type='button' variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className='bg-green-700 hover:opacity-90 hover:bg-green-800 dark:bg-green-900'
-                >
-                  <Check />
-                  Approve
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      ) : null}
-      {canApproveProject(user.role.name, approval_status) ? (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type='button'
-              size='sm'
-              className="gap-2 w-fit bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive"
-            >
-              <X className="h-4 w-4 hidden md:inline-block" />
-              Reject Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent >
-            <form onSubmit={e => handleSubmit(e, 3)} className='space-y-4'>
-              <DialogHeader className='border-b pb-4'>
-                <DialogTitle>Reject Project</DialogTitle>
-                <DialogDescription>
-                  {project.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div>
-                <Label htmlFor="name-1">Remarks</Label>
-                <Textarea id="name-1" name="remarks" placeholder='Enter remarks or description here' />
-              </div>
-              <DialogFooter className='flex-row justify-end'>
-                <DialogClose asChild>
-                  <Button type='button' variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className='bg-destructive/20 text-destructive hover:bg-destructive/30 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:text-destructive'
-                >
-                  <X />
-                  Reject
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      ) : null}
+        </Link> : null}
+
+      {canApproveProject(user.role.name, approval_status) ? <ProjectLocalitiesApproval project={project} isApproval /> : null}
+
+      {canApproveProject(user.role.name, approval_status) ? <ProjectLocalitiesApproval project={project} isApproval={false} /> : null}
     </div>
   )
 }
@@ -364,46 +300,80 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
 const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
   const navigate = useNavigate()
 
+  const [statusFilter, setStatusFilter] = useState<number | null>(null)
+
+  const localities = project?.localities ? statusFilter
+    ? project.localities.filter(loc => loc.approval_status === statusFilter)
+    : project.localities : []
+
   return (
-    <Card className='shadow-none'>
-      <CardHeader>
+    <Card className='shadow-none pt-0 md:pt-0 overflow-hidden'>
+      <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Coverage Areas ({project.localities?.length || 0})
+            Coverage Areas ({project?.localities?.length || 0})
           </div>
           {project.localities && project.localities.length > 0 && (
             <MapDialog
               title={project.name}
-              overlayMapsIds={project.localities?.map((loc) => loc.locality__id)}
+              overlayMapsIds={project?.localities.map((loc) => loc.locality__id)}
             />
           )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {project.localities && project.localities.length > 0 ? (
+        {project.localities && project.localities.length > 0 ?
           <DataTable
             columns={LocalityTableColumns}
-            data={project.localities}
+            data={localities}
             enableGlobalFilter={true}
             searchPlaceholder="Search localities..."
-            onRowClick={project.approval_status === 2 ? (locality) => navigate(`${locality.id}/workflow`) : undefined}
+            // onRowClick={approval_status === 2 ? (locality) => navigate(`${locality.id}/workflow`) : undefined}
             showRowNumbers={true}
             shadowed={false}
             rowActions={(locality) => (
               <Button
                 variant="outline"
-                className={"btn-sm mx-4 disabled:opacity-10"}
-                disabled={project.approval_status !== 2}
+                type='button'
+                size="sm"
+                className={"disabled:opacity-10 mr-5"}
+                disabled={locality.approval_status !== 2}
                 onClick={() => navigate(`${locality.id}/workflow`)}
               >
                 Workflow
               </Button>
             )}
+            rightToolbar={
+              <div className='flex gap-0.5'>
+                <Button
+                  size='sm'
+                  type='button'
+                  onClick={() => setStatusFilter(null)}
+                  className={`font-normal rounded-l-md rounded-r-xs w-12 ${statusFilter === null ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}`}
+                >
+                  All
+                </Button>
+                {Object.entries(ProjectApprovalStatus).map(([k, l], index, arr) =>
+                  <Button
+                    key={k}
+                    size='sm'
+                    type='button'
+                    onClick={() => setStatusFilter(Number(k))}
+                    className={`font-normal
+                      ${index === arr.length - 1
+                        ? 'rounded-r-md rounded-l-xs'
+                        : 'rounded-xs'}
+                      ${statusFilter === Number(k) ? 'bg-primary' : 'bg-accent dark:bg-input/30 text-foreground hover:text-foreground/80 hover:bg-accent/80 dark:hover:bg-muted/80'}
+                    `}
+                  >
+                    {l}
+                  </Button>)
+                }
+              </div>
+            }
           />
-        ) : (
-          <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>
-        )}
+          : <p className="text-muted-foreground text-center py-8">No localities assigned to this project</p>}
       </CardContent>
     </Card>
   )

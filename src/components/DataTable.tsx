@@ -30,6 +30,7 @@ import {
   ArrowUpDown,
   Search,
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 export type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
@@ -200,7 +201,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   return (
     <div className="space-y-3">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 xl:justify-between">
 
         {/* Centered search */}
         <div className="justify-self-end w-full sm:w-[360px] md:w-[500px]">
@@ -327,18 +328,14 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden md:inline text-sm">Rows per page</span>
-            <select
-              className="h-9 rounded-md border bg-transparent px-2 text-sm"
-              value={pag.pageSize}
-              onChange={(e) => changePageSize(Number(e.target.value))}
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            <Select value={`${pag.pageSize}`} onValueChange={(e) => changePageSize(Number(e))}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Page size" />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map(size => <SelectItem key={size} value={`${size}`}>{size} <span className="hidden sm:inline text-sm">rows per page</span></SelectItem>)}
+              </SelectContent>
+            </Select>
 
             <div className="flex items-center gap-1">
               <Button

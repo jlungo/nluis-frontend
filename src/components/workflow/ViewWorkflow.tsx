@@ -2,12 +2,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { SectionedForm } from "./sectioned-form";
 import { useWorkflowsQuery } from "@/queries/useWorkflowQuery";
 import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { cn, getCategoryKey } from "@/lib/utils";
 import { useFormDataQuery } from "@/queries/useFormDataQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { buttonVariants } from "../ui/button";
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
 
 export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
     const { setPage } = usePageStore();
+    const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const workflowKey = getCategoryKey(worklowCategory) ?? 6
@@ -29,6 +30,13 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
+    const projectLocaleProgress = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.progress
+    const approval_status =
+        project?.localities && project.localities.length > 0
+            ? project.localities.every(loc => loc.approval_status === 1)
+                ? 1
+                : project.localities.every(loc => loc.approval_status === 3) ? 3 : 2
+            : 2
 
     useLayoutEffect(() => {
         setPage({
@@ -37,6 +45,10 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             isFormPage: true
         });
     }, [setPage]);
+
+    useEffect(() => {
+        if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
+    }, [approval_status])
 
     if (!workflowKey)
         return <div className='flex flex-col items-center justify-center h-60'>
@@ -53,7 +65,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <p className='text-muted-foreground'>No project with this data found!</p>
         </div>
 
-    if (project.approval_status !== 2)
+    if (approval_status !== 2)
         return <div className='flex flex-col items-center justify-center h-80 gap-12'>
             <p className='text-muted-foreground'>This project is not approved!</p>
             <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
@@ -82,6 +94,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             projectName={project.name}
             projectLocaleName={projectLocaleName}
             projectLocaleId={projectLocaleId}
+            projectLocaleProgress={projectLocaleProgress}
         />
     )
 }

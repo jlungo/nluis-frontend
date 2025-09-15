@@ -16,6 +16,7 @@ import api from '@/lib/axios';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
+import { Progress } from '../ui/progress';
 
 interface FieldValue {
     value?: string | File[] | string[];
@@ -33,9 +34,10 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
+    projectLocaleProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, projectLocaleProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -409,6 +411,12 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 <Edit className="h-4 w-4" />
                                 Edit<span className='hidden md:inline'> Workflow</span>
                             </Link>
+                        ) : null}
+                        {projectLocaleProgress !== undefined ? (
+                            <div className='flex flex-col gap-1 items-end'>
+                                <p className='text-xs md:text-sm'>{projectLocaleProgress}% Complete</p>
+                                <Progress value={projectLocaleProgress} className='w-20 md:w-24 lg:w-32' />
+                            </div>
                         ) : null}
                     </div>
                 </div>
