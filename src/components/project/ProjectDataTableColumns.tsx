@@ -89,7 +89,9 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
 
       return (
         <div className="flex flex-col items-center gap-0.5">
-          <p className="text-xs md:text-sm text-center lg:text-end min-w-24 shrink-0">{progress}% Complete</p>
+          <p className="text-xs md:text-sm text-center lg:text-end min-w-24 shrink-0">{Number.isInteger(progress)
+            ? progress
+            : Math.floor(progress * 100) / 100}% Complete</p>
           <Progress value={progress} className="min-w-32 max-w-48" />
         </div>
       )
@@ -177,7 +179,9 @@ export const LocalityTableColumns: ColumnDef<any>[] = [
     cell: ({ row }: { row: { original: NonNullable<ProjectI['localities']>[number] } }) => (
       <div className="flex flex-col-reverse lg:flex-row items-center gap-1">
         <Progress value={row.original.progress} className="min-w-32 max-w-48" />
-        <p className="text-xs md:text-sm text-center lg:text-end min-w-24 shrink-0">{row.original.progress}% Complete</p>
+        <p className="text-xs md:text-sm text-center lg:text-end min-w-24 shrink-0">{Number.isInteger(row.original.progress)
+          ? row.original.progress
+          : Math.floor(row.original.progress * 100) / 100}% Complete</p>
       </div>
     ),
   },

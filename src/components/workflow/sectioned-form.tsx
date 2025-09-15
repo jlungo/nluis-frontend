@@ -425,7 +425,9 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         ) : null}
                         {projectLocaleProgress !== undefined ? (
                             <div className='flex flex-col gap-1 items-end'>
-                                <p className='text-xs md:text-sm'>{projectLocaleProgress}% Complete</p>
+                                <p className='text-xs md:text-sm'>{Number.isInteger(projectLocaleProgress)
+                                    ? projectLocaleProgress
+                                    : Math.floor(projectLocaleProgress * 100) / 100}% Complete</p>
                                 <Progress value={projectLocaleProgress} className='w-20 md:w-24 lg:w-32' />
                             </div>
                         ) : null}

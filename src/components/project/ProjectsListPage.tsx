@@ -20,7 +20,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
   const location = useLocation();
   const { user } = useAuth()
 
-  const [filters, setFilters] = useState({ status: '', name: '', approval_status: '' });
+  const [filters, setFilters] = useState({ status: '', name: '' });
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading, error: queryError, refetch } = useProjectsQuery({
@@ -28,7 +28,6 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     module_level: moduleLevel,
     status: filters.status || undefined,
     search: filters.name || undefined,
-    approval_status: filters.approval_status || undefined
   });
 
   const { mutateAsync } = useDeleteProject();

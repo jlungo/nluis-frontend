@@ -10,6 +10,7 @@ import { Input } from "../ui/input";
 import { Specializations } from "@/types/constants";
 import { DataTable } from "../DataTable";
 import { ColumnDef } from "@tanstack/react-table";
+import { useAuth } from "@/store/auth";
 
 type FormMembersProps = {
     label: string;
@@ -38,15 +39,14 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
     const [accounts, setAccounts] = useState<MembersI[]>([])
     const [account, setAccount] = useState<MembersI | null>(null)
 
+    const { user } = useAuth()
+
     const { data: users, isLoading } = useUsersList({
         page: 1,
         page_size: 10,
         keyword: search,
         // role: filters.role ? filters.role : undefined,
-        // organization:
-        //   filters.organization && filters.organization !== "all"
-        //     ? filters.organization
-        //     : undefined,
+        organization: user?.organization?.id,
         is_verified: "1",
     });
 

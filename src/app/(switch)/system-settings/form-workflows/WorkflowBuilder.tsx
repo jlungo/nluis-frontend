@@ -110,7 +110,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 description: '',
                 forms: [],
                 approval_roles: [],
-                order: formSections.length + 1,
+                order: sections.length + 1,
                 is_active: true
             }
         ]);
