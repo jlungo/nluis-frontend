@@ -33,10 +33,9 @@ type FormMembersProps = {
     fullWidth?: boolean
 };
 
-const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, placeholder, fullWidth }) => {
+const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, required, disabled, placeholder, fullWidth }) => {
     const [search, setSearch] = useState('')
     const [open, setOpen] = useState(false)
-    const [accounts, setAccounts] = useState<MembersI[]>([])
     const [account, setAccount] = useState<MembersI | null>(null)
 
     const { user } = useAuth()
@@ -51,10 +50,8 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
     });
 
     const handleAddMember = () => {
-        setAccounts(prev => {
-            if (account) return [...prev, account]
-            else return [...prev]
-        })
+        if (account && value && setValue) setValue([...value, account])
+        else if (account && (!value || value?.length === 0) && setValue) setValue([account])
         setTimeout(() => {
             setAccount(null)
             setOpen(false)
@@ -62,10 +59,11 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
     }
 
     const handleDeleteMember = useCallback((id: string) => {
-        setAccounts((prev) => {
-            return prev.filter(item => item.id !== id)
-        })
-    }, [setAccounts])
+        if (value && Array.isArray(value) && setValue) {
+            const newData = value.filter(item => item.id !== id)
+            setValue(newData)
+        }
+    }, [setValue])
 
     return (
         <div className="w-full space-y-2">
@@ -94,7 +92,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             <Label htmlFor="account">User Account {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <MultiSelect
                                 title={label}
-                                data={users ? users.items.filter(user => !accounts.some(acc => acc.id === user.id)).map(user => ({
+                                data={users ? users.items.filter(user => !value?.some(acc => acc.id === user.id)).map(user => ({
                                     label: `${user.first_name} ${user.last_name} (${user.email})`,
                                     value: user.id,
                                 })) : []}
@@ -165,12 +163,12 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
 
             <DataTable
                 columns={columns}
-                data={accounts}
+                data={value || []}
                 shadowed={false}
                 enableGlobalFilter={false}
                 showPagination={false}
                 emptyText="No member(s) added"
-                rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
+                rowActions={!disabled ? (row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button> : undefined}
             />
         </div>
     )
