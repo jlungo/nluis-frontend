@@ -315,7 +315,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             )
 
         return (
-            <div className="h-full flex flex-col">
+            <div className="h-fit flex flex-col">
                 <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

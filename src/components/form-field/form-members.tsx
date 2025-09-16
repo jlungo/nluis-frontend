@@ -127,11 +127,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                                 placeholder="Add member title"
                                 disabled={!account || disabled}
                                 value={account && account?.title ? account.title : undefined}
-                                onChange={(e) => setAccount(prev => {
-                                    if (!prev) return null
-                                    prev.title = e.target.value
-                                    return prev
-                                })}
+                                onChange={(e) => setAccount(prev => prev ? { ...prev, title: e.target.value } : null)}
                             />
                         </div>
                         <div className="w-full space-y-2">
@@ -140,11 +136,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                                 name="specialization"
                                 disabled={disabled || !account}
                                 value={account && account?.specialization ? `${account.specialization}` : undefined}
-                                onValueChange={(e) => setAccount(prev => {
-                                    if (!prev) return null
-                                    prev.specialization = Number(e)
-                                    return prev
-                                })}
+                                onValueChange={(e) => setAccount(prev => prev ? { ...prev, specialization: Number(e) } : null)}
                             >
                                 <SelectTrigger className={"bg-accent w-full"}>
                                     <SelectValue placeholder={"Select specialization area"} />
@@ -154,7 +146,12 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button onClick={handleAddMember} disabled={disabled || !account} type="button" className="w-full">
+                        <Button
+                            type="button"
+                            onClick={handleAddMember}
+                            className="w-full"
+                            disabled={disabled || !account || account.specialization === null || account.title === null}
+                        >
                             Add Member
                         </Button>
                     </DialogContent>
