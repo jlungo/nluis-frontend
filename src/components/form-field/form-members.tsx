@@ -118,6 +118,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                                 setSearch={setSearch}
                                 mutedColor={!fullWidth}
                                 portal={false}
+                                isSingle
                             />
                         </div>
                         <div className="w-full space-y-2">
