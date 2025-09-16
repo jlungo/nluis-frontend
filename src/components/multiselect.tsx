@@ -27,16 +27,20 @@ interface MultiselectProps {
     setSearch?: (search: string) => void
     mutedColor?: boolean;
     portal?: boolean;
+    isSingle?: boolean;
 }
 
-export function MultiSelect({ title, data, selected, setSelected, isLoading, search, setSearch, mutedColor, portal }: MultiselectProps) {
+export function MultiSelect({ title, data, selected, setSelected, isLoading, search, setSearch, mutedColor, portal, isSingle }: MultiselectProps) {
     const [open, setOpen] = useState(false)
 
     const toggleValue = (value: string) => {
-        if (selected.includes(value)) {
-            setSelected(selected.filter((v) => v !== value))
+        if (isSingle) {
+            if (selected.includes(value)) setSelected([])
+            else setSelected([value])
+            setOpen(false)
         } else {
-            setSelected([...selected, value])
+            if (selected.includes(value)) setSelected(selected.filter((v) => v !== value))
+            else setSelected([...selected, value])
         }
     }
 
