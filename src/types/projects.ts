@@ -96,6 +96,8 @@ export interface ProjectQueryParamsI {
   registration_date?: string;
   authorization_date?: string;
   funder?: string;
+  offset?: number;
+  limit?: number;
 }
 
 export interface CreateProjectDataI {

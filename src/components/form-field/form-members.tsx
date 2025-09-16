@@ -12,18 +12,7 @@ import { DataTable } from "../DataTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { useAuth } from "@/store/auth";
 
-type FormMembersProps = {
-    label: string;
-    name: string;
-    required?: boolean;
-    disabled?: boolean;
-    value?: string[];
-    placeholder?: string;
-    setValue?: (value: string[]) => void;
-    fullWidth?: boolean
-};
-
-interface MembersI {
+export interface MembersI {
     id: string;
     first_name: string;
     last_name: string;
@@ -32,6 +21,17 @@ interface MembersI {
     title: string | null;
     specialization: number | null;
 }
+
+type FormMembersProps = {
+    label: string;
+    name: string;
+    required?: boolean;
+    disabled?: boolean;
+    value?: MembersI[];
+    placeholder?: string;
+    setValue?: (value: MembersI[]) => void;
+    fullWidth?: boolean
+};
 
 const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, placeholder, fullWidth }) => {
     const [search, setSearch] = useState('')

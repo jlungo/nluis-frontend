@@ -18,9 +18,10 @@ import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 import { Progress } from '../ui/progress';
 import { queryProjectKey } from '@/queries/useProjectQuery';
+import type { MembersI } from '../form-field/form-members';
 
 interface FieldValue {
-    value?: string | File[] | string[];
+    value?: string | File[] | MembersI[];
     type: InputType;
     field_id: number;
     project_locality_id: string;
@@ -50,7 +51,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[] | string[], type: InputType, field_id: number, project_locality_id: string) => {
+    const updateFieldValue = (formSlug: string, value: string | File[] | MembersI[], type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -124,7 +125,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
+                    // @ts-ignore
                     formData.append(`data-${field_id}`, value[0]);
+                else if (Array.isArray(value))
+                    // If value is MembersI[]
+                    formData.append(`data-${field_id}`, JSON.stringify(value));
                 else formData.append(`data-${field_id}`, value as string);
 
                 // Include project slug for field
@@ -397,7 +402,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     if (activeForm) return renderForm(activeForm, isFilledForm(activeForm));
 
     return (
-        <div className="h-full flex flex-col mb-20">
+        <div className="h-fit flex flex-col mb-20">
             {/* Header */}
             <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                 <div className="flex items-center justify-between">
