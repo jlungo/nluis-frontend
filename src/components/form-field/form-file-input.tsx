@@ -32,17 +32,18 @@ interface CompactFileUploadProps {
 }
 
 export default function FormFileInput(props: CompactFileUploadProps) {
-    if (
-        props?.value &&
+    const [isViewer, setIsViewer] = useState(props?.value &&
         props.value.length > 0 &&
-        (typeof props.value === "string" || (Array.isArray(props.value) && typeof props.value[0] === "string"))
-    )
+        (typeof props.value === "string" || (Array.isArray(props.value) && typeof props.value[0] === "string")))
+    if (isViewer)
         return (
             <FileRenderer
                 files={props.value!}
                 name={props.name}
                 label={props.label}
                 required={props.required}
+                disabled={props.disabled}
+                setIsViewer={setIsViewer}
             />
         )
     return <FileInput {...props} />
@@ -205,11 +206,11 @@ function FileInput({
     );
 }
 
-const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; files: string | string[]; }> = ({ name, label, required, files }) => {
+const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; disabled?: boolean; files: string | string[]; setIsViewer: React.Dispatch<React.SetStateAction<boolean | "" | undefined>> }> = ({ name, label, disabled, required, files, setIsViewer }) => {
     const fileList = Array.isArray(files) ? files.map(file => MEDIA_PATH + file) : [MEDIA_PATH + files];
 
-    const officeViewerUrl = (url: string) =>
-        `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+    // const officeViewerUrl = (url: string) =>
+    //     `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
 
     const getFileType = (url: string) => {
         const ext = url.split(".").pop()?.toLowerCase();
@@ -226,7 +227,19 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
 
     return (
         <div className="gap-4 w-full">
-            {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
+            <div className='flex justify-between items-center gap-2 mb-0.5'>
+                {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
+                <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setIsViewer(false)}
+                    disabled={disabled}
+                    className={`disabled:hidden`}
+                >
+                    Change
+                </Button>
+            </div>
             <div className='w-full bg-muted dark:bg-input/30 aspect-video rounded shadow'>
                 {fileList.map((url, i) => {
                     const type = getFileType(url);
@@ -251,62 +264,11 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
                             return <audio key={i} src={url} controls className="w-full max-w-sm" />;
 
                         case "pdf":
-                            return (
-                                <embed
-                                    key={i}
-                                    src={url}
-                                    type="application/pdf"
-                                    className="w-full h-96 rounded shadow"
-                                />
-                            );
-
+                            return <DocsViewer key={i} url={url} />
                         case "word":
-                            return (
-                                <div key={i} className="w-full">
-                                    <iframe
-                                        src={officeViewerUrl(url)}
-                                        className="w-full h-[75vh] rounded bg-muted"
-                                        title={`word-${i}`}
-                                        referrerPolicy="no-referrer"
-                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                                    />
-                                    <div className="mt-2">
-                                        <a
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 text-primary underline"
-                                        >
-                                            <FileIcon className="h-5 w-5" />
-                                            Open original Word file
-                                        </a>
-                                    </div>
-                                </div>
-                            )
+                            return <DocsViewer key={i} url={url} />
                         case "excel":
-                            return (
-                                <div key={i} className="w-full">
-                                    <iframe
-                                        src={officeViewerUrl(url)}
-                                        className="w-full h-[75vh] rounded bg-muted"
-                                        title={`${type}-${i}`}
-                                        // optional hardening
-                                        referrerPolicy="no-referrer"
-                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                                    />
-                                    <div className="mt-2">
-                                        <a
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 text-primary underline"
-                                        >
-                                            <FileIcon className="h-5 w-5" />
-                                            Open original
-                                        </a>
-                                    </div>
-                                </div>
-                            )
+                            return <DocsViewer key={i} url={url} />
                         case "other":
                         default:
                             return (
@@ -327,3 +289,20 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
         </div>
     );
 };
+
+const DocsViewer = ({ url }: { url: string }) => (
+    <div className="w-full h-full min-h-28">
+        <iframe src={`https://docs.google.com/viewer?url=${url}&embedded=true`} className='border-none h-full w-full'></iframe>
+        <div className="-mt-12 ml-auto mr-2 w-fit rounded-full bg-primary/50 px-2.5 py-1.5">
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs md:text-sm text-white hover:underline"
+            >
+                <FileIcon className="h-5 w-5" />
+                Open original file
+            </a>
+        </div>
+    </div>
+)
