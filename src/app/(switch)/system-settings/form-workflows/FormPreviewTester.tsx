@@ -40,6 +40,8 @@ import { ShapefileMap } from '@/components/zoning/ShapefileMap';
 import { useThemeStore } from '@/store/themeStore';
 import FormMembers from '@/components/form-field/form-members';
 
+export type State = "1" | "0"
+
 export interface FieldOption {
     id: string;
     label: string;
@@ -56,6 +58,7 @@ export interface FormField {
     placeholder?: string;
     order: number;
     options: FieldOption[];
+    is_active: boolean;
 }
 
 export interface SectionForm {
@@ -64,7 +67,8 @@ export interface SectionForm {
     editor_roles: { user_role: string }[];
     description: string;
     order: number;
-    fields: FormField[];
+    form_fields: FormField[];
+    is_active: boolean;
 }
 
 export interface FormSection {
@@ -74,6 +78,7 @@ export interface FormSection {
     description: string;
     order: number;
     forms: SectionForm[];
+    is_active: boolean;
 }
 
 export interface WorkflowTemplate {
@@ -194,7 +199,7 @@ export function FormPreviewTester({
         if (workflowData?.sections)
             workflowData.sections.forEach(section => {
                 section.forms.forEach(form => {
-                    form.fields.forEach(field => {
+                    form.form_fields.forEach(field => {
                         if (field.required && (!formValues[field.name] || formValues[field.name] === '')) {
                             errors.push({
                                 fieldId: field.id,
@@ -484,7 +489,7 @@ export function FormPreviewTester({
             </div>
 
             <div className="space-y-4">
-                {workflowData?.sections && workflowData.sections.sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
+                {workflowData?.sections && workflowData.sections.filter(section => section.is_active === true).sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
                     <Card key={section.id}>
                         <Collapsible
                             open={!collapsedPreviewSections[section.id]}
@@ -511,7 +516,7 @@ export function FormPreviewTester({
                                                 {section.forms.length} forms
                                             </Badge>
                                             <Badge variant="outline" className="text-xs">
-                                                {section.forms.reduce((count, form) => count + form.fields.length, 0)} fields
+                                                {section.forms.reduce((count, form) => count + form.form_fields.length, 0)} fields
                                             </Badge>
                                             {collapsedPreviewSections[section.id] ? (
                                                 <ChevronRight className="h-4 w-4" />
@@ -525,7 +530,7 @@ export function FormPreviewTester({
 
                             <CollapsibleContent>
                                 <CardContent className="space-y-6 pt-0">
-                                    {section.forms.sort((a, b) => a.order - b.order).map((form) => (
+                                    {section.forms.filter(form => form.is_active === true).sort((a, b) => a.order - b.order).map((form) => (
                                         <Collapsible
                                             key={form.id}
                                             open={!collapsedForms[form.id]}
@@ -549,7 +554,7 @@ export function FormPreviewTester({
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Badge variant="outline" className="text-xs">
-                                                                {form.fields.length} fields
+                                                                {form.form_fields.length} fields
                                                             </Badge>
                                                             {collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
@@ -563,7 +568,7 @@ export function FormPreviewTester({
 
                                             <CollapsibleContent>
                                                 <div className="mt-3 grid gap-3 pl-9">
-                                                    {form.fields.sort((a, b) => a.order - b.order).map((field) => (
+                                                    {form.form_fields.filter(field => field.is_active === true).sort((a, b) => a.order - b.order).map((field) => (
                                                         <div key={field.id} className="flex items-center gap-2 text-sm p-2 bg-background rounded border">
                                                             <div className="w-2 h-2 bg-muted-foreground rounded-full" />
                                                             <span>{field.label}</span>
@@ -714,7 +719,7 @@ export function FormPreviewTester({
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Badge variant="outline" className="text-xs">
-                                                                {form.fields.length} fields
+                                                                {form.form_fields.length} fields
                                                             </Badge>
                                                             {collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
@@ -731,7 +736,7 @@ export function FormPreviewTester({
 
                                             <CollapsibleContent>
                                                 <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
-                                                    {form.fields.sort((a, b) => a.order - b.order).map((field) =>
+                                                    {form.form_fields.sort((a, b) => a.order - b.order).map((field) =>
                                                         renderFieldComponent(field)
                                                     )}
                                                 </div>
@@ -857,7 +862,7 @@ export function FormPreviewTester({
                                     <BarChart3 className="h-5 w-5" />
                                     {workflowData?.sections && workflowData.sections.reduce((count, section) =>
                                         count + section.forms.reduce((subCount, form) =>
-                                            subCount + form.fields.length, 0
+                                            subCount + form.form_fields.length, 0
                                         ), 0
                                     )
                                     }
@@ -883,7 +888,7 @@ export function FormPreviewTester({
                                     <Clock className="h-5 w-5" />
                                     {Math.round((Object.keys(formValues).length / (workflowData.sections!.reduce((count, section) =>
                                         count + section.forms.reduce((subCount, form) =>
-                                            subCount + form.fields.length, 0
+                                            subCount + form.form_fields.length, 0
                                         ), 0
                                     ))) * 100) || 0}%
                                 </div>

@@ -1,5 +1,9 @@
 export function canCreateProject(userRole: string) {
-  return userRole === "Admin" || userRole === "Project Leader";
+  return (
+    userRole === "Admin" ||
+    userRole === "Project Leader" ||
+    userRole === "Land Use Officer"
+  );
 }
 
 export function canEditProject(
@@ -7,7 +11,9 @@ export function canEditProject(
   projectApprovalStatus: number
 ) {
   return (
-    (userRole === "Admin" || userRole === "Project Leader") &&
+    (userRole === "Admin" ||
+      userRole === "Project Leader" ||
+      userRole === "Land Use Officer") &&
     projectApprovalStatus !== 2
   );
 }
@@ -17,7 +23,9 @@ export function canDeleteProject(
   projectApprovalStatus: number
 ) {
   return (
-    (userRole === "Admin" || userRole === "Project Leader") &&
+    (userRole === "Admin" ||
+      userRole === "Project Leader" ||
+      userRole === "Land Use Officer") &&
     projectApprovalStatus !== 2
   );
 }

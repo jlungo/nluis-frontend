@@ -9,16 +9,19 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FormField from '@/components/form-field';
-import { InputType } from '@/types/input-types';
+import type { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
+import { Progress } from '../ui/progress';
+import { queryProjectKey } from '@/queries/useProjectQuery';
+import type { MembersI } from '../form-field/form-members';
 
 interface FieldValue {
-    value?: string | File[] | string[];
+    value?: string | File[] | MembersI[];
     type: InputType;
     field_id: number;
     project_locality_id: string;
@@ -33,9 +36,10 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
+    projectLocaleProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, projectLocaleProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -47,7 +51,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[] | string[], type: InputType, field_id: number, project_locality_id: string) => {
+    const updateFieldValue = (formSlug: string, value: string | File[] | MembersI[], type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -62,11 +66,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     "Content-Type": "multipart/form-data",
                 }
             }),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
                 queryKey: [formDataQueryKey],
-            }),
+            })
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [queryProjectKey],
+            })
+        },
         onError: (e) => {
             console.log(e);
         },
@@ -75,11 +84,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const { mutateAsync: mutateAsyncApproval, isPending: isPendingApproval } = useMutation({
         mutationFn: (e: { is_approved: "0" | "1", form_data_ids: number[] }) =>
             api.post(`/form-management/form-data/approval/`, e),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
                 queryKey: [formDataQueryKey],
-            }),
+            })
+            queryClient.invalidateQueries({
+                refetchType: "active",
+                queryKey: [queryProjectKey],
+            })
+        },
         onError: (e) => {
             console.log(e);
         },
@@ -111,7 +125,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
+                    // @ts-ignore
                     formData.append(`data-${field_id}`, value[0]);
+                else if (Array.isArray(value))
+                    // If value is MembersI[]
+                    formData.append(`data-${field_id}`, JSON.stringify(value));
                 else formData.append(`data-${field_id}`, value as string);
 
                 // Include project slug for field
@@ -178,7 +196,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug)
         const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -188,7 +206,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug && value.is_approved === true)
         const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.fields))
+            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -263,7 +281,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
                         <CardContent>
                             <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                {form.fields.slice().sort((a, b) => a.position - b.position).map((field) =>
+                                {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) =>
                                     <FormField
                                         key={field.id}
                                         disabled={disabled || !canClickForm(form) || isFilled}
@@ -297,7 +315,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             )
 
         return (
-            <div className="h-full flex flex-col">
+            <div className="h-fit flex flex-col">
                 <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -318,7 +336,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
                             <CardContent>
                                 <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                    {form.fields.slice().sort((a, b) => a.position - b.position).map((field) => (
+                                    {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
                                             disabled={disabled || !canClickForm(form) || isFilled}
@@ -384,7 +402,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     if (activeForm) return renderForm(activeForm, isFilledForm(activeForm));
 
     return (
-        <div className="h-full flex flex-col mb-20">
+        <div className="h-fit flex flex-col mb-20">
             {/* Header */}
             <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                 <div className="flex items-center justify-between">
@@ -409,6 +427,14 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 <Edit className="h-4 w-4" />
                                 Edit<span className='hidden md:inline'> Workflow</span>
                             </Link>
+                        ) : null}
+                        {projectLocaleProgress !== undefined ? (
+                            <div className='flex flex-col gap-1 items-end'>
+                                <p className='text-xs md:text-sm'>{Number.isInteger(projectLocaleProgress)
+                                    ? projectLocaleProgress
+                                    : Math.floor(projectLocaleProgress * 100) / 100}% Complete</p>
+                                <Progress value={projectLocaleProgress} className='w-20 md:w-24 lg:w-32' />
+                            </div>
                         ) : null}
                     </div>
                 </div>
@@ -477,7 +503,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin")}
+                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" || user.role?.name === "Dg")}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
@@ -519,7 +545,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             <Button
                                                 type='button'
                                                 size='sm'
-                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "1")}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "1")}
                                                 disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isPendingApproval || isLoading}
                                                 className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
                                             >
@@ -542,7 +568,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                 type='button'
                                                 variant='outline'
                                                 size='sm'
-                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.fields.map(field => field.id)), "0")}
+                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "0")}
                                                 disabled={disabled || !isSectionApproved(section) || isPending || isPendingApproval || isLoading}
                                                 className='border-destructive'
                                             >

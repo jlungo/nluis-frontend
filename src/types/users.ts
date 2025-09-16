@@ -5,6 +5,7 @@ export interface UserI {
   email: string;
   phone?: string;
   role?: string;
+  role_id?: string;
   organization?: string;
   organization_name?: string;
   user_type: number;

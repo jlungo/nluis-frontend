@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { slugify } from '@/lib/utils';
 import MultiSelectShowListInput from './MultiSelectShowListInput';
 import DatePicker from './form-field/form-date-picker';
+import { Asterisk } from 'lucide-react';
 
 type FormFieldInputProps =
   | {
@@ -58,7 +59,7 @@ export function FormFieldInput(props: FormFieldInputProps) {
 
   return (
     <div className="w-full space-y-2">
-      {type !== 'date' ? <Label htmlFor={id}>{label} {required && '*'}</Label> : null}
+      {type !== 'date' ? <Label htmlFor={id}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
 
       {type === 'textarea' && (
         <Textarea

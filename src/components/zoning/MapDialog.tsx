@@ -134,7 +134,7 @@ export function MapDialog({ title, baseMapId, overlayMapsIds = [] }: MapDialogPr
               </div>
             </div>
           )}
-
+ 
           {/* Map component */}
           <div
             className={`

@@ -8,7 +8,6 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: "System Settings",
-
         })
     }, [setPage])
 
