@@ -1,7 +1,6 @@
 export interface ProjectI {
   id: string;
   organization: string;
-  // organization_name: string;
   name: string;
   reference_number: string;
   registration_date: string;
@@ -25,7 +24,7 @@ export interface ProjectI {
     progress: number;
     remarks: string | null;
   }> | null;
-} // Fix returning organization_name, localities
+}
 
 export interface ProjectsListPageProps {
   module: string;
