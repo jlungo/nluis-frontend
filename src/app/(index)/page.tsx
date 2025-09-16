@@ -159,14 +159,14 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <Link
                     to='/auth/signup'
-                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-chart-2 text-white rounded-lg hover:bg-chart-2/90 transition-colors text-sm"
+                    className="hidden sm:flex items-center gap-1 px-3 py-2 bg-chart-2 dark:bg-chart-2/50 text-white rounded-lg hover:bg-chart-2/90 transition-colors text-sm"
                   >
                     <UserPlus className="h-4 w-4" />
                     <span>Register</span>
                   </Link>
                   <Link
                     to='/auth/signin'
-                    className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                    className="flex items-center gap-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
                   >
                     <Users className="h-4 w-4" />
                     <span>Login</span>
