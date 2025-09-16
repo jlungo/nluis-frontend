@@ -24,10 +24,12 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading, error: queryError, refetch } = useProjectsQuery({
+    limit: 20,
+    offset: 0,
     organization: user?.organization?.id || '',
     module_level: moduleLevel,
-    status: filters.status || undefined,
-    search: filters.name || undefined,
+    status: filters.status,
+    search: filters.name,
   });
 
   const { mutateAsync } = useDeleteProject();
@@ -139,11 +141,9 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
         initialPageSize={10}
         pageSizeOptions={[5, 10, 20, 50]}
         rowActions={(row) => {
-
           const approval_status_atleast_one = approvalStatusAtleastOne(row?.localities)
           const canDelete = user?.role && user.role !== null ? canDeleteProject(user.role.name, approval_status_atleast_one) : false
           const canEdit = user?.role && user.role !== null ? canEditProject(user.role.name, approval_status_atleast_one) : false
-
           return (
             <ActionButtons
               entity={row}
