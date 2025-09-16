@@ -63,7 +63,9 @@ export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; 
     <div className='flex flex-col md:flex-row-reverse md:items-end lg:items-start gap-2'>
       <ProjectStatusBadge id={approval_status} status={approvalStatusName} />
       <div className="flex flex-row items-center gap-1 md:gap-1">
-        <p className="text-xs md:text-sm w-fit shrink-0">{progress}% Complete</p>
+        <p className="text-xs md:text-sm w-fit shrink-0">{Number.isInteger(progress)
+          ? progress
+          : Math.floor(progress * 100) / 100}% Complete</p>
         <Progress value={progress} className="w-full min-w-32 max-min-w-44" />
       </div>
     </div>
@@ -323,10 +325,9 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
             shadowed={false}
             rowActions={(locality) => (
               <Button
-                variant="outline"
                 type='button'
                 size="sm"
-                className={"disabled:opacity-10 mr-5"}
+                className={"disabled:opacity-10 mr-5 bg-primary/20 text-primary hover:bg-primary/30 dark:text-primary"}
                 disabled={locality.approval_status !== 2}
                 onClick={() => navigate(`${locality.id}/workflow`)}
               >

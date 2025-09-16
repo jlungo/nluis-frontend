@@ -1,14 +1,12 @@
 import { usePageStore } from "@/store/pageStore";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProjectsQuery } from "@/queries/useProjectQuery";
-import { useAuth } from "@/store/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartConfig } from "@/components/ui/chart";
-import { Spinner } from "@/components/ui/spinner";
 import AreaChartComponent from "./area-chart";
 import BarChartComponent from "./bar-chart";
 import LineChartComponent from "./line-chart";
+import { LocalityProjects } from "./locality-projects";
 
 const chartConfig = {
   visitors: {
@@ -26,19 +24,10 @@ const chartConfig = {
 
 type ChartTypeProps = 'area' | 'bar' | 'line'
 
-const chartType: ChartTypeProps[] = ['area', 'bar', 'line']
+const chartType: ChartTypeProps[] = ['bar', 'area', 'line']
 
 export default function DashboardPage() {
   const { setPage } = usePageStore();
-  const { user } = useAuth()
-
-  const { data: projects, isLoading: isLoadingProjects } = useProjectsQuery({
-    organization: user?.organization?.id,
-    // module_level: "regional-land-use",
-    // approval_status: string,
-    // registration_date: string,
-    // authorization_date: string,
-  })
 
   const [timeRange, setTimeRange] = useState("90d")
   const [type, setType] = useState<ChartTypeProps>('bar')
@@ -160,65 +149,43 @@ export default function DashboardPage() {
     });
   }, [setPage]);
 
-  if (isLoadingProjects) {
-    return (
-      <div className='flex flex-col items-center justify-center h-60 gap-5'>
-        <Spinner className="scale-150" />
-        <p className="text-muted-foreground mt-4">Loading data...</p>
-      </div>
-    );
-  }
-
-  if (!projects) {
-    return (
-      <div className='flex flex-col items-center justify-center h-60'>
-        <p className="text-muted-foreground mt-4">Error loading projects</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4 lg:space-y-6 mb-20">
+    <div className="space-y-4 2xl:space-y-6 mb-20">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{projects.count}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Draft Projects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4">
+        <LocalityProjects
+          key='all'
+          title="All"
+          localityLevel=""
+        />
+        <LocalityProjects
+          key='village'
+          title="Village"
+          localityLevel="village-land-use"
+        />
+        <LocalityProjects
+          key='district'
+          title="District"
+          localityLevel="district-land-use"
+        />
+        <LocalityProjects
+          key='regional'
+          title="Regional"
+          localityLevel="regional-land-use"
+        />
+        <LocalityProjects
+          key='zonal'
+          title="Zonal"
+          localityLevel="zonal-land-use"
+        />
+        <LocalityProjects
+          key='national'
+          title="National"
+          localityLevel="national-land-use"
+        />
       </div>
 
-      <Card className="pt-0">
+      <Card className="pt-0 md:pt-6">
         <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 md:py-0 sm:flex-row">
           <div className="grid flex-1 gap-1">
             <CardTitle>Area Chart - Interactive</CardTitle>
@@ -229,7 +196,7 @@ export default function DashboardPage() {
           <div className="flex flex-col lg:flex-row gap-2">
             <Select value={type} onValueChange={(e: ChartTypeProps) => setType(e)}>
               <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto flex capitalize"
+                className="w-[160px] rounded-lg sm:ml-auto flex capitalize bg-background dark:bg-card"
                 aria-label="Select a value"
               >
                 <SelectValue className="capitalize" />
@@ -244,7 +211,7 @@ export default function DashboardPage() {
             </Select>
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto flex"
+                className="w-[160px] rounded-lg sm:ml-auto flex bg-background dark:bg-card"
                 aria-label="Select a value"
               >
                 <SelectValue placeholder="Last 3 months" />
