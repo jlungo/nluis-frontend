@@ -7,17 +7,15 @@ import { useEffect, useState } from "react";
 import type { ChartConfig } from "../ui/chart";
 import { useDataStore } from "./useDataStore";
 import { dataProcessor } from "./dataProcessor";
+import PieChartComponent from "./pie-chart";
 
 type ChartModuleLevelProps = "" | "village-land-use" | "district-land-use" | "regional-land-use" | "zonal-land-use" | "national-land-use"
 export type TabProps = { value: ChartModuleLevelProps; label: string; }
 
-type ChartTypeProps = 'area' | 'bar' | 'line'
+type ChartTypeProps = 'area' | 'bar' | 'line' | 'pie'
 const chartType: ChartTypeProps[] = ['bar', 'area', 'line']
 
 const chartConfig = {
-    views: {
-        label: "Project Progress",
-    },
     progress: {
         label: "Progress",
         color: "var(--chart-1)",
@@ -146,6 +144,13 @@ export default function Index({ tab }: { tab: TabProps }) {
                 }
                 {type === 'line' ?
                     <LineChartComponent
+                        chartConfig={chartConfig}
+                        data={chartData}
+                        xAxis={{ name: 'project', type: 'string' }}
+                    /> : null
+                }
+                {type === 'pie' ?
+                    <PieChartComponent
                         chartConfig={chartConfig}
                         data={chartData}
                         xAxis={{ name: 'project', type: 'string' }}
