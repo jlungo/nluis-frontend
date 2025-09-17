@@ -54,7 +54,7 @@ export default function Layout() {
   return (
     <div className="h-screen bg-background flex overflow-hidden">
       {/* Main Sidebar - FIXED */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-60 sm:w-80 lg:w-54 2xl:w-60'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${sidebarCollapsed ? 'w-14' : 'w-60 sm:w-80 lg:w-50 xl:w-54 2xl:w-56'} transition-all duration-300 ease-in-out fixed left-0 top-0 h-full z-40 lg:relative lg:translate-x-0 lg:flex-shrink-0`}>
         <div className="h-full bg-sidebar border-r border-sidebar-border flex flex-col">
           {/* Sidebar Header - FIXED */}
           <div className="flex-shrink-0 p-3 h-14 border-b border-sidebar-border">
