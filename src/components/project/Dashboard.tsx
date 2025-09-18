@@ -36,7 +36,11 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
                 {tabs.map(tab => <LocalityProjects key={tab.value} tab={tab} />)}
             </div>
 
-            <Tabs value={tab.value} onValueChange={e => setTab(tabs.find(t => t.value === e) ?? tabs[0])} className="w-full">
+            <Tabs
+                value={tab.value}
+                onValueChange={e => setTab(tabs.find(t => t.value === e) ?? tabs[0])}
+                className="w-full"
+            >
                 <TabsList className="rounded-full w-full">
                     {tabs.map(tab => (
                         <TabsTrigger
