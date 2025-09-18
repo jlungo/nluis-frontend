@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
+import { approvalStatus } from './utils';
 
 interface Props {
   moduleLevel: string;
@@ -40,7 +41,6 @@ export default function CreateOrEditProject(props: Props) {
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
-
   const canCreate = () => {
     if (!user || !user?.role?.name) return false;
     return canCreateProject(user.role.name);
@@ -48,7 +48,7 @@ export default function CreateOrEditProject(props: Props) {
 
   const canEdit = () => {
     if (!user || !user?.role?.name || !project) return false;
-    return canEditProject(user?.role?.name, project.approval_status);
+    return canEditProject(user?.role?.name, approvalStatus(project?.localities));
   };
 
   if (loadingFunders || loadingLocalities) {
