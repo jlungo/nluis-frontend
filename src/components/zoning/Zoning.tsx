@@ -18,6 +18,7 @@ import {
   Palette,
   Pencil,
   Save as SaveIcon,
+  Upload as UploadIcon,
 } from "lucide-react";
 import { ZoneDetailsPanel } from "./components/ZoneDetailsPanel";
 import { ConflictsPanel } from "./components/ConflictsPanel";
@@ -29,6 +30,17 @@ import { Separator } from "../ui/separator";
 import { Switch } from "../ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../ui/dialog";
+
+import proj4 from "proj4";
 
 import { useLocalityShapefileQuery } from "@/queries/useLocalityQuery";
 import {
@@ -300,6 +312,9 @@ interface ZoningMapCoreProps {
   defaultLandUseId?: number;
 }
 
+type CoordMode = "wgs84" | "projected";
+type PointRow = { order: number | ""; a: number | ""; b: number | "" }; // a,b = lat/lon OR easting/northing
+
 export function ZoningMapCore({
   baseMapId,
   isMaximized = false,
@@ -330,6 +345,14 @@ export function ZoningMapCore({
   const [drawStates, setDrawStates] = useState<Map<string, DrawFeatureState>>(
     new globalThis.Map()
   );
+
+  // ---- Add Points (table / CSV) modal state ----
+  const [pointsOpen, setPointsOpen] = useState(false);
+  const [coordMode, setCoordMode] = useState<CoordMode>("wgs84");
+  const [epsgCode, setEpsgCode] = useState<string>(""); // e.g., "EPSG:32737"
+  const [pointRows, setPointRows] = useState<PointRow[]>([
+    { order: 1, a: "", b: "" },
+  ]);
 
   const API_BASE = useMemo(
     () => (api.defaults.baseURL || "").replace(/\/$/, ""),
@@ -443,9 +466,7 @@ export function ZoningMapCore({
     for (const f of feats) {
       const lu = String(f.properties?.land_use ?? "");
       const st =
-        f.state?.status ||
-        f.properties?.status ||
-        "Draft"; // feature-state overrides, else props
+        f.state?.status || f.properties?.status || "Draft";
       if (lu) byType[lu] = (byType[lu] || 0) + 1;
       if (st) byStatus[st] = (byStatus[st] || 0) + 1;
     }
@@ -882,6 +903,163 @@ export function ZoningMapCore({
     } catch {}
   }, [isMapLoaded, landUses]);
 
+  /* -------------------------- ADD POINTS (core logic) -------------------------- */
+
+  // CSV → rows
+  const parseCsv = useCallback(async (file: File) => {
+    const text = await file.text();
+    const lines = text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const out: PointRow[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const cols = lines[i].split(/,|;|\t/).map((c) => c.trim());
+      if (cols.length < 3) continue;
+      // skip header
+      if (
+        i === 0 &&
+        (/order/i.test(cols[0]) ||
+          /lat|y|north/i.test(cols[1]) ||
+          /lon|x|east/i.test(cols[2]))
+      ) {
+        continue;
+      }
+      const [ord, c1, c2] = cols;
+      const order = Number(ord);
+      const a = Number(c1);
+      const b = Number(c2);
+      if ([order, a, b].every((n) => Number.isFinite(n))) {
+        out.push({ order, a, b });
+      }
+    }
+    if (!out.length) {
+      toast.error(
+        "CSV not recognized. Expect 3 columns: order, coordinate A, coordinate B."
+      );
+      return;
+    }
+    setPointRows(out);
+    toast.success(`Loaded ${out.length} point(s) from CSV`);
+  }, []);
+
+  // rows → [lng,lat]
+  const rowToLngLat = useCallback(
+    (row: PointRow): [number, number] | null => {
+      if (row.order === "" || row.a === "" || row.b === "") return null;
+      if (coordMode === "wgs84") {
+        const lat = Number(row.a);
+        const lon = Number(row.b);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+        // Basic sanity: lat [-90,90], lon [-180,180]
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+        return [lon, lat];
+      } else {
+        if (!epsgCode || !/^EPSG:\d+$/.test(epsgCode.trim())) return null;
+        try {
+          const [lng, lat] = proj4(epsgCode.trim(), "EPSG:4326", [
+            Number(row.a),
+            Number(row.b),
+          ]);
+          if ([lng, lat].every((n) => Number.isFinite(n))) return [lng, lat];
+          return null;
+        } catch {
+          return null;
+        }
+      }
+    },
+    [coordMode, epsgCode]
+  );
+
+  const convertPointsToPolygon = useCallback(() => {
+    const valid = pointRows
+      .filter((r) => r.order !== "" && r.a !== "" && r.b !== "")
+      .sort((x, y) => Number(x.order) - Number(y.order));
+
+    if (valid.length < 3) {
+      toast.error("Please provide at least 3 valid points.");
+      return;
+    }
+
+    const coords: [number, number][] = [];
+    for (const r of valid) {
+      const pt = rowToLngLat(r);
+      if (!pt) {
+        toast.error(
+          "Invalid coordinates or EPSG. Check your inputs and try again."
+        );
+        return;
+      }
+      coords.push(pt);
+    }
+
+    const ring = closeRing(coords);
+
+    const feature = {
+      type: "Feature" as const,
+      properties: {
+        status: "Draft",
+        locality: baseMapId ? Number(baseMapId) : undefined,
+        land_use: defaultLandUseId ?? undefined,
+      },
+      geometry: { type: "Polygon" as const, coordinates: [ring] },
+    };
+
+    try {
+      const draw = drawRef.current;
+      const addedId = draw.add(feature as any)[0];
+      const added = draw.get(addedId);
+      setDrawStates((prev) => {
+        const next = new Map(prev);
+        next.set(String(addedId), {
+          feature: added,
+          state: "added",
+          original: null,
+        });
+        return next;
+      });
+      setActiveZone(String(addedId));
+      (draw as any).changeMode("direct_select", { featureId: addedId });
+      toast.success("Polygon created from points");
+      setPointsOpen(false);
+    } catch {
+      toast.error("Failed to add polygon to map.");
+    }
+  }, [pointRows, rowToLngLat, baseMapId, defaultLandUseId]);
+
+  const addRow = useCallback(
+    () =>
+      setPointRows((r) => [
+        ...r,
+        { order: (Number(r[r.length - 1]?.order) || r.length) + 1, a: "", b: "" },
+      ]),
+    []
+  );
+
+  const updateRow = useCallback(
+    (idx: number, field: keyof PointRow, value: string) =>
+      setPointRows((rows) => {
+        const copy = [...rows];
+        const val =
+          value.trim() === ""
+            ? ""
+            : field === "order"
+            ? Number(value)
+            : Number(value);
+        copy[idx] = { ...copy[idx], [field]: val as any };
+        return copy;
+      }),
+    []
+  );
+
+  const removeRow = useCallback(
+    (idx: number) =>
+      setPointRows((rows) =>
+        rows.length <= 1 ? rows : rows.filter((_, i) => i !== idx)
+      ),
+    []
+  );
+
   /* ------------------------------------ UI ------------------------------------ */
   return (
     <div className="relative w-full h-full overflow-hidden flex flex-col">
@@ -954,6 +1132,17 @@ export function ZoningMapCore({
         <Separator orientation="vertical" className="h-6 mx-2" />
 
         <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPointsOpen(true)}
+            className="h-8 px-2"
+            title="Enter vertices via table or CSV"
+          >
+            <Pencil className="w-4 h-4 mr-1" /> Add Points
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -1130,7 +1319,6 @@ export function ZoningMapCore({
                         ...f,
                         geometry: {
                           ...f.geometry,
-                          // Ensure coordinates are arrays and type is correct
                           coordinates: f.geometry.coordinates,
                           type: f.geometry.type,
                         },
@@ -1179,7 +1367,6 @@ export function ZoningMapCore({
                   type="fill"
                   source-layer="zones"
                   paint={{
-                    // Will be overridden by useEffect after styles are parsed
                     "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
                     "fill-opacity": 0.5,
                   }}
@@ -1299,6 +1486,154 @@ export function ZoningMapCore({
           </Tabs>
         </div>
       </div>
+
+      {/* =================== ADD POINTS MODAL =================== */}
+      <Dialog open={pointsOpen} onOpenChange={setPointsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Points (Table / CSV)</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Coordinate system */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Coordinate System</Label>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    type="button"
+                    variant={coordMode === "wgs84" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCoordMode("wgs84")}
+                  >
+                    Lat/Lon (EPSG:4326)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={coordMode === "projected" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCoordMode("projected")}
+                  >
+                    Easting/Northing (EPSG)
+                  </Button>
+                </div>
+              </div>
+
+              {coordMode === "projected" && (
+                <div className="space-y-2">
+                  <Label htmlFor="epsg">EPSG Code</Label>
+                  <Input
+                    id="epsg"
+                    placeholder="e.g. EPSG:32737"
+                    value={epsgCode}
+                    onChange={(e) => setEpsgCode(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Provide the source CRS of your easting/northing.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* CSV uploader */}
+            <div className="space-y-2">
+              <Label>Upload CSV (3 columns)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) parseCsv(f);
+                  }}
+                />
+                <UploadIcon className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Expected columns (with or without header):{" "}
+                <strong>order</strong>,{" "}
+                <strong>{coordMode === "wgs84" ? "lat" : "easting"}</strong>,{" "}
+                <strong>{coordMode === "wgs84" ? "lon" : "northing"}</strong>.
+              </p>
+            </div>
+
+            {/* Editable table */}
+            <div className="border rounded-md overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left p-2 w-24">Order</th>
+                    <th className="text-left p-2">
+                      {coordMode === "wgs84" ? "Lat" : "Easting"}
+                    </th>
+                    <th className="text-left p-2">
+                      {coordMode === "wgs84" ? "Lon" : "Northing"}
+                    </th>
+                    <th className="w-16" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {pointRows.map((row, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="p-2">
+                        <Input
+                          inputMode="numeric"
+                          value={row.order}
+                          onChange={(e) => updateRow(i, "order", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          inputMode="decimal"
+                          value={row.a}
+                          onChange={(e) => updateRow(i, "a", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          inputMode="decimal"
+                          value={row.b}
+                          onChange={(e) => updateRow(i, "b", e.target.value)}
+                        />
+                      </td>
+                      <td className="p-2 text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeRow(i)}
+                          disabled={pointRows.length <= 1}
+                        >
+                          Remove
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-between">
+              <Button type="button" variant="outline" onClick={addRow}>
+                + Add Row
+              </Button>
+              <div className="text-xs text-muted-foreground">
+                Minimum 3 points. Rows are sorted by <em>Order</em>.
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={() => setPointsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={convertPointsToPolygon}>
+              Convert to Polygon
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* =================== /ADD POINTS MODAL =================== */}
     </div>
   );
 }
