@@ -272,7 +272,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         <div className="flex items-center gap-3">
                             {disabled ? (
                                 <Link
-                                    to={`/system-settings/form-workflows/${data.slug}/edit`}
+                                    to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
                                     className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
                                 >
                                     <Edit className="h-4 w-4" />
@@ -424,7 +424,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     <div className="flex items-center gap-3">
                         {disabled ? (
                             <Link
-                                to={`/system-settings/form-workflows/${data.slug}/edit`}
+                                to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
                                 className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
                             >
                                 <Edit className="h-4 w-4" />
