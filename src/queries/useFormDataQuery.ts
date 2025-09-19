@@ -3,6 +3,7 @@ import api from "@/lib/axios";
 import { InputType } from "@/types/input-types";
 
 export interface formDataI {
+  slug: string;
   field_id: number;
   form_slug: string;
   value: string;

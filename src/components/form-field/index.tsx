@@ -7,7 +7,7 @@ import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
-import FormMembers from "./form-members";
+import FormMembers, { type MembersI } from "./form-members";
 
 export default function Index(
     data: FieldsProps & {
@@ -16,7 +16,7 @@ export default function Index(
         value: any;
         setValue: (
             formSlug: string,
-            value: string | string[] | File[],
+            value: string | MembersI[] | File[],
             type: InputType,
             field_id: number,
             project_locality_id: string

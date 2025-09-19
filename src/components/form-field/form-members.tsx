@@ -10,51 +10,48 @@ import { Input } from "../ui/input";
 import { Specializations } from "@/types/constants";
 import { DataTable } from "../DataTable";
 import { ColumnDef } from "@tanstack/react-table";
+import { useAuth } from "@/store/auth";
+
+export interface MembersI {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    role?: string;
+    title: string | null;
+    specialization: number | null;
+}
 
 type FormMembersProps = {
     label: string;
     name: string;
     required?: boolean;
     disabled?: boolean;
-    value?: string[];
+    value?: MembersI[];
     placeholder?: string;
-    setValue?: (value: string[]) => void;
+    setValue?: (value: MembersI[]) => void;
     fullWidth?: boolean
 };
 
-interface MembersI {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    role?: string;
-    position: string | null;
-    specialization: number | null;
-}
-
-const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, placeholder, fullWidth }) => {
+const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, required, disabled, placeholder, fullWidth }) => {
     const [search, setSearch] = useState('')
     const [open, setOpen] = useState(false)
-    const [accounts, setAccounts] = useState<MembersI[]>([])
     const [account, setAccount] = useState<MembersI | null>(null)
+
+    const { user } = useAuth()
 
     const { data: users, isLoading } = useUsersList({
         page: 1,
         page_size: 10,
         keyword: search,
         // role: filters.role ? filters.role : undefined,
-        // organization:
-        //   filters.organization && filters.organization !== "all"
-        //     ? filters.organization
-        //     : undefined,
+        organization: user?.organization?.id,
         is_verified: "1",
     });
 
     const handleAddMember = () => {
-        setAccounts(prev => {
-            if (account) return [...prev, account]
-            else return [...prev]
-        })
+        if (account && value && setValue) setValue([...value, account])
+        else if (account && (!value || value?.length === 0) && setValue) setValue([account])
         setTimeout(() => {
             setAccount(null)
             setOpen(false)
@@ -62,10 +59,11 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
     }
 
     const handleDeleteMember = useCallback((id: string) => {
-        setAccounts((prev) => {
-            return prev.filter(item => item.id !== id)
-        })
-    }, [setAccounts])
+        if (value && Array.isArray(value) && setValue) {
+            const newData = value.filter(item => item.id !== id)
+            setValue(newData)
+        }
+    }, [setValue])
 
     return (
         <div className="w-full space-y-2">
@@ -77,7 +75,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button type="button" size="sm">
+                        <Button type="button" size="sm" disabled={disabled}>
                             <UserPlus className="h-4 w-4 mr-2" />
                             Add Member
                         </Button>
@@ -94,7 +92,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                             <Label htmlFor="account">User Account {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <MultiSelect
                                 title={label}
-                                data={users ? users.items.filter(user => !accounts.some(acc => acc.id === user.id)).map(user => ({
+                                data={users ? users.items.filter(user => !value?.some(acc => acc.id === user.id)).map(user => ({
                                     label: `${user.first_name} ${user.last_name} (${user.email})`,
                                     value: user.id,
                                 })) : []}
@@ -110,7 +108,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                                             first_name: acc.first_name,
                                             last_name: acc.last_name,
                                             role: acc?.role,
-                                            position: null,
+                                            title: null,
                                             specialization: null
                                         })
                                     }
@@ -120,20 +118,17 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                                 setSearch={setSearch}
                                 mutedColor={!fullWidth}
                                 portal={false}
+                                isSingle
                             />
                         </div>
                         <div className="w-full space-y-2">
-                            <Label htmlFor="position">Title {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                            <Label htmlFor="title">Title {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                             <Input
-                                id="position"
-                                placeholder="Add position or Role"
+                                id="title"
+                                placeholder="Add member title"
                                 disabled={!account || disabled}
-                                value={account && account?.position ? account.position : undefined}
-                                onChange={(e) => setAccount(prev => {
-                                    if (!prev) return null
-                                    prev.position = e.target.value
-                                    return prev
-                                })}
+                                value={account && account?.title ? account.title : undefined}
+                                onChange={(e) => setAccount(prev => prev ? { ...prev, title: e.target.value } : null)}
                             />
                         </div>
                         <div className="w-full space-y-2">
@@ -142,11 +137,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                                 name="specialization"
                                 disabled={disabled || !account}
                                 value={account && account?.specialization ? `${account.specialization}` : undefined}
-                                onValueChange={(e) => setAccount(prev => {
-                                    if (!prev) return null
-                                    prev.specialization = Number(e)
-                                    return prev
-                                })}
+                                onValueChange={(e) => setAccount(prev => prev ? { ...prev, specialization: Number(e) } : null)}
                             >
                                 <SelectTrigger className={"bg-accent w-full"}>
                                     <SelectValue placeholder={"Select specialization area"} />
@@ -156,22 +147,27 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, required, disabled, pl
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button onClick={handleAddMember} disabled={disabled || !account} type="button" className="w-full">
+                        <Button
+                            type="button"
+                            onClick={handleAddMember}
+                            className="w-full"
+                            disabled={disabled || !account || account.specialization === null || account.title === null}
+                        >
                             Add Member
                         </Button>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            {accounts.length > 0 ?
-                <DataTable
-                    columns={columns}
-                    data={accounts}
-                    shadowed={false}
-                    enableGlobalFilter={false}
-                    showPagination={false}
-                    rowActions={(row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button>}
-                /> : null}
+            <DataTable
+                columns={columns}
+                data={value || []}
+                shadowed={false}
+                enableGlobalFilter={false}
+                showPagination={false}
+                emptyText="No member(s) added"
+                rowActions={!disabled ? (row) => <Button type="button" variant="ghost" onClick={() => handleDeleteMember(row.id)}><Trash2 /></Button> : undefined}
+            />
         </div>
     )
 }
@@ -226,12 +222,12 @@ export const columns: ColumnDef<MembersI, unknown>[] = [
         enableSorting: true,
     },
     {
-        id: "position",
-        accessorKey: "position",
-        header: () => <div className="flex items-center gap-2">Position/Role</div>,
+        id: "title",
+        accessorKey: "title",
+        header: () => <div className="flex items-center gap-2">Title/Role</div>,
         cell: ({ row }) => (
             <div className="font-medium truncate max-w-[320px]">
-                {row.original.position}
+                {row.original.title}
             </div>
         ),
         enableSorting: true,

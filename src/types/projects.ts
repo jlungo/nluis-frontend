@@ -1,16 +1,17 @@
 export interface ProjectI {
   id: string;
+  organization: string;
   name: string;
   reference_number: string;
-  organization: string;
-  type: string | null;
-  description: string | null;
   registration_date: string;
+  // type: string | null;
   authorization_date: string;
+  budget: string;
   project_status: number;
+  description?: string | null;
   approval_status: number;
   remarks: string | null;
-  budget: string;
+  created_at: string;
   total_locality: string | null;
   total_funders: string | null;
   funders: Array<{ id: string; name: string; category: string }> | null;
@@ -21,8 +22,8 @@ export interface ProjectI {
     locality__name: string;
     locality__level: string;
     progress: number;
+    remarks: string | null;
   }> | null;
-  created_at: string;
 }
 
 export interface ProjectsListPageProps {
@@ -94,6 +95,8 @@ export interface ProjectQueryParamsI {
   registration_date?: string;
   authorization_date?: string;
   funder?: string;
+  offset?: number;
+  limit?: number;
 }
 
 export interface CreateProjectDataI {

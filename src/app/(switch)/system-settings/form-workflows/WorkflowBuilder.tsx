@@ -110,7 +110,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 description: '',
                 forms: [],
                 approval_roles: [],
-                order: formSections.length + 1,
+                order: sections.length + 1,
                 is_active: true
             }
         ]);
@@ -389,10 +389,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: Submission) => {
-            console.log(e)
             if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
-            // return api.post(`/form-management/submissi/`, {})
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
@@ -437,14 +435,14 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 description: section.description,
                 position: section.order,
                 approval_roles: section.approval_roles,
-                is_active: section.is_active ? "1" : "0",
+                is_active: previousData ? section.is_active ? "1" : "0" : undefined,
                 forms: section.forms.map(form => ({
                     slug: form.id.startsWith('form-default-UI-') ? undefined : form.id,
                     name: form.name,
                     description: form.description,
                     position: form.order,
                     editor_roles: form.editor_roles,
-                    is_active: form.is_active ? '1' : '0',
+                    is_active: previousData ? form.is_active ? '1' : '0' : undefined,
                     form_fields: form.form_fields.map(field => ({
                         id: isNaN(Number(field.id)) ? undefined : Number(field.id),
                         label: field.label,
@@ -453,7 +451,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                         name: field.name,
                         required: field.required,
                         position: field.order,
-                        is_active: field.is_active ? '1' : '0',
+                        is_active: previousData ? field.is_active ? '1' : '0' : undefined,
                         select_options: field.options.map(option => ({
                             text_label: option.label,
                             value: option.name,

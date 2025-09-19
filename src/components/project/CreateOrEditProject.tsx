@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
+import { approvalStatus } from './utils';
 
 interface Props {
   moduleLevel: string;
@@ -40,7 +41,6 @@ export default function CreateOrEditProject(props: Props) {
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
 
-
   const canCreate = () => {
     if (!user || !user?.role?.name) return false;
     return canCreateProject(user.role.name);
@@ -48,7 +48,7 @@ export default function CreateOrEditProject(props: Props) {
 
   const canEdit = () => {
     if (!user || !user?.role?.name || !project) return false;
-    return canEditProject(user?.role?.name, project.approval_status);
+    return canEditProject(user?.role?.name, approvalStatus(project?.localities));
   };
 
   if (loadingFunders || loadingLocalities) {
@@ -239,6 +239,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 checked={isLocalitySelected(node.id)}
                 onCheckedChange={() => handleLocalitySelect(node)}
                 disabled={isLoading}
+                className='-mt-2.5'
               />
               <Label htmlFor={`checkbox-${node.id}`} className="text-sm font-normal cursor-pointer">
                 {node.name}
@@ -434,7 +435,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
 
         {/* Display selected localities outside the modal */}
         {selectedLocalities.length > 0 && (
-          <div className="mt-4">
+          <div>
             <h4 className="font-medium text-sm mb-2">Selected Localities:</h4>
             <div className="flex flex-wrap gap-2">
               {selectedLocalities.map(locality => (
@@ -462,8 +463,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     <div className="max-w-4xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Project Details Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Project Details
@@ -485,7 +486,6 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
               label="Project Reference Number/Id"
               value={formData.reference_number}
               onChange={(val) => handleInputChange('reference_number', val)}
-              required
               placeholder="Enter project reference number/id"
             />
             <FormFieldInput
@@ -501,8 +501,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Timeline Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Timeline
@@ -531,8 +531,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Budget & Funders Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
               Budget & Funding
@@ -555,6 +555,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
                 id="funder-select"
                 label="Funder"
                 value=""
+                required
                 options={funders?.map(funder => ({
                   value: funder.id.toString(),
                   label: funder.name
@@ -569,8 +570,8 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         </Card>
 
         {/* Coverage Area Section */}
-        <Card>
-          <CardHeader>
+        <Card className='pt-0 md:pt-0 overflow-hidden'>
+          <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
               Coverage Area ({LOCALITY_LEVEL_NAMES[moduleLevel as keyof typeof LOCALITY_LEVEL_NAMES]} Level)
