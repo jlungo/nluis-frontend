@@ -50,7 +50,7 @@ export default function RightDock() {
             onUpdateZone={() => api.saveToAPI?.()}
             landUses={landUses}
             isNewZone={isNew}
-            onAssignLandUse={(zoneId, lu) => api.assignLandUseToActive?.(lu.id)}
+            onAssignLandUse={(_zoneId, lu) => api.assignLandUseToActive?.(lu.id)}
             onApprove={() => api.approve?.()}
             onReject={() => api.reject?.()}
             onDelete={() => api.deleteZone?.()}
