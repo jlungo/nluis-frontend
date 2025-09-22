@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, Scissors, Merge, Eye, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useZoningStore } from "../store/useZoningStore";
 
 interface Conflict {
   id: string;
@@ -25,6 +26,8 @@ interface ConflictsPanelProps {
 }
 
 export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
+  const api = useZoningStore((s) => s.api);
+  const activeZoneId = useZoningStore((s) => s.activeZoneId);
   const getZoneInfo = (zoneId: string) => {
     return zones.find(z => z.id === zoneId);
   };
@@ -38,20 +41,29 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
     }
   };
 
-  const handleTrimZone = (_conflictId: string, zoneId: string) => {
-    toast.success(`Trimming zone ${zoneId} to resolve overlap`);
+  const handleTrimZone = async (_conflictId: string, zoneId: string) => {
+    if (!activeZoneId) return;
+    await api.resolveTrim?.(zoneId);
+    toast.success(`Trimmed zone ${zoneId} to resolve overlap`);
   };
 
-  const handleSplitOverlap = (_conflictId: string) => {
-    toast.success('Splitting overlap area into separate zone');
+  const handleSplitOverlap = async (_conflictId: string) => {
+    if (!activeZoneId) return;
+    const withIds = conflicts.map(c => Number(c.id));
+    await api.resolveSplit?.(withIds);
+    toast.success('Split overlap area into separate zone');
   };
 
-  const handleIgnoreConflict = (_conflictId: string) => {
+  const handleIgnoreConflict = async (_conflictId: string) => {
+    if (!activeZoneId) return;
+    const withIds = conflicts.map(c => Number(c.id));
+    await api.resolveIgnore?.(withIds);
     toast.info('Conflict marked as ignored - zones kept as draft');
   };
 
   const handleViewConflict = (_conflictId: string) => {
-    toast.info('Zooming to conflict area on map');
+    // Optionally: we could compute bbox of overlaps on the map source and fitBounds.
+    toast.info('Conflict geometries are highlighted on the map');
   };
 
   if (conflicts.length === 0) {
