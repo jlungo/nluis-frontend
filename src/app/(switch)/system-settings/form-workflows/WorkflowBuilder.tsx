@@ -74,7 +74,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'checkbox', label: 'Checkbox' },
             { value: 'date', label: 'Date Picker' },
             { value: 'file', label: 'File Upload' },
-            { value: 'members', label: 'Memebrs Add' },
+            { value: 'members', label: 'Members Add' },
             { value: 'zoning', label: 'Zoning' },
         ],
         []
