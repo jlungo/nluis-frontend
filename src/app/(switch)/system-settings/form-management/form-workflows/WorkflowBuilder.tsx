@@ -466,7 +466,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             toast.promise(mutateAsync(workflowData), {
                 loading: previousData ? "Updating worflow..." : "Creating workflow...",
                 success: () => {
-                    navigate('/system-settings/form-workflows', { replace: true });
+                    navigate('/system-settings/form-management/form-workflows', { replace: true });
                     if (previousData) return `Form workflow updated successfully!`;
                     return `Form workflow created successfully!`
                 },
