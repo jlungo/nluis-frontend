@@ -39,6 +39,7 @@ interface NavigationItem {
   label: string;
   icon: React.ReactNode;
   badge?: string;
+  hidden?: boolean;
 }
 
 interface NavigationGroup {
@@ -46,6 +47,7 @@ interface NavigationGroup {
   label: string;
   icon: React.ReactNode;
   items: NavigationItem[];
+  hidden?: boolean;
 }
 
 interface NavigationSidebarProps {
@@ -187,10 +189,16 @@ export function NavigationSidebar({
               icon: <LayoutDashboard className="h-4 w-4" />,
             },
             {
-              id: "form-workflows",
+              id: "form-management",
               label: "Form Management",
               icon: <ClipboardList className="h-4 w-4" />,
               items: [
+                {
+                  id: "form-management",
+                  label: "Form Management",
+                  icon: <ClipboardPlus className="h-4 w-4" />,
+                  hidden: true,
+                },
                 {
                   id: "form-workflows",
                   label: "Form Workflows",
@@ -313,7 +321,7 @@ export function NavigationSidebar({
           } h-8 ${isPathnameActive
             ? "bg-sidebar-primary/80 dark:bg-sidebar-primary/50 hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          }`
+          } ${item.hidden ? "hidden" : ""}`
         )}
       >
         <div className="flex items-center gap-3 w-full">
@@ -350,7 +358,7 @@ export function NavigationSidebar({
         <TooltipProvider key={item.id}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="relative">{buttonContent}</div>
+              <div className={`relative ${item.hidden ? "hidden" : ""}`}>{buttonContent}</div>
             </TooltipTrigger>
             <TooltipContent
               side="right"
@@ -388,7 +396,7 @@ export function NavigationSidebar({
                   className={`w-full px-2 justify-center h-8 ${hasActiveItem
                     ? "bg-sidebar-primary/80 text-white/80 hover:text-white hover:bg-sidebar-primary/90 dark:hover:bg-sidebar-primary/90"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    }`}
+                    } ${group.hidden ? "hidden" : ""}`}
                 >
                   {group.icon}
                   {group.items.some((item) => item.badge) && (
@@ -425,7 +433,7 @@ export function NavigationSidebar({
                         `w-full justify-start h-8 ${pathname.includes(item.id)
                           ? "bg-secondary text-secondary-foreground hover:bg-secondary/70"
                           : "hover:bg-accent"
-                        }`
+                        } ${item.hidden ? "hidden" : ""}`
                       )}
                       to={navigateTo(group.id === item.id ? group.id : `${group.id}/${item.id}`)}
                     >
@@ -463,7 +471,7 @@ export function NavigationSidebar({
             className={`w-full justify-start px-3 h-8 ${hasActiveItem
               ? `${isOpen ? 'bg-sidebar-primary/60 dark:bg-sidebar-primary/20' : 'bg-sidebar-primary/80 dark:hover:bg-sidebar-primary/90'} hover:bg-sidebar-primary dark:hover:bg-sidebar-primary text-white hover:text-white`
               : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              }`}
+              } ${group.hidden ? "hidden" : ""}`}
           >
             <div className="flex items-center gap-3 w-full">
               {group.icon}

@@ -60,9 +60,9 @@ export default function Page() {
             <div className="flex justify-between">
                 <div>
                     <h1 className="text-xl lg:text-2xl font-semibold">Form Workflows Management</h1>
-                    <p className="text-muted-foreground">Create, edit, and manage all your forms</p>
+                    <p className="text-muted-foreground">Create, edit, and manage all your form workflows</p>
                 </div>
-                <Link to="/system-settings/form-workflows/workflow-builder" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
+                <Link to="/system-settings/form-management/form-workflows/workflow-builder" className={cn(buttonVariants({ size: 'sm' }), "gap-2")}>
                     <Plus className="h-4 w-4" />
                     Create<span className="hidden sm:inline"> Workflow</span>
                 </Link>
@@ -159,15 +159,15 @@ export default function Page() {
                 isLoading={isLoadingWorkflows}
                 showRowNumbers
                 enableGlobalFilter={false}
-                onRowClick={(e) => navigate(`/system-settings/form-workflows/${e.slug}`)}
+                onRowClick={(e) => navigate(`/system-settings/form-management/form-workflows/${e.slug}`)}
                 initialPageSize={10}
                 pageSizeOptions={[5, 10, 20, 50]}
                 rowActions={(row) => (
                     <ActionButtons
                         entity={row}
                         entityName="Form Workflow"
-                        onView={e => navigate(`/system-settings/form-workflows/${e.slug}`)}
-                        onEdit={e => navigate(`/system-settings/form-workflows/${e.slug}/edit`)}
+                        onView={e => navigate(`/system-settings/form-management/form-workflows/${e.slug}`)}
+                        onEdit={e => navigate(`/system-settings/form-management/form-workflows/${e.slug}/edit`)}
                         deleteFunction={() => mutateAsync(row.slug)}
                     />
                 )}
