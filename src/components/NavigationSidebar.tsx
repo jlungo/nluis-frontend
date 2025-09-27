@@ -29,6 +29,7 @@ import {
   LandPlot,
   Layers,
   Building2,
+  FileQuestionMark,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
@@ -203,6 +204,11 @@ export function NavigationSidebar({
                   id: "form-workflows",
                   label: "Form Workflows",
                   icon: <ClipboardPlus className="h-4 w-4" />
+                },
+                {
+                  id: "questionnaires",
+                  label: "Questionnaires",
+                  icon: <FileQuestionMark className="h-4 w-4" />
                 },
                 {
                   id: "module-levels",
