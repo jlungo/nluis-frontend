@@ -9,6 +9,14 @@ export type workflowCategoryTypeProps =
   | "reporting"
   | "workflow";
 
+export type questionnaireCategoryTypeProps =
+  | "registration"
+  | "assessment"
+  | "approval"
+  | "monitoring"
+  | "reporting"
+  | "workflow";
+
 export const userTypes: Record<number, userTypeProps> = {
   1: "Staff",
   2: "Planner",
@@ -36,7 +44,20 @@ export const workflowCategoryTypes: Record<number, workflowCategoryTypeProps> =
     6: "workflow",
   };
 
+export const questionnaireCategoryTypes: Record<
+  number,
+  questionnaireCategoryTypeProps
+> = {
+  1: "registration",
+  2: "assessment",
+  3: "approval",
+  4: "monitoring",
+  5: "reporting",
+  6: "workflow",
+};
+
 export type WorkflowCategoryKey = keyof typeof workflowCategoryTypes;
+export type QuestionnaireCategoryKey = keyof typeof questionnaireCategoryTypes;
 
 // TODO: Oversee these, they are dynamic from database.
 export const LOCALITY_LEVELS = {

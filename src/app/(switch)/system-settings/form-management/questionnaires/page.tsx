@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search } from 'lucide-react';
 import { useModulesQuery } from "@/queries/useModuleQuery";
 import { Spinner } from "@/components/ui/spinner";
-import { useWorkflowsQuery, workflowQueryKey, type WorkflowProps } from "@/queries/useWorkflowQuery";
+import { useQuestionnairesQuery, questionnaireQueryKey, type QuestionnaireProps } from "@/queries/useQuestionnaireQuery";
 import { Link, useNavigate } from "react-router";
 import { cn } from "@/lib/utils";
 import { DataTable } from "@/components/DataTable";
@@ -44,14 +44,14 @@ export default function Page() {
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [workflowQueryKey],
+                queryKey: [questionnaireQueryKey],
             }),
         onError: (e) => {
             console.log(e);
         },
     });
 
-    const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, '', '')
+    const { data: questionnaires, isLoading: isLoadingQuestionnaires } = useQuestionnairesQuery(limit, offset, keyword, filterModule, '', '')
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery()
 
     return (
@@ -119,10 +119,10 @@ export default function Page() {
                 </CardContent>
             </Card>
 
-            <DataTable<WorkflowProps, unknown>
+            <DataTable<QuestionnaireProps, unknown>
                 columns={Columns}
-                data={workflows?.results || []}
-                isLoading={isLoadingWorkflows}
+                data={questionnaires?.results || []}
+                isLoading={isLoadingQuestionnaires}
                 showRowNumbers
                 enableGlobalFilter={false}
                 onRowClick={(e) => navigate(`/system-settings/form-management/questionnaires/${e.slug}`)}
