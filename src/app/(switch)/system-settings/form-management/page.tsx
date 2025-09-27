@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { usePageStore } from "@/store/pageStore"
-import { ArrowRight, ClipboardPlus, List } from "lucide-react"
+import { ArrowRight, ClipboardPlus, FileQuestionMark, List } from "lucide-react"
 import { useLayoutEffect } from "react"
 import { useNavigate } from "react-router"
 
@@ -27,12 +27,20 @@ export default function Page() {
             bgColor: 'bg-primary/10'
         },
         {
+            id: 'questionnaires',
+            title: 'Questionnaires',
+            description: 'Create, edit, and manage all questionnaires',
+            icon: <FileQuestionMark className="h-8 w-8" />,
+            color: 'text-chart-2',
+            bgColor: 'bg-chart-2/10'
+        },
+        {
             id: 'module-levels',
             title: 'Module Levels',
             description: 'Create, edit, and manage all your module levels',
             icon: <List className="h-8 w-8" />,
-            color: 'text-chart-2',
-            bgColor: 'bg-chart-2/10'
+            color: 'text-yellow-400',
+            bgColor: 'bg-yellow-400/10'
         }
     ]
 
