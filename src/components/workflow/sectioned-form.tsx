@@ -130,7 +130,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
                 if (Array.isArray(value) && type === 'file')
                     // If value is File[] or multiple files
-                    // @ts-ignore
+                    // @ts-expect-error incorrect type
                     formData.append(`data-${field_id}`, value[0]);
                 else if (Array.isArray(value))
                     // If value is MembersI[]
@@ -391,6 +391,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             )[0]
             if (lowest) setExpandedSections([lowest.slug])
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [values])
 
     useEffect(() => {
@@ -398,6 +399,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             values.forEach(value => {
                 updateFieldValue(value.form_slug, value.value, value.type, value.field_id, projectLocalityId)
             });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [values, projectLocalityId])
 
     if (!user) return

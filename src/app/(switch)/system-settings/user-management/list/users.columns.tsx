@@ -64,7 +64,7 @@ export const ListUsersColumns: ColumnDef<UserI, unknown>[] = [
     header: () => <div className="flex items-center gap-2">User Type</div>,
     accessorKey: "user_type",
     cell: ({ row }) => {
-      const raw = row.original.user_type as any;
+      const raw = row.original.user_type;
       const label = USER_TYPE_LABELS[raw] ?? fallback(raw);
       return label;
     },
@@ -75,7 +75,7 @@ export const ListUsersColumns: ColumnDef<UserI, unknown>[] = [
     header: () => <div className="flex items-center gap-2">Gender</div>,
     accessorKey: "gender",
     cell: ({ row }) => {
-      const raw = row.original.gender as any;
+      const raw = row.original.gender;
       const label = GENDER_LABELS[raw] ?? fallback(raw);
       return label;
     },

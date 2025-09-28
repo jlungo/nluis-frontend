@@ -179,7 +179,7 @@ export function FormPreviewTester({
 
     // Update field value
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateFieldValue = (fieldId: string, value: any) => {
+    const updateFieldValue = useCallback((fieldId: string, value: any) => {
         setFormValues(prev => ({
             ...prev,
             [fieldId]: value
@@ -189,7 +189,7 @@ export function FormPreviewTester({
         setValidationErrors(prev =>
             prev.filter(error => error.fieldId !== fieldId)
         );
-    };
+    }, [setFormValues, setValidationErrors]);
 
     // Validate form
     const validateForm = (): FormValidationError[] => {

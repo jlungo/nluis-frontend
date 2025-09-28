@@ -212,6 +212,7 @@ export interface UpdateDocumentRequest {
   is_public?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface PatchedDocument extends Partial<UpdateDocumentRequest> {}
 
 // Parcel Types

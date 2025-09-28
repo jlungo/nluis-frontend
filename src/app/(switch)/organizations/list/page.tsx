@@ -86,7 +86,9 @@ export default function OrganizationList() {
             <ActionButtons
               entity={row}
               entityName="Organization"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onView={(e) => navigate(`/organizations/${(e as any).id}`)}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onEdit={(e) => navigate(`/organizations/${(e as any).id}/edit`)}
               deleteFunction={undefined}
             />

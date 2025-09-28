@@ -50,6 +50,7 @@ export default function AddPointsDialog({ open, onOpenChange, onConfirm }: Props
     setPointRows((rows) => {
       const copy = [...rows];
       const val = value.trim() === "" ? "" : field === "order" ? Number(value) : Number(value);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       copy[idx] = { ...copy[idx], [field]: val as any };
       return copy;
     });

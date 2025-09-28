@@ -5,6 +5,7 @@ export const closeRing = (ring: number[][]) => {
   return fx === lx && fy === ly ? ring : [...ring, ring[0]];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ensureMultiPolygon = (geometry: any) => {
   if (!geometry) return geometry;
   if (geometry.type === "Polygon") {
@@ -22,10 +23,17 @@ export const ensureMultiPolygon = (geometry: any) => {
   throw new Error("Only Polygon/MultiPolygon supported");
 };
 
-export const fcToBounds = (fc: any): [[number, number], [number, number]] | null => {
+export const fcToBounds = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fc: any
+): [[number, number], [number, number]] | null => {
   if (!fc?.features?.length) return null;
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const f of fc.features) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const each = (coords: any) => {
       if (typeof coords?.[0] === "number") {
         const [x, y] = coords;
@@ -42,9 +50,13 @@ export const fcToBounds = (fc: any): [[number, number], [number, number]] | null
     if (g.type === "Polygon" || g.type === "MultiPolygon") each(g.coordinates);
   }
   if (minX === Infinity) return null;
-  return [[minX, minY], [maxX, maxY]];
+  return [
+    [minX, minY],
+    [maxX, maxY],
+  ];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getOuterRing = (geom: any): number[][] => {
   if (!geom) return [];
   if (geom.type === "Polygon") return geom.coordinates?.[0] ?? [];
@@ -53,7 +65,10 @@ export const getOuterRing = (geom: any): number[][] => {
     let bestLen = 0;
     (geom.coordinates || []).forEach((poly: number[][][]) => {
       const ring = poly?.[0] || [];
-      if (ring.length > bestLen) { best = ring; bestLen = ring.length; }
+      if (ring.length > bestLen) {
+        best = ring;
+        bestLen = ring.length;
+      }
     });
     return best;
   }

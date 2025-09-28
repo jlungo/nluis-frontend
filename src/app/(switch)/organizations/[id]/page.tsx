@@ -48,9 +48,10 @@ export default function OrganizationDetail() {
           return;
         }
         setOrganization(org);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         console.error("Error loading organization:", error);
-        if (error.response?.status === 404) {
+        if (error?.response?.status === 404) {
           toast.error("Organization not found");
         } else if (error.response?.status === 500) {
           toast.error("Server error. Please try again later.");
@@ -138,15 +139,15 @@ export default function OrganizationDetail() {
                       organization.status === OrganizationStatusE.ACTIVE
                         ? "bg-progress-completed/10 text-progress-completed border-progress-completed/20"
                         : organization.status === OrganizationStatusE.PENDING
-                        ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                        : "bg-red-100 text-red-800 border-red-200"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : "bg-red-100 text-red-800 border-red-200"
                     }
                   >
                     {organization.status === OrganizationStatusE.ACTIVE
                       ? "Active"
                       : organization.status === OrganizationStatusE.PENDING
-                      ? "Pending"
-                      : "Inactive"}
+                        ? "Pending"
+                        : "Inactive"}
                   </Badge>
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-3">
@@ -243,20 +244,20 @@ export default function OrganizationDetail() {
                       showRowNumbers
                       enableGlobalFilter
                       searchPlaceholder="Search Projects..."
-                      // onRowClick={(row) => navigate(`/projects/${row.id}`)}
-                      // rowActions={(row) => (
-                      //   <ActionButtons
-                      //     entity={row}
-                      //     entityName="Project"
-                      //     onView={(e) =>
-                      //       navigate(`/projects/${(e as any).id}`)
-                      //     }
-                      //     onEdit={(e) =>
-                      //       navigate(`/projects/${(e as any).id}/edit`)
-                      //     }
-                      //     deleteFunction={undefined}
-                      //   />
-                      // )}
+                    // onRowClick={(row) => navigate(`/projects/${row.id}`)}
+                    // rowActions={(row) => (
+                    //   <ActionButtons
+                    //     entity={row}
+                    //     entityName="Project"
+                    //     onView={(e) =>
+                    //       navigate(`/projects/${(e as any).id}`)
+                    //     }
+                    //     onEdit={(e) =>
+                    //       navigate(`/projects/${(e as any).id}/edit`)
+                    //     }
+                    //     deleteFunction={undefined}
+                    //   />
+                    // )}
                     />
                   </div>
                 </div>
@@ -297,28 +298,26 @@ export default function OrganizationDetail() {
                 </p>
               ) : (
                 <div className="w-full overflow-x-auto">
-                 
+
                   <DataTable
-                      data={users.items ?? []}
-                      columns={ListOrganizationMembersColumns}
-                      isLoading={loading}
-                      showRowNumbers
-                      enableGlobalFilter
-                      searchPlaceholder="Search Members..."
-                      rowActions={(row) => (
-                        <ActionButtons
-                          entity={row}
-                          entityName="Member"
-                          onView={(e) =>
-                            navigate(`/member/${(e as any).id}`)
-                          }
-                          onEdit={(e) =>
-                            navigate(`/member/${(e as any).id}/edit`)
-                          }
-                          deleteFunction={undefined}
-                        />
-                      )}
-                    />
+                    data={users.items ?? []}
+                    columns={ListOrganizationMembersColumns}
+                    isLoading={loading}
+                    showRowNumbers
+                    enableGlobalFilter
+                    searchPlaceholder="Search Members..."
+                    rowActions={(row) => (
+                      <ActionButtons
+                        entity={row}
+                        entityName="Member"
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onView={(e) => navigate(`/member/${(e as any).id}`)}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onEdit={(e) => navigate(`/member/${(e as any).id}/edit`)}
+                        deleteFunction={undefined}
+                      />
+                    )}
+                  />
                 </div>
               )}
             </CardContent>

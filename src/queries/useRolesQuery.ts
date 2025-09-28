@@ -19,7 +19,7 @@ export const useRolesQuery = () => {
       try {
         const response = await api.get<Role[]>(`/auth/roles`);
         return response.data;
-      } catch (error) {
+      } catch {
         return [];
       }
     },
