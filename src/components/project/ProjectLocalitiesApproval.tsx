@@ -74,10 +74,11 @@ export default function ProjectLocalitiesApproval({ project, isApproval }: { pro
                     if (isApproval) return "Localities approved successfully"
                     return "Localities rejected successfully"
                 },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 error: (err: AxiosError | any) =>
                     `${err?.message || err?.response?.data?.message || isApproval ? "Failed to approve!" : "Failed to reject!"}`,
             });
-        } catch (err) {
+        } catch (err: unknown) {
             console.log(err);
         }
     };

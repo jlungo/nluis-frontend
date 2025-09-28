@@ -30,6 +30,7 @@ type ActionButtonsProps<T> = {
   entityName?: string;
   // Called when the user confirms deletion.
   // Will receive either the entity id (if found) or the whole entity.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   deleteFunction?: (payload: any) => Promise<any> | any;
 
   // Optional callbacks to wire view/edit behavior.
@@ -37,6 +38,7 @@ type ActionButtonsProps<T> = {
   onEdit?: (entity: T) => void;
 
   // Optional custom id extractor. Default tries id/_id/uuid.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getId?: (entity: any) => IdLike;
 
   // Disable all actions (e.g., while parent is busy).
@@ -46,6 +48,7 @@ type ActionButtonsProps<T> = {
   queryKey?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function defaultGetId<T extends Record<string, any>>(entity: T): IdLike {
   return entity?.id ?? entity?._id ?? entity?.uuid;
 }
@@ -73,10 +76,12 @@ export default function ActionButtons<T>({
         success: () => {
           return `${entityName} deleted successfully`
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: (err: AxiosError | any) => {
           return err?.message || err?.response?.data?.message || `Failed to delete ${entityName}`;
         }
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.log(err)
     } finally {

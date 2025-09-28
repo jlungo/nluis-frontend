@@ -45,6 +45,7 @@ export default function ResetPassword() {
       try {
         await verifyPasswordResetToken(uidb64, token);
         setIsValidToken(true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         setError(error.detail || 'Invalid or expired reset link');
         toast.error(error.detail || 'Invalid or expired reset link');
@@ -97,6 +98,7 @@ export default function ResetPassword() {
       await completePasswordReset(uidb64, token, password);
       toast.success('Password reset successfully!');
       navigate('/auth/signin', { replace: true });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setError(error.detail || 'Failed to reset password. Please try again.');
       toast.error(error.detail || 'Failed to reset password');

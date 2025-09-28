@@ -28,8 +28,8 @@ export const ListOrganizationProjectsColumns: ColumnDef<ProjectI, unknown>[] = [
         v.toLowerCase() === "active"
           ? "bg-progress-completed/10 text-progress-completed border-progress-completed/20"
           : v.toLowerCase() === "pending"
-          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-          : "bg-muted text-foreground/80 border-muted-foreground/20";
+            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+            : "bg-muted text-foreground/80 border-muted-foreground/20";
       return <Badge className={tone}>{v}</Badge>;
     },
     enableSorting: true,
@@ -37,7 +37,9 @@ export const ListOrganizationProjectsColumns: ColumnDef<ProjectI, unknown>[] = [
   {
     id: "start_date",
     header: () => <div className="flex items-center gap-2">Start Date</div>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     accessorFn: (p) => (p as any).reg_date,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cell: ({ getValue }) => <span>{formatDate(getValue() as any)}</span>,
     enableSorting: true,
   },

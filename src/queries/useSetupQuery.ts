@@ -5,8 +5,9 @@ export type LandUseDto = {
   id: number;
   name: string;
   description?: string | null;
-  color?: string | null;   // legacy fallback
-  style?: any;             // { layers: [...] }
+  color?: string | null; // legacy fallback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style?: any; // { layers: [...] }
 };
 
 const landUsesKey = ["setup", "land-uses"];

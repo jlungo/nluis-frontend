@@ -202,14 +202,16 @@ export default function UserManagement() {
           setSuccess("User account created! Invitation email sent.")
         }
       />
-      <UserEditDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        user={editingUser}
-        roles={roles}
-        organizations={organizations?.results || []}
-        regions={regions || []}
-      />
+      {editingUser ?
+        <UserEditDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          user={editingUser}
+          roles={roles}
+          organizations={organizations?.results || []}
+          regions={regions || []}
+        />
+        : null}
     </div>
   );
 }

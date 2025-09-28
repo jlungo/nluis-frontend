@@ -217,6 +217,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ loading: true });
     try {
       await api.post("/auth/request-password-reset-email/", { email });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Password reset request failed:", error);
       if (error.response?.status === 404) {
@@ -236,6 +237,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ loading: true });
     try {
       await api.post("/auth/resend-account-verify-email/", { user });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Email resend request failed:", error);
       if (error.response?.status === 404) {
@@ -257,6 +259,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const response = await api.post(`/auth/email-verify/`, { token });
       return response.data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Email verification failed:", error);
 
@@ -280,6 +283,7 @@ export const useAuth = create<AuthState>((set, get) => ({
         `/auth/password-reset/${uidb64}/${token}/`
       );
       return response.data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Token verification failed:", error);
       if (error.response?.status === 400) {
@@ -308,6 +312,7 @@ export const useAuth = create<AuthState>((set, get) => ({
         token,
         uidb64,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Password reset failed:", error);
       throw (

@@ -56,7 +56,7 @@ export const TanzaniaMapViewer = ({ onRegionClick }: TanzaniaMapViewerProps) => 
   });
 
   // Load GeoJSON data
-  const { 
+  const {
     data: regionsData,
     isLoading: regionsLoading,
     error: regionsError
@@ -78,6 +78,7 @@ export const TanzaniaMapViewer = ({ onRegionClick }: TanzaniaMapViewerProps) => 
   } = useGeoJSONLoader('/geojson/District_Councils.geojson');
 
   // Handle click events
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClick = (event: any) => {
     const feature = event.features?.[0];
     if (feature && onRegionClick) {
@@ -104,7 +105,7 @@ export const TanzaniaMapViewer = ({ onRegionClick }: TanzaniaMapViewerProps) => 
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
-      
+
       <Map
         ref={mapRef}
         mapboxAccessToken="pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA"
@@ -121,7 +122,7 @@ export const TanzaniaMapViewer = ({ onRegionClick }: TanzaniaMapViewerProps) => 
         onClick={handleClick}
       >
         <NavigationControl position="top-left" />
-        
+
         {regionsData && (
           <Source type="geojson" data={regionsData}>
             <Layer {...REGION_LAYER_STYLE} />

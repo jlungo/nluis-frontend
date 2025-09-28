@@ -10,11 +10,6 @@ export interface UserI {
   organization_name?: string;
   user_type: number;
   gender: number;
-  last_login?: string;
-  created_at: string;
-  is_verified: boolean;
-  status: "active" | "inactive" | "pending" | "suspended";
-  location: string;
 }
 
 export type CreateUserPayloadI = {

@@ -40,6 +40,7 @@ export default function UserCreateDialog({ open, onOpenChange, roles, onSuccess,
         onOpenChange(false);
         setForm({ first_name: "", last_name: "", email: "", phone: "", roleId: "", organization: "", gender: 0, user_type: 0 });
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onError: (e: any) => {
         const msg = e?.response?.data?.detail || e?.response?.data?.email?.[0] || e?.response?.data?.phone?.[0] || "Failed to create user.";
         setErr(msg);

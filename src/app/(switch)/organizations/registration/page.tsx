@@ -106,7 +106,7 @@ export default function RegistrationPage() {
     // Contact Information
     if (!formData.physicalAddress.trim())
       newErrors.physicalAddress = "Physical address is required";
-   
+
     if (!formData.primaryEmail.trim())
       newErrors.primaryEmail = "Primary email is required";
     else if (!validateEmail(formData.primaryEmail))
@@ -179,7 +179,7 @@ export default function RegistrationPage() {
 
       toast.success("Organization registered successfully!");
       navigate("/organizations/organizations-list");
-    } catch (error) {
+    } catch {
       toast.error("Failed to register organization. Please try again.");
     } finally {
       setIsSubmitting(false);

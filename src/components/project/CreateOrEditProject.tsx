@@ -285,6 +285,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (key: keyof CreateProjectDataI, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };

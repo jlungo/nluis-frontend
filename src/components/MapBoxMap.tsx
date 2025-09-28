@@ -5,6 +5,7 @@ import { FeatureCollection } from 'geojson';
 import L from 'leaflet';
 
 // Fix Leaflet icon loading issue
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
@@ -23,8 +24,11 @@ interface MapBoxMapProps {
   onRegionClick: (regionName: string) => void;
   selectedRegion: string | null;
   activeLayers: ActiveLayers;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   layerData: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   geojson?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFeatureClick?: (name: string, type: string, properties: any) => void;
   selectedFeature: string | null;
   selectedType: string | null
@@ -82,6 +86,7 @@ function MapBoxMap({
   }), [layerData, geojson]);
 
   // Handle feature click events
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFeatureClick = useCallback((feature: any, layerType: string) => {
     const name = feature.properties?.name;
     if (!name) return;
@@ -94,12 +99,14 @@ function MapBoxMap({
   }, [onFeatureClick, onRegionClick]);
 
   // Style function for GeoJSON layers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getLayerStyle = useCallback((feature: any) => {
     const isSelected = selectedRegion === feature.properties?.name;
     return isSelected ? layerStyle.selected : layerStyle.default;
   }, [selectedRegion]);
 
   // Event handlers for each feature
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onEachFeature = useCallback((feature: any, layer: L.Layer, layerType: string) => {
     if (layer instanceof L.Path) {
       layer.on({

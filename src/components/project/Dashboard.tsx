@@ -24,7 +24,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
             module: module,
             title: title,
         });
-    }, [setPage]);
+    }, [module, setPage, title]);
 
     let tabs: TabProps[] = [{ value: "", label: "All" }]
     if (module === "land-uses") tabs = landUseTabs
