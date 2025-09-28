@@ -318,7 +318,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                         field.id === fieldId
                                             ? {
                                                 ...field,
-                                                options: [...field?.options, newOption]
+                                                options: [...field.options, newOption]
                                             }
                                             : field
                                     )

@@ -54,6 +54,7 @@ interface ZoneDetailsPanelProps {
   onApprove?: () => void;
   onReject?: () => void;
   onDelete?: () => void;
+  onEnterEdit?: () => void;
 }
 
 const defaultConflicts: ZoneDetailsPanelProps["conflicts"] = [];
@@ -69,6 +70,7 @@ export function ZoneDetailsPanel({
   onApprove,
   onReject,
   onDelete,
+  onEnterEdit,
 }: ZoneDetailsPanelProps) {
   const zone = useMemo(
     () => zones.find((z) => String(z.id) === String(activeZone)),
@@ -77,6 +79,7 @@ export function ZoneDetailsPanel({
 
   // Fallback fetch if parent didn't pass
   const { data: fetchedLUs = [], isLoading: luLoading } = useLandUsesQuery();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableLUs = (landUses?.length ? landUses : fetchedLUs) ?? [];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -178,12 +181,12 @@ export function ZoneDetailsPanel({
     const updatedZones = zones.map((z) =>
       String(z.id) === String(zone.id)
         ? {
-            ...z,
-            ...editForm,
-            type: editForm.type || z.type,
-            color: editForm.color || z.color,
-            lastModified: new Date().toISOString().split("T")[0],
-          }
+          ...z,
+          ...editForm,
+          type: editForm.type || z.type,
+          color: editForm.color || z.color,
+          lastModified: new Date().toISOString().split("T")[0],
+        }
         : z
     );
     onUpdateZone(updatedZones);
@@ -230,7 +233,7 @@ export function ZoneDetailsPanel({
 
   if (!activeZone || !zone) {
     return (
-      <div className="p-4 h-full flex items-center justify-center">
+      <div className="p-4 flex items-center justify-center">
         <div className="text-center space-y-2">
           <MapPin className="w-12 h-12 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground text-sm">
@@ -250,7 +253,7 @@ export function ZoneDetailsPanel({
 
   return (
     <div
-      className="p-3 h-full overflow-y-auto max-h-full"
+      className="p-3"
       onPointerDownCapture={(e) => e.stopPropagation()}
     >
       <div className="space-y-3">
@@ -289,7 +292,7 @@ export function ZoneDetailsPanel({
                       }
                     />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[1000]" position="popper">
                     {availableLUs.map((lu) => (
                       <SelectItem key={String(lu.id)} value={String(lu.id)}>
                         <div className="flex items-center gap-2">
@@ -417,7 +420,7 @@ export function ZoneDetailsPanel({
                 <Save className="w-3 h-3 mr-1" /> Save
               </Button>
               <Button
-              type="button"
+                type="button"
                 variant="outline"
                 onClick={() => setIsEditing(false)}
                 className="text-xs py-1"
@@ -429,7 +432,7 @@ export function ZoneDetailsPanel({
             <>
               <Button
                 type="button"
-                onClick={() => setIsEditing(true)}
+                onClick={() => { onEnterEdit?.(); setIsEditing(true); }}
                 className="flex-1 text-xs py-1"
               >
                 <Edit className="w-3 h-3 mr-1" /> Edit
@@ -445,7 +448,7 @@ export function ZoneDetailsPanel({
               {zone.status !== "Approved" && zone.status !== "Rejected" && (
                 <>
                   <Button
-                  type="button"
+                    type="button"
                     variant="default"
                     size="sm"
                     onClick={handleApprove}

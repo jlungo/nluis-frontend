@@ -220,7 +220,7 @@ export function HistoryPanel({ zones, activeZone }: HistoryPanelProps) {
                 zoneHistory.map((entry, index) => {
                   const Icon = getSourceIcon(entry.source);
                   const isLatest = index === 0;
-                  
+
                   return (
                     <Card key={entry.id} className={isLatest ? 'border-primary' : ''}>
                       <CardHeader className="pb-3">
@@ -289,97 +289,99 @@ export function HistoryPanel({ zones, activeZone }: HistoryPanelProps) {
         {/* Upload History */}
         <ScrollArea className="h-[calc(100vh-250px)]">
           <div className="space-y-3">
-            {mockDataCollectorUploads.map((upload, _index) => {
-              const StatusIcon = getUploadStatusIcon(upload.status);
-              const statusColor = getUploadStatusColor(upload.status);
-              
-              return (
-                <Card key={upload.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <StatusIcon className={`w-5 h-5 ${statusColor}`} />
+            {mockDataCollectorUploads.map(
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              (upload, _index) => {
+                const StatusIcon = getUploadStatusIcon(upload.status);
+                const statusColor = getUploadStatusColor(upload.status);
+
+                return (
+                  <Card key={upload.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <StatusIcon className={`w-5 h-5 ${statusColor}`} />
+                          <div>
+                            <CardTitle className="text-sm">{upload.collectorName}</CardTitle>
+                            <p className="text-xs text-muted-foreground">
+                              ID: {upload.collectorId} | Device: {upload.deviceId}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            upload.status === 'approved' ? 'default' :
+                              upload.status === 'processing' ? 'secondary' :
+                                upload.status === 'rejected' ? 'destructive' : 'outline'
+                          }
+                        >
+                          {upload.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-3">
+                      {/* Upload Details */}
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <CardTitle className="text-sm">{upload.collectorName}</CardTitle>
-                          <p className="text-xs text-muted-foreground">
-                            ID: {upload.collectorId} | Device: {upload.deviceId}
-                          </p>
+                          <span className="text-muted-foreground">Upload Time:</span>
+                          <p>{upload.uploadTime}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Zones:</span>
+                          <p>{upload.zonesUploaded} zones</p>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Location:</span>
+                          <p>{upload.location}</p>
                         </div>
                       </div>
-                      <Badge 
-                        variant={
-                          upload.status === 'approved' ? 'default' :
-                          upload.status === 'processing' ? 'secondary' :
-                          upload.status === 'rejected' ? 'destructive' : 'outline'
-                        }
-                      >
-                        {upload.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
 
-                  <CardContent className="space-y-3">
-                    {/* Upload Details */}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Upload Time:</span>
-                        <p>{upload.uploadTime}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Zones:</span>
-                        <p>{upload.zonesUploaded} zones</p>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Location:</span>
-                        <p>{upload.location}</p>
-                      </div>
-                    </div>
-
-                    {/* Notes */}
-                    {upload.notes && (
-                      <div>
-                        <span className="text-sm text-muted-foreground">Notes:</span>
-                        <p className="text-sm">{upload.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Zone IDs */}
-                    <div>
-                      <span className="text-sm text-muted-foreground">Zone IDs:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {upload.zoneIds.map(zoneId => (
-                          <Badge key={zoneId} variant="outline" className="text-xs">
-                            {zoneId}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadUpload(upload.id)}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      {upload.status === 'rejected' && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleReprocessUpload(upload.id)}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Reprocess
-                        </Button>
+                      {/* Notes */}
+                      {upload.notes && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Notes:</span>
+                          <p className="text-sm">{upload.notes}</p>
+                        </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+
+                      {/* Zone IDs */}
+                      <div>
+                        <span className="text-sm text-muted-foreground">Zone IDs:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {upload.zoneIds.map(zoneId => (
+                            <Badge key={zoneId} variant="outline" className="text-xs">
+                              {zoneId}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadUpload(upload.id)}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                        {upload.status === 'rejected' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReprocessUpload(upload.id)}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Reprocess
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </div>
         </ScrollArea>
 

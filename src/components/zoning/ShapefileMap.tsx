@@ -41,6 +41,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
     ...initialViewport,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const colors = useMemo(() => generateLayerColors(), []);
 
@@ -53,6 +54,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   // Load overlay maps
   const overlayQueries = overlayMapsIds.map((id, index) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const { data, isLoading, error } = useLocalityShapefileQuery(id);
     return { id, data, isLoading, error, index };
   });
@@ -65,6 +67,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
       ...DEFAULT_VIEWPORT,
       ...initialViewport,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
   // Add base map to layer list
@@ -139,11 +142,13 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   }, [overlayQueries, colors, layers]);
 
   const handleMapClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       mapRef.current.flyTo({
         center: event.lngLat
       });
       const features = mapRef.current?.queryRenderedFeatures(event.point);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clicked = features?.find((f: any) =>
         layers.some(layer => layer.id === f.source && layer.visible)
       );
@@ -153,6 +158,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
   );
 
   const handleViewportChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
       let newViewport = e.viewState;
       if (baseMapBounds && newViewport.zoom < 4) {

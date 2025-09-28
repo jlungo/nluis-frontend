@@ -13,6 +13,7 @@ export default function Index(
     data: FieldsProps & {
         disabled?: boolean;
         project_locality_id: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         value: any;
         setValue: (
             formSlug: string,

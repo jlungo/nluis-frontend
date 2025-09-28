@@ -10,7 +10,7 @@ import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Trash2, 
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
-import { LocalityTableColumns, ProjectStatusBadge } from '@/components/project/ProjectDataTableColumns';
+import { LocalityColumns } from '@/components/project/locality-columns';
 import { ProjectApprovalStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
@@ -22,6 +22,7 @@ import { MapDialog } from '../zoning/MapDialog';
 import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
 import { Progress } from '../ui/progress';
 import { approvalStatus, approvalStatusAtleastOne } from './utils';
+import { ProjectStatusBadge } from './project-status-badge';
 
 export default function ViewProjectPage({ moduleLevel }: { moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -230,9 +231,10 @@ const ButtonsComponent: React.FC<{ moduleLevel: string, project: ProjectI, appro
           navigate(`/land-uses/${moduleLevel}`, { replace: true })
           return `Project deleted successfully`
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: (err: AxiosError | any) => `${err?.message || err?.response?.data?.message || "Failed to delete project!"}`
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err)
     }
   }
@@ -316,7 +318,7 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
       <CardContent>
         {project.localities && project.localities.length > 0 ?
           <DataTable
-            columns={LocalityTableColumns}
+            columns={LocalityColumns}
             data={localities}
             enableGlobalFilter={true}
             searchPlaceholder="Search localities..."

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export const useGeoJSONLoader = (url: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -16,7 +17,9 @@ export const useGeoJSONLoader = (url: string) => {
         setData(jsonData);
         setIsLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load GeoJSON'));
+        setError(
+          err instanceof Error ? err : new Error("Failed to load GeoJSON")
+        );
         setIsLoading(false);
       }
     };

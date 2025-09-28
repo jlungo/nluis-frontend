@@ -1,5 +1,5 @@
 import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
+import { useLayoutEffect, useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,17 +105,6 @@ export default function CCROManagementPage() {
     loadLocalities();
     loadQuestionnaires();
   }, []);
-
-  useEffect(() => {
-    filterData();
-  }, [
-    state.ccroData,
-    state.searchTerm,
-    state.statusFilter,
-    state.selectedRegion,
-    state.selectedDistrict,
-    state.selectedVillage,
-  ]);
 
   const loadData = async () => {
     try {
@@ -261,7 +250,7 @@ export default function CCROManagementPage() {
     }
   };
 
-  const filterData = () => {
+  const filterData = useCallback(() => {
     let filtered = state.ccroData;
 
     // Search filter
@@ -299,7 +288,7 @@ export default function CCROManagementPage() {
       ...prev,
       filteredData: filtered,
     }));
-  };
+  }, [state.ccroData, state.searchTerm, state.selectedDistrict, state.selectedRegion, state.statusFilter]);
 
   //   const getStatusColor = (status: string) => {
   //     switch (status) {
@@ -365,6 +354,18 @@ export default function CCROManagementPage() {
       villages,
     }));
   };
+
+  useEffect(() => {
+    filterData();
+  }, [
+    state.ccroData,
+    state.searchTerm,
+    state.statusFilter,
+    state.selectedRegion,
+    state.selectedDistrict,
+    state.selectedVillage,
+    filterData
+  ]);
 
   if (state.loading) {
     return (

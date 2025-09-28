@@ -17,15 +17,15 @@ import { genderTypes, userTypes } from "@/types/constants";
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  user: UserI | null;
+  user: UserI;
   roles: { id: string; name: string }[];
   regions: LocalityI[];
   organizations: OrganizationI[];
 };
 
 export default function UserEditDialog({ open, onOpenChange, user, roles, organizations }: Props) {
-  const [form, setForm] = useState<UserI | any>({
-    id: user?.id,
+  const [form, setForm] = useState<UserI>({
+    id: user.id,
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
     email: user?.email || "",
@@ -39,7 +39,7 @@ export default function UserEditDialog({ open, onOpenChange, user, roles, organi
 
   useEffect(() => {
     setForm({
-      id: user?.id,
+      id: user.id,
       first_name: user?.first_name || "",
       last_name: user?.last_name || "",
       email: user?.email || "",

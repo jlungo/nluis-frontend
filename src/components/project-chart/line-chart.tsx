@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
 interface Props {
     className?: string;
     chartConfig: ChartConfig;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any;
     xAxis: { name: string; type: 'date' | 'string' | 'number' | 'percent' }
     yAxis?: { name?: string; type?: 'date' | 'string' | 'number' | 'percent' }
