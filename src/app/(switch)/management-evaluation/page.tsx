@@ -27,10 +27,7 @@ interface Page {
   onCreateNew: (type: string) => void;
 }
 
-export default function Page({ 
-  onNavigateToSubModule,
-  onCreateNew 
-}: Page) {
+export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const { setPage } = usePageStore();
@@ -96,7 +93,7 @@ export default function Page({
           <p className="text-muted-foreground">Track progress and measure impact of land use planning initiatives</p>
         </div>
         <Button 
-          onClick={() => onCreateNew('me-indicator-management')}
+          onClick={() => {}}
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
@@ -192,7 +189,7 @@ export default function Page({
                     <MapPin className="h-5 w-5" />
                     Village Monitoring Status
                   </CardTitle>
-                  <Button variant="outline" size="sm" onClick={() => onNavigateToSubModule('real-time-map')}>
+                  <Button variant="outline" size="sm" onClick={() => {}}>
                     <Map className="h-4 w-4 mr-1" />
                     Full Map
                   </Button>
@@ -235,7 +232,7 @@ export default function Page({
                     </div>
                   ))}
                 </div>
-                <Button variant="ghost" size="sm" className="w-full mt-3" onClick={() => onCreateNew('satellite-change-detection')}>
+                <Button variant="ghost" size="sm" className="w-full mt-3" onClick={() => {}}>
                   View All Changes
                 </Button>
               </CardContent>
@@ -344,7 +341,7 @@ export default function Page({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Satellite Change Detection</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => onCreateNew('satellite-change-detection')}>
+                <Button variant="outline" size="sm" onClick={() => {}}>
                   <Satellite className="h-4 w-4 mr-1" />
                   New Analysis
                 </Button>
@@ -412,7 +409,7 @@ export default function Page({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Report Management Panel</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => onCreateNew('me-report-generation')}>
+                <Button variant="outline" size="sm" onClick={() => {}}>
                   <Plus className="h-4 w-4 mr-1" />
                   Generate Report
                 </Button>
