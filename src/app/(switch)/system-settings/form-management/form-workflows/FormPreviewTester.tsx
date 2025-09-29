@@ -789,14 +789,6 @@ export function FormPreviewTester({
                             <CardTitle className="text-sm">Current Forms Values</CardTitle>
                         </CardHeader>
                         <CardContent>
-
-
-
-
-
-
-
-
                             <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-96">
                                 {JSON.stringify(formValues, null, 2) || 'No test data yet'}
                             </pre>
