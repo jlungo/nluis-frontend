@@ -30,6 +30,11 @@ import {
   Layers,
   Building2,
   FileQuestionMark,
+  ListChecks,
+  MapPin,
+  TrendingUp,
+  Satellite,
+  LineChart,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { usePageStore } from "@/store/pageStore";
@@ -170,15 +175,40 @@ export function NavigationSidebar({
           return [
             {
               id: "overview",
-              label: "M&E Dashboard",
+              label: "Dashboard",
               icon: <BarChart3 className="h-4 w-4" />,
-              // badge: "5"
+              badge: "5"
+            },
+            {
+              id: "indicators",
+              label: "Indicators",
+              icon: <ListChecks className="h-4 w-4" />
+            },
+            {
+              id: "villages",
+              label: "Village Tracking",
+              icon: <MapPin className="h-4 w-4" />
             },
             {
               id: "reports",
               label: "M&E Reports",
               icon: <FileText className="h-4 w-4" />
             },
+            {
+              id: "analysis",
+              label: "Data Analysis",
+              icon: <TrendingUp className="h-4 w-4" />
+            },
+            {
+              id: "satellite",
+              label: "Satellite Monitoring",
+              icon: <Satellite className="h-4 w-4" />
+            },
+            {
+              id: "projections",
+              label: "Projections",
+              icon: <LineChart className="h-4 w-4" />
+            }
           ];
         case "reports":
           return [];
