@@ -32,7 +32,7 @@ export const Columns: ColumnDef<WorkflowProps, unknown>[] = [
     accessorKey: 'description',
     header: 'Description',
     cell: ({ row }: { row: { original: WorkflowProps } }) => (
-      <div className="text-sm max-w-xs md:max-w-sm">{row.original.description}</div>
+      <div className="text-sm max-w-sm break-words overflow-hidden text-ellipsis line-clamp-2">{row.original.description}</div>
     ),
   },
   {
