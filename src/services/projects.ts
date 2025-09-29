@@ -1,10 +1,10 @@
-import api from '@/lib/axios';
-import type { 
-  ProjectI, 
-  ProjectTypeI, 
-  CreateProjectRequest, 
-  UpdateProjectRequest, 
-  ProjectStats, 
+import api from "@/lib/axios";
+import type {
+  ProjectI,
+  ProjectTypeI,
+  CreateProjectRequest,
+  UpdateProjectRequest,
+  ProjectStats,
   ProjectFilters,
   ProjectUser,
   Document,
@@ -22,15 +22,13 @@ import type {
   MonitoringRecord,
   Locality,
   TaskMenuItem,
- 
   ProjectApprovalResponse,
-
   ParcelSearchResponse,
-  TeamMemberHistory
-} from '@/types/projects';
+  TeamMemberHistory,
+} from "@/types/projects";
 
 class ProjectService {
-  private baseUrl = '/projects';
+  private baseUrl = "/projects";
 
   // Project Types
   async getProjectTypes(): Promise<ProjectTypeI[]> {
@@ -42,7 +40,7 @@ class ProjectService {
   async getProjects(filters: ProjectFilters = {}): Promise<ProjectI[]> {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== "") {
         params.append(key, value.toString());
       }
     });
@@ -56,11 +54,14 @@ class ProjectService {
     return response.data;
   }
 
-  async getOrganizationProjects(organizationId: string, filters: ProjectFilters = {}): Promise<ProjectI[]> {
+  async getOrganizationProjects(
+    organizationId: string,
+    filters: ProjectFilters = {}
+  ): Promise<ProjectI[]> {
     const params = new URLSearchParams();
-    params.append('organization_id', organizationId);
+    params.append("organization_id", organizationId);
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== "") {
         params.append(key, value.toString());
       }
     });
@@ -74,7 +75,10 @@ class ProjectService {
     return response.data;
   }
 
-  async updateProject(id: string, data: UpdateProjectRequest): Promise<ProjectI> {
+  async updateProject(
+    id: string,
+    data: UpdateProjectRequest
+  ): Promise<ProjectI> {
     const response = await api.patch(`${this.baseUrl}/${id}`, data);
     return response.data;
   }
@@ -89,21 +93,28 @@ class ProjectService {
     return response.data;
   }
 
-  async assignUserToProject(projectId: string, userId: string, role: ProjectUser['role']): Promise<ProjectUser> {
+  async assignUserToProject(
+    projectId: string,
+    userId: string,
+    role: ProjectUser["role"]
+  ): Promise<ProjectUser> {
     const response = await api.post(`${this.baseUrl}/${projectId}/users`, {
       user_id: userId,
-      role
+      role,
     });
     return response.data;
   }
 
-  async removeUserFromProject(projectId: string, userId: string): Promise<void> {
+  async removeUserFromProject(
+    projectId: string,
+    userId: string
+  ): Promise<void> {
     await api.delete(`${this.baseUrl}/${projectId}/users/${userId}`);
   }
 
   // Statistics
   async getProjectStats(organizationId?: string): Promise<ProjectStats> {
-    const url = organizationId 
+    const url = organizationId
       ? `${this.baseUrl}/stats?organization_id=${organizationId}`
       : `${this.baseUrl}/stats`;
     const response = await api.get(url);
@@ -118,7 +129,7 @@ class ProjectService {
 
   // Documents
   async getDocuments(projectId: string, taskId?: string): Promise<Document[]> {
-    const url = taskId 
+    const url = taskId
       ? `${this.baseUrl}/document-list/${projectId}/${taskId}`
       : `${this.baseUrl}/documents/${projectId}`;
     const response = await api.get(url);
@@ -135,7 +146,10 @@ class ProjectService {
     return response.data;
   }
 
-  async updateDocument(id: string, data: UpdateDocumentRequest): Promise<Document> {
+  async updateDocument(
+    id: string,
+    data: UpdateDocumentRequest
+  ): Promise<Document> {
     const response = await api.put(`${this.baseUrl}/documents/${id}`, data);
     return response.data;
   }
@@ -151,7 +165,9 @@ class ProjectService {
 
   // Parcels
   async getParcels(projectId: string, stage: string): Promise<Parcel[]> {
-    const response = await api.get(`${this.baseUrl}/parcels/${projectId}/${stage}`);
+    const response = await api.get(
+      `${this.baseUrl}/parcels/${projectId}/${stage}`
+    );
     return response.data;
   }
 
@@ -165,13 +181,23 @@ class ProjectService {
     return response.data;
   }
 
-  async searchParcels(projectId: string, search: string): Promise<ParcelSearchResponse> {
-    const response = await api.get(`${this.baseUrl}/parcels/search/${projectId}/${search}`);
+  async searchParcels(
+    projectId: string,
+    search: string
+  ): Promise<ParcelSearchResponse> {
+    const response = await api.get(
+      `${this.baseUrl}/parcels/search/${projectId}/${search}`
+    );
     return response.data;
   }
 
-  async refreshParcelParties(projectId: string, claimNo: string): Promise<void> {
-    await api.get(`${this.baseUrl}/parcels-party-refresh/${projectId}/${claimNo}`);
+  async refreshParcelParties(
+    projectId: string,
+    claimNo: string
+  ): Promise<void> {
+    await api.get(
+      `${this.baseUrl}/parcels-party-refresh/${projectId}/${claimNo}`
+    );
   }
 
   // Team Members
@@ -186,12 +212,17 @@ class ProjectService {
   }
 
   async createTeamMember(data: CreateTeamMemberRequest): Promise<TeamMember> {
-    const response = await api.post(`${this.baseUrl}/team-members/create`, data);
+    const response = await api.post(
+      `${this.baseUrl}/team-members/create`,
+      data
+    );
     return response.data;
   }
 
   async getTeamMemberHistory(projectId: string): Promise<TeamMemberHistory[]> {
-    const response = await api.get(`${this.baseUrl}/team-members-history/${projectId}`);
+    const response = await api.get(
+      `${this.baseUrl}/team-members-history/${projectId}`
+    );
     return response.data;
   }
 
@@ -219,8 +250,13 @@ class ProjectService {
   }
 
   // Task Menu
-  async getTaskMenu(projectTypeId: string, projectId: string): Promise<TaskMenuItem[]> {
-    const response = await api.get(`${this.baseUrl}/task-menu/${projectTypeId}/${projectId}`);
+  async getTaskMenu(
+    projectTypeId: string,
+    projectId: string
+  ): Promise<TaskMenuItem[]> {
+    const response = await api.get(
+      `${this.baseUrl}/task-menu/${projectTypeId}/${projectId}`
+    );
     return response.data;
   }
 
@@ -241,8 +277,14 @@ class ProjectService {
   }
 
   // Filtered project lists
-  async getFilteredProjects(projectTypeId: string, statusId: string, desc: string): Promise<ProjectI[]> {
-    const response = await api.get(`${this.baseUrl}/list/${projectTypeId}/${statusId}/${desc}`);
+  async getFilteredProjects(
+    projectTypeId: string,
+    statusId: string,
+    desc: string
+  ): Promise<ProjectI[]> {
+    const response = await api.get(
+      `${this.baseUrl}/list/${projectTypeId}/${statusId}/${desc}`
+    );
     return response.data;
   }
 }
