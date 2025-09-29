@@ -87,13 +87,6 @@ export const MODULE_LEVEL_SLUG = {
   [LOCALITY_LEVELS.VILLAGE]: "village-land-use",
 } as const;
 
-// export const ProjectStatus: Record<number, string> = {
-//   1: "Pending",
-//   2: "In Process",
-//   3: "Completed",
-//   4: "On Hold",
-// };
-
 export const ProjectApprovalStatus: Record<number, string> = {
   1: "Waiting Approval",
   2: "Approved",
@@ -114,19 +107,6 @@ export const ProjectStatusFilters: Record<string, string> = {
   rejected: "Rejected",
   completed: "Completed",
 };
-
-// export const ProjectStatusColors: Record<string, string> = {
-//   Pending: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
-//   "In Process": "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
-//   Completed:
-//     "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
-//   "On Hold":
-//     "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100",
-//   "Waiting for Approval":
-//     "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
-//   Approved: "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100",
-//   Rejected: "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100",
-// };
 
 export const tanzaniaLocalityKey = 92;
 

@@ -7,5 +7,7 @@ export type InputType =
   | "date"
   | "file"
   | "select"
+  | "multiselect"
+  | "table"
   | "members"
   | "zoning";
