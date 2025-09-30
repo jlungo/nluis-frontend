@@ -8,4 +8,5 @@ export type InputType =
   | "file"
   | "select"
   | "members"
-  | "zoning";
+  | "zoning"
+  | "report";

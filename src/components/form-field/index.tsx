@@ -8,6 +8,7 @@ import FormSelect from "./form-select";
 import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
 import FormMembers, { type MembersI } from "./form-members";
+import FormReport from "./form-report";
 
 export default function Index(
     data: FieldsProps & {
@@ -89,6 +90,18 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                // value={data?.value}
+                // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('report'):
+            return (
+                <FormReport
+                    label={data.label}
+                    name={data.name}
+                    // disabled={data.disabled}
+                    required={data.required}
+                    // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 // value={data?.value}
                 // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />

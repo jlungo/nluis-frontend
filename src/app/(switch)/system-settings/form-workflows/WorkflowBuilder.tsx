@@ -76,6 +76,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'file', label: 'File Upload' },
             { value: 'members', label: 'Memebrs Add' },
             { value: 'zoning', label: 'Zoning' },
+            { value: 'report', label: 'Report' },
         ],
         []
     );
