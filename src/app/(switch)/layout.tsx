@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { NavigationSidebar } from '@/components/NavigationSidebar';
+import NavigationSidebar from '@/components/navigation-sidebar';
 import {
   Settings,
   User,

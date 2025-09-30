@@ -100,9 +100,9 @@ interface WorkflowPreviewTesterProps {
 }
 
 interface FormValidationError {
-    fieldId: string;
-    sectionId?: string;
-    formId?: string;
+    fieldName: string;
+    sectionId: string;
+    formId: string;
     message: string;
 }
 
@@ -128,17 +128,16 @@ export function FormPreviewTester({
 
     // Toggle section collapse
     const toggleSectionCollapse = (sectionId: string, isPreview: boolean = false) => {
-        if (isPreview) {
+        if (isPreview)
             setCollapsedPreviewSections(prev => ({
                 ...prev,
                 [sectionId]: !prev[sectionId]
             }));
-        } else {
+        else
             setCollapsedSections(prev => ({
                 ...prev,
                 [sectionId]: !prev[sectionId]
             }));
-        }
     };
 
     // Toggle form collapse
@@ -149,21 +148,18 @@ export function FormPreviewTester({
         }));
     };
 
-    // Expand all sections
-    const expandAllSections = () => {
+    const collapseAllSections = () => {
         setCollapsedSections({});
         setCollapsedForms({});
         setCollapsedPreviewSections({});
     };
 
-    // Collapse all sections
-    const collapseAllSections = () => {
+    const expandAllSections = () => {
         const allSections: Record<string, boolean> = {};
         const allForms: Record<string, boolean> = {};
         const allPreviewSections: Record<string, boolean> = {};
-
         if (workflowData?.sections) {
-            workflowData.sections.forEach(section => {
+            workflowData.sections.filter(section => section.is_active === true).forEach(section => {
                 allSections[section.id] = true;
                 allPreviewSections[section.id] = true;
                 section.forms.forEach(form => {
@@ -171,38 +167,31 @@ export function FormPreviewTester({
                 });
             });
         }
-
         setCollapsedSections(allSections);
         setCollapsedForms(allForms);
         setCollapsedPreviewSections(allPreviewSections);
     };
 
-    // Update field value
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateFieldValue = useCallback((fieldId: string, value: any) => {
+    const updateFieldValue = useCallback((fieldName: string, value: any) => {
         setFormValues(prev => ({
             ...prev,
-            [fieldId]: value
+            [fieldName]: value
         }));
-
-        // Clear validation error for this field
-        setValidationErrors(prev =>
-            prev.filter(error => error.fieldId !== fieldId)
-        );
+        setValidationErrors(prev => prev.filter(error => error.fieldName !== fieldName));
     }, [setFormValues, setValidationErrors]);
 
     // Validate form
     const validateForm = (): FormValidationError[] => {
         const errors: FormValidationError[] = [];
-
-        // Validate advanced form (sections/forms)
         if (workflowData?.sections)
-            workflowData.sections.forEach(section => {
-                section.forms.forEach(form => {
-                    form.form_fields.forEach(field => {
-                        if (field.required && (!formValues[field.name] || formValues[field.name] === '')) {
+            workflowData.sections.filter(section => section.is_active === true).forEach(section => {
+                section.forms.filter(form => form.is_active === true).forEach(form => {
+                    form.form_fields.filter(field => field.is_active === true).forEach(field => {
+                        const fieldName = `${section.order}-${form.order}-${field.name}`
+                        if (field.required && (!formValues[fieldName] || formValues[fieldName] === '')) {
                             errors.push({
-                                fieldId: field.id,
+                                fieldName: fieldName,
                                 sectionId: section.id,
                                 formId: form.id,
                                 message: `${field.label} is required`
@@ -211,7 +200,6 @@ export function FormPreviewTester({
                     });
                 });
             });
-
         return errors;
     };
 
@@ -219,19 +207,15 @@ export function FormPreviewTester({
     const handleTestSubmission = async () => {
         setIsSubmitting(true);
         setShowValidation(true);
-
         const errors = validateForm();
         setValidationErrors(errors);
-
         if (errors.length > 0) {
             toast.error(`Form validation failed with ${errors.length} errors`);
             setIsSubmitting(false);
             return;
         }
-
         // Simulate form submission delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        await new Promise(resolve => setTimeout(resolve, 500));
         const submissionResult = {
             success: true,
             submissionId: `test-${Date.now()}`,
@@ -240,7 +224,6 @@ export function FormPreviewTester({
             fieldCount: Object.keys(formValues).length,
             validationPassed: true
         };
-
         setTestSubmissionResult(submissionResult);
         setIsSubmitting(false);
         toast.success('Form test submission successful!');
@@ -257,9 +240,10 @@ export function FormPreviewTester({
 
     // Render a single field component
     const renderFieldComponent = useCallback(
-        (field: FormField) => {
-            const fieldValue = formValues[field.name];
-            const fieldError = validationErrors.find(error => error.fieldId === field.id);
+        (field: FormField, formOrder: number, sectionOrder: number) => {
+            const fieldName = `${sectionOrder}-${formOrder}-${field.name}`
+            const fieldValue = formValues[fieldName];
+            const fieldError = validationErrors.find(error => error.fieldName === fieldName);
             const hasError = !!fieldError && showValidation;
 
             const renderLabel = () => (
@@ -270,7 +254,6 @@ export function FormPreviewTester({
                     </Label>
                 </div>
             );
-
             const renderError = () =>
                 hasError && (
                     <Alert className="border-destructive bg-destructive/10">
@@ -284,7 +267,7 @@ export function FormPreviewTester({
             switch (field.type) {
                 case "zoning":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <MapRenderer key={field.id} />
                             {renderError()}
                         </div>
@@ -292,10 +275,10 @@ export function FormPreviewTester({
 
                 case "members":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <FormMembers
                                 label={field.label}
-                                name={field.name}
+                                name={fieldName}
                                 required={field.required}
                                 placeholder={field.placeholder}
                                 fullWidth
@@ -308,13 +291,13 @@ export function FormPreviewTester({
                 case "email":
                 case "number":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}
                             <Input
                                 type={field.type === "text" ? "text" : field.type}
                                 placeholder={field.placeholder || `Enter ${field.type}...`}
                                 value={fieldValue || ""}
-                                onChange={(e) => updateFieldValue(field.name, e.target.value)}
+                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
                                 className={hasError ? "border-destructive" : ""}
                             />
                             {renderError()}
@@ -323,12 +306,12 @@ export function FormPreviewTester({
 
                 case "textarea":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}
                             <Textarea
                                 placeholder={field.placeholder || "Enter text..."}
                                 value={fieldValue || ""}
-                                onChange={(e) => updateFieldValue(field.name, e.target.value)}
+                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
                                 className={hasError ? "border-destructive" : ""}
                                 rows={3}
                             />
@@ -338,11 +321,11 @@ export function FormPreviewTester({
 
                 case "select":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}
                             <Select
                                 value={fieldValue || ""}
-                                onValueChange={(value) => updateFieldValue(field.name, value)}
+                                onValueChange={(value) => updateFieldValue(fieldName, value)}
                             >
                                 <SelectTrigger
                                     className={hasError ? "border-destructive w-full" : "w-full"}
@@ -367,13 +350,13 @@ export function FormPreviewTester({
 
                 case "checkbox":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     checked={fieldValue || false}
                                     onCheckedChange={(checked) =>
-                                        updateFieldValue(field.name, checked)
+                                        updateFieldValue(fieldName, checked)
                                     }
                                 />
                                 <Label>{field.placeholder || "Check this option"}</Label>
@@ -384,14 +367,14 @@ export function FormPreviewTester({
 
                 case "date":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <DatePicker
                                 label={field.label}
-                                name={field.name}
+                                name={fieldName}
                                 required={field.required}
                                 dateValue={fieldValue ? new Date(fieldValue) : undefined}
                                 onDateChange={(e) =>
-                                    updateFieldValue(field.name, e.toISOString().split("T")[0])
+                                    updateFieldValue(fieldName, e.toISOString().split("T")[0])
                                 }
                                 fullWidth
                             />
@@ -401,7 +384,7 @@ export function FormPreviewTester({
 
                 case "file":
                     return (
-                        <div key={field.id} className="space-y-2">
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}
                             <div
                                 className={`group relative border-2 border-dashed rounded-xl overflow-hidden ${hasError
@@ -412,7 +395,7 @@ export function FormPreviewTester({
                                 <input
                                     type="file"
                                     onChange={(e) =>
-                                        updateFieldValue(field.name, e.target.files?.[0]?.name || "")
+                                        updateFieldValue(fieldName, e.target.files?.[0]?.name || "")
                                     }
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
@@ -422,7 +405,7 @@ export function FormPreviewTester({
                                     </div>
                                     <div className="flex-grow flex flex-col gap-1">
                                         <p className="text-sm">
-                                            {formValues[field.name] || field.label}
+                                            {formValues[fieldName] || field.label}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             {field.placeholder}
@@ -449,7 +432,6 @@ export function FormPreviewTester({
         [formValues, validationErrors, showValidation, updateFieldValue]
     );
 
-
     // Render form preview (read-only structure)
     const renderFormPreview = () => (
         <div className="space-y-6">
@@ -469,56 +451,56 @@ export function FormPreviewTester({
                 <div className="flex flex-col md:flex-row items-center gap-2">
                     <h3 className="font-medium text-base md:text-lg">Form Structure</h3>
                     <Badge variant="outline" className="text-xs">
-                        {workflowData?.sections ? `${workflowData.sections.length} sections` : null}
+                        {workflowData?.sections ? `${workflowData.sections.filter(section => section.is_active === true).length} sections` : null}
                     </Badge>
                 </div>
-                <div className="flex flex-col md:flex-row items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={expandAllSections} className="gap-1">
-                        <ChevronDown className="h-3 w-3" />
-                        Expand All
+                <div className="flex flex-col md:flex-row md:items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={expandAllSections} className="text-xs md:text-sm">
+                        <ChevronDown className="h-2 md:h-3 w-2 md:w-3" />
+                        Expand<span className='hidden md:inline'> All</span>
                     </Button>
-                    <Button variant="outline" size="sm" onClick={collapseAllSections} className="gap-1">
-                        <ChevronUp className="h-3 w-3" />
-                        Collapse All
+                    <Button variant="outline" size="sm" onClick={collapseAllSections} className="text-xs md:text-sm">
+                        <ChevronUp className="h-2 md:h-3 w-2 md:w-3" />
+                        Collapse<span className='hidden md:inline'> All</span>
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1">
-                        {isFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+                    <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="text-xs md:text-sm">
+                        {isFullscreen ? <Minimize className="h-2 md:h-3 w-2 md:w-3" /> : <Maximize className="h-2 md:h-3 w-2 md:w-3" />}
                         {isFullscreen ? 'Exit' : 'Fullscreen'}
                     </Button>
                 </div>
             </div>
 
             <div className="space-y-4">
-                {workflowData?.sections && workflowData.sections.filter(section => section.is_active === true).sort((a, b) => a.order - b.order).map((section, sectionIndex) => (
+                {workflowData?.sections && workflowData.sections.filter(section => section.is_active === true).sort((a, b) => a.order - b.order).map((section) => (
                     <Card key={section.id}>
                         <Collapsible
-                            open={!collapsedPreviewSections[section.id]}
+                            open={collapsedPreviewSections[section.id]}
                             onOpenChange={() => toggleSectionCollapse(section.id, true)}
                         >
                             <CollapsibleTrigger asChild>
-                                <CardHeader className="cursor-pointer bg-accent/50 dark:bg-muted/30 hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center justify-between">
+                                <CardHeader className="cursor-pointer bg-accent/50 dark:bg-muted/30 hover:bg-muted/50 dark:hover:bg-muted/40 transition-colors">
+                                    <div className="flex items-center justify-between gap-1">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
                                                 <Layers className="h-4 w-4" />
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base">
-                                                    Section {sectionIndex + 1}: {section.name}
+                                                <CardTitle className="text-xs md:text-base line-clamp-1">
+                                                    <span className='hidden md:inline'>Section </span>{section.order}: {section.name}
                                                 </CardTitle>
-                                                {section.description && (
-                                                    <CardDescription>{section.description}</CardDescription>
-                                                )}
+                                                {section.description && <CardDescription className='hidden md:inline md:line-clamp-1'>{section.description}</CardDescription>}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="text-xs">
-                                                {section.forms.length} forms
-                                            </Badge>
-                                            <Badge variant="outline" className="text-xs">
-                                                {section.forms.reduce((count, form) => count + form.form_fields.length, 0)} fields
-                                            </Badge>
-                                            {collapsedPreviewSections[section.id] ? (
+                                            <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {section.forms.filter(form => form.is_active === true).length} forms
+                                                </Badge>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {section.forms.filter(form => form.is_active === true).reduce((count, form) => count + form.form_fields.filter(field => field.is_active === true).length, 0)} fields
+                                                </Badge>
+                                            </div>
+                                            {!collapsedPreviewSections[section.id] ? (
                                                 <ChevronRight className="h-4 w-4" />
                                             ) : (
                                                 <ChevronDown className="h-4 w-4" />
@@ -529,34 +511,33 @@ export function FormPreviewTester({
                             </CollapsibleTrigger>
 
                             <CollapsibleContent>
-                                <CardContent className="space-y-6 pt-0">
+                                <CardContent className="pt-0">
                                     {section.forms.filter(form => form.is_active === true).sort((a, b) => a.order - b.order).map((form) => (
                                         <Collapsible
                                             key={form.id}
-                                            open={!collapsedForms[form.id]}
+                                            open={collapsedForms[form.id]}
                                             onOpenChange={() => toggleFormCollapse(form.id)}
+                                            className='border bg-muted/30 rounded-lg py-4 my-3'
                                         >
                                             <CollapsibleTrigger asChild>
-                                                <div className="border rounded-lg p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+                                                <div className="px-4 py-2 md:py-0 cursor-pointer bg-accent dark:bg-muted/40 hover:bg-muted/90 dark:hover:bg-muted/50 transition-colors">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
                                                                 <FolderOpen className="h-3 w-3" />
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-medium flex items-center gap-2">
+                                                                <h4 className="font-medium flex items-center gap-2 text-xs md:text-sm">
                                                                     {form.name}
                                                                 </h4>
-                                                                {form.description && (
-                                                                    <p className="text-sm text-muted-foreground">{form.description}</p>
-                                                                )}
+                                                                {form.description && <p className="text-xs md:text-sm text-muted-foreground hidden md:inline md:line-clamp-1">{form.description}</p>}
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {form.form_fields.length} fields
+                                                            <Badge variant="outline" className="text-xs hidden md:block">
+                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
                                                             </Badge>
-                                                            {collapsedForms[form.id] ? (
+                                                            {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
                                                                 <ChevronDown className="h-4 w-4" />
@@ -566,8 +547,8 @@ export function FormPreviewTester({
                                                 </div>
                                             </CollapsibleTrigger>
 
-                                            <CollapsibleContent>
-                                                <div className="mt-3 grid gap-3 pl-9">
+                                            <CollapsibleContent className='px-4'>
+                                                <div className="mt-3 grid gap-1 md:gap-2 md:pl-8">
                                                     {form.form_fields.filter(field => field.is_active === true).sort((a, b) => a.order - b.order).map((field) => (
                                                         <div key={field.id} className="flex items-center gap-2 text-sm p-2 bg-background rounded border">
                                                             <div className="w-2 h-2 bg-muted-foreground rounded-full" />
@@ -599,41 +580,41 @@ export function FormPreviewTester({
     // Render interactive form test
     const renderFormTest = () => (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-end justify-between gap-1">
                 <div>
-                    <h2 className="text-base md:text-xl font-semibold">{workflowData.name}</h2>
+                    <h2 className="text-sm sm:text-base md:text-xl font-semibold">{workflowData.name}</h2>
                     {workflowData.description && (
-                        <p className="text-muted-foreground">{workflowData.description}</p>
+                        <p className="text-xs md:text-sm lg:text-base text-muted-foreground">{workflowData.description}</p>
                     )}
                 </div>
                 <div className='flex gap-2'>
-                    <div className="flex flex-col md:flex-row items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={expandAllSections} className="gap-1">
-                            <ChevronDown className="h-3 w-3" />
-                            Expand All
+                    <div className="flex flex-col xl:flex-row gap-2">
+                        <Button variant="outline" size="sm" onClick={expandAllSections} className="text-xs md:text-sm">
+                            <ChevronDown className="h-2 md:h-3 w-2 md:w-3" />
+                            Expand<span className='hidden md:inline'> All</span>
                         </Button>
-                        <Button variant="outline" size="sm" onClick={collapseAllSections} className="gap-1">
-                            <ChevronUp className="h-3 w-3" />
-                            Collapse All
+                        <Button variant="outline" size="sm" onClick={collapseAllSections} className="text-xs md:text-sm">
+                            <ChevronUp className="h-2 md:h-3 w-2 md:w-3" />
+                            Collapse<span className='hidden md:inline'> All</span>
                         </Button>
                     </div>
-                    <div className="flex flex-col md:flex-row items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={handleResetTest} className="gap-2">
-                            <RefreshCw className="h-4 w-4" />
+                    <div className="flex flex-col xl:flex-row gap-2">
+                        <Button variant="outline" size="sm" onClick={handleResetTest} className="text-xs md:text-sm">
+                            <RefreshCw className="h-2 md:h-3 w-2 md:w-3" />
                             Reset
                         </Button>
                         <Button
                             onClick={handleTestSubmission}
                             disabled={isSubmitting}
-                            className="gap-2"
+                            className="text-xs md:text-sm"
                             size="sm"
                         >
                             {isSubmitting ? (
-                                <RefreshCw className="h-2 w-2 animate-spin" />
+                                <RefreshCw className="h-2 md:h-3 w-2 md:w-3 animate-spin" />
                             ) : (
-                                <Send className="h-2 w-2" />
+                                <Send className="h-2 md:h-3 w-2 md:w-3" />
                             )}
-                            <span className='hidden md:block'>Test</span> Submit
+                            <span className='hidden md:block'>Test </span>Submit
                         </Button>
                     </div>
                 </div>
@@ -666,31 +647,36 @@ export function FormPreviewTester({
             )}
 
             <div className="space-y-6">
-                {workflowData?.sections && workflowData.sections.sort((a, b) => a.order - b.order).map((section) => (
+                {workflowData?.sections && workflowData.sections.filter(section => section.is_active === true).sort((a, b) => a.order - b.order).map((section) => (
                     <Card key={section.id}>
                         <Collapsible
-                            open={!collapsedSections[section.id]}
+                            open={collapsedSections[section.id]}
                             onOpenChange={() => toggleSectionCollapse(section.id)}
                         >
                             <CollapsibleTrigger asChild>
-                                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center justify-between">
+                                <CardHeader className="cursor-pointer bg-accent/50 dark:bg-muted/30 hover:bg-muted/50 dark:hover:bg-muted/40 transition-colors">
+                                    <div className="flex items-center justify-between gap-1">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
                                                 <Layers className="h-4 w-4" />
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base">{section.name}</CardTitle>
-                                                {section.description && (
-                                                    <CardDescription>{section.description}</CardDescription>
-                                                )}
+                                                <CardTitle className="text-xs md:text-base line-clamp-1">
+                                                    <span className='hidden md:inline'>Section </span>{section.order}: {section.name}
+                                                </CardTitle>
+                                                {section.description && <CardDescription className='hidden md:inline md:line-clamp-1'>{section.description}</CardDescription>}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="text-xs">
-                                                {section.forms.length} forms
-                                            </Badge>
-                                            {collapsedSections[section.id] ? (
+                                            <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {section.forms.filter(form => form.is_active === true).length} forms
+                                                </Badge>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {section.forms.filter(form => form.is_active === true).reduce((count, form) => count + form.form_fields.filter(field => field.is_active === true).length, 0)} fields
+                                                </Badge>
+                                            </div>
+                                            {!collapsedSections[section.id] ? (
                                                 <ChevronRight className="h-4 w-4" />
                                             ) : (
                                                 <ChevronDown className="h-4 w-4" />
@@ -701,43 +687,46 @@ export function FormPreviewTester({
                             </CollapsibleTrigger>
 
                             <CollapsibleContent>
-                                <CardContent className="space-y-6 pt-0">
-                                    {section.forms.sort((a, b) => a.order - b.order).map((form) => (
+                                <CardContent className="pt-0">
+                                    {section.forms.filter(form => form.is_active === true).sort((a, b) => a.order - b.order).map((form) => (
                                         <Collapsible
                                             key={form.id}
-                                            open={!collapsedForms[form.id]}
+                                            open={collapsedForms[form.id]}
                                             onOpenChange={() => toggleFormCollapse(form.id)}
+                                            className='border bg-muted/30 rounded-lg py-4 my-3'
                                         >
                                             <CollapsibleTrigger asChild>
-                                                <div className="border rounded-lg p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+                                                <div className="px-4 py-2 md:py-0 cursor-pointer bg-accent dark:bg-muted/40 hover:bg-muted/90 dark:hover:bg-muted/50 transition-colors">
                                                     <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-3">
                                                             <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
                                                                 <FolderOpen className="h-3 w-3" />
                                                             </div>
-                                                            <h4 className="font-medium">{form.name}</h4>
+                                                            <div>
+                                                                <h4 className="font-medium flex items-center gap-2 text-xs md:text-sm">
+                                                                    {form.name}
+                                                                </h4>
+                                                                {form.description && <p className="text-xs md:text-sm text-muted-foreground hidden md:inline md:line-clamp-1">{form.description}</p>}
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {form.form_fields.length} fields
+                                                            <Badge variant="outline" className="text-xs hidden md:block">
+                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
                                                             </Badge>
-                                                            {collapsedForms[form.id] ? (
+                                                            {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
                                                                 <ChevronDown className="h-4 w-4" />
                                                             )}
                                                         </div>
                                                     </div>
-                                                    {form.description && (
-                                                        <p className="text-sm text-muted-foreground mt-2">{form.description}</p>
-                                                    )}
                                                 </div>
                                             </CollapsibleTrigger>
 
-                                            <CollapsibleContent>
-                                                <div className="mt-4 space-y-4 pl-4 border-l-2 border-muted">
-                                                    {form.form_fields.sort((a, b) => a.order - b.order).map((field) =>
-                                                        renderFieldComponent(field)
+                                            <CollapsibleContent className='px-4'>
+                                                <div className="mt-4 space-y-1 md:space-y-2 pl-4 border-l-2 border-muted">
+                                                    {form.form_fields.filter(field => field.is_active === true).sort((a, b) => a.order - b.order).map((field) =>
+                                                        renderFieldComponent(field, form.order, section.order)
                                                     )}
                                                 </div>
                                             </CollapsibleContent>
@@ -852,19 +841,18 @@ export function FormPreviewTester({
                             <div className="text-center">
                                 <div className="text-lg lg:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
-                                    {workflowData?.sections && workflowData.sections.reduce((count, section) =>
-                                        count + section.forms.reduce((subCount, form) =>
-                                            subCount + form.form_fields.length, 0
+                                    {workflowData?.sections && workflowData.sections.filter(section => section.is_active === true).reduce((count, section) =>
+                                        count + section.forms.filter(form => form.is_active === true).reduce((subCount, form) =>
+                                            subCount + form.form_fields.filter(field => field.is_active === true).length, 0
                                         ), 0
-                                    )
-                                    }
+                                    )}
                                 </div>
                                 <div className="text-xs md:text-sm text-muted-foreground">Total Fields</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Layers className="h-5 w-5" />
-                                    {workflowData?.sections ? workflowData.sections.length : 0}
+                                    {workflowData?.sections ? workflowData.sections.filter(section => section.is_active === true).length : 0}
                                 </div>
                                 <div className="text-xs md:text-sm text-muted-foreground">Sections</div>
                             </div>
@@ -878,9 +866,9 @@ export function FormPreviewTester({
                             <div className="text-center">
                                 <div className="text-lg md:text-2xl font-semibold text-primary flex items-center justify-center gap-2">
                                     <Clock className="h-5 w-5" />
-                                    {Math.round((Object.keys(formValues).length / (workflowData.sections!.reduce((count, section) =>
-                                        count + section.forms.reduce((subCount, form) =>
-                                            subCount + form.form_fields.length, 0
+                                    {Math.round((Object.keys(formValues).length / (workflowData.sections!.filter(section => section.is_active === true).reduce((count, section) =>
+                                        count + section.forms.filter(form => form.is_active === true).reduce((subCount, form) =>
+                                            subCount + form.form_fields.filter(form => form.is_active === true).length, 0
                                         ), 0
                                     ))) * 100) || 0}%
                                 </div>
