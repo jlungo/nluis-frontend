@@ -8,6 +8,9 @@ import FormSelect from "./form-select";
 import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
 import FormMembers, { type MembersI } from "./form-members";
+import FormMultiselect from "./form-multiselect";
+
+export type ValueType = string | string[] | File[] | MembersI[]
 
 export default function Index(
     data: FieldsProps & {
@@ -17,7 +20,7 @@ export default function Index(
         value: any;
         setValue: (
             formSlug: string,
-            value: string | MembersI[] | File[],
+            value: ValueType,
             type: InputType,
             field_id: number,
             project_locality_id: string
@@ -26,6 +29,7 @@ export default function Index(
         baseMapId?: string
     }
 ) {
+    if (data.type === 'multiselect') console.log(data.value)
     switch (data.type) {
         case ('textarea'):
             return (
@@ -82,6 +86,15 @@ export default function Index(
                     onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
+        case ('multiselect'):
+            return (
+                <FormMultiselect
+                    data={data}
+                    disabled={data?.disabled}
+                    values={data?.value && Array.isArray(data.value) ? data.value : []}
+                    setValues={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
         case ('zoning'):
             return (
                 <FormZoning
@@ -105,6 +118,10 @@ export default function Index(
                     value={data?.value}
                     setValue={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
+            )
+        case ('table'):
+            return (
+                <></>
             )
         default:
             return (
