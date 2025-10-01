@@ -47,6 +47,7 @@ export default function ForgotPassword() {
       await requestPasswordReset(email);
       setShowSuccess(true);
       toast.success('Password reset email sent!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setError(error.detail || 'Failed to send reset email. Please try again.');
       toast.error(error.detail || 'Failed to send reset email');
@@ -60,6 +61,7 @@ export default function ForgotPassword() {
     try {
       await requestPasswordReset(email);
       toast.success('Password reset email resent!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setError(error.detail || 'Failed to resend reset email. Please try again.');
       toast.error(error.detail || 'Failed to resend reset email');

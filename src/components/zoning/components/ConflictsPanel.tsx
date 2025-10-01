@@ -47,6 +47,7 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
     toast.success(`Trimmed zone ${zoneId} to resolve overlap`);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSplitOverlap = async (_conflictId: string) => {
     if (!activeZoneId) return;
     const withIds = conflicts.map(c => Number(c.id));
@@ -54,6 +55,7 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
     toast.success('Split overlap area into separate zone');
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleIgnoreConflict = async (_conflictId: string) => {
     if (!activeZoneId) return;
     const withIds = conflicts.map(c => Number(c.id));
@@ -61,6 +63,7 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
     toast.info('Conflict marked as ignored - zones kept as draft');
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleViewConflict = (_conflictId: string) => {
     // Optionally: we could compute bbox of overlaps on the map source and fitBounds.
     toast.info('Conflict geometries are highlighted on the map');
@@ -127,7 +130,7 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
                     <div className="space-y-2">
                       {[zone1, zone2].map((zone) => zone && (
                         <div key={zone.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                          <div 
+                          <div
                             className="w-3 h-3 rounded"
                             style={{ backgroundColor: zone.color }}
                           />
@@ -157,18 +160,18 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
                   {/* Resolution Actions */}
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Resolution Options:</p>
-                    
+
                     <div className="grid grid-cols-2 gap-2">
                       <Button type="button"
-                        variant="outline" 
+                        variant="outline"
                         size="sm"
                         onClick={() => handleTrimZone(conflict.id, conflict.zones[0])}
                       >
                         <Scissors className="w-4 h-4 mr-2" />
                         Trim {zone1?.type}
                       </Button>
-                      <Button  type="button"
-                        variant="outline" 
+                      <Button type="button"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleTrimZone(conflict.id, conflict.zones[1])}
                       >
@@ -177,9 +180,9 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
                       </Button>
                     </div>
 
-                    <Button  type="button"
-                      variant="outline" 
-                      size="sm" 
+                    <Button type="button"
+                      variant="outline"
+                      size="sm"
                       className="w-full"
                       onClick={() => handleSplitOverlap(conflict.id)}
                     >
@@ -189,16 +192,16 @@ export function ConflictsPanel({ conflicts, zones }: ConflictsPanelProps) {
 
                     <div className="flex gap-2">
                       <Button type="button"
-                        variant="ghost" 
-                        size="sm" 
+                        variant="ghost"
+                        size="sm"
                         className="flex-1"
                         onClick={() => handleViewConflict(conflict.id)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View on Map
                       </Button>
-                      <Button  type="button"
-                        variant="ghost" 
+                      <Button type="button"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleIgnoreConflict(conflict.id)}
                       >

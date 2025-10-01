@@ -44,11 +44,11 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             title: pageTitle,
             isFormPage: true
         });
-    }, [setPage]);
+    }, [module, pageTitle, setPage]);
 
     useEffect(() => {
         if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
-    }, [approval_status])
+    }, [approval_status, module, moduleLevel, navigate, projectId])
 
     if (!workflowKey)
         return <div className='flex flex-col items-center justify-center h-60'>

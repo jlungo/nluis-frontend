@@ -1,4 +1,4 @@
-import { FeatureCollection } from 'geojson';
+import { FeatureCollection } from "geojson";
 
 export interface ActiveLayers {
   regions: boolean;
@@ -14,5 +14,5 @@ export interface MapBoxMapProps {
   selectedType?: string | null;
   activeLayers: ActiveLayers;
   layerData: Partial<Record<LayerKey, FeatureCollection>>;
-  onFeatureClick: (name: string, type: string, properties: any) => void;
+  onFeatureClick: (name: string, type: string, properties: unknown) => void;
 }

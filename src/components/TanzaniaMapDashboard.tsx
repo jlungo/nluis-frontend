@@ -44,6 +44,7 @@ const TanzaniaMapDashboard = () => {
     wards: false,
     villages: false
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [layerData, setLayerData] = useState<{ [key: string]: any }>({
     regions: null,
     districts: null,
@@ -52,6 +53,7 @@ const TanzaniaMapDashboard = () => {
   });
 
   // Handle feature click with better debugging
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFeatureClick = useCallback((name: string, type: string, properties: any) => {
     console.log('=== DASHBOARD FEATURE CLICK ===');
     console.log('Clicked:', { name, type, properties });
@@ -102,6 +104,7 @@ const TanzaniaMapDashboard = () => {
         // Ensure each feature has the required properties
         const processedData = {
           ...data,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           features: data.features.map((feature: any, index: number) => {
             const name = feature.properties.Region_Nam ||
               feature.properties.Region ||
@@ -167,6 +170,7 @@ const TanzaniaMapDashboard = () => {
     }
 
     // Ensure each feature has a unique ID, name, and type property
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.features = data.features.map((feature: any, index: number) => {
       let name = '';
       switch (layerName) {
@@ -275,6 +279,7 @@ const TanzaniaMapDashboard = () => {
 
   const renderNationalLandUseSummary = (landUseType: string) => {
     const { totals } = getNationalLandUseTotals();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (totals as Record<string, any>)[landUseType];
     const legend = tanzaniaLandUseLegend.find((lu) => lu.swahili === landUseType);
 

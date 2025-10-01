@@ -21,15 +21,15 @@ export default function RightDock() {
   const zones = useMemo(() => {
     return activeSummary
       ? [{
-          id: activeSummary.id,
-          type: activeSummary.type,
-          color: activeSummary.color || "#888",
-          coordinates: getOuterRing({ type: "Polygon", coordinates: [activeSummary.coordinates] }),
-          status: activeSummary.status || "Draft",
-          attributes: {},
-          notes: activeSummary.notes || "",
-          lastModified: activeSummary.lastModified,
-        }]
+        id: activeSummary.id,
+        type: activeSummary.type,
+        color: activeSummary.color || "#888",
+        coordinates: getOuterRing({ type: "Polygon", coordinates: [activeSummary.coordinates] }),
+        status: activeSummary.status || "Draft",
+        attributes: {},
+        notes: activeSummary.notes || "",
+        lastModified: activeSummary.lastModified,
+      }]
       : [];
   }, [activeSummary]);
 
@@ -46,7 +46,7 @@ export default function RightDock() {
         <TabsContent value="details" className="p-0">
           <ZoneDetailsPanel
             activeZone={activeZoneId}
-            zones={zones as any}
+            zones={zones}
             onUpdateZone={() => api.saveToAPI?.()}
             landUses={landUses}
             isNewZone={isNew}
@@ -59,7 +59,11 @@ export default function RightDock() {
         </TabsContent>
 
         <TabsContent value="conflicts" className="p-0">
-          <ConflictsPanel conflicts={conflicts as any} zones={[]} />
+          <ConflictsPanel
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            conflicts={conflicts as any}
+            zones={[]}
+          />
         </TabsContent>
 
         <TabsContent value="history" className="p-0">

@@ -74,7 +74,7 @@ export default function Page() {
         },
         {
             id: 'management-evaluation',
-            title: 'Management & Evaluation',
+            title: 'Monitoring & Evaluation',
             description: 'Project monitoring, evaluation, and reporting',
             icon: <BarChart3 className="h-8 w-8" />,
             color: 'text-progress-completed',

@@ -29,6 +29,7 @@ export default function Page() {
       }
       await requestEmailReset(tempId);
       toast.success('Email resent!');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.detail || 'Failed to resend email. Please try again.');
     } finally {

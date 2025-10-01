@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapGL, { Source, Layer, NavigationControl } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-// @ts-ignore
+// @ts-expect-error no types
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import proj4 from "proj4";
@@ -142,7 +143,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         } else {
           map.triggerRepaint();
         }
-      } catch {}
+      } catch (e: unknown) {
+        console.log(e)
+      }
     };
     map.on("error", onError);
     return () => map.off("error", onError);
@@ -158,7 +161,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     try {
       // Disable default double-click zoom so we can use double-click for edit
       (mapRef?.getMap?.() || mapRef)?.doubleClickZoom?.disable?.();
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
     if (baseMapBounds) {
       (mapRef.fitBounds || mapRef.getMap()?.fitBounds)?.(
         [
@@ -168,6 +173,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         { padding: 24, duration: 800 }
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMapBounds]);
 
   // Mouse move → status bar
@@ -223,7 +229,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             (drawRef.current as any)?.changeMode("direct_select", {
               featureId: f.id,
             });
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
           // Update right panel summary for newly created feature
           try {
             setActiveZoneInStore(
@@ -238,7 +246,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
               },
               true
             );
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
         });
         return next;
       });
@@ -286,6 +296,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         return next;
       });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMapId, defaultLandUseId]);
 
   // (autosave removed per request)
@@ -305,7 +316,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     if (!feats || feats.length === 0) {
       try {
         feats = map.queryRenderedFeatures({ layers: ["zones-fill"] }) as any[];
-      } catch {}
+      } catch (e: unknown) {
+        console.log(e)
+      }
     }
 
     const byType: Record<string, number> = {};
@@ -358,16 +371,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     if (isMapLoaded) recomputeLegendCounts();
   }, [isMapLoaded, landUses, drawStates, recomputeLegendCounts]);
 
-  // API mutations
-  const updateStatus = useUpdateZoneStatus({ onDone: refreshZones });
-  const deleteZone = useDeleteZone({
-    onDone: () => {
-      refreshZones();
-      if (activeZone) setActiveZone(null);
-    },
-  });
-
-  function refreshZones() {
+  const refreshZones = useCallback(() => {
     const mapRef = mapGLRef.current;
     const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
     const src: any = map?.getSource("zones-tiles");
@@ -381,9 +385,20 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     try {
       map?.setFilter("zones-fill", undefined);
       map?.setFilter("zones-line", undefined);
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
     recomputeLegendCounts();
-  }
+  }, [zonesTilesTemplate, recomputeLegendCounts]);
+
+  // API mutations
+  const updateStatus = useUpdateZoneStatus({ onDone: refreshZones });
+  const deleteZone = useDeleteZone({
+    onDone: () => {
+      refreshZones();
+      if (activeZone) setActiveZone(null);
+    },
+  });
 
   // single-zone status helpers (used by menu via API)
   const approve = useCallback(() => {
@@ -443,7 +458,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       ] as any;
       map?.setFilter("zones-fill", filter);
       map?.setFilter("zones-line", filter);
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
   }, [activeZone, deleteZone]);
 
   // assign LU for new/edit features (draw)
@@ -484,7 +501,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
               "color",
               landUse.color
             );
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
         return next;
       });
       toast.success("Land Use assigned");
@@ -527,11 +546,14 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       setDrawStates(new Map());
       try {
         drawRef.current?.deleteAll();
-      } catch {}
+      } catch (e: unknown) {
+        console.log(e)
+      }
       refreshZones();
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || "Save failed");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawStates, baseMapId]);
 
   // Save As (local)
@@ -561,7 +583,6 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
 
   const saveAsShapefile = useCallback(async () => {
     try {
-      // @ts-ignore
       const shpWrite = await import("shp-write");
       const feats = Array.from(drawStates.values()).map(({ feature }) => ({
         type: "Feature" as const,
@@ -572,7 +593,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       const options = { folder: "project", types: { polygon: "zones" } } as any;
       const zipBlob: Blob = (shpWrite.zip(fc, options) as unknown) as Blob;
       downloadBlob(zipBlob, `project-export-${Date.now()}.zip`);
-    } catch (e) {
+    } catch {
       toast.error("Shapefile export failed (is 'shp-write' installed?)");
     }
   }, [drawStates]);
@@ -600,7 +621,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         if (!draw) return;
         try {
           (draw as any).changeMode("simple_select");
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
       },
       // assign LU to currently active drawn feature from RightDock
       assignLandUseToActive: (luId: number) => {
@@ -662,7 +685,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             (draw as any).changeMode("direct_select", {
               featureId: activeZone,
             });
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
         }
       },
       startDrawPoint: () => {
@@ -693,7 +718,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       sendToDraftSelected: sendToDraft,
       // optional
       deleteZone: remove,
-      focusLayersPanel: () => {},
+      focusLayersPanel: () => { },
       // conflicts resolution API (backend-powered)
       resolveTrim: async (withId?: string | number) => {
         if (!activeZone) return;
@@ -707,7 +732,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           try {
             const src: any = mapGLRef.current?.getMap?.()?.getSource("conflicts-src");
             src?.setData({ type: "FeatureCollection", features: [] });
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
           setConflicts([]);
           refreshZones();
         } catch (e: any) {
@@ -725,7 +752,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           try {
             const src: any = mapGLRef.current?.getMap?.()?.getSource("conflicts-src");
             src?.setData({ type: "FeatureCollection", features: [] });
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
           setConflicts([]);
           refreshZones();
         } catch (e: any) {
@@ -743,7 +772,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           try {
             const src: any = mapGLRef.current?.getMap?.()?.getSource("conflicts-src");
             src?.setData({ type: "FeatureCollection", features: [] });
-          } catch {}
+          } catch (e: unknown) {
+            console.log(e)
+          }
           setConflicts([]);
         } catch (e: any) {
           toast.error(e?.response?.data?.detail || "Ignore failed");
@@ -770,7 +801,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
   // click to select
   const onMapClick = useCallback(
     async (e: any) => {
-         if (activeDrawMode !== "simple_select") return; // <-- add this line
+      if (activeDrawMode !== "simple_select") return; // <-- add this line
       const mapRef = mapGLRef.current;
       const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
       const f = map?.queryRenderedFeatures(e.point, {
@@ -791,14 +822,18 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         try {
           const src: any = map?.getSource("conflicts-src");
           src?.setData(overlaps);
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
         // Store a minimal conflicts list compatible with our UI store
         setConflicts([{ id: idStr, with: conflictsList.map((c: any) => c.id) }]);
       } catch {
         try {
           const src: any = map?.getSource("conflicts-src");
           src?.setData({ type: "FeatureCollection", features: [] });
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
         setConflicts([]);
       }
 
@@ -835,6 +870,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [zoneDetail, drawStates, setActiveZoneInStore, setConflicts]
   );
 
@@ -855,7 +891,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         try {
           (draw as any).changeMode("direct_select", { featureId: idStr });
           return;
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
       }
       // Fallback to full editSelectedFeatures flow (uses zoneDetail when ready)
       try {
@@ -894,12 +932,16 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
                   next.set(String(feature.id), { feature, state: "edited", original: feature });
                   return next;
                 });
-              } catch {}
+              } catch (e: unknown) {
+                console.log(e)
+              }
             }
           },
         };
         (apiTmp as any).editSelectedFeatures();
-      } catch {}
+      } catch (e: unknown) {
+        console.log(e)
+      }
     },
     [zoneDetail]
   );
@@ -936,6 +978,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     }
     updateLabelsField(labelField);
     updateLabelsVisibility(labelsVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMapLoaded]); // field/visible applied by helpers below
 
   function updateLabelsVisibility(v: boolean) {
@@ -946,7 +989,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         "visibility",
         v ? "visible" : "none"
       );
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
   }
   function updateLabelsField(f: "land_use_name" | "land_use" | "id" | "none") {
     const map = mapGLRef.current?.getMap?.() || mapGLRef.current;
@@ -963,7 +1008,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     else textExpr = "";
     try {
       map.setLayoutProperty("zones-labels", "text-field", textExpr);
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
   }
 
   // styles registration
@@ -978,11 +1025,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     solidColorByLU.forEach((color, id) => colorPairs.push(id, color));
     const baseColorExpr = colorPairs.length
       ? [
-          "match",
-          ["get", "land_use"],
-          ...colorPairs,
-          ["coalesce", ["get", "color"], "#6b7280"],
-        ]
+        "match",
+        ["get", "land_use"],
+        ...colorPairs,
+        ["coalesce", ["get", "color"], "#6b7280"],
+      ]
       : ["coalesce", ["get", "color"], "#6b7280"];
 
     const patternPairs: any[] = [];
@@ -1017,7 +1064,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       map.setPaintProperty("zones-fill", "fill-color", fillColor);
       map.setPaintProperty("zones-fill", "fill-opacity", 0.5);
       map.setPaintProperty("zones-fill", "fill-pattern", fillPattern);
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
 
     // Conflicts GeoJSON source and layers (filled overlap + outline)
     try {
@@ -1049,7 +1098,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           "conflicts-fill"
         );
       }
-    } catch {}
+    } catch (e: unknown) {
+      console.log(e)
+    }
 
     applyLabelLayer();
   }, [isMapLoaded, landUses, applyLabelLayer, colorMode]);
@@ -1153,19 +1204,25 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       try {
         const map = mapGLRef.current?.getMap?.() || mapGLRef.current;
         map?.resize?.();
-      } catch {}
+      } catch (e: unknown) {
+        console.log(e)
+      }
       // debounce legend recompute a bit after resize
       clearTimeout(timer);
       timer = setTimeout(() => {
         try {
           // recomputeLegendCounts is stable via useCallback deps
           (recomputeLegendCounts as any)();
-        } catch {}
+        } catch (e: unknown) {
+          console.log(e)
+        }
       }, 150);
     });
     ro?.observe?.(el);
     return () => {
-      try { ro?.disconnect?.(); } catch {}
+      try { ro?.disconnect?.(); } catch (e: unknown) {
+        console.log(e)
+      }
       clearTimeout(timer);
     };
   }, [recomputeLegendCounts]);

@@ -101,6 +101,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     onPaginationChange ??
     ((updater: PaginationState | ((old: PaginationState) => PaginationState)) =>
       setInternalPagination((old) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         typeof updater === "function" ? (updater as any)(old) : updater
       ));
 
@@ -112,6 +113,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       cols.push({
         id: "_rownum",
         header: () => <div className="text-center">No.</div>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         cell: ({ table, row }: { table: any; row: any }) => (
           <div className="text-center text-muted-foreground">
             {table.getState().pagination.pageIndex *
@@ -131,6 +133,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
       cols.push({
         id: "_actions",
         header: () => <div className="text-right pr-2">Actions</div>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         cell: ({ row }: { row: any }) => (
           <div className="text-right" onClick={(e) => e.stopPropagation()}>
             {rowActions(row.original)}
@@ -145,6 +148,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   }, [columns, showRowNumbers, rowActions]);
 
   // Build base config
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const config: any = {
     data,
     columns: composedColumns,
@@ -156,6 +160,7 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     initialState: { pagination: { pageSize: initialPageSize } },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalFilterFn: (row: any, _columnId: any, filterValue: any) => {
       const v = String(
         Object.values(row.original || {}).join(" ")

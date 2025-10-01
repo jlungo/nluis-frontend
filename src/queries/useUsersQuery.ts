@@ -6,7 +6,10 @@ import { usersService } from "@/services/user.services";
 export const USERS_KEY = ["users"] as const;
 
 // Paginated list – returns { items, rowCount, pageCount }
-export function useUsersList(params: Required<Pick<UsersListParams, "page" | "page_size">> & Omit<UsersListParams, "page" | "page_size">) {
+export function useUsersList(
+  params: Required<Pick<UsersListParams, "page" | "page_size">> &
+    Omit<UsersListParams, "page" | "page_size">
+) {
   return useQuery({
     queryKey: [USERS_KEY[0], params],
     queryFn: () => usersService.list(params),

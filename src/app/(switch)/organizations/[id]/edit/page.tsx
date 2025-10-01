@@ -98,13 +98,13 @@ export default function EditOrganization() {
 
         try {
           regionsData = await locationService.getRegions();
-        } catch (error) {
+        } catch {
           console.warn('Regions API not available, using empty array');
         }
 
         try {
           districtsData = await locationService.getDistricts();
-        } catch (error) {
+        } catch {
           console.warn('Districts API not available, using empty array');
         }
 

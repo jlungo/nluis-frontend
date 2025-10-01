@@ -38,6 +38,7 @@ export default function VerifyEmail() {
         } else {
           throw new Error('Verification response is missing expected data.');
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         const detail = error?.detail || 'Invalid or expired verification link';
         setError(detail);

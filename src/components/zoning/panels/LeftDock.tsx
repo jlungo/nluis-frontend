@@ -20,7 +20,7 @@ export default function LeftDock({ colorMode }: { colorMode: "type" | "status" }
           colorMode={colorMode}
           landUses={landUses}
           countsByType={countsByType}
-          countsByStatus={countsByStatus as any}
+          countsByStatus={countsByStatus}
           basemapVisible={basemapVisible}
           onToggleBasemap={setBasemapVisible}
           // labels

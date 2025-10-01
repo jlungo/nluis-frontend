@@ -1,5 +1,5 @@
 import { usePageStore } from "@/store/pageStore";
-import { useLayoutEffect, useState, useEffect } from "react";
+import { useLayoutEffect, useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,16 +71,6 @@ export default function FormResponsesPage() {
     loadResponses();
   }, []);
 
-  useEffect(() => {
-    filterResponses();
-  }, [
-    state.responses,
-    state.searchTerm,
-    state.statusFilter,
-    state.dateFilter,
-    state.selectedForm,
-  ]);
-
   const loadResponses = async () => {
     try {
       // TODO: Replace with actual API call
@@ -141,7 +131,7 @@ export default function FormResponsesPage() {
     }
   };
 
-  const filterResponses = () => {
+  const filterResponses = useCallback(() => {
     let filtered = state.responses;
 
     // Search filter
@@ -178,7 +168,11 @@ export default function FormResponsesPage() {
       ...prev,
       filteredResponses: filtered,
     }));
-  };
+  }, [state.responses, state.searchTerm, state.statusFilter, state.selectedForm]);
+
+  useEffect(() => {
+    filterResponses();
+  }, [state.responses, state.searchTerm, state.statusFilter, state.dateFilter, state.selectedForm, filterResponses]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {

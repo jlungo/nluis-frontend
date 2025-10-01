@@ -79,6 +79,7 @@ export function ZoneDetailsPanel({
 
   // Fallback fetch if parent didn't pass
   const { data: fetchedLUs = [], isLoading: luLoading } = useLandUsesQuery();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const availableLUs = (landUses?.length ? landUses : fetchedLUs) ?? [];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -180,12 +181,12 @@ export function ZoneDetailsPanel({
     const updatedZones = zones.map((z) =>
       String(z.id) === String(zone.id)
         ? {
-            ...z,
-            ...editForm,
-            type: editForm.type || z.type,
-            color: editForm.color || z.color,
-            lastModified: new Date().toISOString().split("T")[0],
-          }
+          ...z,
+          ...editForm,
+          type: editForm.type || z.type,
+          color: editForm.color || z.color,
+          lastModified: new Date().toISOString().split("T")[0],
+        }
         : z
     );
     onUpdateZone(updatedZones);
@@ -419,7 +420,7 @@ export function ZoneDetailsPanel({
                 <Save className="w-3 h-3 mr-1" /> Save
               </Button>
               <Button
-              type="button"
+                type="button"
                 variant="outline"
                 onClick={() => setIsEditing(false)}
                 className="text-xs py-1"
@@ -447,7 +448,7 @@ export function ZoneDetailsPanel({
               {zone.status !== "Approved" && zone.status !== "Rejected" && (
                 <>
                   <Button
-                  type="button"
+                    type="button"
                     variant="default"
                     size="sm"
                     onClick={handleApprove}

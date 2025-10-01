@@ -3,8 +3,6 @@ import api from "@/lib/axios";
 import { PaginatedResponseI } from "@/types/pagination";
 import type { CreateUserPayloadI, UserI, UsersListParams } from "@/types/users";
 
-
-
 export const usersService = {
   list: async (params: UsersListParams) =>
     (await api.get<PaginatedResponseI<UserI>>("/auth/users/", { params })).data,
@@ -28,10 +26,9 @@ export const usersService = {
         last_name: u.last_name,
         email: u.email,
         phone: u.phone,
-        role: u.role, // if your API wants role_id, map here
+        role: u.role,
         organization: u.organization,
         user_type: u.user_type,
-        status: u.status,
       })
     ).data,
   remove: async (id: string) => (await api.delete(`/auth/users/${id}/`)).data,

@@ -2,7 +2,6 @@ import Layout from "./layout";
 import Page from "./page";
 import WorkflowSlugPage from "./[workflow_slug]";
 import WorkflowBuilder from "./workflow-builder";
-import ModuleLevels from "./module-levels";
 
 const Index = {
   path: "form-workflows",
@@ -14,7 +13,6 @@ const Index = {
     },
     WorkflowSlugPage,
     WorkflowBuilder,
-    ModuleLevels,
   ],
 };
 
