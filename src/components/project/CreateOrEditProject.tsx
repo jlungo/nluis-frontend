@@ -36,10 +36,13 @@ interface FormProps {
 
 export default function CreateOrEditProject(props: Props) {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { data: funders, isLoading: loadingFunders } = useFunders();
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
-  const { data: project, isLoading: isLoadingProject } = useProjectQuery(props?.projectId);
+  const { data: project, isLoading: isLoadingProject, isError } = useProjectQuery(props?.projectId);
+
+  useEffect(() => {
+
+  }, [])
 
   const canCreate = () => {
     if (!user || !user?.role?.name) return false;
@@ -70,7 +73,7 @@ export default function CreateOrEditProject(props: Props) {
       />
     );
 
-  if (isLoadingProject || !project) {
+  if ((isLoadingProject || !isError) && props?.projectId) {
     return (
       <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
@@ -90,8 +93,11 @@ export default function CreateOrEditProject(props: Props) {
       />
     );
 
-  navigate(props.redirectPath, { replace: true });
-  return null;
+  return (
+    <div className='flex flex-col items-center justify-center h-60'>
+      <p className="text-muted-foreground mt-4">You are not assigned to any organization. Contact Admin</p>
+    </div>
+  )
 }
 
 function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, project, organizationId }: FormProps) {

@@ -73,3 +73,26 @@ export function SortableField({ id, children }: { id: string; children: React.Re
         </div>
     );
 }
+
+export function SortableOption({ id, children }: { id: string; children: React.ReactNode }) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    return (
+        <div ref={setNodeRef} style={style} className="relative">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger {...attributes} {...listeners} className='flex gap-2 cursor-grab absolute top-0 left-0 pt-4.5 opacity-60 h-9 w-7'>
+                        <Move className="h-3 w-3 hidden" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                        <p>Drag to change position</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            {children}
+        </div>
+    );
+}

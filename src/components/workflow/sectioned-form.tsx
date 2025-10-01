@@ -8,7 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import FormField from '@/components/form-field';
+import FormField, { type ValueType } from '@/components/form-field';
 import type { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,11 +18,10 @@ import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 import { Progress } from '../ui/progress';
 import { queryProjectKey } from '@/queries/useProjectQuery';
-import type { MembersI } from '../form-field/form-members';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 interface FieldValue {
-    value?: string | File[] | MembersI[];
+    value?: ValueType;
     type: InputType;
     field_id: number;
     project_locality_id: string;
@@ -52,7 +51,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: string | File[] | MembersI[], type: InputType, field_id: number, project_locality_id: string) => {
+    const updateFieldValue = (formSlug: string, value: ValueType, type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -133,7 +132,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     // @ts-expect-error incorrect type
                     formData.append(`data-${field_id}`, value[0]);
                 else if (Array.isArray(value))
-                    // If value is MembersI[]
+                    // If value is MembersI[] or string[]
                     formData.append(`data-${field_id}`, JSON.stringify(value));
                 else formData.append(`data-${field_id}`, value as string);
 
@@ -299,7 +298,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isPendingApproval || isLoading}>
+                            <Button
+                                type='submit'
+                                className='w-full'
+                                disabled={disabled || !canClickForm(form) || isFilled || isPending || isPendingApproval || isLoading}
+                            >
                                 {isPending || isLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -354,7 +357,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}>
+                                <Button
+                                    type='submit'
+                                    className='w-full'
+                                    disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}
+                                >
                                     {isPending || isLoading ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
