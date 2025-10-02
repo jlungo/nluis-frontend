@@ -20,8 +20,7 @@ interface FormField {
   | "radio"
   | "file"
   | "image"
-  | "location" 
-  | "land-subdivision";
+  | "location";
   required: boolean;
   placeholder?: string;
   options?: string[];

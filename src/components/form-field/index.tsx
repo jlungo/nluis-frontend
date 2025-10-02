@@ -9,7 +9,6 @@ import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
 import FormMembers, { type MembersI } from "./form-members";
 import FormMultiselect from "./form-multiselect";
-import FormSubdivision from "./form-subdivision";
 
 export type ValueType = string | string[] | File[] | MembersI[]
 
@@ -123,17 +122,6 @@ export default function Index(
         case ('table'):
             return (
                 <></>
-            )
-        case ('land-subdivision'):
-            return (
-                <FormSubdivision 
-                    label={data.label}
-                    name={data.name}
-                    required={data.required}
-                    disabled={data.disabled}
-                    value={data?.value}
-                    onChange={(value) => data.setValue(data.form_slug, value, data.type, data.id, data.project_locality_id)}
-                />
             )
         default:
             return (

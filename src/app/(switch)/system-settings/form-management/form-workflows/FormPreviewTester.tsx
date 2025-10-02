@@ -39,7 +39,6 @@ import type { InputType } from '@/types/input-types';
 import { ShapefileMap } from '@/components/zoning/ShapefileMap';
 import { useThemeStore } from '@/store/themeStore';
 import FormMembers from '@/components/form-field/form-members';
-import SubdivisionShell from '@/components/subdivision/SubdivisionShell';
 
 export type State = "1" | "0"
 
@@ -270,18 +269,6 @@ export function FormPreviewTester({
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <MapRenderer key={field.id} />
-                            {renderError()}
-                        </div>
-                    );
-
-                case "land-subdivision":
-                    return (
-                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
-                            {renderLabel()}
-                            <SubdivisionMapRenderer
-                                value={fieldValue}
-                                onChange={(value) => updateFieldValue(fieldName, value)}
-                            />
                             {renderError()}
                         </div>
                     );
@@ -970,18 +957,6 @@ const MapRenderer: React.FC = () => {
     return (
         <div className="w-full aspect-square lg:aspect-video max-h-[70vh]">
             <ShapefileMap key={`${isDarkMode}`} />
-        </div>
-    )
-}
-
-const SubdivisionMapRenderer: React.FC<{ value: string | undefined, onChange: (value: string) => void }> = ({ value, onChange }) => {
-    return (
-        <div className="w-full h-[500px] rounded-lg border bg-background">
-            <SubdivisionShell
-                value={value}
-                onChange={onChange}
-                className="w-full h-full"
-            />
         </div>
     )
 }

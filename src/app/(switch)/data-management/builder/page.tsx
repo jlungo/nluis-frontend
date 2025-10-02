@@ -29,7 +29,6 @@ import {
   Database,
   Eye,
   Copy,
-  MapPin,
 } from "lucide-react";
 
 interface FormField {
@@ -47,8 +46,7 @@ interface FormField {
   | "radio"
   | "file"
   | "image"
-  | "location"
-  | "land-subdivision";
+  | "location";
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -173,8 +171,6 @@ export default function FormBuilderPage() {
         return <Image className="h-4 w-4" />;
       case "location":
         return <Database className="h-4 w-4" />;
-      case "land-subdivision":
-        return <MapPin className="h-4 w-4" />;
       default:
         return <FormInput className="h-4 w-4" />;
     }
@@ -288,13 +284,6 @@ export default function FormBuilderPage() {
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
             <Database className="h-8 w-8 mx-auto text-gray-400 mb-2" />
             <p className="text-sm text-gray-500">Location picker</p>
-          </div>
-        );
-      case "land-subdivision":
-        return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <MapPin className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-gray-500">Land Subdivision</p>
           </div>
         );
       default:

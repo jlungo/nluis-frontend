@@ -10,5 +10,4 @@ export type InputType =
   | "multiselect"
   | "table"
   | "members"
-  | "zoning"
-  | "land-subdivision";
+  | "zoning";
