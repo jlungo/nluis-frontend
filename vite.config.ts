@@ -11,16 +11,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  envPrefix: "VITE_",
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          mapbox: ['mapbox-gl', 'react-map-gl']
-        }
-      }
-    }
-  },
   server: {
     host: true, // or '0.0.0.0'
     port: 3000, // or any other port
