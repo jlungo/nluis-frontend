@@ -29,7 +29,8 @@ import AddPointsDialog, {
 } from "../points/AddPointsDialog";
 
 const MAPBOX_STYLE = "mapbox://styles/mapbox/streets-v11";
-const MAPBOX_TOKEN = "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA";
+const MAPBOX_TOKEN =
+  "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA";
 
 type DrawState = "added" | "edited" | "deleted";
 type DrawFeatureState = {

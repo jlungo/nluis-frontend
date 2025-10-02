@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import MapGL, { NavigationControl, Source, Layer } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
+import { MAPBOX_TOKEN } from '@/lib/env';
 // @ts-expect-error no types
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
@@ -221,7 +222,7 @@ export default function SubdivisionMapViewer({
       <div className="w-full h-full relative">
         <MapGL
           ref={mapRef}
-          mapboxAccessToken="pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA"
+          mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
           initialViewState={initialViewport}
           mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
           onLoad={initializeDraw}
