@@ -5,6 +5,7 @@ import { ParcelList } from './components/ParcelList';
 import { ParcelDetails } from './components/ParcelDetails';
 import SubdivisionMapViewer from './components/SubdivisionMapViewer';
 import { useSubdivisionValidation } from './hooks/useSubdivisionValidation';
+import { Maximize2, Minimize2 } from 'lucide-react';
 
 interface SubdivisionShellProps {
   parentParcel?: ParcelFeature;
@@ -35,15 +36,39 @@ export default function SubdivisionShell({
   }, [isMaximized]);
 
   return (
-    <div className={`flex flex-col w-full h-full border rounded-md overflow-hidden ${className || ''}`}>
+    <div 
+      className={`
+        flex flex-col 
+        ${isMaximized 
+          ? 'fixed inset-0 z-50 bg-background' 
+          : `w-full h-full border rounded-md overflow-hidden ${className || ''}`
+        }
+      `}
+    >
+      {/* Header with maximize/minimize control */}
+      <div className="flex justify-between items-center px-2 py-1 border-b bg-muted/50">
+        <h3 className="text-sm font-medium">Land Subdivision</h3>
+        <button
+          onClick={() => setIsMaximized(!isMaximized)}
+          className="p-1 hover:bg-muted rounded"
+        >
+          {isMaximized ? (
+            <Minimize2 className="h-4 w-4" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+
       {/* Main content area with map */}
-      <div className="flex-1 relative">
+      <div className={`flex-1 relative ${isMaximized ? 'h-[calc(100vh-2.5rem)]' : ''}`}>
         <SubdivisionMapViewer 
           parentParcel={parentParcel}
-          disabled={disabled} 
+          disabled={disabled}
+          isMaximized={isMaximized}
         />
       </div>
-      <div className="flex-1 flex">
+      <div className={`flex ${isMaximized ? 'h-72' : 'flex-1'}`}>
         {/* Left panel - will contain parcel list and tools */}
         <div className="w-64 border-r bg-background/95">
           <ParcelList />

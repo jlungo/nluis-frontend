@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import MapGL, { NavigationControl } from 'react-map-gl/mapbox';
+import MapGL, { NavigationControl, Source, Layer } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 // @ts-expect-error no types
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
@@ -19,15 +19,18 @@ import {
   useUpdateSubdivision,
   useDeleteSubdivision 
 } from '@/queries/useParcelQuery';
+import { useResidentialZonesQuery } from '@/queries/useZoningQuery';
 
 interface SubdivisionMapViewerProps {
   parentParcel?: ParcelFeature;
   disabled?: boolean;
+  isMaximized?: boolean;
 }
 
 export default function SubdivisionMapViewer({
   parentParcel,
-  disabled
+  disabled,
+  isMaximized
 }: SubdivisionMapViewerProps) {
   // Refs
   const mapRef = useRef<MapRef | null>(null);
@@ -51,6 +54,11 @@ export default function SubdivisionMapViewer({
   const { mutateAsync: updateExistingSubdivision } = useUpdateSubdivision();
   const { mutateAsync: deleteExistingSubdivision } = useDeleteSubdivision();
   
+  // Fetch residential zoning for the area
+  const { data: residentialZones } = useResidentialZonesQuery(
+    parentParcel?.properties.area_id
+  );
+
   // Sync backend subdivisions with local state
   useEffect(() => {
     if (backendSubdivisions.length > 0) {
@@ -202,16 +210,26 @@ export default function SubdivisionMapViewer({
   }, [parentParcel]);
 
   return (
-    <div className="w-full h-full bg-background">
+    <div 
+      className={`w-full ${isMaximized ? 'fixed inset-0 z-50' : 'h-full'} bg-background`}
+      style={{ 
+        height: isMaximized ? '100vh' : '100%',
+        transition: 'all 0.3s ease-in-out'
+      }}
+    >
       {/* Map Container */}
       <div className="w-full h-full relative">
         <MapGL
           ref={mapRef}
-          mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+          mapboxAccessToken="pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA"
           initialViewState={initialViewport}
           mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
           onLoad={initializeDraw}
-          style={{ width: '100%', height: '100%' }}
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            transition: 'all 0.3s ease-in-out'
+          }}
           minZoom={5.5}
           maxZoom={20}
           maxBounds={[
@@ -219,6 +237,31 @@ export default function SubdivisionMapViewer({
             [40.4484, -0.9862]   // Northeast coordinates of Tanzania
           ]}
         >
+          {/* Residential Zones Layer */}
+          {residentialZones && (
+            <Source
+              id="residential-zones"
+              type="geojson"
+              data={residentialZones}
+            >
+              <Layer
+                id="residential-zones-fill"
+                type="fill"
+                paint={{
+                  'fill-color': '#FFA07A',
+                  'fill-opacity': 0.4
+                }}
+              />
+              <Layer
+                id="residential-zones-line"
+                type="line"
+                paint={{
+                  'line-color': '#FF6347',
+                  'line-width': 2
+                }}
+              />
+            </Source>
+          )}
           <NavigationControl position="top-right" />
         </MapGL>
       </div>

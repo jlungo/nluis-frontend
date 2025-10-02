@@ -21,8 +21,15 @@ function getMediaBasePath() {
 }
 
 function getMapboxToken() {
-  if (!VITE_MAPBOX_TOKEN) throw new Error("Mapbox token not set in environment!");
-  return VITE_MAPBOX_TOKEN;
+  // Check window.env first (production)
+  if (typeof window !== 'undefined' && (window as any).env?.VITE_MAPBOX_TOKEN) {
+    return (window as any).env.VITE_MAPBOX_TOKEN;
+  }
+  // Then check Vite env (development)
+  if (VITE_MAPBOX_TOKEN) {
+    return VITE_MAPBOX_TOKEN;
+  }
+  throw new Error("Mapbox token not set in environment!");
 }
 
 export const API_URL = getApiUrl();

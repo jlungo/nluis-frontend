@@ -7,6 +7,7 @@ export interface ParcelProperties {
   size: number;
   status: 'Active' | 'Inactive';
   landUseId: string | number;
+  area_id?: string | number; // ID of the area (village/ward) containing this parcel
 }
 
 export type ParcelFeature = Feature<MultiPolygon, ParcelProperties>;

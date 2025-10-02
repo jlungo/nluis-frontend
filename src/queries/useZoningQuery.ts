@@ -35,3 +35,20 @@ export const useDeleteZone = (opts?: { onDone?: () => void }) => {
     },
   });
 };
+
+// Fetch residential zones for a specific area
+export const useResidentialZonesQuery = (areaId?: string | number) =>
+  useQuery({
+    queryKey: ["residential-zones", areaId],
+    enabled: !!areaId,
+    queryFn: () =>
+      api
+        .get(`/zoning/zones/`, {
+          params: {
+            area_id: areaId,
+            type: "residential",
+            format: "geojson"
+          }
+        })
+        .then((r) => r.data),
+  });
