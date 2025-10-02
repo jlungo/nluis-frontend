@@ -1,5 +1,6 @@
 const VITE_MEDIA_PATH = import.meta.env.VITE_MEDIA_PATH as string | undefined;
 const VITE_API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const VITE_MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
 function getApiUrl() {
   let url: string = "";
@@ -19,5 +20,11 @@ function getMediaBasePath() {
   return url;
 }
 
+function getMapboxToken() {
+  if (!VITE_MAPBOX_TOKEN) throw new Error("Mapbox token not set in environment!");
+  return VITE_MAPBOX_TOKEN;
+}
+
 export const API_URL = getApiUrl();
 export const MEDIA_PATH = getMediaBasePath();
+export const MAPBOX_TOKEN = getMapboxToken();
