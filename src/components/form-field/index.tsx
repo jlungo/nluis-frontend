@@ -1,16 +1,18 @@
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
+import type { InputType } from "@/types/input-types";
+import type { TableRowI } from "./form-table";
 import FormInput from "./form-input";
 import FormTextArea from "./form-textarea";
 import DatePicker from "./form-date-picker";
 import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
-import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
 import FormMembers, { type MembersI } from "./form-members";
 import FormMultiselect from "./form-multiselect";
+import FormTable from "./form-table";
 
-export type ValueType = string | string[] | File[] | MembersI[]
+export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[]
 
 export default function Index(
     data: FieldsProps & {
@@ -89,7 +91,10 @@ export default function Index(
         case ('multiselect'):
             return (
                 <FormMultiselect
-                    data={data}
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    selectOptions={data.select_options}
                     disabled={data?.disabled}
                     values={data?.value && Array.isArray(data.value) ? data.value : []}
                     setValues={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
@@ -103,8 +108,6 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
-                // value={data?.value}
-                // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('members'):
@@ -121,7 +124,15 @@ export default function Index(
             )
         case ('table'):
             return (
-                <></>
+                <FormTable
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    selectOptions={data.select_options}
+                    disabled={data?.disabled}
+                    values={data?.value && Array.isArray(data.value) ? data.value : []}
+                    setValues={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                />
             )
         default:
             return (
