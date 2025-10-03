@@ -39,6 +39,8 @@ import type { InputType } from '@/types/input-types';
 import { ShapefileMap } from '@/components/zoning/ShapefileMap';
 import { useThemeStore } from '@/store/themeStore';
 import FormMembers from '@/components/form-field/form-members';
+import FormMultiselect from '@/components/form-field/form-multiselect';
+import FormTable, { type TableRowI } from '@/components/form-field/form-table';
 
 export type State = "1" | "0"
 
@@ -248,7 +250,7 @@ export function FormPreviewTester({
 
             const renderLabel = () => (
                 <div className="flex items-center gap-2">
-                    <Label className="flex items-center gap-2">
+                    <Label htmlFor={fieldName} className="flex items-center gap-2">
                         {field.label}
                         {field.required && <span className="text-destructive">*</span>}
                     </Label>
@@ -268,7 +270,7 @@ export function FormPreviewTester({
                 case "zoning":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
-                            <MapRenderer key={field.id} />
+                            <MapRenderer />
                             {renderError()}
                         </div>
                     );
@@ -287,23 +289,6 @@ export function FormPreviewTester({
                         </div>
                     );
 
-                case "text":
-                case "email":
-                case "number":
-                    return (
-                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
-                            {renderLabel()}
-                            <Input
-                                type={field.type === "text" ? "text" : field.type}
-                                placeholder={field.placeholder || `Enter ${field.type}...`}
-                                value={fieldValue || ""}
-                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
-                                className={hasError ? "border-destructive" : ""}
-                            />
-                            {renderError()}
-                        </div>
-                    );
-
                 case "textarea":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
@@ -311,6 +296,8 @@ export function FormPreviewTester({
                             <Textarea
                                 placeholder={field.placeholder || "Enter text..."}
                                 value={fieldValue || ""}
+                                name={fieldName}
+                                id={fieldName}
                                 onChange={(e) => updateFieldValue(fieldName, e.target.value)}
                                 className={hasError ? "border-destructive" : ""}
                                 rows={3}
@@ -326,6 +313,7 @@ export function FormPreviewTester({
                             <Select
                                 value={fieldValue || ""}
                                 onValueChange={(value) => updateFieldValue(fieldName, value)}
+                                name={fieldName}
                             >
                                 <SelectTrigger
                                     className={hasError ? "border-destructive w-full" : "w-full"}
@@ -348,6 +336,14 @@ export function FormPreviewTester({
                         </div>
                     );
 
+                case "multiselect":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <MultiselectRenderer {...field} />
+                            {renderError()}
+                        </div>
+                    );
+
                 case "checkbox":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
@@ -355,6 +351,8 @@ export function FormPreviewTester({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     checked={fieldValue || false}
+                                    name={fieldName}
+                                    id={fieldName}
                                     onCheckedChange={(checked) =>
                                         updateFieldValue(fieldName, checked)
                                     }
@@ -371,6 +369,7 @@ export function FormPreviewTester({
                             <DatePicker
                                 label={field.label}
                                 name={fieldName}
+                                id={fieldName}
                                 required={field.required}
                                 dateValue={fieldValue ? new Date(fieldValue) : undefined}
                                 onDateChange={(e) =>
@@ -394,6 +393,8 @@ export function FormPreviewTester({
                             >
                                 <input
                                     type="file"
+                                    name={fieldName}
+                                    id={fieldName}
                                     onChange={(e) =>
                                         updateFieldValue(fieldName, e.target.files?.[0]?.name || "")
                                     }
@@ -425,8 +426,30 @@ export function FormPreviewTester({
                         </div>
                     );
 
+                case "table":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <TableRenderer {...field} />
+                            {renderError()}
+                        </div>
+                    );
+
                 default:
-                    return null;
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            {renderLabel()}
+                            <Input
+                                type={field.type === "text" ? "text" : field.type}
+                                placeholder={field.placeholder || `Enter ${field.type}...`}
+                                value={fieldValue || ""}
+                                name={fieldName}
+                                id={fieldName}
+                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
+                                className={hasError ? "border-destructive" : ""}
+                            />
+                            {renderError()}
+                        </div>
+                    );;
             }
         },
         [formValues, validationErrors, showValidation, updateFieldValue]
@@ -958,5 +981,36 @@ const MapRenderer: React.FC = () => {
         <div className="w-full aspect-square lg:aspect-video max-h-[70vh]">
             <ShapefileMap key={`${isDarkMode}`} />
         </div>
+    )
+}
+
+const MultiselectRenderer: React.FC<FormField> = ({ options, name, label, required }) => {
+    const [values, setValues] = useState<string[]>([])
+    return (
+        <FormMultiselect
+            name={name}
+            label={label}
+            required={required}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.name }))}
+            values={values}
+            setValues={setValues}
+            className='md:w-full xl:w-full'
+        />
+    )
+}
+
+const TableRenderer: React.FC<FormField> = ({ options, name, label, required }) => {
+    const [values, setValues] = useState<TableRowI[]>([])
+    return (
+        <FormTable
+            name={name}
+            label={label}
+            required={required}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.name }))}
+            values={values}
+            setValues={setValues}
+            className='md:w-full xl:w-full'
+            isPreview
+        />
     )
 }
