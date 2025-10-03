@@ -40,10 +40,6 @@ export default function CreateOrEditProject(props: Props) {
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
   const { data: project, isLoading: isLoadingProject, isError } = useProjectQuery(props?.projectId);
 
-  useEffect(() => {
-
-  }, [])
-
   const canCreate = () => {
     if (!user || !user?.role?.name) return false;
     return canCreateProject(user.role.name);
