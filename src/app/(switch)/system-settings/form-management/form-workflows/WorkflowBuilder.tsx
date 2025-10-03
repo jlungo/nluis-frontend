@@ -156,11 +156,36 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         setFormSections((sections) => {
             let updatedSections;
             if (sectionId.startsWith("section-default-UI-")) updatedSections = sections.filter((section) => section.id !== sectionId);
-            else updatedSections = sections.map((section) => section.id === sectionId ? { ...section, order: 0, is_active: false } : section)
-            return updatedSections
-                .filter((s) => s.is_active !== false)
-                .sort((a, b) => a.order - b.order)
-                .map((section, idx) => ({ ...section, order: idx + 1 }));
+            else updatedSections = sections.map((section) =>
+                section.id !== sectionId
+                    ? section
+                    : {
+                        ...section,
+                        order: 0,
+                        is_active: false,
+                        forms: section.forms.map(form => ({
+                            ...form,
+                            order: 0,
+                            is_active: false,
+                            form_fields: form.form_fields.map(field => ({
+                                ...field,
+                                order: 0,
+                                is_active: false,
+                                options: field.options.map(option => ({
+                                    ...option,
+                                    order: 0,
+                                }))
+                            }))
+                        }))
+                    }
+            )
+            return [
+                ...updatedSections
+                    .filter((section) => section.is_active === true)
+                    .sort((a, b) => a.order - b.order)
+                    .map((section, idx) => ({ ...section, order: idx + 1 })),
+                ...updatedSections.filter((section) => section.is_active === false)
+            ]
         });
         setUncollapsed(prev => prev.filter(id => id !== `${sectionId}-collapse-section`))
     }, [setFormSections, setUncollapsed]);
@@ -222,11 +247,30 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 if (section.id !== sectionId) return section;
                 let updatedForms;
                 if (formId.startsWith("form-default-UI-")) updatedForms = section.forms.filter((form) => form.id !== formId);
-                else updatedForms = section.forms.map((form) => form.id === formId ? { ...form, order: 0, is_active: false } : form)
-                const reorderedForms = updatedForms
-                    .filter((f) => f.is_active !== false)
-                    .sort((a, b) => a.order - b.order)
-                    .map((form, idx) => ({ ...form, order: idx + 1 }));
+                else updatedForms = section.forms.map((form) =>
+                    form.id !== formId
+                        ? form
+                        : {
+                            ...form,
+                            order: 0,
+                            is_active: false,
+                            form_fields: form.form_fields.map(field => ({
+                                ...field,
+                                order: 0,
+                                is_active: false,
+                                options: field.options.map(option => ({
+                                    ...option,
+                                    order: 0,
+                                }))
+                            }))
+                        }
+                )
+                const reorderedForms = [
+                    ...updatedForms.filter((form) => form.is_active === true)
+                        .sort((a, b) => a.order - b.order)
+                        .map((form, idx) => ({ ...form, order: idx + 1 })),
+                    ...updatedForms.filter((form) => form.is_active === false)
+                ];
                 return {
                     ...section,
                     forms: reorderedForms,
@@ -310,11 +354,25 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                         if (form.id !== formId) return form;
                         let updatedFields;
                         if (fieldId.startsWith("field-default-UI-")) updatedFields = form.form_fields.filter((field) => field.id !== fieldId);
-                        else updatedFields = form.form_fields.map((field) => field.id === fieldId ? { ...field, order: 0, is_active: false } : field)
-                        const reorderedFields = updatedFields
-                            .filter((f) => f.is_active !== false)
-                            .sort((a, b) => a.order - b.order)
-                            .map((field, idx) => ({ ...field, order: idx + 1 }));
+                        else updatedFields = form.form_fields.map((field) =>
+                            field.id !== fieldId
+                                ? field
+                                : {
+                                    ...field,
+                                    order: 0,
+                                    is_active: false,
+                                    options: field.options.map(option => ({
+                                        ...option,
+                                        order: 0,
+                                    }))
+                                }
+                        )
+                        const reorderedFields = [
+                            ...updatedFields.filter((field) => field.is_active === true)
+                                .sort((a, b) => a.order - b.order)
+                                .map((field, idx) => ({ ...field, order: idx + 1 })),
+                            ...updatedFields.filter((field) => field.is_active === false)
+                        ];
                         return {
                             ...form,
                             form_fields: reorderedFields,
@@ -945,6 +1003,14 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                     {!uncollapsed.includes(`${section.id}-collapse-section`) && section.name.length > 0 ? <p className='text-xs md:text-sm line-clamp-1 text-foreground'>{section.name}</p> : null}
                                                                 </div>
                                                                 <div className='flex items-center justify-between gap-2'>
+                                                                    <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            {section.forms.filter(form => form.is_active === true).length} forms
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            {section.forms.filter(form => form.is_active === true).reduce((count, form) => count + form.form_fields.filter(field => field.is_active === true).length, 0)} fields
+                                                                        </Badge>
+                                                                    </div>
                                                                     <AlertDialog>
                                                                         <TooltipProvider>
                                                                             <Tooltip>
@@ -969,9 +1035,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>Delete Section</AlertDialogTitle>
                                                                                 <AlertDialogDescription>
-                                                                                    Are you sure you want to delete this section?
-                                                                                    {section.name.length > 0 ? <div className='text-center text-foreground'>{section.name}</div> : null}
-                                                                                    {section.description.length > 0 ? <div className='text-center text-muted-foreground'>{section.description}</div> : null}
+                                                                                    Are you sure you want to delete this section?<br />
+                                                                                    {section.name.length > 0 ? <span className='text-center text-foreground'>{section.name}</span> : null}<br />
+                                                                                    {section.description.length > 0 ? <span className='text-center text-muted-foreground'>{section.description}</span> : null}
                                                                                 </AlertDialogDescription>
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
@@ -994,8 +1060,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                         </CollapsibleTrigger>
 
                                                         <CollapsibleContent className="flex-1 space-y-3 w-full px-5 md:px-6">
-                                                            <div className="flex flex-col md:flex-row gap-3 w-full mt-4">
-                                                                <div className='flex flex-col w-full gap-3'>
+                                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                                                                <div className='flex flex-col gap-3'>
                                                                     <Input
                                                                         placeholder="Section name"
                                                                         value={section.name}
@@ -1085,6 +1151,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                             {!uncollapsed.includes(`${form.id}-collapse-form`) && form.name.length > 0 ? <p className='text-xs md:text-sm line-clamp-1 text-foreground'>{form.name}</p> : null}
                                                                                                         </div>
                                                                                                         <div className="flex items-center justify-between gap-2">
+                                                                                                            <Badge variant="outline" className="text-xs hidden md:block">
+                                                                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
+                                                                                                            </Badge>
                                                                                                             <AlertDialog>
                                                                                                                 <TooltipProvider>
                                                                                                                     <Tooltip>
@@ -1109,9 +1178,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                                     <AlertDialogHeader>
                                                                                                                         <AlertDialogTitle>Delete Form</AlertDialogTitle>
                                                                                                                         <AlertDialogDescription>
-                                                                                                                            Are you sure you want to delete this form?
-                                                                                                                            {form.name.length > 0 ? <div className='text-center text-foreground'>{form.name}</div> : null}
-                                                                                                                            {form.description.length > 0 ? <div className='text-center text-muted-foreground'>{form.description}</div> : null}
+                                                                                                                            Are you sure you want to delete this form?<br />
+                                                                                                                            {form.name.length > 0 ? <span className='text-center text-foreground'>{form.name}</span> : null}<br />
+                                                                                                                            {form.description.length > 0 ? <span className='text-center text-muted-foreground'>{form.description}</span> : null}
                                                                                                                         </AlertDialogDescription>
                                                                                                                     </AlertDialogHeader>
                                                                                                                     <AlertDialogFooter>
@@ -1277,9 +1346,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                                                                     <AlertDialogHeader>
                                                                                                                                                         <AlertDialogTitle>Delete Field</AlertDialogTitle>
                                                                                                                                                         <AlertDialogDescription>
-                                                                                                                                                            Are you sure you want to delete this field?
-                                                                                                                                                            {field.label.length > 0 ? <div className='text-center text-foreground'>{field.label}</div> : null}
-                                                                                                                                                            {field?.placeholder && field?.placeholder.length > 0 ? <div className='text-center text-muted-foreground'>{field.placeholder}</div> : null}
+                                                                                                                                                            Are you sure you want to delete this field?<br />
+                                                                                                                                                            {field.label.length > 0 ? <span className='text-center text-foreground'>{field.label}</span> : null}<br />
+                                                                                                                                                            {field?.placeholder && field?.placeholder.length > 0 ? <span className='text-center text-muted-foreground'>{field.placeholder}</span> : null}
                                                                                                                                                         </AlertDialogDescription>
                                                                                                                                                     </AlertDialogHeader>
                                                                                                                                                     <AlertDialogFooter>
@@ -1337,7 +1406,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                                                                             strategy={verticalListSortingStrategy}
                                                                                                                                                         >
                                                                                                                                                             {field.options.filter(option => option.id).slice().sort((a, b) => a.order - b.order).map(option => (
-                                                                                                                                                                <Fragment key={field.id}>
+                                                                                                                                                                <Fragment key={option.id}>
                                                                                                                                                                     <SortableOption id={option.id}>
                                                                                                                                                                         <div className='flex items-center gap-1'>
                                                                                                                                                                             <div className="text-xs text-muted-foreground w-6 h-8.5 flex justify-center items-center rounded bg-muted dark:bg-white/5">
@@ -1373,8 +1442,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                                                                                                     <AlertDialogHeader>
                                                                                                                                                                                         <AlertDialogTitle>Delete {field.type === "table" ? "Column" : "Option"}</AlertDialogTitle>
                                                                                                                                                                                         <AlertDialogDescription>
-                                                                                                                                                                                            Are you sure you want to delete this {field.type === "table" ? "Column" : "Option"}?
-                                                                                                                                                                                            {option.label.length > 0 ? <div className='text-center text-foreground'>{option.label}</div> : null}
+                                                                                                                                                                                            Are you sure you want to delete this {field.type === "table" ? "Column" : "Option"}?<br />
+                                                                                                                                                                                            {option.label.length > 0 ? <span className='text-center text-foreground'>{option.label}</span> : null}
                                                                                                                                                                                         </AlertDialogDescription>
                                                                                                                                                                                     </AlertDialogHeader>
                                                                                                                                                                                     <AlertDialogFooter>
