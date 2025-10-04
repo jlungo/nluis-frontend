@@ -6,7 +6,7 @@ export interface ModuleProps {
   name: string;
 }
 
-export const moduleQueryKey = "moduleKey";
+export const moduleQueryKey = "module";
 
 export const useModulesQuery = () => {
   return useQuery<ModuleProps[]>({

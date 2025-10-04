@@ -1,12 +1,12 @@
+import type { FieldI } from ".";
 import { forwardRef } from "react";
 import { Label } from "../ui/label";
-import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Asterisk } from "lucide-react";
 
 type FormSelectProps = React.ComponentPropsWithoutRef<typeof Select> & {
-    data: FieldsProps;
+    data: FieldI;
     className?: string;
 };
 

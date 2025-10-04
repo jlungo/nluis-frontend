@@ -13,6 +13,8 @@ export type WorkflowSubmission = {
     position: number;
     approval_roles: { user_role: string }[];
     is_active?: State;
+    edit_if_prev_approved: boolean;
+    edit_if_prev_filled: boolean;
     forms: {
       slug?: string;
       name: string;
@@ -20,6 +22,7 @@ export type WorkflowSubmission = {
       position: number;
       editor_roles: { user_role: string }[];
       is_active?: State;
+      edit_if_prev_filled: boolean;
       form_fields: {
         id?: number;
         label: string;
@@ -42,7 +45,7 @@ export type WorkflowSubmission = {
 export type QuestionnaireSubmission = {
   name: string;
   description: string | null;
-  module_level: string;
+  module: string;
   version: string;
   category: number;
   sections: {
@@ -76,9 +79,165 @@ export type QuestionnaireSubmission = {
   }[];
 };
 
-export const req = {
+export const req: WorkflowSubmission = {
   name: "Region Land Use Planning Workflow",
   description: "Complete region land use planning workflow",
+  module_level: "village-land-use",
+  category: 6,
+  version: "1",
+  sections: [
+    {
+      slug: "region-introduction-and-team-formation",
+      name: "Region Introduction and Team Formation",
+      description:
+        "Introduce project to region and establish Region Land Use Management team",
+      position: 1,
+      approval_roles: [
+        {
+          user_role: "0er33i9rdddnekk9834983",
+        },
+      ],
+      edit_if_prev_approved: false,
+      edit_if_prev_filled: false,
+      forms: [
+        {
+          slug: "region-introduction-form",
+          name: "Region Introduction Form",
+          description:
+            "Present project to citizens and collect community response",
+          position: 1,
+          editor_roles: [
+            {
+              user_role: "0er33i9rdddnekk9834983",
+            },
+          ],
+          edit_if_prev_filled: false,
+          form_fields: [
+            {
+              id: 42,
+              label: "Meeting Date",
+              type: "date",
+              placeholder: "Enter meeting date",
+              name: "meeting-date",
+              required: true,
+              position: 1,
+              select_options: [],
+            },
+            {
+              id: 43,
+              label: "Meeting Location",
+              type: "text",
+              placeholder: "Meeting location/venue",
+              name: "meeting-location",
+              required: true,
+              position: 2,
+              select_options: [],
+            },
+            {
+              label: "New field",
+              type: "text",
+              placeholder: "Placeholder",
+              name: "new-field",
+              required: false,
+              position: 3,
+              select_options: [],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "team-assignment",
+      name: "Team Assignment",
+      description:
+        "Assign implementation team and establish local partnerships",
+      position: 1,
+      approval_roles: [
+        {
+          user_role: "0er33i9rdddnekk9834983",
+        },
+      ],
+      edit_if_prev_approved: false,
+      edit_if_prev_filled: false,
+      forms: [
+        {
+          slug: "team-asignment-form",
+          name: "Team Asignment Form",
+          description: "Assign NLUPC implementation team and roles",
+          position: 1,
+          editor_roles: [
+            {
+              user_role: "0er33i9rdddnekk9834983",
+            },
+          ],
+          edit_if_prev_filled: false,
+          form_fields: [
+            {
+              id: 29,
+              label: "Team Leader",
+              type: "members",
+              placeholder: "Select team leader",
+              name: "team-leader",
+              required: true,
+              position: 1,
+              select_options: [],
+            },
+            {
+              id: 30,
+              label: "Team Members",
+              type: "members",
+              placeholder: "Select team members",
+              name: "team-members",
+              required: true,
+              position: 2,
+              select_options: [],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "New Section",
+      description: "Description",
+      position: 1,
+      approval_roles: [
+        {
+          user_role: "0er33i9rdddnekk9834983",
+        },
+      ],
+      edit_if_prev_approved: false,
+      edit_if_prev_filled: false,
+      forms: [
+        {
+          name: "New Form",
+          description: "New form description",
+          position: 1,
+          editor_roles: [
+            {
+              user_role: "0er33i9rdddnekk9834983",
+            },
+          ],
+          edit_if_prev_filled: false,
+          form_fields: [
+            {
+              label: "New field",
+              type: "text",
+              placeholder: "Placeholder",
+              name: "new-field",
+              required: false,
+              position: 1,
+              select_options: [],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+export const request: QuestionnaireSubmission = {
+  name: "Region Land Use Planning Questionnaire",
+  description: "Complete region land use planning questionnaire",
   module: "land-uses",
   category: 6,
   version: "1",
@@ -96,7 +255,7 @@ export const req = {
           description:
             "Present project to citizens and collect community response",
           position: 1,
-          fields: [
+          form_fields: [
             {
               id: 42,
               label: "Meeting Date",
@@ -142,7 +301,7 @@ export const req = {
           name: "Team Asignment Form",
           description: "Assign NLUPC implementation team and roles",
           position: 1,
-          fields: [
+          form_fields: [
             {
               id: 29,
               label: "Team Leader",
@@ -176,7 +335,7 @@ export const req = {
           name: "New Form",
           description: "New form description",
           position: 1,
-          fields: [
+          form_fields: [
             {
               label: "New field",
               type: "text",

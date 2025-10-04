@@ -73,7 +73,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                     <p className="text-muted-foreground text-xs md:text-sm">{placeholder}</p>
                 </div>
 
-                <Dialog open={open} onOpenChange={setOpen}>
+                {!disabled && <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                         <Button type="button" size="sm" disabled={disabled}>
                             <UserPlus className="h-4 w-4 mr-2" />
@@ -156,7 +156,7 @@ const FormMembers: React.FC<FormMembersProps> = ({ label, value, setValue, requi
                             Add Member
                         </Button>
                     </DialogContent>
-                </Dialog>
+                </Dialog>}
             </div>
 
             <DataTable
