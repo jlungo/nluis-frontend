@@ -1,11 +1,11 @@
 import type { ComponentPropsWithoutRef } from "react";
+import type { FieldI } from ".";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
-import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import { Asterisk } from "lucide-react";
 
 type CheckboxProps = Omit<ComponentPropsWithoutRef<typeof Checkbox>, "onCheckedChange"> & {
-    data: FieldsProps;
+    data: FieldI;
     checked?: boolean;
     onValueChange?: (value: boolean) => void;
 };

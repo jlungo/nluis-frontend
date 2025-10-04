@@ -1,6 +1,8 @@
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
+import type { FieldsProps as QuestionnaireField } from "@/queries/useQuestionnaireQuery";
 import type { InputType } from "@/types/input-types";
 import type { TableRowI } from "./form-table";
+import FormMembers, { type MembersI } from "./form-members";
 import FormInput from "./form-input";
 import FormTextArea from "./form-textarea";
 import DatePicker from "./form-date-picker";
@@ -8,14 +10,15 @@ import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import FormZoning from "./form-zoning";
-import FormMembers, { type MembersI } from "./form-members";
 import FormMultiselect from "./form-multiselect";
 import FormTable from "./form-table";
 
 export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[]
 
+export type FieldI = FieldsProps | QuestionnaireField
+
 export default function Index(
-    data: FieldsProps & {
+    data: FieldI & {
         disabled?: boolean;
         project_locality_id: string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,7 +30,6 @@ export default function Index(
             field_id: number,
             project_locality_id: string
         ) => void,
-        isFilled: boolean,
         baseMapId?: string
     }
 ) {

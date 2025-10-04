@@ -16,7 +16,7 @@ interface DataProps extends APIResponse {
   results: SectionProps[];
 }
 
-export const sectionQueryKey = "sectionKey";
+export const sectionQueryKey = "section";
 
 export const useSectionsQuery = (
   limit: number,

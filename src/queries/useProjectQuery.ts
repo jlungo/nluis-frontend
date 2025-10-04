@@ -11,7 +11,7 @@ import type {
   ProjectTypeI,
 } from "@/types/projects";
 
-export const queryProjectKey = "projects";
+export const queryProjectKey = "project";
 
 export const useProjectsQuery = (params: ProjectQueryParamsI) => {
   return useQuery<APIResponse<ProjectI>>({

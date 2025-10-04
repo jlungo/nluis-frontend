@@ -76,7 +76,7 @@ interface DataProps extends APIResponse {
   results: QuestionnaireProps[];
 }
 
-export const questionnaireQueryKey = "questionnaireKey";
+export const questionnaireQueryKey = "questionnaire";
 
 export const useQuestionnairesQuery = (
   limit: number,

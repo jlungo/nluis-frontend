@@ -32,18 +32,15 @@ interface CompactFileUploadProps {
 }
 
 export default function FormFileInput(props: CompactFileUploadProps) {
-    const [isViewer, setIsViewer] = useState(props?.value &&
+    if (props?.value && props?.disabled &&
         props.value.length > 0 &&
         (typeof props.value === "string" || (Array.isArray(props.value) && typeof props.value[0] === "string")))
-    if (isViewer)
         return (
             <FileRenderer
                 files={props.value!}
                 name={props.name}
                 label={props.label}
                 required={props.required}
-                disabled={props.disabled}
-                setIsViewer={setIsViewer}
             />
         )
     return <FileInput {...props} />
@@ -206,7 +203,7 @@ function FileInput({
     );
 }
 
-const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; disabled?: boolean; files: string | string[]; setIsViewer: React.Dispatch<React.SetStateAction<boolean | "" | undefined>> }> = ({ name, label, disabled, required, files, setIsViewer }) => {
+const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean; files: string | string[]; }> = ({ name, label, required, files }) => {
     const fileList = Array.isArray(files) ? files.map(file => MEDIA_PATH + file) : [MEDIA_PATH + files];
 
     // const officeViewerUrl = (url: string) =>
@@ -229,16 +226,6 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
         <div className="gap-4 w-full">
             <div className='flex justify-between items-center gap-2 mb-0.5'>
                 {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
-                <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setIsViewer(false)}
-                    disabled={disabled}
-                    className={`disabled:hidden`}
-                >
-                    Change
-                </Button>
             </div>
             <div className='w-full bg-muted dark:bg-input/30 aspect-video rounded shadow'>
                 {fileList.map((url, i) => {
