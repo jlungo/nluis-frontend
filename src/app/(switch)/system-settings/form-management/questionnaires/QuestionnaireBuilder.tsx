@@ -24,21 +24,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useModulesQuery, type ModuleProps } from '@/queries/useModuleQuery';
-import { useLevelsQuery, type LevelProps } from '@/queries/useLevelQuery';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Spinner } from '@/components/ui/spinner';
 import type { InputType } from '@/types/input-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import type { AxiosError } from 'axios';
-import { workflowQueryKey, type WorkflowProps } from '@/queries/useWorkflowQuery';
-import type { FormField, FormSection, SectionForm, WorkflowTemplate } from './FormPreviewTester';
-import { workflowCategoryTypes } from '@/types/constants';
+import { questionnaireQueryKey, type QuestionnaireProps } from '@/queries/useQuestionnaireQuery';
+import type { FormField, FormSection, SectionForm, QuestionnaireTemplate } from './FormPreviewTester';
+import { questionnaireCategoryTypes } from '@/types/constants';
 import { slugify } from '@/lib/utils';
-import { useRolesQuery } from '@/queries/useRolesQuery';
-import { MultiSelect } from '@/components/multiselect';
 import { Switch } from '@/components/ui/switch';
-import type { WorkflowSubmission } from '@/types/submission';
+import type { QuestionnaireSubmission } from '@/types/submission';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; import {
@@ -53,13 +50,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableField, SortableForm, SortableOption, SortableSection } from './SortableContext';
 
-export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
+export default function QuestionnaireBuilder({ previousData, sections }: { previousData?: QuestionnaireProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedModule, setSelectedModule] = useState<ModuleProps | null>(null);
-    const [selectedLevel, setSelectedLevel] = useState<LevelProps | null>(null);
     const [formDetails, setFormDetails] = useState<{
         name: string;
         description: string | null;
@@ -74,9 +70,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     const [uncollapsed, setUncollapsed] = useState<string[]>([])
     const [formSections, setFormSections] = useState<FormSection[]>([]);
 
-    const { data: roles, isLoading: isLoadingRoles } = useRolesQuery();
     const { data: modules, isLoading: isLoadingModules } = useModulesQuery();
-    const { data: levels, isLoading: isLoadingLevels } = useLevelsQuery(1000, 0, '', selectedModule?.slug ? selectedModule.slug : "")
 
     const fieldTypes = useMemo<{ value: InputType; label: string }[]>(
         () => [
@@ -90,18 +84,15 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'table', label: 'Table' },
             { value: 'date', label: 'Date Picker' },
             { value: 'file', label: 'File Upload' },
-            { value: 'members', label: 'Members Add' },
-            { value: 'zoning', label: 'Zoning' },
         ],
         []
     );
 
     const steps = useMemo(() => [
         { id: 1, name: 'Module', description: 'Choose module' },
-        { id: 2, name: 'Level', description: 'Select level' },
-        { id: 3, name: 'Workflow', description: 'Workflow details' },
-        { id: 4, name: 'Structure', description: 'Build sections' },
-        { id: 5, name: 'Preview', description: 'Test & preview' }
+        { id: 2, name: 'Questionnaire', description: 'Questionnaire details' },
+        { id: 3, name: 'Structure', description: 'Build sections' },
+        { id: 4, name: 'Preview', description: 'Test & preview' }
     ], []);
 
     const progress = useMemo(() => (currentStep / steps.length) * 100, [currentStep, steps.length]);
@@ -577,20 +568,22 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     };
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: WorkflowSubmission) => {
-            if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
-            return api.post(`/form-management/submission/`, e)
+        mutationFn: (e: QuestionnaireSubmission) => {
+            // TODO: Add questionnaire submission update endpoint
+            if (previousData) return api.put(`/form-management/submiss/${previousData.slug}/update/`, e);
+            // TODO: Add questionnaire submission post endpoint
+            return api.post(`/form-management/submiss/`, e)
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [workflowQueryKey],
+                queryKey: [questionnaireQueryKey],
             }),
         onError: (e) => console.log(e),
     });
 
     const handleComplete = useCallback(() => {
-        if (!selectedModule || !selectedLevel) {
+        if (!selectedModule) {
             toast.error('Please complete all required selections');
             return;
         }
@@ -601,19 +594,19 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         }
 
         if (!formDetails.name) {
-            toast.error('Please provide a workflow name');
+            toast.error('Please provide a questionnaire name');
             return;
         }
 
         if (formSections.length === 0) {
-            toast.error('Please add at least one section to the workflow');
+            toast.error('Please add at least one section to the questionnaire');
             return;
         }
 
-        const workflowData: WorkflowSubmission = {
+        const questionnaireData: QuestionnaireSubmission = {
             name: formDetails.name,
             description: formDetails.description,
-            module_level: selectedLevel.slug,
+            module: selectedModule.slug,
             category: formDetails.category,
             version: `${formDetails.version}`,
             sections: formSections.map(section => ({
@@ -621,18 +614,13 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 name: section.name,
                 description: section.description,
                 position: section.order,
-                approval_roles: section.approval_roles,
                 is_active: previousData ? section.is_active ? "1" : "0" : undefined,
-                edit_if_prev_approved: false,
-                edit_if_prev_filled: false,
                 forms: section.forms.map(form => ({
                     slug: form.id.startsWith('form-default-UI-') ? undefined : form.id,
                     name: form.name,
                     description: form.description,
                     position: form.order,
-                    editor_roles: form.editor_roles,
                     is_active: previousData ? form.is_active ? '1' : '0' : undefined,
-                    edit_if_prev_filled: false,
                     form_fields: form.form_fields.map(field => ({
                         id: isNaN(Number(field.id)) ? undefined : Number(field.id),
                         label: field.label,
@@ -653,12 +641,12 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
         };
 
         try {
-            toast.promise(mutateAsync(workflowData), {
-                loading: previousData ? "Updating worflow..." : "Creating workflow...",
+            toast.promise(mutateAsync(questionnaireData), {
+                loading: previousData ? "Updating worflow..." : "Creating questionnaire...",
                 success: () => {
-                    navigate('/system-settings/form-management/form-workflows', { replace: true });
-                    if (previousData) return `Form workflow updated successfully!`;
-                    return `Form workflow created successfully!`
+                    navigate('/system-settings/form-management/form-questionnaires', { replace: true });
+                    if (previousData) return `Questionnaire updated successfully!`;
+                    return `Questionnaire created successfully!`
                 },
                 error: (e: AxiosError) => {
                     const detail =
@@ -672,11 +660,10 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             })
         } catch (error) {
             console.log(error)
-            toast.error("Failed to create workflow!");
+            toast.error("Failed to create questionnaire!");
         }
     }, [
         selectedModule,
-        selectedLevel,
         formDetails,
         formSections,
         mutateAsync,
@@ -685,13 +672,12 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
     ]);
 
     // Create form data for preview
-    const createFormForPreview = (): WorkflowTemplate => {
+    const createFormForPreview = (): QuestionnaireTemplate => {
         return {
             id: `form-preview-${Date.now()}`,
             name: formDetails.name || 'Untitled Form',
             description: formDetails.description,
             module: selectedModule?.name || '',
-            module_level: selectedLevel?.slug || '',
             isActive: true,
             isTemplate: true,
             sections: formSections.length > 0 ? formSections : undefined,
@@ -705,12 +691,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             slug: previousData.module_slug,
             name: previousData.module_name,
         });
-        setSelectedLevel({
-            slug: previousData.module_level,
-            name: previousData.module_level_name,
-            module_slug: previousData.module_slug,
-            module_name: previousData.module_name,
-        });
         setFormDetails({
             name: previousData.name,
             description: previousData?.description || '',
@@ -718,7 +698,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             version: parseFloat(previousData.version)
         });
         if (sections) setFormSections(sections);
-        setCurrentStep(4);
+        setCurrentStep(3);
     }, [previousData, sections])
 
     const renderStepContent = () => {
@@ -775,72 +755,14 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     </div>
                 );
 
+
             case 2:
-                return (
-                    <>
-                        {selectedModule ? (
-                            <div className="space-y-6">
-                                <div>
-                                    <h2 className="text-base xl:text-xl font-semibold mb-2">Select Level</h2>
-                                    <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
-                                        Choose the administrative level for this form
-                                    </p>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        {/* <Badge variant="outline" className={selectedModule.color.replace('bg-', 'border-').replace('/10', '/20')}> */}
-                                        <Badge variant="outline">
-                                            {selectedModule.name}
-                                        </Badge>
-                                    </div>
-                                </div>
-
-                                {!isLoadingLevels && levels && levels?.results && levels.results.length > 0 ?
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {levels.results.map((level) => (
-                                            <Card
-                                                key={level.slug}
-                                                className={`cursor-pointer transition-all hover:shadow-md ${selectedLevel?.slug === level.slug
-                                                    ? 'ring-2 ring-primary border-primary'
-                                                    : 'hover:border-primary/50'
-                                                    }`}
-                                                onClick={() => setSelectedLevel(level)}
-                                            >
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <h3 className="font-medium">{level.name}</h3>
-                                                            <p className="text-sm text-muted-foreground mt-1">
-                                                                Create a form related to {level.name} level
-                                                            </p>
-                                                        </div>
-                                                        {selectedLevel?.slug === level.slug && (
-                                                            <Check className="h-5 w-5 text-primary" />
-                                                        )}
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                    :
-                                    <div className='w-full h-40 flex flex-col items-center justify-center'>
-                                        {isLoadingLevels ? (
-                                            <Spinner />
-                                        ) :
-                                            <p className='text-muted-foreground'>This module has no levels yet. You can levels for modules <Link to="/system-settings/module-levels" className="text-blue-800">here</Link>.</p>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        ) : null}
-                    </>
-                );
-
-            case 3:
                 return (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-base xl:text-xl font-semibold mb-2">Workflow Details</h2>
+                            <h2 className="text-base xl:text-xl font-semibold mb-2">Questionnaire Details</h2>
                             <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
-                                Define the basic information for your form
+                                Define the basic information for your questionnaire
                             </p>
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                                 {selectedModule && (
@@ -848,23 +770,15 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                         {selectedModule.name}
                                     </Badge>
                                 )}
-                                {selectedLevel && (
-                                    <>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                        <Badge variant="outline">
-                                            {selectedLevel.name}
-                                        </Badge>
-                                    </>
-                                )}
                             </div>
                         </div>
 
                         <div className="grid gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="formName">Workflow Name *</Label>
+                                <Label htmlFor="formName">Questionnaire Name *</Label>
                                 <Input
                                     id="formName"
-                                    placeholder="Enter form name..."
+                                    placeholder="Enter questionnaire name..."
                                     value={formDetails.name}
                                     onChange={(e) => setFormDetails({ ...formDetails, name: e.target.value })}
                                 />
@@ -874,7 +788,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                 <Label htmlFor="formDescription">Description</Label>
                                 <Textarea
                                     id="formDescription"
-                                    placeholder="Describe the purpose and use of this form..."
+                                    placeholder="Describe the purpose and use of this questionnaire..."
                                     value={formDetails?.description || undefined}
                                     onChange={(e) => setFormDetails({ ...formDetails, description: e.target.value })}
                                     rows={3}
@@ -883,7 +797,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="formCategory">Workflow Category</Label>
+                                    <Label htmlFor="formCategory">Questionnaire Category</Label>
                                     <Select
                                         value={formDetails?.category ? `${formDetails?.category}` : ''}
                                         onValueChange={(value) => setFormDetails({ ...formDetails, category: parseInt(value) })}
@@ -893,7 +807,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                             <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {Object.entries(workflowCategoryTypes).map(([key, value]) => <SelectItem key={key} value={key} className='capitalize'>{value}</SelectItem>)}
+                                            {Object.entries(questionnaireCategoryTypes).map(([key, value]) => <SelectItem key={key} value={key} className='capitalize'>{value}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -911,12 +825,12 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     </div>
                 );
 
-            case 4:
+            case 3:
                 return (
                     <div className="space-y-6">
                         <div className="flex items-end justify-between gap-1">
                             <div className='w-full'>
-                                <h2 className="text-base xl:text-xl font-semibold mb-2">Build Workflow Structure</h2>
+                                <h2 className="text-base xl:text-xl font-semibold mb-2">Build Questionnaire Structure</h2>
                                 <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
                                     Create sections, add forms, and define fields
                                 </p>
@@ -1070,13 +984,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                         value={section.name}
                                                                         onChange={(e) => updateSection(section.id, { name: e.target.value })}
                                                                     />
-                                                                    <MultiSelect
-                                                                        title='users able to approve'
-                                                                        data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
-                                                                        selected={section.approval_roles.map(role => role.user_role)}
-                                                                        setSelected={(e) => updateSection(section.id, { approval_roles: e.map(role => ({ user_role: role })) })}
-                                                                        isLoading={isLoadingRoles}
-                                                                    />
                                                                 </div>
                                                                 <Textarea
                                                                     placeholder="Section description"
@@ -1211,13 +1118,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                                 placeholder="Form name"
                                                                                                                 value={form.name}
                                                                                                                 onChange={(e) => updateForm(section.id, form.id, { name: e.target.value })}
-                                                                                                            />
-                                                                                                            <MultiSelect
-                                                                                                                title='users able to edit'
-                                                                                                                data={roles ? roles.filter(role => role.code !== 'ADMIN').map(role => ({ value: role.id, label: role.name })) : []}
-                                                                                                                selected={form.editor_roles.map(role => role.user_role)}
-                                                                                                                setSelected={(e) => updateForm(section.id, form.id, { editor_roles: e.map(role => ({ user_role: role })) })}
-                                                                                                                isLoading={isLoadingRoles}
                                                                                                             />
                                                                                                         </div>
                                                                                                         <Textarea
@@ -1543,11 +1443,11 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                     </div >
                 );
 
-            case 5:
+            case 4:
                 return (
                     <div className="-m-6">
                         <FormPreviewTester
-                            workflowData={createFormForPreview()}
+                            questionnaireData={createFormForPreview()}
                             onSave={handleComplete}
                             onEdit={() => setCurrentStep(4)}
                         />
@@ -1565,9 +1465,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg md:text-2xl font-semibold">Create New Form Workflow</h1>
+                        <h1 className="text-lg md:text-2xl font-semibold">Create New Questionnaire</h1>
                         <p className="text-xs md:text-sm xl:text-base text-muted-foreground">
-                            Follow the steps to create a structured form with sections and forms
+                            Follow the steps to create a structured questionnaire with sections and forms
                         </p>
                     </div>
                     {/* <Button variant="outline" onClick={onCancel}>
@@ -1638,14 +1538,13 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                 onClick={handleNext}
                                 disabled={
                                     (currentStep === 1 && !selectedModule) ||
-                                    (currentStep === 2 && !selectedLevel) ||
-                                    (currentStep === 3 && !formDetails.name) ||
-                                    (currentStep === 3 && !formDetails?.category) ||
-                                    (currentStep === 4 && formSections.length === 0)
+                                    (currentStep === 2 && !formDetails.name) ||
+                                    (currentStep === 2 && !formDetails?.category) ||
+                                    (currentStep === 3 && formSections.length === 0)
                                 }
                                 className="gap-2"
                             >
-                                {currentStep === 5 ?
+                                {currentStep === 4 ?
                                     <>
                                         Preview & Test
                                         <TestTube className="h-4 w-4" />
@@ -1664,7 +1563,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                 className="gap-2"
                             >
                                 <Check className="h-4 w-4" />
-                                {previousData ? 'Edit' : 'Create'} Form Workflow
+                                {previousData ? 'Edit' : 'Create'} Questionnaire
                             </Button>
                         )}
                     </div>

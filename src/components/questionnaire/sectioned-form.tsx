@@ -1,12 +1,12 @@
 import { type FormEvent, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
-import { workflowQueryKey, type FormProps, type SectionProps, type WorkflowProps } from '@/queries/useWorkflowQuery';
+import { questionnaireQueryKey, type FormProps, type SectionProps, type QuestionnaireProps } from '@/queries/useQuestionnaireQuery';
 import { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X, Edit2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, CheckCircle, X, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FormField, { type ValueType } from '@/components/form-field';
 import type { InputType } from '@/types/input-types';
@@ -15,10 +15,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
-import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
+import { type questionnaireDataI, questionnaireDataQueryKey } from '@/queries/useQuestionnaireDataQuery';
 import { Progress } from '../ui/progress';
 import { queryProjectKey } from '@/queries/useProjectQuery';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 interface FieldValue {
     value?: ValueType;
@@ -29,8 +28,8 @@ interface FieldValue {
 }
 
 type Props = {
-    data: WorkflowProps;
-    values?: formDataI[];
+    data: QuestionnaireProps;
+    values?: questionnaireDataI[];
     disabled?: boolean;
     projectLocalityId?: string;
     projectName?: string;
@@ -62,13 +61,14 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) => {
-            // TODO: Add edit formdata endpoint
-            if (editForm) return api.post(`/form-management/submit-form-data/`, e, {
+            // TODO: Add edit questionnairedata endpoint
+            if (editForm) return api.post(`/form-management/submit-questionnaire-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
             })
-            return api.post(`/form-management/submit-form-data/`, e, {
+            // TODO: Add edit questionnairedata endpoint
+            return api.post(`/form-management/submit-questionnaire-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
@@ -77,7 +77,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [formDataQueryKey],
+                queryKey: [questionnaireDataQueryKey],
             })
             queryClient.invalidateQueries({
                 refetchType: "active",
@@ -85,30 +85,10 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             })
             queryClient.invalidateQueries({
                 refetchType: "active",
-                queryKey: [workflowQueryKey],
+                queryKey: [questionnaireQueryKey],
             })
         },
         onError: e => console.log(e),
-    });
-
-    const { mutateAsync: mutateAsyncApproval, isPending: isPendingApproval } = useMutation({
-        mutationFn: (e: { is_approved: "0" | "1", form_data_slugs: string[] }) =>
-            api.post(`/form-management/form-data/approval/`, e),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [formDataQueryKey],
-            })
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [queryProjectKey],
-            })
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [workflowQueryKey],
-            })
-        },
-        onError: e => console.log(e)
     });
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>, formSlug: string) => {
@@ -175,25 +155,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         }
     }
 
-    const approveOrDisapproveForms = (form_fields_ids: number[], is_approved: "0" | "1") => {
-        if (!values) return
-        const form_data_slugs = form_fields_ids.map(id => values.find(v => v.field_id === id)?.slug) // match id with values
-            .filter((slug): slug is string => Boolean(slug));
-        toast.promise(mutateAsyncApproval({ is_approved, form_data_slugs }), {
-            loading: is_approved === '0' ? "Disapproving..." : "Approving...",
-            success: is_approved === '0' ? "Section disapproved" : `Section approved`,
-            error: (e: AxiosError) => {
-                const detail =
-                    e?.response?.data &&
-                        typeof e.response.data === "object" &&
-                        "detail" in e.response.data
-                        ? (e.response.data as { detail?: string }).detail
-                        : undefined;
-                return `${detail || "Network error!"}`;
-            }
-        })
-    }
-
     const toggleSection = (sectionId: string) => {
         setExpandedSections(prev =>
             prev.includes(sectionId)
@@ -224,27 +185,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     const canClickForm = (form: FormProps) => {
         if (!user) return false
-        const isEditor =
-            form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined ||
-            user.role?.name === "Admin"
-
+        const isEditor = user.role?.name === "Admin"
         const allApproved = areAllFieldsApproved(form.slug)
         return !allApproved && isEditor
     }
 
     const isSectionApproved = (section: SectionProps) => {
         if (!user) return false
-        const isApprover =
-            section.approval_roles.find(role => role.role_id === user.role?.id) !== undefined ||
-            user.role?.name === "Admin"
-
+        const isApprover = user.role?.name === "Admin"
         const allApproved = section.forms.every(form => areAllFieldsApproved(form.slug))
         return allApproved && isApprover
-    }
-
-    const isFilledSection = (section: SectionProps) => {
-        const allFilled = section.forms.every(form => isFilledForm(form.slug))
-        return allFilled
     }
 
     const countFilledForms = (section: SectionProps) => {
@@ -403,11 +353,11 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     <div className="flex items-center gap-3">
                         {disabled ? (
                             <Link
-                                to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
+                                to={`/system-settings/form-management/form-questionnaires/${data.slug}/edit`}
                                 className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
                             >
                                 <Edit className="h-4 w-4" />
-                                Edit<span className='hidden md:inline'> Workflow</span>
+                                Edit<span className='hidden md:inline'> Questionnaire</span>
                             </Link>
                         ) : null}
                         {projectLocaleProgress !== undefined ? (
@@ -485,7 +435,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" || user.role?.name === "Dg")}
+                                                    disabled={!canClickForm(form) && !(user.role?.name === "Admin" || user.role?.name === "Dg")}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
@@ -518,110 +468,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     </div>
                                 </CollapsibleContent>
                             </Collapsible>
-
-                            {section.approval_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" ? (
-                                <>
-                                    {!isSectionApproved(section)
-                                        ? <CardFooter className='flex items-center justify-between px-3 md:px-4'>
-                                            <p className='text-muted-foreground text-xs md:text-sm'>{disabled ? 'Approval' : 'Approve the details'}</p>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button
-                                                        type='button'
-                                                        size='sm'
-                                                        disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isPendingApproval || isLoading}
-                                                        className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                        Approve
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Approve {section.name} section?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            Please validate that the data within the forms of this section is correct
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction asChild>
-
-                                                            <Button
-                                                                type='button'
-                                                                size='sm'
-                                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "1")}
-                                                                disabled={disabled || isSectionApproved(section) || !isFilledSection(section) || isPending || isPendingApproval || isLoading}
-                                                                className='bg-green-800 dark:bg-green-900 hover:bg-green-700 dark:hover:bg-green-800'
-                                                            >
-                                                                {isPending || isLoading ? (
-                                                                    <>
-                                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                        Approving...
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Check className="h-4 w-4" />
-                                                                        Approve
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </CardFooter>
-                                        : <CardFooter className='flex items-center justify-between px-3 md:px-4'>
-                                            <p className='text-muted-foreground text-xs md:text-sm'>Reject Approval</p>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button
-                                                        type='button'
-                                                        variant='outline'
-                                                        size='sm'
-                                                        disabled={disabled || !isSectionApproved(section) || isPending || isPendingApproval || isLoading}
-                                                    >
-                                                        <X className="h-4 w-4 text-destructive" />
-                                                        Disapprove
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Disapprove {section.name} section?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            Reject the correctness of data within the forms of this section
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction asChild>
-                                                            <Button
-                                                                type='button'
-                                                                size='sm'
-                                                                onClick={() => approveOrDisapproveForms(section.forms.flatMap(form => form.form_fields.map(field => field.id)), "0")}
-                                                                disabled={disabled || !isSectionApproved(section) || isPending || isPendingApproval || isLoading}
-                                                                className='border-destructive dark:border-destructive text-destructive dark:text-destructive bg-destructive/20 hover:bg-destructive/30'
-                                                            >
-                                                                {isPending || isLoading ? (
-                                                                    <>
-                                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                        Disapproving...
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <X className="h-4 w-4 text-destructive" />
-                                                                        Disapprove
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </CardFooter>
-                                    }
-                                </>
-                            ) : <CardFooter className='flex items-center justify-between px-3 md:px-4 py-1' />}
+                            <CardFooter className='flex items-center justify-between px-3 md:px-4 py-1' />
                         </Card>
                     ))}
                 </div>

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { InputType } from "@/types/input-types";
 
-export interface formDataI {
+export interface questionnaireDataI {
   slug: string;
   field_id: number;
   form_slug: string;
@@ -11,18 +11,21 @@ export interface formDataI {
   is_approved: boolean;
 }
 
-export const formDataQueryKey = "formData";
+export const questionnaireDataQueryKey = "questionnaireData";
 
-export const useFormDataQuery = (
+export const useQuestionnaireDataQuery = (
   workflow_slug?: string,
   locality_project_id?: string
 ) => {
-  return useQuery<formDataI[]>({
-    queryKey: [formDataQueryKey, { workflow_slug, locality_project_id }],
+  return useQuery<questionnaireDataI[]>({
+    queryKey: [
+      questionnaireDataQueryKey,
+      { workflow_slug, locality_project_id },
+    ],
     queryFn: () =>
       api
         .get(
-          `/form-management/data/?workflow_slug=${workflow_slug}&locality_project_id=${locality_project_id}`
+          `/form-management/questionnaire/?workflow_slug=${workflow_slug}&locality_project_id=${locality_project_id}`
         )
         .then((res) => res.data),
     enabled: workflow_slug !== undefined && locality_project_id !== undefined,

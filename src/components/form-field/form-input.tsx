@@ -1,12 +1,12 @@
+import type { FieldI } from ".";
 import { forwardRef } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import { cn } from "@/lib/utils";
 import { Asterisk } from "lucide-react";
 
 type FormInputProps = React.ComponentPropsWithoutRef<typeof Input> & {
-    data: FieldsProps;
+    data: FieldI;
 };
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(

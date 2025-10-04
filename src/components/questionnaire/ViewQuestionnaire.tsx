@@ -1,10 +1,10 @@
 import { Spinner } from "@/components/ui/spinner";
 import { SectionedForm } from "./sectioned-form";
-import { useWorkflowsQuery } from "@/queries/useWorkflowQuery";
+import { useQuestionnairesQuery } from "@/queries/useQuestionnaireQuery";
 import { usePageStore } from "@/store/pageStore";
 import { useEffect, useLayoutEffect } from "react";
 import { cn, getCategoryKey } from "@/lib/utils";
-import { useFormDataQuery } from "@/queries/useFormDataQuery";
+import { useQuestionnaireDataQuery } from "@/queries/useQuestionnaireDataQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
 import { Link, useNavigate } from "react-router";
@@ -19,14 +19,14 @@ type Props = {
     worklowCategory: string
 }
 
-export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
+export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
-    const workflowKey = getCategoryKey(worklowCategory) ?? 6
-    const { data: workflow, isLoading: isLoadingWorkflow } = useWorkflowsQuery(1, 0, '', module, moduleLevel, workflowKey);
-    const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflow && workflow?.results && workflow.results.length > 0 ? workflow.results[0].slug : undefined, projectLocalityId)
+    const questionnaireKey = getCategoryKey(worklowCategory) ?? 6
+    const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnairesQuery(1, 0, '', module, moduleLevel, questionnaireKey);
+    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire && questionnaire?.results && questionnaire.results.length > 0 ? questionnaire.results[0].slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
@@ -50,14 +50,14 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
         if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
     }, [approval_status, module, moduleLevel, navigate, projectId])
 
-    if (!workflowKey)
+    if (!questionnaireKey)
         return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>Workflow key configuration error!</p>
+            <p className='text-muted-foreground'>Questionnaire key configuration error!</p>
         </div>
 
-    if (isLoadingWorkflow || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
+    if (isLoadingQuestionnaire || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
-        <p className="text-muted-foreground mt-4">Loading workflow and data...</p>
+        <p className="text-muted-foreground mt-4">Loading questionnaire and data...</p>
     </div>
 
     if (!project)
@@ -71,26 +71,24 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
         </div>
 
-    if ((!projectLocaleName || !projectLocaleId) && !isLoadingWorkflow && !isLoadingValues && !isLoadingProject)
+    if ((!projectLocaleName || !projectLocaleId) && !isLoadingQuestionnaire && !isLoadingValues && !isLoadingProject)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>Project Locality not found!</p>
         </div>
 
-    if (!workflow || !workflow?.results || workflow.results.length === 0)
+    if (!questionnaire || !questionnaire?.results || questionnaire.results.length === 0)
         return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>No workflow data found!</p>
+            <p className='text-muted-foreground'>No questionnaire data found!</p>
         </div>
 
     if (!values)
         return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>Failed to fetch workflow data!</p>
+            <p className='text-muted-foreground'>Failed to fetch questionnaire data!</p>
         </div>
-
-    console.log(workflow.results[0])
 
     return (
         <SectionedForm
-            data={workflow.results[0]}
+            data={questionnaire.results[0]}
             values={values}
             projectLocalityId={projectLocalityId}
             projectName={project.name}

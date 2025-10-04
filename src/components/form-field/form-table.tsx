@@ -1,4 +1,5 @@
-import { SelectOptionProps } from "@/queries/useWorkflowQuery";
+import type { SelectOptionProps } from "@/queries/useWorkflowQuery";
+import type { SelectOptionProps as QOptionsProps } from "@/queries/useQuestionnaireQuery";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Label } from "../ui/label";
 import { Asterisk, Eye, Pen, Plus, Trash2 } from "lucide-react";
@@ -16,12 +17,14 @@ export interface TableRowI {
     }[]
 }
 
+type SelectIOptionI = SelectOptionProps | QOptionsProps
+
 interface FormTableProps {
     name: string;
     label: string;
     required: boolean;
     placeholder?: string;
-    selectOptions: SelectOptionProps[]
+    selectOptions: SelectIOptionI[]
     values?: TableRowI[];
     setValues: (values: TableRowI[]) => void;
     disabled?: boolean;
@@ -31,7 +34,7 @@ interface FormTableProps {
 
 const FormTable = (props: FormTableProps) => {
     const { name, label, required, selectOptions, values = [], setValues, disabled, isPreview } = props
-    const [isViewer, setIsViewer] = useState(values && values.length > 0 && Array.isArray(values))
+    const [isViewer, setIsViewer] = useState(values && values.length > 0 && Array.isArray(values) && disabled)
 
     const handleInputChange = (rowPosition: number, columnPosition: number, newValue: string) => {
         setValues(
@@ -74,15 +77,16 @@ const FormTable = (props: FormTableProps) => {
                 <div className="w-fir flex items-center justify-between gap-1 pb-2">
                     {!disabled && (
                         <>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addRow}
-                            >
-                                <Plus />
-                                Add Row
-                            </Button>
+                            {!isViewer &&
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addRow}
+                                >
+                                    <Plus />
+                                    Add Row
+                                </Button>}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -105,16 +109,20 @@ const FormTable = (props: FormTableProps) => {
                     )}
                 </div>
             </div>
-            <div className={`overflow-hidden rounded-md border ${isPreview ? "bg-accent dark:bg-input/30" : "bg-muted dark:bg-input/30"}`}>
+            <div className={`overflow-hidden rounded-xl border ${isPreview ? "bg-accent dark:bg-input/30" : "bg-muted/80 dark:bg-input/20"}`}>
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>No.</TableHead>
-                            {selectOptions.sort((a, b) => a.position - b.position).map(option => <TableHead key={option.value}>{option.text_label}</TableHead>)}
-                            {!isViewer && <TableCell className="text-right">Actions</TableCell>}
+                            {selectOptions.sort((a, b) => a.position - b.position).map(option => (
+                                <TableHead key={option.value}>
+                                    {option.text_label}
+                                </TableHead>
+                            ))}
+                            {!isViewer && <TableCell className="text-center font-semibold">Actions</TableCell>}
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="text-muted-foreground">
+                    <TableBody className="text-black/70 dark:text-white/60">
                         {values.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={selectOptions.length + 2} className="text-center py-6">
@@ -133,13 +141,13 @@ const FormTable = (props: FormTableProps) => {
                                                 value={item.label}
                                                 disabled={disabled}
                                                 onChange={e => handleInputChange(row.position, item.position, e.target.value)}
-                                                className="bg-background dark:bg-background"
+                                                className="text-foreground bg-background dark:bg-background"
                                             />
                                         }
                                     </TableCell>
                                 ))}
                                 {!isViewer && (
-                                    <TableCell className="flex gap-2 text-right">
+                                    <TableCell className="flex gap-2 justify-end">
                                         <AlertDialog>
                                             <TooltipProvider>
                                                 <Tooltip>

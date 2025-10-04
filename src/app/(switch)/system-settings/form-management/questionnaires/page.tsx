@@ -32,13 +32,12 @@ export default function Page() {
         PageData({
             module: 'system-settings',
             title: "Questionnaire Management",
-
         })
     }, [PageData])
 
     const { mutateAsync } = useMutation({
         mutationFn: (slug: string) => api.delete(
-            '/flows/' + slug,
+            '//' + slug,
             // TODO add delete questionnaire endpoint
         ),
         onSuccess: () =>
@@ -46,9 +45,7 @@ export default function Page() {
                 refetchType: "active",
                 queryKey: [questionnaireQueryKey],
             }),
-        onError: (e) => {
-            console.log(e);
-        },
+        onError: e => console.log(e),
     });
 
     const { data: questionnaires, isLoading: isLoadingQuestionnaires } = useQuestionnairesQuery(limit, offset, keyword, filterModule, '', '')

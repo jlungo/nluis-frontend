@@ -92,7 +92,7 @@ interface DataProps extends APIResponse {
   results: WorkflowProps[];
 }
 
-export const workflowQueryKey = "workflowKey";
+export const workflowQueryKey = "workflow";
 
 export const useWorkflowsQuery = (
   limit: number,
