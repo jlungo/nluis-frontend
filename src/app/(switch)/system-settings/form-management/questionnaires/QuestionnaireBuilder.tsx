@@ -865,7 +865,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                             </div>
                         </div>
 
-                        {formSections.filter(s => s.is_active).length === 0 ? (
+                        {formSections.filter(s => s.is_active === true).length === 0 ? (
                             <Card className="border-dashed border-2 p-12 text-center">
                                 <div className="space-y-4">
                                     <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
@@ -898,7 +898,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                                 </div>
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
                                     <SortableContext
-                                        items={formSections.filter(s => s.is_active).map(s => s.id)}
+                                        items={formSections.filter(s => s.is_active === true).map(s => s.id)}
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {formSections.filter(section => section.is_active === true).slice().sort((a, b) => a.order - b.order).map(section => (
@@ -1038,7 +1038,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                                                                             onDragEnd={(event) => handleFormDragEnd(event, section.id)}
                                                                         >
                                                                             <SortableContext
-                                                                                items={section.forms.filter(f => f.is_active).map(f => f.id)}
+                                                                                items={section.forms.filter(f => f.is_active === true).map(f => f.id)}
                                                                                 strategy={verticalListSortingStrategy}
                                                                             >
                                                                                 {section.forms.filter(form => form.is_active === true).slice().sort((a, b) => a.order - b.order).map(form => (
@@ -1134,7 +1134,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                                                                                                     </div>
 
                                                                                                     {/* Fields */}
-                                                                                                    {form.form_fields.filter(s => s.is_active).length === 0 ? (
+                                                                                                    {form.form_fields.filter(s => s.is_active === true).length === 0 ? (
                                                                                                         <div className="border-2 border-dashed rounded-lg py-4 text-center">
                                                                                                             <div className="space-y-2">
                                                                                                                 <FolderOpen className="h-5 w-5 text-muted-foreground mx-auto" />
@@ -1171,7 +1171,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                                                                                                                 onDragEnd={(event) => handleFieldDragEnd(event, section.id, form.id)}
                                                                                                             >
                                                                                                                 <SortableContext
-                                                                                                                    items={form.form_fields.filter(s => s.is_active).sort((a, b) => a.order - b.order).map((f) => f.id)}
+                                                                                                                    items={form.form_fields.filter(s => s.is_active === true).sort((a, b) => a.order - b.order).map((f) => f.id)}
                                                                                                                     strategy={verticalListSortingStrategy}
                                                                                                                 >
                                                                                                                     {form.form_fields.filter(field => field.is_active === true).slice().sort((a, b) => a.order - b.order).map(field => (

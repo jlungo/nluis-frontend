@@ -31,7 +31,8 @@ import {
     BarChart3,
     Users,
     Clock,
-    Upload
+    Upload,
+    Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import DatePicker from '@/components/form-field/form-date-picker';
@@ -41,6 +42,8 @@ import { useThemeStore } from '@/store/themeStore';
 import FormMembers from '@/components/form-field/form-members';
 import FormMultiselect from '@/components/form-field/form-multiselect';
 import FormTable, { type TableRowI } from '@/components/form-field/form-table';
+import { Tooltip, TooltipContent } from '@/components/ui/tooltip';
+import { TooltipTrigger } from '@radix-ui/react-tooltip';
 
 export type State = "1" | "0"
 
@@ -71,6 +74,7 @@ export interface SectionForm {
     order: number;
     form_fields: FormField[];
     is_active: boolean;
+    edit_if_prev_filled: boolean
 }
 
 export interface FormSection {
@@ -81,6 +85,8 @@ export interface FormSection {
     order: number;
     forms: SectionForm[];
     is_active: boolean;
+    edit_if_prev_approved: boolean;
+    edit_if_prev_filled: boolean;
 }
 
 export interface WorkflowTemplate {
@@ -515,7 +521,35 @@ export function FormPreviewTester({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
+                                            {section.order !== 1 ? (
+                                                <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                    {section.edit_if_prev_approved &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-destructive">
+                                                                    <Lock />
+                                                                    Approved
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been approved
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                    {section.edit_if_prev_filled &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                    <Lock />
+                                                                    Filled
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been filled completely
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                </div>
+                                            ) : null}
+                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
                                                 <Badge variant="outline" className="text-xs">
                                                     {section.forms.filter(form => form.is_active === true).length} forms
                                                 </Badge>
@@ -557,9 +591,23 @@ export function FormPreviewTester({
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs hidden md:block">
-                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
-                                                            </Badge>
+                                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                                {form.order !== 1 && form.edit_if_prev_filled &&
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger>
+                                                                            <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                                <Lock />
+                                                                                Filled
+                                                                            </Badge>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            Only fill this form when the previous has been filled
+                                                                        </TooltipContent>
+                                                                    </Tooltip>}
+                                                                <Badge variant="outline" className="text-xs hidden md:block">
+                                                                    {form.form_fields.filter(field => field.is_active === true).length} fields
+                                                                </Badge>
+                                                            </div>
                                                             {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
@@ -691,6 +739,34 @@ export function FormPreviewTester({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            {section.order !== 1 ? (
+                                                <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                    {section.edit_if_prev_approved &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-destructive">
+                                                                    <Lock />
+                                                                    Approved
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been approved
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                    {section.edit_if_prev_filled &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                    <Lock />
+                                                                    Filled
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been filled completely
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                </div>
+                                            ) : null}
                                             <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
                                                 <Badge variant="outline" className="text-xs">
                                                     {section.forms.filter(form => form.is_active === true).length} forms
@@ -733,9 +809,23 @@ export function FormPreviewTester({
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs hidden md:block">
-                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
-                                                            </Badge>
+                                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                                {form.order !== 1 && form.edit_if_prev_filled &&
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger>
+                                                                            <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                                <Lock />
+                                                                                Filled
+                                                                            </Badge>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            Only fill this form when the previous has been filled
+                                                                        </TooltipContent>
+                                                                    </Tooltip>}
+                                                                <Badge variant="outline" className="text-xs hidden md:block">
+                                                                    {form.form_fields.filter(field => field.is_active === true).length} fields
+                                                                </Badge>
+                                                            </div>
                                                             {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
