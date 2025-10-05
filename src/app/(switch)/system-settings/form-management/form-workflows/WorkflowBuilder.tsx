@@ -1090,7 +1090,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                 {section.order !== 1 ? (
                                                                     <div className="flex flex-col md:flex-row gap-3 md:col-span-2">
                                                                         <div className='w-full md:w-1/2 flex gap-2 justify-between items-center space-x-2 border rounded-lg py-0.5 px-3 bg-accent dark:bg-input/30'>
-                                                                            <Label htmlFor={`${section.id}-prev-approved`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Edit When Previous is Approved</Label>
+                                                                            <Label htmlFor={`${section.id}-prev-approved`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Only edit When Previous is Approved</Label>
                                                                             <Switch
                                                                                 id={`${section.id}-prev-approved`}
                                                                                 checked={section.edit_if_prev_approved}
@@ -1099,7 +1099,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                             />
                                                                         </div>
                                                                         <div className='w-full md:w-1/2 flex gap-2 justify-between items-center space-x-2 border rounded-lg py-0.5 px-3 bg-accent dark:bg-input/30'>
-                                                                            <Label htmlFor={`${section.id}-prev-filled`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Edit When Previous is Filled</Label>
+                                                                            <Label htmlFor={`${section.id}-prev-filled`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Only edit When Previous is Filled</Label>
                                                                             <Switch
                                                                                 id={`${section.id}-prev-filled`}
                                                                                 checked={section.edit_if_prev_filled}
@@ -1253,7 +1253,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
                                                                                                         />
                                                                                                         {form.order !== 1 ? (
                                                                                                             <div className='flex gap-2 justify-between items-center space-x-2 border rounded-lg py-0.5 px-3 bg-accent dark:bg-input/30'>
-                                                                                                                <Label htmlFor={`${section.id}-${form.id}-prev-filled`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Edit When Previous is Filled</Label>
+                                                                                                                <Label htmlFor={`${section.id}-${form.id}-prev-filled`} className='mt-2 text-xs md:text-sm font-normal md:font-semibold'>Only edit When Previous is Filled</Label>
                                                                                                                 <Switch
                                                                                                                     id={`${section.id}-${form.id}-prev-filled`}
                                                                                                                     checked={form.edit_if_prev_filled}
