@@ -98,6 +98,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
             // badge: "8"
           },
           {
+            id: "ccro-projects",
+            label: "CCRO Projects",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
             id: "land-formalization",
             label: "Land Formalization",
             icon: <FileText className="h-4 w-4" />

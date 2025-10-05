@@ -1,6 +1,6 @@
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { useSubdivisionStore } from '../store/useSubdivisionStore';
+import useSubdivisionStore from '../store/useSubdivisionStore';
 
 export function ValidationErrors() {
   const errors = useSubdivisionStore((s) => s.validationErrors);

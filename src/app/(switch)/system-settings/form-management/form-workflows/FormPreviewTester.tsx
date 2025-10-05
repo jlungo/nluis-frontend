@@ -274,7 +274,7 @@ export function FormPreviewTester({
                         </div>
                     );
 
-                case "land-subdivision":
+                case "landsubdivision":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             {renderLabel()}

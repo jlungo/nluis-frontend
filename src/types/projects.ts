@@ -4,7 +4,7 @@ export interface ProjectI {
   name: string;
   reference_number: string;
   registration_date: string;
-  // type: string | null;
+  type?: string | null;
   authorization_date: string;
   budget: string;
   project_status: number;
@@ -107,6 +107,8 @@ export interface CreateProjectDataI {
   registration_date: string;
   authorization_date: string;
   budget: string;
+  // project type to distinguish CCRO vs generic projects
+  type?: string;
   module_level: string;
   funder_ids: string[];
   locality_ids: string[];

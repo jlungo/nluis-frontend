@@ -40,11 +40,17 @@ export interface BaseSubdivisionProperties {
   approvalDate?: string;
   approvedBy?: string;
   notes?: string;
+  // geographic metadata
+  centroid?: { lng: number; lat: number };
+  // utm coordinates for the centroid when available
+  utm?: { x: number; y: number; zone?: number; epsg?: string } | null;
+  conflicts?: Array<{ type: string; message: string }>;
 }
 
 // Complete subdivision properties with ID
 export interface SubdivisionProperties extends BaseSubdivisionProperties {
   id: string;
+  _drawId?: string; // Optional draw ID for temporary features
 }
 
 // GeoJSON feature types for subdivisions

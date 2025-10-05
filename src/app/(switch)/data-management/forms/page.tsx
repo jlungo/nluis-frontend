@@ -21,7 +21,7 @@ interface FormField {
   | "file"
   | "image"
   | "location" 
-  | "land-subdivision";
+  | "landsubdivision";
   required: boolean;
   placeholder?: string;
   options?: string[];

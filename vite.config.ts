@@ -23,4 +23,20 @@ export default defineConfig({
       }
     }
   },
+  build: {
+    chunkSizeWarningLimit: 1500, // Increase warning limit (in KB)
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            // split mapbox-gl into its own chunk
+            if (id.includes("mapbox-gl")) {
+              return "vendor-mapbox-gl";
+            }
+            return "vendor";
+          }
+        }
+      }
+    }
+  }
 });

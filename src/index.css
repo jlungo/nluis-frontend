@@ -204,3 +204,129 @@
     }
   }
 }
+
+/* Subdivision fullscreen helper: apply to the root shell container */
+.sub-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 60 !important;
+  background: var(--color-background);
+}
+.sub-fullscreen > .flex-1 {
+  height: calc(100vh - 56px) !important; /* leave space for toolbar + statusbar */
+}
+.sub-fullscreen .w-72, .sub-fullscreen .w-96 {
+  height: calc(100vh - 56px) !important;
+  overflow: auto !important;
+}
+.sub-fullscreen .flex-1.relative {
+  height: calc(100vh - 56px) !important;
+}
+
+/* Responsive submenu and toolbar behavior */
+@media (max-width: 768px) {
+  /* Make toolbar/menu compact */
+  .sub-toolbar, .sub-menubar {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* Toolbar becomes horizontally scrollable when there's overflow */
+  .sub-toolbar .toolbar-buttons {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  /* Panels collapse to full-width drawers */
+  .sub-left-panel {
+    position: fixed;
+    z-index: 55;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    width: 80%;
+    max-width: 320px;
+    transform: translateX(-110%);
+    transition: transform 180ms ease-in-out;
+    background: var(--color-sidebar);
+    color: var(--color-sidebar-foreground);
+  }
+  .sub-left-panel.open {
+    transform: translateX(0);
+  }
+
+  .sub-right-panel {
+    position: fixed;
+    z-index: 55;
+    right: 0;
+    top: 56px;
+    bottom: 0;
+    width: 80%;
+    max-width: 360px;
+    transform: translateX(110%);
+    transition: transform 180ms ease-in-out;
+    background: var(--color-sidebar);
+    color: var(--color-sidebar-foreground);
+  }
+  .sub-right-panel.open {
+    transform: translateX(0);
+  }
+
+  /* Ensure map area fills remaining space */
+  .sub-main-area {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    height: calc(100vh - 56px) !important;
+  }
+}
+
+/* small adjustments for larger devices */
+@media (min-width: 769px) {
+  .sub-toolbar .toolbar-buttons { flex-wrap: wrap; }
+}
+
+/* toolbar scroll container styling */
+.toolbar-buttons {
+  display: flex;
+  gap: 8px;
+}
+.toolbar-buttons { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.toolbar-buttons::-webkit-scrollbar { height: 6px; }
+.toolbar-buttons::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+/* main area fill adjustments */
+.sub-main-area { position: relative; min-height: 200px; }
+.sub-main-area .mapboxgl-map { width: 100% !important; height: 100% !important; }
+
+/* Floating mobile panel toggles */
+.sub-main-area .floating-toggle {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  z-index: 60;
+}
+.sub-main-area .floating-toggle-left {
+  left: 1rem;
+  right: auto;
+}
+.sub-main-area button[aria-label] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(10, 10, 10, 0.6);
+  color: white;
+}
+
+/* mobile backdrop for drawers */
+.mobile-backdrop {
+  position: fixed;
+  inset: 56px 0 0 0; /* below toolbar */
+  background: rgba(0,0,0,0.45);
+  z-index: 54;
+}

@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect } from 'react';
+import { type FormEvent, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { workflowQueryKey, type FormProps, type SectionProps, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import { useState } from 'react';
@@ -51,13 +51,21 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
 
-    const updateFieldValue = (formSlug: string, value: ValueType, type: InputType, field_id: number, project_locality_id: string) => {
-        if (!user || project_locality_id.length === 0) return
-        setFieldData(prev => ({
-            ...prev,
-            [`${formSlug}-${field_id}`]: { value, type, field_id, project_locality_id, created_by: user.id }
-        }));
-    };
+    const updateFieldValue = useCallback((formSlug: string, value: ValueType, type: InputType, field_id: number, project_locality_id: string) => {
+        if (!user || project_locality_id.length === 0) return;
+        setFieldData(prev => {
+            // Check if the value actually changed before updating
+            const key = `${formSlug}-${field_id}`;
+            const currentValue = prev[key]?.value;
+            if (JSON.stringify(currentValue) === JSON.stringify(value)) {
+                return prev; // Return same reference if value hasn't changed
+            }
+            return {
+                ...prev,
+                [key]: { value, type, field_id, project_locality_id, created_by: user.id }
+            };
+        });
+    }, [user]);
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) =>
@@ -389,17 +397,18 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     }, [searchParams])
 
     useEffect(() => {
-        if (!data) return
-        if (data.sections.length == 1 && data.sections.every(section => section.forms.length == 1))
+        if (!data) return;
+        // Only set these values on initial mount or when data structure changes
+        if (data.sections.length === 1 && data.sections.every(section => section.forms.length === 1)) {
             setActiveForm(data.sections[0].forms[0].slug);
-        if (data?.sections.length > 0) {
+        }
+        if (data.sections.length > 0) {
             const lowest = [...data.sections].sort(
                 (a, b) => (a.position ?? Infinity) - (b.position ?? Infinity)
-            )[0]
-            if (lowest) setExpandedSections([lowest.slug])
+            )[0];
+            if (lowest) setExpandedSections([lowest.slug]);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [values])
+    }, [data])
 
     useEffect(() => {
         if (values && projectLocalityId)

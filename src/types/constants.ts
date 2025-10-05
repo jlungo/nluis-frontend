@@ -118,3 +118,7 @@ export const Specializations: Record<number, string> = {
   5: "Communications Officer",
   6: "Other",
 };
+
+// Optional override for CCRO module slug. Keep undefined by default so callers
+// fall back to MODULE_LEVEL_SLUG when not explicitly set.
+export const CCRO_MODULE_SLUG: string | undefined = undefined;

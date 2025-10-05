@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSubdivisionStore } from '../store/useSubdivisionStore';
+import useSubdivisionStore from '../store/useSubdivisionStore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -151,7 +151,7 @@ function PartyAllocationForm({ allocations, onChange }: PartyAllocationFormProps
           onChange={(e) => setNewPartyName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addParty()}
         />
-        <Button onClick={addParty}>Add</Button>
+  <Button type="button" onClick={addParty}>Add</Button>
       </div>
 
       <div className="space-y-3">
@@ -174,6 +174,7 @@ function PartyAllocationForm({ allocations, onChange }: PartyAllocationFormProps
             />
             <div className="w-8">%</div>
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               onClick={() => removeParty(allocation.partyId)}

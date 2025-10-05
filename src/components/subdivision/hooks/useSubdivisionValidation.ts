@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSubdivisionStore } from '../store/useSubdivisionStore';
+import useSubdivisionStore from '../store/useSubdivisionStore';
 import { validateAllSubdivisions } from '../utils/validation';
 
 export function useSubdivisionValidation() {

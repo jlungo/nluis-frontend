@@ -1,7 +1,7 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { PencilRuler, Trash2 } from 'lucide-react';
-import { useSubdivisionStore } from '../store/useSubdivisionStore';
+import useSubdivisionStore from '../store/useSubdivisionStore';
 
 export function ParcelList() {
   const subdivisions = useSubdivisionStore((s) => s.subdivisions);
@@ -14,6 +14,7 @@ export function ParcelList() {
     <div className="flex flex-col h-full">
       <div className="p-3 border-b">
         <Button 
+          type="button"
           variant="outline" 
           className="w-full"
           onClick={() => setIsDrawing(true)}
@@ -43,6 +44,7 @@ export function ParcelList() {
                   </div>
                 </div>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   onClick={(e) => {

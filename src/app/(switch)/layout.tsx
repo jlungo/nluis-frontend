@@ -23,7 +23,7 @@ export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const { page } = usePageStore()
+  const { page, setPage } = usePageStore()
   const navigate = useNavigate();
   const { user } = useAuth()
 
@@ -49,6 +49,32 @@ export default function Layout() {
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
     else if (page?.module && !user.modules.some(m => m.slug === page.module)) navigate(`/board`, { replace: true })
   }, [navigate, page?.module, user])
+
+  // Hydrate module context from the URL on initial load/refresh so the
+  // navigation sidebar can render module-specific items even if the
+  // zustand `page` store hasn't been populated yet by client navigation.
+  useEffect(() => {
+    if (!page) {
+      try {
+        const path = window.location.pathname || "";
+        const parts = path.split('/').filter(Boolean);
+        const first = parts[0];
+        if (first) {
+          // Create a friendly title from the slug: "ccro-management" -> "CCRO Management"
+          const title = first
+            .split('-')
+            .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+            .join(' ');
+
+          setPage({ module: first as any, title, showBreadcrums: true });
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+    // Only run on mount or when page changes to null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user) return null
   return (

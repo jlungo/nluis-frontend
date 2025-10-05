@@ -124,7 +124,7 @@ export default function Index(
             return (
                 <></>
             )
-        case ('land-subdivision'):
+        case ('landsubdivision'):
             return (
                 <FormSubdivision 
                     label={data.label}
@@ -133,6 +133,8 @@ export default function Index(
                     disabled={data.disabled}
                     value={data?.value}
                     onChange={(value) => data.setValue(data.form_slug, value, data.type, data.id, data.project_locality_id)}
+                    // Prefer explicit baseMapId (the actual locality id) when available; fall back to project_locality_id mapping
+                    localityId={data.baseMapId ?? data.project_locality_id}
                 />
             )
         default:

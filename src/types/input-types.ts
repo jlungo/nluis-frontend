@@ -11,4 +11,4 @@ export type InputType =
   | "table"
   | "members"
   | "zoning"
-  | "land-subdivision";
+  | "landsubdivision";

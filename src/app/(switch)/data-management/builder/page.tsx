@@ -48,7 +48,7 @@ interface FormField {
   | "file"
   | "image"
   | "location"
-  | "land-subdivision";
+  | "landsubdivision";
   required: boolean;
   placeholder?: string;
   options?: string[];
@@ -173,7 +173,7 @@ export default function FormBuilderPage() {
         return <Image className="h-4 w-4" />;
       case "location":
         return <Database className="h-4 w-4" />;
-      case "land-subdivision":
+      case "landsubdivision":
         return <MapPin className="h-4 w-4" />;
       default:
         return <FormInput className="h-4 w-4" />;
@@ -290,7 +290,7 @@ export default function FormBuilderPage() {
             <p className="text-sm text-gray-500">Location picker</p>
           </div>
         );
-      case "land-subdivision":
+      case "landsubdivision":
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
             <MapPin className="h-8 w-8 mx-auto text-gray-400 mb-2" />

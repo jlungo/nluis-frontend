@@ -35,3 +35,15 @@ export const useDeleteZone = (opts?: { onDone?: () => void }) => {
     },
   });
 };
+
+// List zones, optionally filtered by query params (e.g., locality)
+export const useZonesQuery = (params?: { locality?: string | number } | null) =>
+  useQuery({
+    queryKey: ['zones', params],
+    queryFn: async () => {
+      const response = await api.get('/zoning/zones/', { params });
+      return response.data;
+    },
+    enabled: !!params?.locality,
+  });
+
