@@ -385,7 +385,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     <div className="flex items-center justify-between p-4 bg-muted/60 dark:bg-muted/20 hover:bg-muted/90 dark:hover:bg-muted/40 cursor-pointer">
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center gap-2">
-                                                {/* {section.icon} */}
                                                 <span className="font-medium">{section.name}</span>
                                             </div>
 
@@ -442,11 +441,16 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {areAllFieldsApproved(form.slug) && (
-                                                            <Badge variant="default" className="bg-green-800 text-xs">
-                                                                Complete
+                                                        <div className="flex flex-col md:flex-row gap-2">
+                                                            {areAllFieldsApproved(form.slug) && (
+                                                                <Badge variant="default" className="bg-green-800 text-xs">
+                                                                    Complete
+                                                                </Badge>
+                                                            )}
+                                                            <Badge variant="secondary" className="text-xs text-muted-foreground">
+                                                                {form.form_fields.length} fields
                                                             </Badge>
-                                                        )}
+                                                        </div>
                                                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                                     </div>
                                                 </button>

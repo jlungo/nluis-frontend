@@ -10,7 +10,7 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import logo from "@/assets/nluis.png"
 import { MainHeader } from '@/components/MainHeader';
 import { usePageStore } from '@/store/pageStore';
@@ -18,13 +18,16 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
 import DynamicBreadcrums from '@/components/DynamicBreadcrums';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const isMobile = useIsMobile()
   const { page } = usePageStore()
   const navigate = useNavigate();
+  const { pathname } = useLocation()
   const { user } = useAuth()
 
   const toggleSidebar = () => {
@@ -43,6 +46,10 @@ export default function Layout() {
   const expandSidebar = () => {
     setSidebarCollapsed(false);
   };
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false)
+  }, [pathname, isMobile])
 
   useEffect(() => {
     if (!user) navigate(`/auth/signin`, { replace: true })

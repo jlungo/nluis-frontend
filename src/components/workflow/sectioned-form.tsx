@@ -256,6 +256,17 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         return editIfPrevApproved || editIfPrevFilled
     }
 
+    const isFormLocked = (form: FormProps, section: SectionProps) => {
+        if (form.position === 1) return false
+        const prevForm = section.forms.find(sec => sec.position === form.position - 1)
+        if (!prevForm) return false
+
+        const isPrevFilled = isFilledForm(prevForm.slug)
+        const editIfPrevFilled = form.edit_if_prev_filled === true && !isPrevFilled
+
+        return editIfPrevFilled
+    }
+
     const canEditForm = (form: FormProps, section: SectionProps) => {
         if (!user) return false
         const isEditor =
@@ -264,7 +275,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
         const allApproved = areAllFieldsApproved(form.slug)
         const sectionLocked = isSectionLocked(section)
-        return !allApproved && isEditor && !sectionLocked
+        return !allApproved && isEditor && !sectionLocked && !isFormLocked(form, section)
     }
 
     const canViewForm = (form: FormProps, section: SectionProps) => {
@@ -456,7 +467,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     <div className="flex items-center justify-between p-4 bg-muted/60 dark:bg-muted/20 hover:bg-muted/90 dark:hover:bg-muted/40 cursor-pointer">
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center gap-2">
-                                                {/* {section.icon} */}
                                                 <span className="font-medium">{section.name}</span>
                                             </div>
 
@@ -473,16 +483,17 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
                                                         : null}
                                                 </> : null}
-
-                                            {isSectionLocked(section) ? (
-                                                <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                    <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                    Locked
-                                                </Badge>
-                                            ) : null}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</span>
+                                            <div className="flex flex-col md:flex-row gap-0 md:gap-2 -my-4">
+                                                {isSectionLocked(section) ? (
+                                                    <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                        <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                        Locked
+                                                    </Badge>
+                                                ) : null}
+                                                <div className="text-xs md:text-sm text-muted-foreground whitespace-nowrap text-center">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</div>
+                                            </div>
                                             {expandedSections.includes(section.slug) ? (
                                                 <ChevronDown className="h-4 w-4" />
                                             ) : (
@@ -520,17 +531,21 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {/* {!form.isAccessible && (
-                                                        <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                            <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                            Locked
-                                                        </Badge>
-                                                        )} */}
-                                                        {areAllFieldsApproved(form.slug) && (
-                                                            <Badge variant="default" className="bg-green-800 text-xs">
-                                                                Complete
+                                                        <div className="flex flex-col md:flex-row gap-2 -my-4">
+                                                            {areAllFieldsApproved(form.slug) ? (
+                                                                <Badge variant="default" className="bg-green-800 text-xs">
+                                                                    Complete
+                                                                </Badge>
+                                                            ) : isFormLocked(form, section) && (
+                                                                <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                                    <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                                    Locked
+                                                                </Badge>
+                                                            )}
+                                                            <Badge variant="secondary" className="text-xs text-muted-foreground mx-auto">
+                                                                {form.form_fields.length} fields
                                                             </Badge>
-                                                        )}
+                                                        </div>
                                                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                                     </div>
                                                 </button>
@@ -567,7 +582,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                     <AlertDialogFooter>
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                         <AlertDialogAction asChild>
-
                                                             <Button
                                                                 type='button'
                                                                 size='sm'
