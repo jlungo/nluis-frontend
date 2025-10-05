@@ -183,7 +183,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         return true
     }
 
-    const canClickForm = (form: FormProps) => {
+    const canEditForm = (form: FormProps) => {
         if (!user) return false
         const isEditor = user.role?.name === "Admin"
         const allApproved = areAllFieldsApproved(form.slug)
@@ -225,7 +225,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            {isFilled && !disabled && canClickForm(form) && !isSectionApproved(section) ?
+                            {isFilled && !disabled && canEditForm(form) && !isSectionApproved(section) ?
                                 editForm ?
                                     <Button
                                         type='button'
@@ -260,7 +260,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
-                                            disabled={disabled || !canClickForm(form) || (isFilled && !editForm)}
+                                            disabled={disabled || !canEditForm(form) || (isFilled && !editForm)}
                                             value={fieldData[`${form.slug}-${field.id}`]?.value}
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
@@ -270,12 +270,12 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     ))}
                                 </div>
                             </CardContent>
-                            {!(disabled || !canClickForm(form) || isFilled) || editForm ? (
+                            {!(disabled || !canEditForm(form) || isFilled) || editForm ? (
                                 <CardFooter>
                                     <Button
                                         type='submit'
                                         className='w-full'
-                                        disabled={disabled || !canClickForm(form) || isPending || isLoading}
+                                        disabled={disabled || !canEditForm(form) || isPending || isLoading}
                                     >
                                         {isPending || isLoading ?
                                             <>
@@ -402,13 +402,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
                                                         : null}
                                                 </> : null}
-
-                                            {/* {!section.isAccessible && (
-                                            <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                Locked
-                                            </Badge>
-                                            )} */}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm text-muted-foreground">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</span>
@@ -435,7 +428,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form) && !(user.role?.name === "Admin" || user.role?.name === "Dg")}
+                                                    disabled={!canEditForm(form) && !(user.role?.name === "Admin" || user.role?.name === "Dg")}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
@@ -449,12 +442,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {/* {!form.isAccessible && (
-                                                        <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                            <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                            Locked
-                                                        </Badge>
-                                                        )} */}
                                                         {areAllFieldsApproved(form.slug) && (
                                                             <Badge variant="default" className="bg-green-800 text-xs">
                                                                 Complete

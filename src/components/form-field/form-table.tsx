@@ -141,9 +141,8 @@ const FormTable = (props: FormTableProps) => {
                                                 value={item.label}
                                                 disabled={disabled}
                                                 onChange={e => handleInputChange(row.position, item.position, e.target.value)}
-                                                className="text-foreground bg-background dark:bg-background"
-                                            />
-                                        }
+                                                className="text-foreground bg-background dark:bg-background min-w-48"
+                                            />}
                                     </TableCell>
                                 ))}
                                 {!isViewer && (

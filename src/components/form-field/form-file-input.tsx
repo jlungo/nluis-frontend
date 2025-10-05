@@ -227,7 +227,7 @@ const FileRenderer: React.FC<{ name: string; label?: string; required?: boolean;
             <div className='flex justify-between items-center gap-2 mb-0.5'>
                 {label ? <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label> : null}
             </div>
-            <div className='w-full bg-muted dark:bg-input/30 aspect-video rounded shadow'>
+            <div className='w-full bg-muted dark:bg-input/30 aspect-[9/14] md:aspect-square lg:aspect-video rounded shadow'>
                 {fileList.map((url, i) => {
                     const type = getFileType(url);
 
