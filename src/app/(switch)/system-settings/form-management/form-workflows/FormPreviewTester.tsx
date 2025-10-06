@@ -44,6 +44,7 @@ import FormMultiselect from '@/components/form-field/form-multiselect';
 import FormTable, { type TableRowI } from '@/components/form-field/form-table';
 import { Tooltip, TooltipContent } from '@/components/ui/tooltip';
 import { TooltipTrigger } from '@radix-ui/react-tooltip';
+import FormAddQuestionnaires, { type AddQuestionnaireProps } from '@/components/form-field/form-add-questionnaire';
 
 export type State = "1" | "0"
 
@@ -94,6 +95,7 @@ export interface WorkflowTemplate {
     name: string;
     description: string | null;
     module: string;
+    module_slug: string;
     module_level: string;
     isActive: boolean;
     isTemplate: boolean;
@@ -440,6 +442,14 @@ export function FormPreviewTester({
                         </div>
                     );
 
+                case "add_questionnaires":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <AddQuestionnairesRenderer {...field} module={workflowData.module_slug} />
+                            {renderError()}
+                        </div>
+                    );
+
                 default:
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
@@ -458,7 +468,7 @@ export function FormPreviewTester({
                     );;
             }
         },
-        [formValues, validationErrors, showValidation, updateFieldValue]
+        [formValues, validationErrors, showValidation, workflowData.module_slug, updateFieldValue]
     );
 
     // Render form preview (read-only structure)
@@ -1081,7 +1091,7 @@ const MultiselectRenderer: React.FC<FormField> = ({ options, name, label, requir
             name={name}
             label={label}
             required={required}
-            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.name }))}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.label }))}
             values={values}
             setValues={setValues}
             className='md:w-full xl:w-full'
@@ -1101,6 +1111,21 @@ const TableRenderer: React.FC<FormField> = ({ options, name, label, required }) 
             values={values}
             setValues={setValues}
             className='md:w-full xl:w-full'
+            isPreview
+        />
+    )
+}
+
+const AddQuestionnairesRenderer: React.FC<FormField & { module: string }> = ({ name, label, required, module }) => {
+    const [values, setValues] = useState<AddQuestionnaireProps[]>([])
+    return (
+        <FormAddQuestionnaires
+            label={label}
+            name={name}
+            required={required}
+            module={module}
+            values={values}
+            onValueChange={setValues}
             isPreview
         />
     )

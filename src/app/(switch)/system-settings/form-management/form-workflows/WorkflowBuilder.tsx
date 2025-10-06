@@ -92,7 +92,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'file', label: 'File Upload' },
             { value: 'members', label: 'Members Add' },
             { value: 'zoning', label: 'Zoning' },
-            { value: 'questionnaire', label: 'Questionnaire' },
+            { value: 'add_questionnaires', label: 'Add Questionnaires' },
+            { value: 'view_questionnaires', label: 'View Questionnaires' },
         ],
         []
     );
@@ -582,7 +583,6 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: WorkflowSubmission) => {
-            console.log(e)
             if (previousData) return api.put(`/form-management/submission/${previousData.slug}/update/`, e);
             return api.post(`/form-management/submission/`, e)
         },
@@ -696,6 +696,7 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             name: formDetails.name || 'Untitled Form',
             description: formDetails.description,
             module: selectedModule?.name || '',
+            module_slug: selectedModule?.slug || '',
             module_level: selectedLevel?.slug || '',
             isActive: true,
             isTemplate: true,

@@ -2,6 +2,8 @@ import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import type { FieldsProps as QuestionnaireField } from "@/queries/useQuestionnaireQuery";
 import type { InputType } from "@/types/input-types";
 import type { TableRowI } from "./form-table";
+import FormAddQuestionnaires, { type AddQuestionnaireProps } from "./form-add-questionnaire";
+import FormViewQuestionnaires from "./form-view-questionnaire";
 import FormMembers, { type MembersI } from "./form-members";
 import FormInput from "./form-input";
 import FormTextArea from "./form-textarea";
@@ -13,7 +15,7 @@ import FormZoning from "./form-zoning";
 import FormMultiselect from "./form-multiselect";
 import FormTable from "./form-table";
 
-export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[]
+export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[] | AddQuestionnaireProps[]
 
 export type FieldI = FieldsProps | QuestionnaireField
 
@@ -30,7 +32,9 @@ export default function Index(
             field_id: number,
             project_locality_id: string
         ) => void,
-        baseMapId?: string
+        baseMapId?: string;
+        module: string;
+        projectLocalityId?: string;
     }
 ) {
     const formSlug = 'form_slug' in data && data.form_slug
@@ -141,6 +145,31 @@ export default function Index(
                     disabled={data?.disabled}
                     values={data?.value && Array.isArray(data.value) ? data.value : []}
                     setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ("add_questionnaires"):
+            return (
+                <FormAddQuestionnaires
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    disabled={data?.required}
+                    module={data.module}
+                    values={data?.value || []}
+                    onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ("view_questionnaires"):
+            return (
+                <FormViewQuestionnaires
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    disabled={data?.required}
+                    module={data.module}
+                    projectLocalityId={data?.projectLocalityId}
+                // values={data?.value || []}
+                // onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:

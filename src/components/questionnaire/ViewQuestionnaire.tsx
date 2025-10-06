@@ -25,7 +25,7 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const questionnaireKey = getCategoryKey(worklowCategory) ?? 6
-    const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnairesQuery(1, 0, '', module, moduleLevel, questionnaireKey);
+    const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnairesQuery(1, 0, '', module, questionnaireKey);
     const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire && questionnaire?.results && questionnaire.results.length > 0 ? questionnaire.results[0].slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name

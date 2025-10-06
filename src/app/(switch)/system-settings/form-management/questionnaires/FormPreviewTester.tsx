@@ -988,7 +988,7 @@ const MultiselectRenderer: React.FC<FormField> = ({ options, name, label, requir
             name={name}
             label={label}
             required={required}
-            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.name }))}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.label }))}
             values={values}
             setValues={setValues}
             className='md:w-full xl:w-full'

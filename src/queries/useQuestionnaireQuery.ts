@@ -83,18 +83,18 @@ export const useQuestionnairesQuery = (
   offset: number,
   keyword: string,
   module: string,
-  level: string,
-  category: number | ""
+  category: number | "",
+  projectLocalityId?: string
 ) => {
   return useQuery<DataProps>({
     queryKey: [
       questionnaireQueryKey,
-      { limit, offset, keyword, module, level, category },
+      { limit, offset, keyword, module, category, projectLocalityId },
     ],
     queryFn: () =>
       api
         .get(
-          `/collect/questionnaire/list/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}&category=${category}`
+          `/collect/questionnaire/list/?limit=${limit}&offset=${offset}&keyword=${keyword}&module=${module}&category=${category}&project_locality_id=${projectLocalityId}`
         )
         .then((res) => res.data),
   });

@@ -356,6 +356,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
                                             baseMapId={projectLocaleId || undefined}
+                                            module={data.module_slug}
                                             {...field}
                                         />
                                     ))}
