@@ -36,10 +36,7 @@ export default function Page() {
     }, [PageData])
 
     const { mutateAsync } = useMutation({
-        mutationFn: (slug: string) => api.delete(
-            '//' + slug,
-            // TODO add delete questionnaire endpoint
-        ),
+        mutationFn: (slug: string) => api.delete(`/collect/questionnaire/${slug}/delete/`),
         onSuccess: () =>
             queryClient.invalidateQueries({
                 refetchType: "active",

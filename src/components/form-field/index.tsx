@@ -33,7 +33,13 @@ export default function Index(
         baseMapId?: string
     }
 ) {
-    if (data.type === 'multiselect') console.log(data.value)
+    const formSlug = 'form_slug' in data && data.form_slug
+        ? data.form_slug
+        : ('custom_form_slug' in data ? data.custom_form_slug : undefined)
+    const selectOptions = 'select_options' in data && data.select_options
+        ? data.select_options
+        : ('questionnaire_select_options' in data ? data.questionnaire_select_options : [])
+    if (!formSlug) return
     switch (data.type) {
         case ('textarea'):
             return (
@@ -42,7 +48,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value || undefined}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('date'):
@@ -53,7 +59,7 @@ export default function Index(
                     required={data.required}
                     disabled={data.disabled}
                     dateValue={data?.value ? new Date(data.value as string) : undefined}
-                    onDateChange={(e) => data.setValue(data.form_slug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}
+                    onDateChange={(e) => data.setValue(formSlug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('checkbox'):
@@ -63,7 +69,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     checked={data?.value && data.value === "true"}
-                    onValueChange={(e) => data.setValue(data.form_slug, String(e), data.type, data.id, data.project_locality_id)}
+                    onValueChange={(e) => data.setValue(formSlug, String(e), data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('file'):
@@ -76,7 +82,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                     className="w-full"
                 />
             )
@@ -87,7 +93,8 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    selectOptions={selectOptions}
+                    onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('multiselect'):
@@ -96,10 +103,10 @@ export default function Index(
                     label={data.label}
                     name={data.name}
                     required={data.required}
-                    selectOptions={data.select_options}
+                    selectOptions={selectOptions}
                     disabled={data?.disabled}
                     values={data?.value && Array.isArray(data.value) ? data.value : []}
-                    setValues={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('zoning'):
@@ -121,7 +128,7 @@ export default function Index(
                     required={data.required}
                     disabled={data.disabled}
                     value={data?.value}
-                    setValue={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    setValue={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('table'):
@@ -130,10 +137,10 @@ export default function Index(
                     label={data.label}
                     name={data.name}
                     required={data.required}
-                    selectOptions={data.select_options}
+                    selectOptions={selectOptions}
                     disabled={data?.disabled}
                     values={data?.value && Array.isArray(data.value) ? data.value : []}
-                    setValues={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:
@@ -143,7 +150,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
     }

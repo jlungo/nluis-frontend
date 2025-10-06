@@ -35,10 +35,10 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
-    projectLocaleProgress?: number
+    questionnaireProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, projectLocaleProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, questionnaireProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -166,8 +166,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const isFilledForm = (formSlug: string): boolean => {
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug)
-        const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
+        const formFields = data.questionnaire_sections.flatMap(section =>
+            section.questionnaire_section_forms.filter(form => form.slug === formSlug).flatMap(form => form.custom_form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -176,8 +176,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const areAllFieldsApproved = (formSlug: string) => {
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug && value.is_approved === true)
-        const formFields = data.sections.flatMap(section =>
-            section.forms.filter(form => form.slug === formSlug).flatMap(form => form.form_fields))
+        const formFields = data.questionnaire_sections.flatMap(section =>
+            section.questionnaire_section_forms.filter(form => form.slug === formSlug).flatMap(form => form.custom_form_fields))
 
         if (formValues.length !== formFields.length) return false
         return true
@@ -193,23 +193,23 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const isSectionApproved = (section: SectionProps) => {
         if (!user) return false
         const isApprover = user.role?.name === "Admin"
-        const allApproved = section.forms.every(form => areAllFieldsApproved(form.slug))
+        const allApproved = section.questionnaire_section_forms.every(form => areAllFieldsApproved(form.slug))
         return allApproved && isApprover
     }
 
     const countFilledForms = (section: SectionProps) => {
-        return section.forms.reduce((count, form) => {
+        return section.questionnaire_section_forms.reduce((count, form) => {
             return count + (isFilledForm(form.slug) ? 1 : 0)
         }, 0)
     }
 
     const renderForm = (formId: string, isFilled: boolean) => {
         if (!data) return
-        const section = data.sections.find(section => section.forms.some(form => form.slug === formId))
+        const section = data.questionnaire_sections.find(section => section.questionnaire_section_forms.some(form => form.slug === formId))
         if (!section) return null
-        const form = section.forms.find(sf => sf.slug === formId);
+        const form = section.questionnaire_section_forms.find(sf => sf.slug === formId);
         if (!form) return null;
-        const isSingle = data.sections.length == 1 && data.sections.every(section => section.forms.length == 1)
+        const isSingle = data.questionnaire_sections.length == 1 && data.questionnaire_sections.every(section => section.questionnaire_section_forms.length == 1)
         return (
             <div className="h-fit flex flex-col">
                 <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
@@ -220,7 +220,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 {isSingle ? 'Back' : 'Sections'}
                             </Button>
                             <div>
-                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}</h1>
+                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}{isSingle && section.name.length > 0 ? `: ${section.name}` : null}</h1>
                                 <p className="text-xs lg:text-sm text-muted-foreground">{form?.description || null}</p>
                             </div>
                         </div>
@@ -248,6 +248,15 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                         Edit Form
                                     </Button>
                                 : null}
+                            {disabled ? (
+                                <Link
+                                    to={`/system-settings/form-management/questionnaires/${data.slug}/edit`}
+                                    className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                    Edit<span className='hidden md:inline'> Questionnaire</span>
+                                </Link>
+                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -257,7 +266,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
                             <CardContent>
                                 <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                    {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
+                                    {form.custom_form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
                                             disabled={disabled || !canEditForm(form) || (isFilled && !editForm)}
@@ -310,10 +319,10 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     useEffect(() => {
         if (!data) return
-        if (data.sections.length == 1 && data.sections.every(section => section.forms.length == 1))
-            setActiveForm(data.sections[0].forms[0].slug);
-        if (data?.sections.length > 0) {
-            const lowest = [...data.sections].sort(
+        if (data.questionnaire_sections.length == 1 && data.questionnaire_sections.every(section => section.questionnaire_section_forms.length == 1))
+            setActiveForm(data.questionnaire_sections[0].questionnaire_section_forms[0].slug);
+        if (data?.questionnaire_sections.length > 0) {
+            const lowest = [...data.questionnaire_sections].sort(
                 (a, b) => (a.position ?? Infinity) - (b.position ?? Infinity)
             )[0]
             if (lowest) setExpandedSections([lowest.slug])
@@ -353,19 +362,19 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     <div className="flex items-center gap-3">
                         {disabled ? (
                             <Link
-                                to={`/system-settings/form-management/form-questionnaires/${data.slug}/edit`}
+                                to={`/system-settings/form-management/questionnaires/${data.slug}/edit`}
                                 className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
                             >
                                 <Edit className="h-4 w-4" />
                                 Edit<span className='hidden md:inline'> Questionnaire</span>
                             </Link>
                         ) : null}
-                        {projectLocaleProgress !== undefined ? (
+                        {questionnaireProgress !== undefined ? (
                             <div className='flex flex-col gap-1 items-end'>
-                                <p className='text-xs md:text-sm'>{Number.isInteger(projectLocaleProgress)
-                                    ? projectLocaleProgress
-                                    : Math.floor(projectLocaleProgress * 100) / 100}% Complete</p>
-                                <Progress value={projectLocaleProgress} className='w-20 md:w-24 lg:w-32' />
+                                <p className='text-xs md:text-sm'>{Number.isInteger(questionnaireProgress)
+                                    ? questionnaireProgress
+                                    : Math.floor(questionnaireProgress * 100) / 100}% Complete</p>
+                                <Progress value={questionnaireProgress} className='w-20 md:w-24 lg:w-32' />
                             </div>
                         ) : null}
                     </div>
@@ -375,7 +384,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             {/* Content */}
             <div className={`flex-1 overflow-y-auto ${!disabled ? "px-4 md:px-6 pb-4 md:pb-4" : ""}`}>
                 <div className="space-y-4">
-                    {data.sections.slice().sort((a, b) => a.position - b.position).slice().sort((a, b) => a.position - b.position).map((section) => (
+                    {data.questionnaire_sections.slice().sort((a, b) => a.position - b.position).slice().sort((a, b) => a.position - b.position).map((section) => (
                         <Card key={section.slug} className={`overflow-hidden gap-2 lg:gap-2 pb-3 md:pb-3 ${isSectionApproved(section) ? 'border-green-800 dark:border-green-900' : ''}`}>
                             <Collapsible
                                 open={expandedSections.includes(section.slug)}
@@ -391,10 +400,10 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             {!disabled
                                                 ? <>
                                                     <Badge
-                                                        variant={countFilledForms(section) === section.forms.length ? 'default' : 'secondary'}
-                                                        className={countFilledForms(section) === section.forms.length ? 'bg-green-700 dark:bg-green-900' : ''}
+                                                        variant={countFilledForms(section) === section.questionnaire_section_forms.length ? 'default' : 'secondary'}
+                                                        className={countFilledForms(section) === section.questionnaire_section_forms.length ? 'bg-green-700 dark:bg-green-900' : ''}
                                                     >
-                                                        {countFilledForms(section)} / {section.forms.length} filled
+                                                        {countFilledForms(section)} / {section.questionnaire_section_forms.length} filled
                                                     </Badge>
 
                                                     {isSectionApproved(section)
@@ -403,7 +412,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                 </> : null}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-muted-foreground">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</span>
+                                            <span className="text-sm text-muted-foreground">{section.questionnaire_section_forms.length === 1 ? `1 form` : `${section.questionnaire_section_forms.length} forms`}</span>
                                             {expandedSections.includes(section.slug) ? (
                                                 <ChevronDown className="h-4 w-4" />
                                             ) : (
@@ -417,7 +426,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     <div className="p-4 space-y-3">
                                         <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
                                         <div className="grid gap-3">
-                                            {section.forms.slice().sort((a, b) => a.position - b.position).map((form) => (
+                                            {section.questionnaire_section_forms.slice().sort((a, b) => a.position - b.position).map((form) => (
                                                 <button
                                                     type='button'
                                                     key={form.slug}
@@ -448,7 +457,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                                 </Badge>
                                                             )}
                                                             <Badge variant="secondary" className="text-xs text-muted-foreground">
-                                                                {form.form_fields.length} fields
+                                                                {form.custom_form_fields.length} fields
                                                             </Badge>
                                                         </div>
                                                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
