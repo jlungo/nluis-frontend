@@ -5,7 +5,7 @@ import { ProjectApprovalStatus } from "@/types/constants";
 import { Progress } from "../ui/progress";
 import { approvalStatus } from "./utils";
 import { ProjectStatusBadge } from "./project-status-badge";
-import LocalitiesPlanIndicator from './LocalitiesPlanIndicator';
+// import LocalitiesPlanIndicator from './LocalitiesPlanIndicator';
 
 // Columns for Projects DataTable
 export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
@@ -107,13 +107,13 @@ export const ProjectsDataTableColumn: ColumnDef<ProjectI, unknown>[] = [
       <div className="text-sm max-w-40 overflow-hidden text-ellipsis">{row.original.organization}</div>
     ),
   },
-  {
-    id: 'plans',
-    header: 'Plans',
-    cell: ({ row }: { row: { original: ProjectI } }) => (
-      <div className="text-sm">
-        <LocalitiesPlanIndicator localities={row.original.localities as any} />
-      </div>
-    ),
-  },
+  // {
+  //   id: 'plans',
+  //   header: 'Plans',
+  //   cell: ({ row }: { row: { original: ProjectI } }) => (
+  //     <div className="text-sm">
+  //       <LocalitiesPlanIndicator localities={row.original.localities as any} />
+  //     </div>
+  //   ),
+  // },
 ];

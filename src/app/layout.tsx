@@ -5,7 +5,7 @@ import ReactQueryContext from "@/context/react-query";
 export default function Layout() {
     return (
         <ReactQueryContext>
-            <div className="bg-background min-h-screen">
+            <div className="bg-background min-h-screen relative">
                 <Outlet />
             </div>
             <Toaster />

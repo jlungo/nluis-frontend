@@ -159,10 +159,14 @@ export function useToolbarDefs(): ToolbarSection[] {
           label: "Draw Polygon",
           icon: Square,
           onClick: () => {
+            console.log('Draw Polygon clicked');
             const state = useSubdivisionStore.getState();
             const api = state.api;
-            if (api) {
-              api.startDrawPolygon?.();
+            if (api?.startDrawPolygon) {
+              console.log('Calling startDrawPolygon');
+              api.startDrawPolygon();
+            } else {
+              console.error('Draw Polygon API method not found', { api });
             }
           },
         },
@@ -183,10 +187,17 @@ export function useToolbarDefs(): ToolbarSection[] {
           label: "Add Points",
           icon: PencilRuler,
           onClick: () => {
-            const state = useSubdivisionStore.getState();
-            const api = state.api;
-            if (api) {
-              api.openAddPoints?.();
+            const store = useSubdivisionStore.getState();
+            console.log('Add Points clicked:', {
+              hasApi: !!store.api,
+              hasOpenAddPoints: !!store.api?.openAddPoints,
+              api: store.api
+            });
+            if (store.api?.openAddPoints) {
+              console.log('Calling openAddPoints');
+              store.api.openAddPoints();
+            } else {
+              console.error("Add points API method not found");
             }
           },
         },

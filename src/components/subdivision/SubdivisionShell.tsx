@@ -14,6 +14,7 @@ import { SubdivisionErrorBoundary } from './components/SubdivisionErrorBoundary'
 
 interface SubdivisionShellProps {
   parentParcel?: ParcelFeature;
+  // baseMapId?: string;
   value?: string;
   onChange?: (value: string) => void;
   className?: string;
@@ -221,6 +222,7 @@ export default function SubdivisionShell({
             parentParcel={effectiveParent}
             disabled={disabled}
             localityId={localityId}
+            // baseMapId={props.baseMapId}
             isMaximized={isMaximized}
             onToggleFullscreen={() => setIsMaximized((v) => !v)}
           />

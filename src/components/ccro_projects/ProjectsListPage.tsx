@@ -84,7 +84,7 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
       <div className='flex justify-between items-start'>
         <div className='space-y-1'>
           <h1 className="text-lg lg:text-2xl font-semibold capitalize">{decodeURIComponent(moduleLevel.replace(/-/g, " "))} Projects</h1>
-          <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
+          <p className="text-muted-foreground text-sm">Manage and track CCRO projects</p>
         </div>
         {canCreate() ? (
           <Button type='button' onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">

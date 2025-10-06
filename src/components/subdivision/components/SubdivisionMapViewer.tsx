@@ -122,13 +122,12 @@ export default function SubdivisionMapViewer({
 
   // Helper: Get plans tiles template (use latest plan tiles endpoint)
   const getPlansTilesTemplate = useCallback(() => {
-    // Use the axios baseURL but avoid duplicating API prefix. api.defaults.baseURL may already include `/api/v1`.
+    // Use the axios baseURL but avoid duplicating API prefix
     const API_BASE = (api.defaults.baseURL || '').replace(/\/$/, '');
-  if (!localityId) return null; // don't return a template with a placeholder - Mapbox will attempt to fetch literal braces
+    if (!localityId) return null; // don't return a template with a placeholder - Mapbox will attempt to fetch literal braces
 
-  // Build the tiles URL relative to the base (do NOT prepend `/api/v1` here because API_BASE may already contain it)
-
-  return API_BASE + `/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`;
+    // Return the full MVT tiles endpoint URL with the complete API path
+    return `${API_BASE}/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`;
   }, [localityId]);
 
   // Map style effect - only when styleName changes
@@ -454,53 +453,70 @@ export default function SubdivisionMapViewer({
     const draw = drawRef.current;
     const map = mapRef.current?.getMap();
     
-    if (!draw || !map) return;
-    
+    // Initialize API with methods that don't depend on map/draw first
     const api = {
       startSelect: () => {
+        if (!draw || !map) return;
         try {
           draw.changeMode('simple_select');
           setDrawMode(null);
           setIsDrawing(false);
-          map.getCanvas().style.cursor = 'pointer';
+          const canvas = map.getCanvas();
+          if (canvas) canvas.style.cursor = 'pointer';
         } catch (err) {
           console.error('Failed to start select mode:', err);
         }
       },
       startDrawPolygon: () => {
+        console.log('startDrawPolygon API method called', {
+          hasDraw: !!draw,
+          hasMap: !!map
+        });
+        if (!draw || !map) {
+          console.error('Missing draw or map refs');
+          return;
+        }
         try {
           draw.changeMode('draw_polygon');
           setDrawMode('polygon');
           setIsDrawing(true);
-          map.getCanvas().style.cursor = 'crosshair';
+          const canvas = map.getCanvas();
+          if (canvas) canvas.style.cursor = 'crosshair';
+          console.log('Successfully started polygon mode');
         } catch (err) {
           console.error('Failed to start polygon mode:', err);
         }
       },
       startDrawLine: () => {
+        if (!draw || !map) return;
         try {
           draw.changeMode('draw_line_string');
           setDrawMode('line');
           setIsDrawing(true);
-          map.getCanvas().style.cursor = 'crosshair';
+          const canvas = map.getCanvas();
+          if (canvas) canvas.style.cursor = 'crosshair';
         } catch (err) {
           console.error('Failed to start line mode:', err);
         }
       },
       startDrawPoint: () => {
+        if (!draw || !map) return;
         try {
           draw.changeMode('draw_point');
           setDrawMode('point');
           setIsDrawing(true);
-          map.getCanvas().style.cursor = 'crosshair';
+          const canvas = map.getCanvas();
+          if (canvas) canvas.style.cursor = 'crosshair';
         } catch (err) {
           console.error('Failed to start point mode:', err);
         }
       },
       openAddPoints: () => {
+        console.log('openAddPoints called, setting pointsOpen to true');
         setDrawMode(null);
         setIsDrawing(false);
         setPointsOpen(true);
+        console.log('Current pointsOpen state:', pointsOpen);
       },
       toggleLabels: (v?: boolean) => {
         const newValue = typeof v === 'boolean' ? v : !labelsVisible;
@@ -518,8 +534,18 @@ export default function SubdivisionMapViewer({
       },
     };
     
+    const currentApi = useSubdivisionStore.getState().api;
+    console.log('API Registration:', {
+      isInitialSetup: !currentApi,
+      methods: Object.keys(api),
+      hasDrawRef: !!drawRef.current,
+      hasMapRef: !!mapRef.current
+    });
     useSubdivisionStore.getState().setAPI(api);
-    return () => useSubdivisionStore.getState().setAPI(undefined);
+    return () => {
+      console.log('Cleaning up API');
+      useSubdivisionStore.getState().setAPI(undefined);
+    };
   }, [setIsDrawing, setDrawMode, labelsVisible, drawRef, mapRef]);
 
   // Responsive map resize
@@ -1105,10 +1131,18 @@ export default function SubdivisionMapViewer({
             
             {/* Plans vector tiles */}
             {(() => {
-              const tilesUrl = getPlansTilesTemplate();
-              if (!tilesUrl) return null;
+              if (!localityId) return null;
+              // Transform request will handle adding auth headers
+              const tileUrl = `${api.defaults.baseURL?.replace(/\/$/, '')}/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`;
               return (
-                <Source id="plans-tiles" type="vector" tiles={[tilesUrl]} minzoom={1} maxzoom={22} promoteId="id">
+                <Source 
+                  id="plans-tiles" 
+                  type="vector" 
+                  tiles={[tileUrl]} 
+                  minzoom={1} 
+                  maxzoom={22} 
+                  promoteId="id"
+                >
                   <Layer
                     id="plans-fill"
                     type="fill"

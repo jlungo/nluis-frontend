@@ -1,7 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import MapGL, { Source, Layer, NavigationControl } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
+import api, { getAccessToken, refreshAccessToken } from "@/lib/axios";
 import { useLocalityShapefileQuery } from '@/queries/useLocalityQuery';
 import useSubdivisionStore from '../store/useSubdivisionStore';
-import { usePlansQuery } from '@/queries/usePlansQuery';
+import { fcToBounds } from "../../zoning/utils/geo";
+
+const MAPBOX_STYLE = "mapbox://styles/mapbox/streets-v11";
+const MAPBOX_TOKEN =
+  "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA";
 
 interface Props {
   localityId?: string | number | null;
@@ -9,149 +16,158 @@ interface Props {
   disabled?: boolean;
 }
 
-// Lightweight, interactive SVG map engine for quick testing.
-// - Renders locality boundary (if available)
-// - Fetches plans for the locality via `/zoning/plans/?locality=` if present, otherwise no plans
-// - Clicking a plan toggles selection in the subdivision store
-export default function SubdivisionMapEngine({ localityId, parentParcel, disabled }: Props) {
-  const { data: boundary } = useLocalityShapefileQuery(localityId ? String(localityId) : undefined as any);
+export default function SubdivisionMapEngine({ localityId }: Props) {
+  const mapGLRef = useRef<any>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [baseMapBounds, setBaseMapBounds] = useState<[[number, number], [number, number]] | null>(null);
+
+  // Store hooks and data
   const togglePlan = useSubdivisionStore((s) => s.togglePlan);
+  const API_BASE = useMemo(() => (api.defaults.baseURL || "").replace(/\/$/, ""), []);
 
-  // Use react-query hook to fetch plans (land-use plans) for the locality
-  const { data: plansResponse, isLoading } = usePlansQuery(localityId ? { locality: localityId } : null);
+  // Plans tiles template
+  const plansTilesTemplate = useMemo(() => {
+    if (!localityId) return "";
+    return `${API_BASE}/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`;
+  }, [API_BASE, localityId]);
 
-  // Convert the response into a GeoJSON FeatureCollection if necessary
-  const plansGeo = (() => {
-    if (!plansResponse) return null as any;
-    if (plansResponse.features) return plansResponse;
-    if (Array.isArray(plansResponse)) {
-      return { type: 'FeatureCollection', features: plansResponse.map((p: any) => ({ type: 'Feature', geometry: p.geometry, properties: p })) };
-    }
-    // Unknown shape, return null
-    return null as any;
-  })();
+  // Transform request to add auth headers
+  const transformRequest = useCallback(
+    (url: string) => {
+      const isApiCall = url.startsWith(API_BASE);
+      if (!isApiCall) return { url };
+      const token = getAccessToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      return { url, headers };
+    },
+    [API_BASE]
+  );
 
-  // When plansGeo changes, set up plan features
+  // Basemap GeoJSON + bounds
+  const { data: baseMapData } = useLocalityShapefileQuery(localityId ? String(localityId) : undefined);
   useEffect(() => {
-    if (!plansGeo) return;
-  }, [plansGeo]);
+    if (baseMapData) setBaseMapBounds(fcToBounds(baseMapData));
+  }, [baseMapData]);
 
-  // This is a lightweight component - API setup is handled by MapViewer
-
-  // Compute bounds from either boundary or plansGeo
-  const geo = boundary || plansGeo;
-  const bounds = useMemo(() => {
-    if (!geo) return null;
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    function visit(coords: any) {
-      if (typeof coords[0] === 'number') {
-        const x = coords[0];
-        const y = coords[1];
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-      } else {
-        for (const c of coords) visit(c);
+  // Error handling for tile requests
+  useEffect(() => {
+    const mapRef = mapGLRef.current;
+    if (!mapRef) return;
+    const map = mapRef.getMap ? mapRef.getMap() : mapRef;
+    const onError = async (e: any) => {
+      const status = e?.error?.status || e?.error?.cause?.status;
+      if (status !== 401) return;
+      try {
+        await refreshAccessToken();
+        const src: any = map.getSource("plans-tiles");
+        if (src?.setTiles) {
+          const v = Date.now();
+          src.setTiles([`${plansTilesTemplate}?v=${v}`]);
+        } else {
+          map.triggerRepaint();
+        }
+      } catch (e: unknown) {
+        console.error(e);
       }
+    };
+    map.on("error", onError);
+    return () => map.off("error", onError);
+  }, [plansTilesTemplate]);
+
+  // Map load handler
+  const onMapLoad = useCallback(() => {
+    setIsMapLoaded(true);
+    const mapRef = mapGLRef.current;
+
+    // Fit to basemap bounds if available
+    if (baseMapBounds) {
+      (mapRef.fitBounds || mapRef.getMap()?.fitBounds)?.(baseMapBounds, {
+        padding: 24,
+        duration: 800,
+      });
     }
-    const feats = geo?.features || [];
-    for (const f of feats) {
-      if (f?.geometry?.coordinates) {
-        visit(f.geometry.coordinates);
-      }
+  }, [baseMapBounds]);
+
+  // Plan click handler
+  const onPlanClick = useCallback((e: any) => {
+    const features = e.features;
+    if (!features?.length) return;
+    
+    const feature = features[0];
+    const planId = feature.properties?.id;
+    if (planId) {
+      togglePlan(planId);
     }
-    if (!isFinite(minX)) return null;
-    return { minX, minY, maxX, maxY };
-  }, [geo]);
+  }, [togglePlan]);
 
-  function project(lon: number, lat: number, w: number, h: number) {
-    if (!bounds) return { x: 0, y: 0 };
-    const { minX, maxX, minY, maxY } = bounds as any;
-    const x = ((lon - minX) / (maxX - minX || 1)) * w;
-    const y = ((maxY - lat) / (maxY - minY || 1)) * h;
-    return { x, y };
-  }
+  // Add click handler for plans layer
+  useEffect(() => {
+    const mapRef = mapGLRef.current;
+    if (!mapRef || !isMapLoaded) return;
+    
+    const map = mapRef.getMap ? mapRef.getMap() : mapRef;
+    map.on('click', 'plans-fill', onPlanClick);
+    
+    return () => {
+      map.off('click', 'plans-fill', onPlanClick);
+    };
+  }, [isMapLoaded, onPlanClick]);
 
-  function ringToPath(ring: number[][], w: number, h: number) {
-    return ring
-      .map((pt, i) => {
-        const { x, y } = project(pt[0], pt[1], w, h);
-        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
-      })
-      .join(' ') + ' Z';
-  }
-
-  function polygonToPaths(coords: any, w: number, h: number) {
-    return coords.map((ring: any) => ringToPath(ring, w, h));
-  }
-
-  const svgW = 700;
-  const svgH = 480;
+  if (!localityId) return null;
 
   return (
-    <div className="w-full h-full p-2">
-      <div className="p-2 flex items-center justify-between">
-        <div>
-          <h4 className="text-sm font-medium">Subdivision Map</h4>
-          <div className="text-xs text-muted-foreground">Lightweight interactive preview</div>
-        </div>
-  <div className="text-xs text-muted-foreground">{isLoading ? 'Loading…' : ''}</div>
-      </div>
-
-      <div className="w-full h-[420px] bg-white rounded overflow-hidden shadow-sm">
-        {!geo ? (
-          <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">No map data</div>
-        ) : (
-          <svg viewBox={`0 0 ${svgW} ${svgH}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-            <rect x={0} y={0} width={svgW} height={svgH} fill="transparent" />
-            <g>
-              {(geo.features || []).map((f: any, fi: number) => {
-                const geom = f.geometry;
-                let paths: string[] = [];
-                if (geom.type === 'Polygon') paths = polygonToPaths(geom.coordinates, svgW, svgH);
-                else if (geom.type === 'MultiPolygon') {
-                  for (const poly of geom.coordinates) paths = paths.concat(polygonToPaths(poly, svgW, svgH));
-                }
-                const zoneId = String(f.properties?.id ?? f.properties?.plan_id ?? f.properties?.pk ?? fi);
-                const fill = f.properties?.color ?? f.properties?.fill ?? '#e6f0ff';
-                return paths.map((p, i) => (
-                  <path
-                    key={`${fi}-${i}`}
-                    d={p}
-                    fill={fill}
-                    stroke="#111827"
-                    strokeWidth={0.6}
-                    opacity={0.9}
-                    onClick={() => {
-                      if (disabled) return;
-                      togglePlan(zoneId);
-                    }}
-                    role="button"
-                    aria-label={`plan-${zoneId}`}
-                  />
-                ));
-              })}
-              {/* Render parent parcel geometry if provided */}
-              {parentParcel?.geometry && (() => {
-                const geom = parentParcel.geometry;
-                const paths: string[] = [];
-                if (geom.type === 'Polygon') {
-                  paths.push(...polygonToPaths(geom.coordinates, svgW, svgH));
-                } else if (geom.type === 'MultiPolygon') {
-                  for (const poly of geom.coordinates) paths.push(...polygonToPaths(poly, svgW, svgH));
-                }
-                return paths.map((p, i) => (
-                  <path key={`parent-${i}`} d={p} fill="none" stroke="#ef4444" strokeWidth={1} />
-                ));
-              })()}
-            </g>
-          </svg>
+    <div className="w-full h-full relative">
+      <MapGL
+        ref={mapGLRef}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        initialViewState={{
+          longitude: 35,
+          latitude: -6,
+          zoom: 10,
+        }}
+        mapStyle={MAPBOX_STYLE}
+        style={{ width: "100%", height: "100%" }}
+        transformRequest={transformRequest}
+        onLoad={onMapLoad}
+        interactiveLayerIds={["plans-fill"]}
+      >
+        {isMapLoaded && plansTilesTemplate && (
+          <>
+            <Source
+              id="plans-tiles"
+              type="vector"
+              tiles={[plansTilesTemplate]}
+              minzoom={0}
+              maxzoom={22}
+            >
+              <Layer
+                id="plans-fill"
+                type="fill"
+                source="plans-tiles"
+                source-layer="plans"
+                paint={{
+                  "fill-color": ["get", "color"],
+                  "fill-opacity": 0.5,
+                }}
+              />
+              <Layer
+                id="plans-line"
+                type="line"
+                source="plans-tiles"
+                source-layer="plans"
+                paint={{
+                  "line-color": "#000000",
+                  "line-width": 1,
+                }}
+              />
+            </Source>
+          </>
         )}
-      </div>
+        <div className="absolute top-2 right-2">
+          <NavigationControl />
+        </div>
+      </MapGL>
     </div>
   );
 }
