@@ -48,19 +48,19 @@ export type QuestionnaireSubmission = {
   module: string;
   version: string;
   category: number;
-  sections: {
+  questionnaire_sections: {
     slug?: string;
     name: string;
     description: string;
     position: number;
     is_active?: State;
-    forms: {
+    questionnaire_section_forms: {
       slug?: string;
       name: string;
       description: string | null;
       position: number;
       is_active?: State;
-      form_fields: {
+      custom_form_fields: {
         id?: number;
         label: string;
         type: string;
@@ -69,7 +69,7 @@ export type QuestionnaireSubmission = {
         required: boolean;
         position: number;
         is_active?: State;
-        select_options: {
+        questionnaire_select_options: {
           text_label: string;
           value: string;
           position: number;
@@ -241,21 +241,21 @@ export const request: QuestionnaireSubmission = {
   module: "land-uses",
   category: 6,
   version: "1",
-  sections: [
+  questionnaire_sections: [
     {
       slug: "region-introduction-and-team-formation",
       name: "Region Introduction and Team Formation",
       description:
         "Introduce project to region and establish Region Land Use Management team",
       position: 1,
-      forms: [
+      questionnaire_section_forms: [
         {
           slug: "region-introduction-form",
           name: "Region Introduction Form",
           description:
             "Present project to citizens and collect community response",
           position: 1,
-          form_fields: [
+          custom_form_fields: [
             {
               id: 42,
               label: "Meeting Date",
@@ -264,7 +264,7 @@ export const request: QuestionnaireSubmission = {
               name: "meeting-date",
               required: true,
               position: 1,
-              select_options: [],
+              questionnaire_select_options: [],
             },
             {
               id: 43,
@@ -274,7 +274,7 @@ export const request: QuestionnaireSubmission = {
               name: "meeting-location",
               required: true,
               position: 2,
-              select_options: [],
+              questionnaire_select_options: [],
             },
             {
               label: "New field",
@@ -283,7 +283,7 @@ export const request: QuestionnaireSubmission = {
               name: "new-field",
               required: false,
               position: 3,
-              select_options: [],
+              questionnaire_select_options: [],
             },
           ],
         },
@@ -295,13 +295,13 @@ export const request: QuestionnaireSubmission = {
       description:
         "Assign implementation team and establish local partnerships",
       position: 1,
-      forms: [
+      questionnaire_section_forms: [
         {
           slug: "team-asignment-form",
           name: "Team Asignment Form",
           description: "Assign NLUPC implementation team and roles",
           position: 1,
-          form_fields: [
+          custom_form_fields: [
             {
               id: 29,
               label: "Team Leader",
@@ -310,7 +310,7 @@ export const request: QuestionnaireSubmission = {
               name: "team-leader",
               required: true,
               position: 1,
-              select_options: [],
+              questionnaire_select_options: [],
             },
             {
               id: 30,
@@ -320,7 +320,7 @@ export const request: QuestionnaireSubmission = {
               name: "team-members",
               required: true,
               position: 2,
-              select_options: [],
+              questionnaire_select_options: [],
             },
           ],
         },
@@ -330,12 +330,12 @@ export const request: QuestionnaireSubmission = {
       name: "New Section",
       description: "Description",
       position: 1,
-      forms: [
+      questionnaire_section_forms: [
         {
           name: "New Form",
           description: "New form description",
           position: 1,
-          form_fields: [
+          custom_form_fields: [
             {
               label: "New field",
               type: "text",
@@ -343,7 +343,7 @@ export const request: QuestionnaireSubmission = {
               name: "new-field",
               required: false,
               position: 1,
-              select_options: [],
+              questionnaire_select_options: [],
             },
           ],
         },

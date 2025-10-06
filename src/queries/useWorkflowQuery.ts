@@ -17,7 +17,7 @@ export interface SelectOptionProps {
 }
 
 export interface FieldsProps {
-  id: 0;
+  id: number;
   label: string;
   type: InputType;
   type_display: string;

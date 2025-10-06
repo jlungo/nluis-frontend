@@ -569,10 +569,8 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: QuestionnaireSubmission) => {
-            // TODO: Add questionnaire submission update endpoint
-            if (previousData) return api.put(`/form-management/submiss/${previousData.slug}/update/`, e);
-            // TODO: Add questionnaire submission post endpoint
-            return api.post(`/form-management/submiss/`, e)
+            if (previousData) return api.put(`/collect/questionnaire/${previousData.slug}/update/`, e);
+            return api.post(`/collect/questionnaire/create/`, e)
         },
         onSuccess: () =>
             queryClient.invalidateQueries({
@@ -609,19 +607,19 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
             module: selectedModule.slug,
             category: formDetails.category,
             version: `${formDetails.version}`,
-            sections: formSections.map(section => ({
+            questionnaire_sections: formSections.map(section => ({
                 slug: section.id.startsWith('section-default-UI-') ? undefined : section.id,
                 name: section.name,
                 description: section.description,
                 position: section.order,
                 is_active: previousData ? section.is_active ? "1" : "0" : undefined,
-                forms: section.forms.map(form => ({
+                questionnaire_section_forms: section.forms.map(form => ({
                     slug: form.id.startsWith('form-default-UI-') ? undefined : form.id,
                     name: form.name,
                     description: form.description,
                     position: form.order,
                     is_active: previousData ? form.is_active ? '1' : '0' : undefined,
-                    form_fields: form.form_fields.map(field => ({
+                    custom_form_fields: form.form_fields.map(field => ({
                         id: isNaN(Number(field.id)) ? undefined : Number(field.id),
                         label: field.label,
                         type: field.type as InputType,
@@ -630,7 +628,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                         required: field.required,
                         position: field.order,
                         is_active: previousData ? field.is_active ? '1' : '0' : undefined,
-                        select_options: field.options.map(option => ({
+                        questionnaire_select_options: field.options.map(option => ({
                             text_label: option.label,
                             value: option.name,
                             position: option.order,
@@ -642,9 +640,9 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
 
         try {
             toast.promise(mutateAsync(questionnaireData), {
-                loading: previousData ? "Updating worflow..." : "Creating questionnaire...",
+                loading: previousData ? "Updating questionnaire..." : "Creating questionnaire...",
                 success: () => {
-                    navigate('/system-settings/form-management/form-questionnaires', { replace: true });
+                    navigate('/system-settings/form-management/questionnaires', { replace: true });
                     if (previousData) return `Questionnaire updated successfully!`;
                     return `Questionnaire created successfully!`
                 },
@@ -1449,7 +1447,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                         <FormPreviewTester
                             questionnaireData={createFormForPreview()}
                             onSave={handleComplete}
-                            onEdit={() => setCurrentStep(4)}
+                            onEdit={() => setCurrentStep(3)}
                         />
                     </div>
                 );

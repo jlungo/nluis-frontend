@@ -302,7 +302,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 {isSingle ? 'Back' : 'Sections'}
                             </Button>
                             <div>
-                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}</h1>
+                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}{isSingle && section.name.length > 0 ? `: ${section.name}` : null}</h1>
                                 <p className="text-xs lg:text-sm text-muted-foreground">{form?.description || null}</p>
                             </div>
                         </div>
@@ -330,6 +330,15 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                         Edit Form
                                     </Button>
                                 : null}
+                            {disabled ? (
+                                <Link
+                                    to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
+                                    className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                    Edit<span className='hidden md:inline'> Workflow</span>
+                                </Link>
+                            ) : null}
                         </div>
                     </div>
                 </div>

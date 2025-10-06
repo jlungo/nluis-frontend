@@ -44,9 +44,7 @@ export default function Page() {
                 refetchType: "active",
                 queryKey: [workflowQueryKey],
             }),
-        onError: (e) => {
-            console.log(e);
-        },
+        onError: (e) => console.log(e),
     });
 
     const { data: workflows, isLoading: isLoadingWorkflows } = useWorkflowsQuery(limit, offset, keyword, filterModule, filterLevel, '')

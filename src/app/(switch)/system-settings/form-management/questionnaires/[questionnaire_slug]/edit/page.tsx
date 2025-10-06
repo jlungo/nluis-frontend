@@ -37,19 +37,19 @@ export default function Page() {
         <p className="text-muted-foreground mt-4">Loading questionnaire...</p>
     </div>
 
-    const sections: FormSection[] = data.sections.map(section => ({
+    const sections: FormSection[] = data.questionnaire_sections.map(section => ({
         id: section.slug,
         name: section.name,
         description: section.description,
         order: section.position,
         is_active: section.is_active,
-        forms: section.forms.map(form => ({
+        forms: section.questionnaire_section_forms.map(form => ({
             id: form.slug,
             name: form.name,
             description: form.description,
             order: form.position,
             is_active: form.is_active,
-            form_fields: form.form_fields.map(field => ({
+            form_fields: form.custom_form_fields.map(field => ({
                 id: `${field.id}`,
                 name: field.name,
                 label: field.label,
@@ -58,7 +58,7 @@ export default function Page() {
                 placeholder: field.placeholder,
                 order: field.position,
                 is_active: field.is_active,
-                options: field.select_options.map(option => ({
+                options: field.questionnaire_select_options.map(option => ({
                     id: option.value,
                     label: option.text_label,
                     name: option.value,

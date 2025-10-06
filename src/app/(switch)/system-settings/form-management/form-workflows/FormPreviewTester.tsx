@@ -1085,6 +1085,7 @@ const MultiselectRenderer: React.FC<FormField> = ({ options, name, label, requir
             values={values}
             setValues={setValues}
             className='md:w-full xl:w-full'
+            isPreview
         />
     )
 }
