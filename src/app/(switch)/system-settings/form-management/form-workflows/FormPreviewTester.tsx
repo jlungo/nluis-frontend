@@ -45,6 +45,7 @@ import FormTable, { type TableRowI } from '@/components/form-field/form-table';
 import { Tooltip, TooltipContent } from '@/components/ui/tooltip';
 import { TooltipTrigger } from '@radix-ui/react-tooltip';
 import FormAddQuestionnaires, { type AddQuestionnaireProps } from '@/components/form-field/form-add-questionnaire';
+import FormViewQuestionnaires from '@/components/form-field/form-view-questionnaire';
 
 export type State = "1" | "0"
 
@@ -365,7 +366,7 @@ export function FormPreviewTester({
                                         updateFieldValue(fieldName, checked)
                                     }
                                 />
-                                <Label>{field.placeholder || "Check this option"}</Label>
+                                <Label htmlFor={fieldName} className='mt-2'>{field.placeholder || "Check this option"}</Label>
                             </div>
                             {renderError()}
                         </div>
@@ -446,6 +447,22 @@ export function FormPreviewTester({
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <AddQuestionnairesRenderer {...field} module={workflowData.module_slug} />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "view_questionnaires":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <FormViewQuestionnaires
+                                label={field.label}
+                                name={field.name}
+                                required={field.required}
+                                module={workflowData.module_slug}
+                                // values={values}
+                                // onValueChange={setValues}
+                                isPreview
+                            />
                             {renderError()}
                         </div>
                     );

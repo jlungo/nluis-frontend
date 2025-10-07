@@ -1,9 +1,9 @@
 import { Spinner } from "@/components/ui/spinner";
 import { SectionedForm } from "./sectioned-form";
-import { useQuestionnairesQuery } from "@/queries/useQuestionnaireQuery";
+import { useQuestionnaireQuery } from "@/queries/useQuestionnaireQuery";
 import { usePageStore } from "@/store/pageStore";
 import { useEffect, useLayoutEffect } from "react";
-import { cn, getCategoryKey } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useQuestionnaireDataQuery } from "@/queries/useQuestionnaireDataQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
@@ -16,17 +16,16 @@ type Props = {
     projectLocalityId: string;
     module: ModuleTypes;
     moduleLevel: string;
-    worklowCategory: string
+    questionnaireId: string;
 }
 
-export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, worklowCategory }: Props) {
+export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
-    const questionnaireKey = getCategoryKey(worklowCategory) ?? 6
-    const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnairesQuery(1, 0, '', module, questionnaireKey);
-    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire && questionnaire?.results && questionnaire.results.length > 0 ? questionnaire.results[0].slug : undefined, projectLocalityId)
+    const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnaireQuery(questionnaireId);
+    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
@@ -50,11 +49,6 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
         if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
     }, [approval_status, module, moduleLevel, navigate, projectId])
 
-    if (!questionnaireKey)
-        return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>Questionnaire key configuration error!</p>
-        </div>
-
     if (isLoadingQuestionnaire || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
         <p className="text-muted-foreground mt-4">Loading questionnaire and data...</p>
@@ -76,7 +70,7 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
             <p className='text-muted-foreground'>Project Locality not found!</p>
         </div>
 
-    if (!questionnaire || !questionnaire?.results || questionnaire.results.length === 0)
+    if (!questionnaire)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>No questionnaire data found!</p>
         </div>
@@ -88,12 +82,14 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
 
     return (
         <SectionedForm
-            data={questionnaire.results[0]}
+            data={questionnaire}
             values={values}
             projectLocalityId={projectLocalityId}
             projectName={project.name}
             projectLocaleName={projectLocaleName}
             projectLocaleId={projectLocaleId}
+            moduleLevel={moduleLevel}
+            projectId={projectId}
         // questionnaireProgress={projectLocaleProgress}
         />
     )

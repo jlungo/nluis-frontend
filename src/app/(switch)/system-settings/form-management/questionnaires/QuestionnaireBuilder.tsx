@@ -1191,7 +1191,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
                                                                                                                                         />
                                                                                                                                         <Input
                                                                                                                                             placeholder="Placeholder"
-                                                                                                                                            value={field.placeholder}
+                                                                                                                                            value={field?.placeholder ?? ''}
                                                                                                                                             onChange={(e) => updateField(section.id, form.id, field.id, { placeholder: e.target.value })}
                                                                                                                                             className="flex-1"
                                                                                                                                         />

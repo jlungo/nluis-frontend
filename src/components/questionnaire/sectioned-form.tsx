@@ -35,10 +35,12 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
+    moduleLevel?: string
+    projectId?: string
     questionnaireProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, questionnaireProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, moduleLevel, projectId, questionnaireProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -275,6 +277,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             project_locality_id={projectLocalityId || ""}
                                             baseMapId={projectLocaleId || undefined}
                                             module={data.module_slug}
+                                            href={`/${data.module_slug}/${moduleLevel}/${projectId}/${projectLocalityId}`}
                                             {...field}
                                         />
                                     ))}
