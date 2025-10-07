@@ -1,4 +1,6 @@
 import type { Position, Polygon, MultiPolygon } from 'geojson';
+import { area as turfArea, booleanPointInPolygon, booleanWithin, booleanIntersects, bbox as turfBbox } from '@turf/turf';
+import { polygon as turfPolygon, point as turfPoint } from '@turf/helpers';
 
 /**
  * Converts a Polygon geometry to a MultiPolygon geometry
@@ -14,56 +16,51 @@ export function ensureMultiPolygon(geometry: Polygon | MultiPolygon): MultiPolyg
 }
 
 /**
- * Calculates the area of a polygon in square meters
+ * Calculates the area of a polygon in square meters using turf
  */
 export function calculateArea(coordinates: Position[][]): number {
-  // Basic implementation of the Shoelace formula (Gauss's area formula)
-  let area = 0;
-  const ring = coordinates[0]; // Use outer ring only
-
-  for (let i = 0; i < ring.length - 1; i++) {
-    area += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+  try {
+    const poly = turfPolygon(coordinates as any);
+    return turfArea(poly);
+  } catch (err) {
+    // Fallback: return 0 on error
+    return 0;
   }
-
-  return Math.abs(area) / 2;
 }
 
 /**
- * Checks if a point is inside a polygon
+ * Checks if a point is inside a polygon using turf
  */
 export function isPointInPolygon(point: Position, polygon: Position[][]): boolean {
-  const [x, y] = point;
-  const ring = polygon[0]; // Use outer ring only
-  let inside = false;
-
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i];
-    const [xj, yj] = ring[j];
-
-    const intersect = ((yi > y) !== (yj > y)) &&
-      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-
-    if (intersect) inside = !inside;
+  try {
+    const pt = turfPoint(point as any);
+    const poly = turfPolygon(polygon as any);
+    return booleanPointInPolygon(pt, poly as any);
+  } catch {
+    return false;
   }
-
-  return inside;
 }
 
 /**
- * Checks if two polygons overlap
+ * Checks if two polygons overlap (intersect) using bbox pre-check + turf booleanIntersects
  */
 export function doPolygonsOverlap(poly1: Position[][], poly2: Position[][]): boolean {
-  // Check if any point from poly1 is inside poly2
-  for (const point of poly1[0]) {
-    if (isPointInPolygon(point, poly2)) return true;
-  }
+  try {
+    const p1 = turfPolygon(poly1 as any);
+    const p2 = turfPolygon(poly2 as any);
 
-  // Check if any point from poly2 is inside poly1
-  for (const point of poly2[0]) {
-    if (isPointInPolygon(point, poly1)) return true;
-  }
+    // quick bbox test to avoid expensive geometry operations when far apart
+    const b1 = turfBbox(p1);
+    const b2 = turfBbox(p2);
+    // bboxes are [minX, minY, maxX, maxY]
+    if (b1[2] < b2[0] || b1[0] > b2[2] || b1[3] < b2[1] || b1[1] > b2[3]) {
+      return false;
+    }
 
-  return false;
+    return booleanIntersects(p1 as any, p2 as any);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -73,6 +70,11 @@ export function validateSubdivisionContainment(
   subdivision: Position[][],
   parentParcel: Position[][]
 ): boolean {
-  // Check if all points of the subdivision are inside the parent parcel
-  return subdivision[0].every(point => isPointInPolygon(point, parentParcel));
+  try {
+    const sub = turfPolygon(subdivision as any);
+    const parent = turfPolygon(parentParcel as any);
+    return booleanWithin(sub as any, parent as any);
+  } catch {
+    return false;
+  }
 }

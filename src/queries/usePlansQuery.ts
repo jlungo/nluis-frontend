@@ -52,7 +52,7 @@ export const usePlanDetailQuery = (arg?: PlanDetailArg) =>
 
       // ✅ Construct correct vector tile URL template
       // Used by map renderers like Mapbox GL or MapLibre
-      const tileUrlTemplate = `${api.defaults.baseURL}/zoning/plans/latest/${locality}/tiles/{z}/{x}/{y}.mvt?locality=${locality}`;
+      const tileUrlTemplate = `${api.defaults.baseURL}/zoning/plans/latest/${locality}/tiles/{z}/{x}/{y}.mvt`;
 
       return {
         ...planMeta,

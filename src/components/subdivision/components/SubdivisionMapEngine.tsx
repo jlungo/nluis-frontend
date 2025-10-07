@@ -7,8 +7,7 @@ import useSubdivisionStore from '../store/useSubdivisionStore';
 import { fcToBounds } from "../../zoning/utils/geo";
 
 const MAPBOX_STYLE = "mapbox://styles/mapbox/streets-v11";
-const MAPBOX_TOKEN =
-  "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 interface Props {
   localityId?: string | number | null;
@@ -34,7 +33,7 @@ export default function SubdivisionMapEngine({ localityId }: Props) {
   // Transform request to add auth headers
   const transformRequest = useCallback(
     (url: string) => {
-      const isApiCall = url.startsWith(API_BASE);
+      const isApiCall = url.startsWith(API_BASE) || url.startsWith(API_BASE.replace(/^https?:\/\//, ''));
       if (!isApiCall) return { url };
       const token = getAccessToken();
       const headers: Record<string, string> = {};
@@ -57,19 +56,24 @@ export default function SubdivisionMapEngine({ localityId }: Props) {
     const map = mapRef.getMap ? mapRef.getMap() : mapRef;
     const onError = async (e: any) => {
       const status = e?.error?.status || e?.error?.cause?.status;
-      if (status !== 401) return;
-      try {
-        await refreshAccessToken();
-        const src: any = map.getSource("plans-tiles");
-        if (src?.setTiles) {
-          const v = Date.now();
-          src.setTiles([`${plansTilesTemplate}?v=${v}`]);
-        } else {
-          map.triggerRepaint();
+      // If unauthorized, try refreshing the token and cache-busting the template
+      if (status === 401) {
+        try {
+          await refreshAccessToken();
+          const src: any = map.getSource("plans-tiles");
+          if (src?.setTiles) {
+            const v = Date.now();
+            src.setTiles([`${plansTilesTemplate}?v=${v}`]);
+          } else {
+            map.triggerRepaint();
+          }
+        } catch (e: unknown) {
+          console.error(e);
         }
-      } catch (e: unknown) {
-        console.error(e);
+        return;
       }
+
+        // For 404/410 we don't attempt parent-zoom fallback here (zoning only refreshes on 401)
     };
     map.on("error", onError);
     return () => map.off("error", onError);
@@ -145,7 +149,7 @@ export default function SubdivisionMapEngine({ localityId }: Props) {
                 id="plans-fill"
                 type="fill"
                 source="plans-tiles"
-                source-layer="plans"
+                source-layer="zones"
                 paint={{
                   "fill-color": ["get", "color"],
                   "fill-opacity": 0.5,
@@ -155,7 +159,7 @@ export default function SubdivisionMapEngine({ localityId }: Props) {
                 id="plans-line"
                 type="line"
                 source="plans-tiles"
-                source-layer="plans"
+                source-layer="zones"
                 paint={{
                   "line-color": "#000000",
                   "line-width": 1,

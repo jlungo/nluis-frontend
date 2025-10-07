@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import type { ParcelFeature } from '@/types/subdivision';
 import { useThemeStore } from '@/store/themeStore';
 import SubdivisionMapViewer from './components/SubdivisionMapViewer';
@@ -10,6 +10,7 @@ import { useSubdivisionValidation } from './hooks/useSubdivisionValidation';
 import { useLocalityPlanQuery } from './hooks/useLocalityPlanQuery';
 
 import useSubdivisionStore from './store/useSubdivisionStore';
+import { debounce } from '@/lib/debounce';
 import { SubdivisionErrorBoundary } from './components/SubdivisionErrorBoundary';
 
 interface SubdivisionShellProps {
@@ -72,6 +73,9 @@ export default function SubdivisionShell({
 
   // Store last emitted value to prevent unnecessary updates
   const lastEmittedValue = useRef('');
+  const debouncedEmit = useMemo(() => debounce((val: string, cb?: (v: string) => void) => {
+    try { if (cb) cb(val); } catch {}
+  }, 250), []);
   
   // Emit onChange when subdivisions change so parent forms can stay in sync
   useEffect(() => {
@@ -81,12 +85,13 @@ export default function SubdivisionShell({
       const newValue = JSON.stringify(fc);
       if (lastEmittedValue.current !== newValue) {
         lastEmittedValue.current = newValue;
-        onChange(newValue);
+        // Use debounced emit to avoid frequent heavy serializations
+        debouncedEmit(newValue, onChange);
       }
     } catch (e) {
       // ignore serialization errors
     }
-  }, [subdivisions, onChange]);
+  }, [subdivisions, onChange, debouncedEmit]);
 
   // Handle Escape key for exiting maximized mode
   useEffect(() => {
