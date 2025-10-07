@@ -2,6 +2,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { Asterisk } from "lucide-react";
 import { useQuestionnairesQuery } from "@/queries/useQuestionnaireQuery";
+import { Spinner } from "../ui/spinner";
 
 export type AddQuestionnaireProps = {
     slug: string;
@@ -20,9 +21,28 @@ type FormAddQuestionnairesProps = {
 };
 
 export default function FormAddQuestionnaires({ name, label, required, module, values, onValueChange }: FormAddQuestionnairesProps) {
-    const { data: questionnaires } = useQuestionnairesQuery(0, 0, '', module, "")
+    const { data: questionnaires, isLoading, isError } = useQuestionnairesQuery(0, 0, '', module, "")
 
-    if (!questionnaires || !questionnaires.results?.length) return
+    if (isLoading)
+        return (
+            <div>
+                <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                <div className="flex flex-col items-center justify-center gap-1 h-10">
+                    <Spinner />
+                    <p className="text-muted-foreground text-xs">Loading...</p>
+                </div>
+            </div>
+        )
+
+    if (isError || (!questionnaires || !questionnaires.results?.length))
+        return (
+            <div>
+                <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                <div className="w-full flex flex-col items-center justify-center gap-2">
+                    <p className="text-center text-destructive text-xs md:text-sm">An error occured</p>
+                </div>
+            </div>
+        )
 
     const selectedQuestionnaires = questionnaires.results.filter(q =>
         values.some(v => v.slug === q.slug)

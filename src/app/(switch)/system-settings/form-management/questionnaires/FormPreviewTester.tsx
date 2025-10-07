@@ -354,7 +354,7 @@ export function FormPreviewTester({
                                         updateFieldValue(fieldName, checked)
                                     }
                                 />
-                                <Label>{field.placeholder || "Check this option"}</Label>
+                                <Label htmlFor={fieldName} className='mt-2'>{field.placeholder || "Check this option"}</Label>
                             </div>
                             {renderError()}
                         </div>

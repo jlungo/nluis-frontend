@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import api from "@/lib/axios";
+// import api from "@/lib/axios";
 import { InputType } from "@/types/input-types";
 
 export interface questionnaireDataI {
@@ -14,20 +14,23 @@ export interface questionnaireDataI {
 export const questionnaireDataQueryKey = "questionnaireData";
 
 export const useQuestionnaireDataQuery = (
-  workflow_slug?: string,
+  questionnaire_slug?: string,
   locality_project_id?: string
 ) => {
   return useQuery<questionnaireDataI[]>({
     queryKey: [
       questionnaireDataQueryKey,
-      { workflow_slug, locality_project_id },
+      { questionnaire_slug, locality_project_id },
     ],
-    queryFn: () =>
-      api
-        .get(
-          `/form-management/questionnaire/?workflow_slug=${workflow_slug}&locality_project_id=${locality_project_id}`
-        )
-        .then((res) => res.data),
-    enabled: workflow_slug !== undefined && locality_project_id !== undefined,
+    // TODO: Add actual function that loads data form endpoint when available
+    // queryFn: () =>
+    //   api
+    //     .get(
+    //       `/collect/questionnaire/?questionnaire_slug=${questionnaire_slug}&locality_project_id=${locality_project_id}`
+    //     )
+    //     .then((res) => res.data),
+    queryFn: async () => [],
+    enabled:
+      questionnaire_slug !== undefined && locality_project_id !== undefined,
   });
 };

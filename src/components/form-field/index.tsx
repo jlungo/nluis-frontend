@@ -34,6 +34,7 @@ export default function Index(
         ) => void,
         baseMapId?: string;
         module: string;
+        href?: string
         projectLocalityId?: string;
     }
 ) {
@@ -168,6 +169,7 @@ export default function Index(
                     disabled={data?.required}
                     module={data.module}
                     projectLocalityId={data?.projectLocalityId}
+                    href={data?.href}
                 // values={data?.value || []}
                 // onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
