@@ -377,7 +377,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                             <div className='flex flex-col gap-1 items-end'>
                                 <p className='text-xs md:text-sm'>{Number.isInteger(questionnaireProgress)
                                     ? questionnaireProgress
-                                    : Math.floor(questionnaireProgress * 100) / 100}% Complete</p>
+                                    : Math.floor(questionnaireProgress * 100) / 100}% Filled</p>
                                 <Progress value={questionnaireProgress} className='w-20 md:w-24 lg:w-32' />
                             </div>
                         ) : null}

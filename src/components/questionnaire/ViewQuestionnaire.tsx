@@ -29,7 +29,16 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
-    // const projectLocaleProgress = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.progress
+
+    const questionnaireProgress =
+        questionnaire && values
+            ? (values.length /
+                questionnaire.questionnaire_sections
+                    .flatMap(q => q.questionnaire_section_forms)
+                    .flatMap(f => f.custom_form_fields).length) *
+            100
+            : 0;
+
     const approval_status =
         project?.localities && project.localities.length > 0
             ? project.localities.every(loc => loc.approval_status === 1)
@@ -90,7 +99,7 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
             projectLocaleId={projectLocaleId}
             moduleLevel={moduleLevel}
             projectId={projectId}
-        // questionnaireProgress={projectLocaleProgress}
+            questionnaireProgress={questionnaireProgress}
         />
     )
 }
