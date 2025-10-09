@@ -26,7 +26,7 @@ export default function FormViewQuestionnaires({ name, label, required, disabled
 
     if (isLoading)
         return (
-            <div>
+            <div className="w-full">
                 <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                 <div className="flex flex-col items-center justify-center gap-1 h-10">
                     <Spinner />
@@ -37,7 +37,7 @@ export default function FormViewQuestionnaires({ name, label, required, disabled
 
     if (isError || (!questionnaires || !questionnaires.results?.length))
         return (
-            <div>
+            <div className="w-full">
                 <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                 <div className="w-full flex flex-col items-center justify-center gap-2">
                     <p className="text-center text-destructive text-xs md:text-sm">An error occured</p>
@@ -46,7 +46,7 @@ export default function FormViewQuestionnaires({ name, label, required, disabled
         )
 
     return (
-        <div>
+        <div className="w-full">
             <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
             <div className="flex flex-col md:flex-row gap-4">
                 {questionnaires.results?.length && questionnaires.results.length > 0 ? (
@@ -64,8 +64,8 @@ export default function FormViewQuestionnaires({ name, label, required, disabled
                                 >
                                     <Link to={href ? `${href}/questionnaire/${q.slug}` : ''}>
                                         <span className="hidden md:inline">View</span>
+                                        <ChevronRight />
                                     </Link>
-                                    <ChevronRight />
                                 </Button>
                             </div>
                         )}

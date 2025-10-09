@@ -443,7 +443,7 @@ export function FormPreviewTester({
                         </div>
                     );
 
-                case "add_questionnaires":
+                case "addquestionnaires":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <AddQuestionnairesRenderer {...field} module={workflowData.module_slug} />
@@ -451,7 +451,7 @@ export function FormPreviewTester({
                         </div>
                     );
 
-                case "view_questionnaires":
+                case "viewquestionnaires":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
                             <FormViewQuestionnaires

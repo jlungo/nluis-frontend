@@ -11,7 +11,7 @@ export type WorkflowSubmission = {
     name: string;
     description: string;
     position: number;
-    approval_roles: { user_role: string }[];
+    approval_roles: {user_role: string}[];
     is_active?: State;
     edit_if_prev_approved: boolean;
     edit_if_prev_filled: boolean;
@@ -20,7 +20,7 @@ export type WorkflowSubmission = {
       name: string;
       description: string | null;
       position: number;
-      editor_roles: { user_role: string }[];
+      editor_roles: {user_role: string}[];
       is_active?: State;
       edit_if_prev_filled: boolean;
       form_fields: {

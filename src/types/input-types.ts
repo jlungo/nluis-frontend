@@ -11,5 +11,5 @@ export type InputType =
   | "table"
   | "members"
   | "zoning"
-  | "add_questionnaires"
-  | "view_questionnaires";
+  | "addquestionnaires"
+  | "viewquestionnaires";

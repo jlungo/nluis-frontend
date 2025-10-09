@@ -129,7 +129,7 @@ export default function Layout() {
             <div className="flex-shrink-0 p-3 border-t border-sidebar-border">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/api/placeholder/32/32" alt="User" />
+                  <AvatarImage alt="User" />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                     {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                   </AvatarFallback>
