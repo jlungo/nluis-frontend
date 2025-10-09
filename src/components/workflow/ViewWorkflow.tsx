@@ -86,8 +86,6 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <p className='text-muted-foreground'>Failed to fetch workflow data!</p>
         </div>
 
-    console.log(workflow.results[0])
-
     return (
         <SectionedForm
             data={workflow.results[0]}
@@ -97,6 +95,8 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             projectLocaleName={projectLocaleName}
             projectLocaleId={projectLocaleId}
             projectLocaleProgress={projectLocaleProgress}
+            moduleLevel={moduleLevel}
+            projectId={projectId}
         />
     )
 }

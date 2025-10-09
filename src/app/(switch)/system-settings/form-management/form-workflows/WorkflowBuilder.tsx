@@ -92,8 +92,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'file', label: 'File Upload' },
             { value: 'members', label: 'Members Add' },
             { value: 'zoning', label: 'Zoning' },
-            { value: 'add_questionnaires', label: 'Add Questionnaires' },
-            { value: 'view_questionnaires', label: 'View Questionnaires' },
+            { value: 'addquestionnaires', label: 'Add Questionnaires' },
+            { value: 'viewquestionnaires', label: 'View Questionnaires' },
         ],
         []
     );

@@ -64,12 +64,12 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const { mutateAsync, isPending } = useMutation({
         mutationFn: (e: FormData) => {
             // TODO: Add edit questionnairedata endpoint
-            if (editForm) return api.post(`/form-management/submit-questionnaire-data/`, e, {
+            if (editForm) return api.put(`/form-management/submit-questionnaire-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
             })
-            // TODO: Add edit questionnairedata endpoint
+            // TODO: Add post questionnairedata endpoint
             return api.post(`/form-management/submit-questionnaire-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",

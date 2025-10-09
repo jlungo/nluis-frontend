@@ -1,6 +1,6 @@
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { formatDate } from '@/lib/utils';
-import { ProjectI } from "@/types/projects";
+import type { ProjectI } from "@/types/projects";
 import { ProjectApprovalStatus } from "@/types/constants";
 import { Progress } from "../ui/progress";
 import { approvalStatus } from "./utils";

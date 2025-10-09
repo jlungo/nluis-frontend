@@ -148,7 +148,7 @@ export default function Index(
                     setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
-        case ("add_questionnaires"):
+        case ("addquestionnaires"):
             return (
                 <FormAddQuestionnaires
                     label={data.label}
@@ -160,7 +160,7 @@ export default function Index(
                     onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
-        case ("view_questionnaires"):
+        case ("viewquestionnaires"):
             return (
                 <FormViewQuestionnaires
                     label={data.label}

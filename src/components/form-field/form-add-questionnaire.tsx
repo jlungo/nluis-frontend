@@ -25,7 +25,7 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
 
     if (isLoading)
         return (
-            <div>
+            <div className="w-full">
                 <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                 <div className="flex flex-col items-center justify-center gap-1 h-10">
                     <Spinner />
@@ -36,7 +36,7 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
 
     if (isError || (!questionnaires || !questionnaires.results?.length))
         return (
-            <div>
+            <div className="w-full">
                 <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
                 <div className="w-full flex flex-col items-center justify-center gap-2">
                     <p className="text-center text-destructive text-xs md:text-sm">An error occured</p>
@@ -49,7 +49,7 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
     );
 
     return (
-        <div>
+        <div className="w-full">
             <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="p-3 rounded-lg border w-full md:w-1/2">
@@ -57,8 +57,8 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
                         questionnaires.results.map(q => (
                             <div key={q.slug} className="flex gap-2 items-center">
                                 <Checkbox
-                                    id={name}
-                                    name={name}
+                                    id={q.slug}
+                                    name={q.slug}
                                     checked={values.some(value => value.slug === q.slug)}
                                     onCheckedChange={val => {
                                         if (!onValueChange) return;
@@ -81,7 +81,7 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
                                         }
                                     }}
                                 />
-                                <Label htmlFor={name} className="mt-2 cursor-pointer">{q.name}</Label>
+                                <Label htmlFor={q.slug} className="mt-2 cursor-pointer">{q.name}</Label>
                             </div>
                         )) : <p className="pt-2 text-center text-xs lg:text-sm text-muted-foreground">No questionnaires found</p>}
                 </div>
