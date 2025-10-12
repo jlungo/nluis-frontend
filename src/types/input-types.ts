@@ -11,4 +11,6 @@ export type InputType =
   | "table"
   | "members"
   | "zoning"
+  | "existing_land_use"
+  | "proposed_land_use"
   | "report";

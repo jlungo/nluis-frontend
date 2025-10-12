@@ -7,6 +7,8 @@ import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
+import FormExistingLandUse from "./form-existing-land-use";
+import FormProposedLandUse from "./form-proposed-land-use";
 import FormMembers, { type MembersI } from "./form-members";
 import FormReport from "./form-report";
 
@@ -93,6 +95,26 @@ export default function Index(
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 // value={data?.value}
                 // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('existing_land_use'):
+            return (
+                <FormExistingLandUse
+                    label={data.label}
+                    name={data.name}
+                    disabled={data.disabled}
+                    required={data.required}
+                    baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                />
+            )
+        case ('proposed_land_use'):
+            return (
+                <FormProposedLandUse
+                    label={data.label}
+                    name={data.name}
+                    disabled={data.disabled}
+                    required={data.required}
+                    baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 />
             )
         case ('report'):

@@ -92,6 +92,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'file', label: 'File Upload' },
             { value: 'members', label: 'Members Add' },
             { value: 'zoning', label: 'Zoning' },
+            { value: 'existing_land_use', label: 'Existing Land Use' },
+            { value: 'proposed_land_use', label: 'Proposed Land Use' },
+            { value: 'report', label: 'Report' },
         ],
         []
     );

@@ -13,6 +13,7 @@ type Props = {
   onColorModeChange: (m: "type" | "status") => void;
   isMaximized?: boolean;
   onMaximizeToggle?: () => void;
+  isProposed?: boolean;
 };
 
 export default function AppShell(props: Props) {
@@ -41,6 +42,7 @@ export default function AppShell(props: Props) {
             baseMapId={props.baseMapId}
             defaultLandUseId={props.defaultLandUseId}
             colorMode={props.colorMode}
+            isProposed={props.isProposed}
           />
         </div>
 
