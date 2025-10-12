@@ -51,7 +51,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
     TouchSensor,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { SortableField, SortableForm, SortableOption, SortableSection } from './SortableContext';
+import { SortableField, SortableForm, SortableSection } from './SortableContext';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
@@ -92,6 +92,9 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'file', label: 'File Upload' },
             { value: 'members', label: 'Members Add' },
             { value: 'zoning', label: 'Zoning' },
+            { value: 'existing_land_use', label: 'Existing Land Use' },
+            { value: 'proposed_land_use', label: 'Proposed Land Use' },
+            { value: 'report', label: 'Report' },
             { value: 'addquestionnaires', label: 'Add Questionnaires' },
             { value: 'viewquestionnaires', label: 'View Questionnaires' },
         ],

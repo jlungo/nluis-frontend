@@ -12,6 +12,9 @@ import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
 import FormZoning from "./form-zoning";
+import FormExistingLandUse from "./form-existing-land-use";
+import FormProposedLandUse from "./form-proposed-land-use";
+import FormReport from "./form-report";
 import FormMultiselect from "./form-multiselect";
 import FormTable from "./form-table";
 
@@ -122,6 +125,38 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                />
+            )
+        case ('existing_land_use'):
+            return (
+                <FormExistingLandUse
+                    label={data.label}
+                    name={data.name}
+                    disabled={data.disabled}
+                    required={data.required}
+                    baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                />
+            )
+        case ('proposed_land_use'):
+            return (
+                <FormProposedLandUse
+                    label={data.label}
+                    name={data.name}
+                    disabled={data.disabled}
+                    required={data.required}
+                    baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                />
+            )
+        case ('report'):
+            return (
+                <FormReport
+                    label={data.label}
+                    name={data.name}
+                    // disabled={data.disabled}
+                    required={data.required}
+                    // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                // value={data?.value}
+                // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('members'):
