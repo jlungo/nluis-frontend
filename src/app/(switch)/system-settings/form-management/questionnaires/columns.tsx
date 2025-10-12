@@ -3,18 +3,18 @@ import type { QuestionnaireProps } from "@/queries/useQuestionnaireQuery";
 import { questionnaireCategoryTypes } from "@/types/constants";
 
 function countAllForms(questionnaire: QuestionnaireProps): number {
-  return questionnaire.sections.reduce(
-    (formCount, section) => formCount + section.forms.length,
+  return questionnaire.questionnaire_sections.reduce(
+    (formCount, section) => formCount + section.questionnaire_section_forms.length,
     0
   );
 }
 
 function countAllFields(questionnaire: QuestionnaireProps): number {
-  return questionnaire.sections.reduce((fieldCount, section) => {
+  return questionnaire.questionnaire_sections.reduce((fieldCount, section) => {
     return (
       fieldCount +
-      section.forms.reduce((formFieldCount, form) => {
-        return formFieldCount + form.form_fields.length;
+      section.questionnaire_section_forms.reduce((formFieldCount, form) => {
+        return formFieldCount + form.custom_form_fields.length;
       }, 0)
     );
   }, 0);
@@ -55,7 +55,7 @@ export const Columns: ColumnDef<QuestionnaireProps, unknown>[] = [
     cell: ({ row }: { row: { original: QuestionnaireProps } }) => (
       <div className="text-center">
         <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 dark:text-blue-400 dark:bg-blue-950 text-sm font-medium rounded">
-          {row.original.sections_count}
+          {row.original.questionnaire_sections_count}
         </span>
       </div>
     ),

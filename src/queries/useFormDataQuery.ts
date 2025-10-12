@@ -11,7 +11,7 @@ export interface formDataI {
   is_approved: boolean;
 }
 
-export const formDataQueryKey = "formDataKey";
+export const formDataQueryKey = "formData";
 
 export const useFormDataQuery = (
   workflow_slug?: string,

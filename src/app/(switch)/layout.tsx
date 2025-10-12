@@ -10,7 +10,7 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import logo from "@/assets/nluis.png"
 import { MainHeader } from '@/components/MainHeader';
 import { usePageStore } from '@/store/pageStore';
@@ -18,13 +18,16 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
 import DynamicBreadcrums from '@/components/DynamicBreadcrums';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const isMobile = useIsMobile()
   const { page } = usePageStore()
   const navigate = useNavigate();
+  const { pathname } = useLocation()
   const { user } = useAuth()
 
   const toggleSidebar = () => {
@@ -43,6 +46,10 @@ export default function Layout() {
   const expandSidebar = () => {
     setSidebarCollapsed(false);
   };
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false)
+  }, [pathname, isMobile])
 
   useEffect(() => {
     if (!user) navigate(`/auth/signin`, { replace: true })
@@ -122,7 +129,7 @@ export default function Layout() {
             <div className="flex-shrink-0 p-3 border-t border-sidebar-border">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/api/placeholder/32/32" alt="User" />
+                  <AvatarImage alt="User" />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                     {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                   </AvatarFallback>

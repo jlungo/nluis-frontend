@@ -13,4 +13,6 @@ export type InputType =
   | "zoning"
   | "existing_land_use"
   | "proposed_land_use"
-  | "report";
+  | "report"
+  | "addquestionnaires"
+  | "viewquestionnaires";

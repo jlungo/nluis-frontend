@@ -51,7 +51,7 @@ export function LogoutButton() {
                         </AlertDialogTrigger>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                        <p>Logout</p>
+                        Logout
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

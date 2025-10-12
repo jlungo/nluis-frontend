@@ -1,34 +1,53 @@
 import type { FieldsProps } from "@/queries/useWorkflowQuery";
+import type { FieldsProps as QuestionnaireField } from "@/queries/useQuestionnaireQuery";
+import type { InputType } from "@/types/input-types";
+import type { TableRowI } from "./form-table";
+import FormAddQuestionnaires, { type AddQuestionnaireProps } from "./form-add-questionnaire";
+import FormViewQuestionnaires from "./form-view-questionnaire";
+import FormMembers, { type MembersI } from "./form-members";
 import FormInput from "./form-input";
 import FormTextArea from "./form-textarea";
 import DatePicker from "./form-date-picker";
 import FormCheckbox from "./form-checkbox";
 import FormFileInput from "./form-file-input";
 import FormSelect from "./form-select";
-import type { InputType } from "@/types/input-types";
 import FormZoning from "./form-zoning";
 import FormExistingLandUse from "./form-existing-land-use";
 import FormProposedLandUse from "./form-proposed-land-use";
-import FormMembers, { type MembersI } from "./form-members";
 import FormReport from "./form-report";
+import FormMultiselect from "./form-multiselect";
+import FormTable from "./form-table";
+
+export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[] | AddQuestionnaireProps[]
+
+export type FieldI = FieldsProps | QuestionnaireField
 
 export default function Index(
-    data: FieldsProps & {
+    data: FieldI & {
         disabled?: boolean;
         project_locality_id: string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         value: any;
         setValue: (
             formSlug: string,
-            value: string | MembersI[] | File[],
+            value: ValueType,
             type: InputType,
             field_id: number,
             project_locality_id: string
         ) => void,
-        isFilled: boolean,
-        baseMapId?: string
+        baseMapId?: string;
+        module: string;
+        href?: string
+        projectLocalityId?: string;
     }
 ) {
+    const formSlug = 'form_slug' in data && data.form_slug
+        ? data.form_slug
+        : ('custom_form_slug' in data ? data.custom_form_slug : undefined)
+    const selectOptions = 'select_options' in data && data.select_options
+        ? data.select_options
+        : ('questionnaire_select_options' in data ? data.questionnaire_select_options : [])
+    if (!formSlug) return
     switch (data.type) {
         case ('textarea'):
             return (
@@ -37,7 +56,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value || undefined}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('date'):
@@ -48,7 +67,7 @@ export default function Index(
                     required={data.required}
                     disabled={data.disabled}
                     dateValue={data?.value ? new Date(data.value as string) : undefined}
-                    onDateChange={(e) => data.setValue(data.form_slug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}
+                    onDateChange={(e) => data.setValue(formSlug, e.toISOString().split("T")[0], data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('checkbox'):
@@ -58,7 +77,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     checked={data?.value && data.value === "true"}
-                    onValueChange={(e) => data.setValue(data.form_slug, String(e), data.type, data.id, data.project_locality_id)}
+                    onValueChange={(e) => data.setValue(formSlug, String(e), data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('file'):
@@ -71,7 +90,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                     className="w-full"
                 />
             )
@@ -82,7 +101,20 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    selectOptions={selectOptions}
+                    onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('multiselect'):
+            return (
+                <FormMultiselect
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    selectOptions={selectOptions}
+                    disabled={data?.disabled}
+                    values={data?.value && Array.isArray(data.value) ? data.value : []}
+                    setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('zoning'):
@@ -93,8 +125,6 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     baseMapId={data?.baseMapId ? data.baseMapId : undefined}
-                // value={data?.value}
-                // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         case ('existing_land_use'):
@@ -138,7 +168,45 @@ export default function Index(
                     required={data.required}
                     disabled={data.disabled}
                     value={data?.value}
-                    setValue={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
+                    setValue={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('table'):
+            return (
+                <FormTable
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    selectOptions={selectOptions}
+                    disabled={data?.disabled}
+                    values={data?.value && Array.isArray(data.value) ? data.value : []}
+                    setValues={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ("addquestionnaires"):
+            return (
+                <FormAddQuestionnaires
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    disabled={data?.required}
+                    module={data.module}
+                    values={data?.value || []}
+                    onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ("viewquestionnaires"):
+            return (
+                <FormViewQuestionnaires
+                    label={data.label}
+                    name={data.name}
+                    required={data.required}
+                    disabled={data?.required}
+                    module={data.module}
+                    projectLocalityId={data?.projectLocalityId}
+                    href={data?.href}
+                // values={data?.value || []}
+                // onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:
@@ -148,7 +216,7 @@ export default function Index(
                     disabled={data.disabled}
                     required={data.required}
                     value={data?.value}
-                    onChange={(e) => data.setValue(data.form_slug, e.target.value, data.type, data.id, data.project_locality_id)}
+                    onChange={(e) => data.setValue(formSlug, e.target.value, data.type, data.id, data.project_locality_id)}
                 />
             )
     }

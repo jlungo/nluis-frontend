@@ -22,15 +22,17 @@ interface MultiselectProps {
     data: { value: string; label: string }[];
     selected: string[];
     setSelected: (selected: string[]) => void;
-    isLoading: boolean;
+    isLoading?: boolean;
     search?: string;
     setSearch?: (search: string) => void
     mutedColor?: boolean;
     portal?: boolean;
     isSingle?: boolean;
+    disabled?: boolean;
+    className?: string;
 }
 
-export function MultiSelect({ title, data, selected, setSelected, isLoading, search, setSearch, mutedColor, portal, isSingle }: MultiselectProps) {
+export function MultiSelect({ title, data, selected, setSelected, isLoading, search, setSearch, mutedColor, portal, isSingle, disabled, className }: MultiselectProps) {
     const [open, setOpen] = useState(false)
 
     const toggleValue = (value: string) => {
@@ -51,6 +53,7 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading, sea
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
+                    disabled={disabled}
                     className={`w-full overflow-hidden justify-between ${mutedColor ? 'bg-muted' : 'bg-accent dark:bg-input/30'} font-normal text-muted-foreground dark:text-muted-foreground/90`}
                 >
                     {selected && selected.length > 0
@@ -62,7 +65,7 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading, sea
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 sm:w-96 md:w-96 xl:w-[495px] p-0" portal={portal}>
+            <PopoverContent className={cn("w-80 sm:w-96 md:w-96 xl:w-[495px] p-0", className)} portal={portal}>
                 <Command shouldFilter={setSearch ? false : true}>
                     <CommandInput
                         placeholder="Search..."

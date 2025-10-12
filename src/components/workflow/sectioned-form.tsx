@@ -2,13 +2,13 @@ import { type FormEvent, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { workflowQueryKey, type FormProps, type SectionProps, type WorkflowProps } from '@/queries/useWorkflowQuery';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, Check, CheckCircle, X, Edit2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import FormField from '@/components/form-field';
+import FormField, { type ValueType } from '@/components/form-field';
 import type { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,11 +18,10 @@ import type { AxiosError } from 'axios';
 import { type formDataI, formDataQueryKey } from '@/queries/useFormDataQuery';
 import { Progress } from '../ui/progress';
 import { queryProjectKey } from '@/queries/useProjectQuery';
-import type { MembersI } from '../form-field/form-members';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 interface FieldValue {
-    value?: string | File[] | MembersI[];
+    value?: ValueType;
     type: InputType;
     field_id: number;
     project_locality_id: string;
@@ -37,10 +36,12 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
+    moduleLevel?: string
+    projectId?: string
     projectLocaleProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, projectLocaleProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, moduleLevel, projectId, projectLocaleProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -51,8 +52,9 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     const [expandedSections, setExpandedSections] = useState<string[]>([]);
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
+    const [editForm, setEditForm] = useState(false);
 
-    const updateFieldValue = (formSlug: string, value: string | File[] | MembersI[], type: InputType, field_id: number, project_locality_id: string) => {
+    const updateFieldValue = (formSlug: string, value: ValueType, type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
         setFieldData(prev => ({
             ...prev,
@@ -61,12 +63,19 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     };
 
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: FormData) =>
-            api.post(`/form-management/submit-form-data/`, e, {
+        mutationFn: (e: FormData) => {
+            // TODO: Add edit formdata endpoint
+            if (editForm) return api.post(`/form-management/submit-form-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
-            }),
+            })
+            return api.post(`/form-management/submit-form-data/`, e, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                }
+            })
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({
                 refetchType: "active",
@@ -133,7 +142,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     // @ts-expect-error incorrect type
                     formData.append(`data-${field_id}`, value[0]);
                 else if (Array.isArray(value))
-                    // If value is MembersI[]
+                    // If value is MembersI[] or string[]
                     formData.append(`data-${field_id}`, JSON.stringify(value));
                 else formData.append(`data-${field_id}`, value as string);
 
@@ -215,16 +224,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         return true
     }
 
-    const canClickForm = (form: FormProps) => {
-        if (!user) return false
-        const isEditor =
-            form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined ||
-            user.role?.name === "Admin"
-
-        const allApproved = areAllFieldsApproved(form.slug)
-        return !allApproved && isEditor
-    }
-
     const isSectionApproved = (section: SectionProps) => {
         if (!user) return false
         const isApprover =
@@ -246,77 +245,55 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         }, 0)
     }
 
+    const isSectionLocked = (section: SectionProps) => {
+        if (section.position === 1) return false
+        const prevSection = data.sections.find(sec => sec.position === section.position - 1)
+        if (!prevSection) return false
+        const isPrevFilled = isFilledSection(prevSection)
+        const isPrevApproved = isSectionApproved(prevSection)
+
+        const editIfPrevApproved = section.edit_if_prev_approved === true && !isPrevApproved
+        const editIfPrevFilled = section.edit_if_prev_filled === true && !isPrevFilled
+
+        return editIfPrevApproved || editIfPrevFilled
+    }
+
+    const isFormLocked = (form: FormProps, section: SectionProps) => {
+        if (form.position === 1) return false
+        const prevForm = section.forms.find(sec => sec.position === form.position - 1)
+        if (!prevForm) return false
+
+        const isPrevFilled = isFilledForm(prevForm.slug)
+        const editIfPrevFilled = form.edit_if_prev_filled === true && !isPrevFilled
+
+        return editIfPrevFilled
+    }
+
+    const canEditForm = (form: FormProps, section: SectionProps) => {
+        if (!user) return false
+        const isEditor =
+            form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined ||
+            user.role?.name === "Admin"
+
+        const allApproved = areAllFieldsApproved(form.slug)
+        const sectionLocked = isSectionLocked(section)
+        return !allApproved && isEditor && !sectionLocked && !isFormLocked(form, section)
+    }
+
+    const canViewForm = (form: FormProps, section: SectionProps) => {
+        if (!user) return false
+        const canNotOpen = !canEditForm(form, section) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" || user.role?.name === "Dg")
+        const canNotApprove = section.approval_roles.find(role => role.role_id === user.role?.id) === undefined
+        return !canNotOpen || !canNotApprove
+    }
+
     const renderForm = (formId: string, isFilled: boolean) => {
         if (!data) return
-
-        const form = data.sections
-            .flatMap(section => section.forms)
-            .find(sf => sf.slug === formId);
-
+        const section = data.sections.find(section => section.forms.some(form => form.slug === formId))
+        if (!section) return null
+        const form = section.forms.find(sf => sf.slug === formId);
         if (!form) return null;
-
         const isSingle = data.sections.length == 1 && data.sections.every(section => section.forms.length == 1)
-
-        if (isSingle && disabled)
-            return (
-                <Card className='max-w-4xl mx-auto pt-0 md:pt-0 overflow-hidden mb-20'>
-                    <CardHeader className='bg-muted dark:bg-accent/50 pb-2 pt-6 flex justify-between gap-1'>
-                        <div className='w-full'>
-                            <CardTitle>
-                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}</h1>
-                            </CardTitle>
-                            <CardDescription>
-                                <p className="text-xs lg:text-sm text-muted-foreground">{form?.description || null}</p>
-                            </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            {disabled ? (
-                                <Link
-                                    to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
-                                    className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
-                                >
-                                    <Edit className="h-4 w-4" />
-                                    Edit<span className='hidden md:inline'> Workflow</span>
-                                </Link>
-                            ) : null}
-                        </div>
-                    </CardHeader>
-                    <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
-                        <CardContent>
-                            <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
-                                {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) =>
-                                    <FormField
-                                        key={field.id}
-                                        disabled={disabled || !canClickForm(form) || isFilled}
-                                        value={fieldData[`${form.slug}-${field.id}`]?.value}
-                                        setValue={updateFieldValue}
-                                        project_locality_id={projectLocalityId || ""}
-                                        isFilled={isFilled}
-                                        baseMapId={projectLocaleId || undefined}
-                                        {...field}
-                                    />
-                                )}
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isPendingApproval || isLoading}>
-                                {isPending || isLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="h-4 w-4" />
-                                        Save
-                                    </>
-                                )}
-                            </Button>
-                        </CardFooter>
-                    </form>
-                </Card>
-            )
-
         return (
             <div className="h-fit flex flex-col">
                 <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
@@ -327,9 +304,43 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 {isSingle ? 'Back' : 'Sections'}
                             </Button>
                             <div>
-                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}</h1>
+                                <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}{isSingle && section.name.length > 0 ? `: ${section.name}` : null}</h1>
                                 <p className="text-xs lg:text-sm text-muted-foreground">{form?.description || null}</p>
                             </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {isFilled && !disabled && canEditForm(form, section) && !isSectionApproved(section) ?
+                                editForm ?
+                                    <Button
+                                        type='button'
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setEditForm(false)}
+                                    >
+                                        <X />
+                                        Cancel Edit
+                                    </Button>
+                                    :
+                                    <Button
+                                        type='button'
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setEditForm(true)}
+                                        className='border-destructive/50 dark:border-destructive/50'
+                                    >
+                                        <Edit2 className="h-4 w-4 text-destructive" />
+                                        Edit Form
+                                    </Button>
+                                : null}
+                            {disabled ? (
+                                <Link
+                                    to={`/system-settings/form-management/form-workflows/${data.slug}/edit`}
+                                    className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                    Edit<span className='hidden md:inline'> Workflow</span>
+                                </Link>
+                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -342,32 +353,42 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     {form.form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
-                                            disabled={disabled || !canClickForm(form) || isFilled}
+                                            disabled={disabled || !canEditForm(form, section) || (isFilled && !editForm)}
                                             value={fieldData[`${form.slug}-${field.id}`]?.value}
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
-                                            isFilled={isFilled}
                                             baseMapId={projectLocaleId || undefined}
+                                            module={data.module_slug}
+                                            href={`/${data.module_slug}/${moduleLevel}/${projectId}/${projectLocalityId}`}
                                             {...field}
                                         />
                                     ))}
                                 </div>
                             </CardContent>
-                            <CardFooter>
-                                <Button type='submit' className='w-full' disabled={disabled || !canClickForm(form) || isFilled || isPending || isLoading}>
-                                    {isPending || isLoading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="h-4 w-4" />
-                                            Save
-                                        </>
-                                    )}
-                                </Button>
-                            </CardFooter>
+                            {!(disabled || !canEditForm(form, section) || isFilled) || editForm ? (
+                                <CardFooter>
+                                    <Button
+                                        type='submit'
+                                        className='w-full'
+                                        disabled={disabled || !canEditForm(form, section) || isPending || isLoading}
+                                    >
+                                        {isPending || isLoading ?
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Saving...
+                                            </>
+                                            :
+                                            editForm ? <>
+                                                <Edit2 className="h-4 w-4" />
+                                                Edit Data
+                                            </> : <>
+                                                <Save className="h-4 w-4" />
+                                                Save Data
+                                            </>
+                                        }
+                                    </Button>
+                                </CardFooter>
+                            ) : null}
                         </form>
                     </Card>
                 </div>
@@ -377,6 +398,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     useEffect(() => {
         const active = searchParams.get("form");
+        setEditForm(false)
         if (active) setActiveForm(active)
         else setActiveForm('')
     }, [searchParams])
@@ -458,7 +480,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     <div className="flex items-center justify-between p-4 bg-muted/60 dark:bg-muted/20 hover:bg-muted/90 dark:hover:bg-muted/40 cursor-pointer">
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center gap-2">
-                                                {/* {section.icon} */}
                                                 <span className="font-medium">{section.name}</span>
                                             </div>
 
@@ -475,16 +496,17 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         ? <Badge className="bg-green-700 dark:bg-green-900">Approved</Badge>
                                                         : null}
                                                 </> : null}
-
-                                            {/* {!section.isAccessible && (
-                                            <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                Locked
-                                            </Badge>
-                                            )} */}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-muted-foreground">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</span>
+                                            <div className="flex flex-col md:flex-row gap-0 md:gap-2 -my-4">
+                                                {isSectionLocked(section) ? (
+                                                    <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                        <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                        Locked
+                                                    </Badge>
+                                                ) : null}
+                                                <div className="text-xs md:text-sm text-muted-foreground whitespace-nowrap text-center">{section.forms.length === 1 ? `1 form` : `${section.forms.length} forms`}</div>
+                                            </div>
                                             {expandedSections.includes(section.slug) ? (
                                                 <ChevronDown className="h-4 w-4" />
                                             ) : (
@@ -508,7 +530,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         }
                                                     )}
                                                     onClick={() => navigate(`?form=${form.slug}`)}
-                                                    disabled={!canClickForm(form) && !(form.editor_roles.find(role => role.role_id === user.role?.id) !== undefined || user.role?.name === "Admin" || user.role?.name === "Dg")}
+                                                    disabled={!canViewForm(form, section)}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
@@ -522,17 +544,21 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {/* {!form.isAccessible && (
-                                                        <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
-                                                            <Lock className="h-3 w-3 mr-1 text-yellow-600" />
-                                                            Locked
-                                                        </Badge>
-                                                        )} */}
-                                                        {areAllFieldsApproved(form.slug) && (
-                                                            <Badge variant="default" className="bg-green-800 text-xs">
-                                                                Complete
+                                                        <div className="flex flex-col md:flex-row gap-2 -my-4">
+                                                            {areAllFieldsApproved(form.slug) ? (
+                                                                <Badge variant="default" className="bg-green-800 text-xs">
+                                                                    Complete
+                                                                </Badge>
+                                                            ) : isFormLocked(form, section) && (
+                                                                <Badge variant="outline" className="text-xs border-yellow-600 text-yellow-600 dark:text-yellow-600">
+                                                                    <Lock className="h-3 w-3 mr-1 text-yellow-600" />
+                                                                    Locked
+                                                                </Badge>
+                                                            )}
+                                                            <Badge variant="secondary" className="text-xs text-muted-foreground mx-auto">
+                                                                {form.form_fields.length} fields
                                                             </Badge>
-                                                        )}
+                                                        </div>
                                                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                                     </div>
                                                 </button>
@@ -569,7 +595,6 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                     <AlertDialogFooter>
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                         <AlertDialogAction asChild>
-
                                                             <Button
                                                                 type='button'
                                                                 size='sm'
