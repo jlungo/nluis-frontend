@@ -69,8 +69,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                     "Content-Type": "multipart/form-data",
                 }
             })
-            // TODO: Add post questionnairedata endpoint
-            return api.post(`/form-management/submit-questionnaire-data/`, e, {
+            return api.post(`/collect/questionnaire/submit-form-data/`, e, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }
