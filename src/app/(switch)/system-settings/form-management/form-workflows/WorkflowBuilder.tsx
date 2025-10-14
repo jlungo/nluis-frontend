@@ -51,7 +51,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
     TouchSensor,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { SortableField, SortableForm, SortableSection } from './SortableContext';
+import { SortableField, SortableForm, SortableOption, SortableSection } from './SortableContext';
 
 export default function WorkflowBuilder({ previousData, sections }: { previousData?: WorkflowProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
