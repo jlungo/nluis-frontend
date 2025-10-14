@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 import api from "@/lib/axios";
-import type { APIResponse } from "@/types/api-response";
-import type { QuestionnaireCategoryKey } from "@/types/constants";
-import type { InputType } from "@/types/input-types";
+import type {APIResponse} from "@/types/api-response";
+import type {QuestionnaireCategoryKey} from "@/types/constants";
+import type {InputType} from "@/types/input-types";
 
 export interface SelectOptionProps {
   text_label: string;
@@ -89,7 +89,7 @@ export const useQuestionnairesQuery = (
   return useQuery<DataProps>({
     queryKey: [
       questionnaireQueryKey,
-      { limit, offset, keyword, module, category, projectLocalityId },
+      {limit, offset, keyword, module, category, projectLocalityId},
     ],
     queryFn: () =>
       api
@@ -105,7 +105,7 @@ export const useQuestionnaireQuery = (questionnaire_slug: string) => {
     queryKey: [questionnaireQueryKey, questionnaire_slug],
     queryFn: () =>
       api
-        .get(`/collect/questionnaire/${questionnaire_slug}/`)
+        .get(`/collect/questionnaire/${questionnaire_slug}/detail`)
         .then((res) => res.data),
   });
 };
