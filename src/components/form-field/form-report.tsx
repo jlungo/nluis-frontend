@@ -1,7 +1,6 @@
 // FormReportMock.tsx
 import { Label } from "../ui/label";
 import { Asterisk } from "lucide-react";
-import { useState } from "react";
 import FormReportBinding from "../report/FormReportBinding";
 
 type FormReportProps = {
