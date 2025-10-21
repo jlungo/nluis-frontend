@@ -191,6 +191,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
                 icon: <FileQuestionMark className="h-4 w-4" />
               },
               {
+                id: "reports",
+                label: "Report Templates",
+                icon: <FileText className="h-4 w-4" />
+              },
+              {
                 id: "module-levels",
                 label: "Module Levels",
                 icon: <List className="h-4 w-4" />

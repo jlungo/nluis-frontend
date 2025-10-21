@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { usePageStore } from "@/store/pageStore"
-import { ArrowRight, ClipboardPlus, FileQuestionMark, List } from "lucide-react"
+import { ArrowRight, ClipboardPlus, FileQuestionMark, FileText, List } from "lucide-react"
 import { useLayoutEffect } from "react"
 import { useNavigate } from "react-router"
 
@@ -35,6 +35,14 @@ export default function Page() {
             bgColor: 'bg-chart-2/10'
         },
         {
+            id: 'reports',
+            title: 'Report Templates',
+            description: 'Create and manage report templates for automatic document generation',
+            icon: <FileText className="h-8 w-8" />,
+            color: 'text-green-500',
+            bgColor: 'bg-green-500/10'
+        },
+        {
             id: 'module-levels',
             title: 'Module Levels',
             description: 'Create, edit, and manage all your module levels',
@@ -49,7 +57,7 @@ export default function Page() {
             <div className="flex justify-between">
                 <div>
                     <h1 className="text-xl lg:text-2xl font-semibold">Form Management</h1>
-                    <p className="text-muted-foreground">Create, edit, and manage all the systems dynamic forms</p>
+                    <p className="text-muted-foreground">Create, edit, and manage all the system's dynamic forms</p>
                 </div>
             </div>
             <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:w-fit max-w-[1500px] mx-auto">

@@ -33,7 +33,7 @@ export default function AppShell(props: Props) {
       <div className="flex-1 min-h-0 flex">
         {leftOpen ? (
           <div className="w-80 border-r bg-card shrink-0 min-h-0 relative z-20">
-            <LeftDock colorMode={props.colorMode} />
+            <LeftDock colorMode={props.colorMode} isProposed={props.isProposed} />
           </div>
         ) : null}
 
