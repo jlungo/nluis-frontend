@@ -46,9 +46,10 @@ type Props = {
   baseMapId?: string;
   defaultLandUseId?: number;
   colorMode?: "type" | "status";
+  isProposed?: boolean;
 };
 
-export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "type" }: Props) {
+export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "type", isProposed }: Props) {
   const mapGLRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawRef = useRef<any>(null);
@@ -96,8 +97,9 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
   const zonesTilesTemplate = useMemo(() => {
     const q = new URLSearchParams();
     if (baseMapId) q.set("locality", baseMapId);
+    if (isProposed !== undefined) q.set("is_proposed", isProposed ? "1" : "0");
     return `${API_BASE}/zoning/zones/tiles/{z}/{x}/{y}.mvt?${q.toString()}`;
-  }, [API_BASE, baseMapId]);
+  }, [API_BASE, baseMapId, isProposed]);
 
   const transformRequest = useCallback(
     (url: string) => {
@@ -223,6 +225,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             status: f.properties?.status || "Draft",
             locality: baseMapId ? Number(baseMapId) : undefined,
             land_use: f.properties?.land_use ?? defaultLandUseId ?? undefined,
+            is_proposed: isProposed ?? false,
           };
           next.set(id, { feature: f, state: "added", original: null });
           setActiveZone(id);
@@ -298,7 +301,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseMapId, defaultLandUseId]);
+  }, [baseMapId, defaultLandUseId, isProposed]);
 
   // (autosave removed per request)
 
@@ -525,6 +528,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         locality: baseMapId ? Number(baseMapId) : undefined,
         land_use: s.feature.properties?.land_use,
         status: s.feature.properties?.status ?? "Draft",
+        is_proposed: s.feature.properties?.is_proposed ?? isProposed ?? false,
       };
       return {
         type: "Feature",
@@ -555,7 +559,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       toast.error(e?.response?.data?.detail || "Save failed");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawStates, baseMapId]);
+  }, [drawStates, baseMapId, isProposed]);
 
   // Save As (local)
   function downloadBlob(blob: Blob, filename: string) {

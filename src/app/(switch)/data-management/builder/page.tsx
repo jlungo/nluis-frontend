@@ -29,7 +29,6 @@ import {
   Database,
   Eye,
   Copy,
-  MapPin,
 } from "lucide-react";
 
 interface FormField {

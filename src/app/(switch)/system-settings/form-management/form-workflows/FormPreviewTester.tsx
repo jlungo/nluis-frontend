@@ -31,7 +31,8 @@ import {
     BarChart3,
     Users,
     Clock,
-    Upload
+    Upload,
+    Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import DatePicker from '@/components/form-field/form-date-picker';
@@ -39,7 +40,12 @@ import type { InputType } from '@/types/input-types';
 import { ShapefileMap } from '@/components/zoning/ShapefileMap';
 import { useThemeStore } from '@/store/themeStore';
 import FormMembers from '@/components/form-field/form-members';
-import SubdivisionShell from '@/components/subdivision/SubdivisionShell';
+import FormMultiselect from '@/components/form-field/form-multiselect';
+import FormTable, { type TableRowI } from '@/components/form-field/form-table';
+import { Tooltip, TooltipContent } from '@/components/ui/tooltip';
+import { TooltipTrigger } from '@radix-ui/react-tooltip';
+import FormAddQuestionnaires, { type AddQuestionnaireProps } from '@/components/form-field/form-add-questionnaire';
+import FormViewQuestionnaires from '@/components/form-field/form-view-questionnaire';
 
 export type State = "1" | "0"
 
@@ -70,6 +76,7 @@ export interface SectionForm {
     order: number;
     form_fields: FormField[];
     is_active: boolean;
+    edit_if_prev_filled: boolean
 }
 
 export interface FormSection {
@@ -80,6 +87,8 @@ export interface FormSection {
     order: number;
     forms: SectionForm[];
     is_active: boolean;
+    edit_if_prev_approved: boolean;
+    edit_if_prev_filled: boolean;
 }
 
 export interface WorkflowTemplate {
@@ -87,6 +96,7 @@ export interface WorkflowTemplate {
     name: string;
     description: string | null;
     module: string;
+    module_slug: string;
     module_level: string;
     isActive: boolean;
     isTemplate: boolean;
@@ -249,7 +259,7 @@ export function FormPreviewTester({
 
             const renderLabel = () => (
                 <div className="flex items-center gap-2">
-                    <Label className="flex items-center gap-2">
+                    <Label htmlFor={fieldName} className="flex items-center gap-2">
                         {field.label}
                         {field.required && <span className="text-destructive">*</span>}
                     </Label>
@@ -300,23 +310,6 @@ export function FormPreviewTester({
                         </div>
                     );
 
-                case "text":
-                case "email":
-                case "number":
-                    return (
-                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
-                            {renderLabel()}
-                            <Input
-                                type={field.type === "text" ? "text" : field.type}
-                                placeholder={field.placeholder || `Enter ${field.type}...`}
-                                value={fieldValue || ""}
-                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
-                                className={hasError ? "border-destructive" : ""}
-                            />
-                            {renderError()}
-                        </div>
-                    );
-
                 case "textarea":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
@@ -324,6 +317,8 @@ export function FormPreviewTester({
                             <Textarea
                                 placeholder={field.placeholder || "Enter text..."}
                                 value={fieldValue || ""}
+                                name={fieldName}
+                                id={fieldName}
                                 onChange={(e) => updateFieldValue(fieldName, e.target.value)}
                                 className={hasError ? "border-destructive" : ""}
                                 rows={3}
@@ -339,6 +334,7 @@ export function FormPreviewTester({
                             <Select
                                 value={fieldValue || ""}
                                 onValueChange={(value) => updateFieldValue(fieldName, value)}
+                                name={fieldName}
                             >
                                 <SelectTrigger
                                     className={hasError ? "border-destructive w-full" : "w-full"}
@@ -361,6 +357,14 @@ export function FormPreviewTester({
                         </div>
                     );
 
+                case "multiselect":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <MultiselectRenderer {...field} />
+                            {renderError()}
+                        </div>
+                    );
+
                 case "checkbox":
                     return (
                         <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
@@ -368,11 +372,13 @@ export function FormPreviewTester({
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     checked={fieldValue || false}
+                                    name={fieldName}
+                                    id={fieldName}
                                     onCheckedChange={(checked) =>
                                         updateFieldValue(fieldName, checked)
                                     }
                                 />
-                                <Label>{field.placeholder || "Check this option"}</Label>
+                                <Label htmlFor={fieldName} className='mt-2'>{field.placeholder || "Check this option"}</Label>
                             </div>
                             {renderError()}
                         </div>
@@ -384,6 +390,7 @@ export function FormPreviewTester({
                             <DatePicker
                                 label={field.label}
                                 name={fieldName}
+                                id={fieldName}
                                 required={field.required}
                                 dateValue={fieldValue ? new Date(fieldValue) : undefined}
                                 onDateChange={(e) =>
@@ -407,6 +414,8 @@ export function FormPreviewTester({
                             >
                                 <input
                                     type="file"
+                                    name={fieldName}
+                                    id={fieldName}
                                     onChange={(e) =>
                                         updateFieldValue(fieldName, e.target.files?.[0]?.name || "")
                                     }
@@ -438,11 +447,57 @@ export function FormPreviewTester({
                         </div>
                     );
 
+                case "table":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <TableRenderer {...field} />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "addquestionnaires":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <AddQuestionnairesRenderer {...field} module={workflowData.module_slug} />
+                            {renderError()}
+                        </div>
+                    );
+
+                case "viewquestionnaires":
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            <FormViewQuestionnaires
+                                label={field.label}
+                                name={field.name}
+                                required={field.required}
+                                module={workflowData.module_slug}
+                                // values={values}
+                                // onValueChange={setValues}
+                                isPreview
+                            />
+                            {renderError()}
+                        </div>
+                    );
+
                 default:
-                    return null;
+                    return (
+                        <div key={field.id} className="space-y-2 bg-background p-2 sm:p-3 md:p-4 border">
+                            {renderLabel()}
+                            <Input
+                                type={field.type === "text" ? "text" : field.type}
+                                placeholder={field.placeholder || `Enter ${field.type}...`}
+                                value={fieldValue || ""}
+                                name={fieldName}
+                                id={fieldName}
+                                onChange={(e) => updateFieldValue(fieldName, e.target.value)}
+                                className={hasError ? "border-destructive" : ""}
+                            />
+                            {renderError()}
+                        </div>
+                    );;
             }
         },
-        [formValues, validationErrors, showValidation, updateFieldValue]
+        [formValues, validationErrors, showValidation, workflowData.module_slug, updateFieldValue]
     );
 
     // Render form preview (read-only structure)
@@ -505,7 +560,35 @@ export function FormPreviewTester({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
+                                            {section.order !== 1 ? (
+                                                <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                    {section.edit_if_prev_approved &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-destructive">
+                                                                    <Lock />
+                                                                    Approved
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been approved
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                    {section.edit_if_prev_filled &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                    <Lock />
+                                                                    Filled
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been filled completely
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                </div>
+                                            ) : null}
+                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
                                                 <Badge variant="outline" className="text-xs">
                                                     {section.forms.filter(form => form.is_active === true).length} forms
                                                 </Badge>
@@ -547,9 +630,23 @@ export function FormPreviewTester({
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs hidden md:block">
-                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
-                                                            </Badge>
+                                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                                {form.order !== 1 && form.edit_if_prev_filled &&
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger>
+                                                                            <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                                <Lock />
+                                                                                Filled
+                                                                            </Badge>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            Only fill this form when the previous has been filled
+                                                                        </TooltipContent>
+                                                                    </Tooltip>}
+                                                                <Badge variant="outline" className="text-xs hidden md:block">
+                                                                    {form.form_fields.filter(field => field.is_active === true).length} fields
+                                                                </Badge>
+                                                            </div>
                                                             {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
@@ -681,6 +778,34 @@ export function FormPreviewTester({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            {section.order !== 1 ? (
+                                                <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                    {section.edit_if_prev_approved &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-destructive">
+                                                                    <Lock />
+                                                                    Approved
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been approved
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                    {section.edit_if_prev_filled &&
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                    <Lock />
+                                                                    Filled
+                                                                </Badge>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                Only fill this section when the previous has been filled completely
+                                                            </TooltipContent>
+                                                        </Tooltip>}
+                                                </div>
+                                            ) : null}
                                             <div className="hidden flex-col md:flex-row items-center gap-2 md:flex">
                                                 <Badge variant="outline" className="text-xs">
                                                     {section.forms.filter(form => form.is_active === true).length} forms
@@ -723,9 +848,23 @@ export function FormPreviewTester({
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="text-xs hidden md:block">
-                                                                {form.form_fields.filter(field => field.is_active === true).length} fields
-                                                            </Badge>
+                                                            <div className="hidden flex-col lg:flex-row items-center gap-2 md:flex">
+                                                                {form.order !== 1 && form.edit_if_prev_filled &&
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger>
+                                                                            <Badge variant="outline" className="text-xs border-yellow-600">
+                                                                                <Lock />
+                                                                                Filled
+                                                                            </Badge>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            Only fill this form when the previous has been filled
+                                                                        </TooltipContent>
+                                                                    </Tooltip>}
+                                                                <Badge variant="outline" className="text-xs hidden md:block">
+                                                                    {form.form_fields.filter(field => field.is_active === true).length} fields
+                                                                </Badge>
+                                                            </div>
                                                             {!collapsedForms[form.id] ? (
                                                                 <ChevronRight className="h-4 w-4" />
                                                             ) : (
@@ -974,14 +1113,49 @@ const MapRenderer: React.FC = () => {
     )
 }
 
-const SubdivisionMapRenderer: React.FC<{ value: string | undefined, onChange: (value: string) => void }> = ({ value, onChange }) => {
+const MultiselectRenderer: React.FC<FormField> = ({ options, name, label, required }) => {
+    const [values, setValues] = useState<string[]>([])
     return (
-        <div className="w-full h-[500px] rounded-lg border bg-background">
-            <SubdivisionShell
-                value={value}
-                onChange={onChange}
-                className="w-full h-full"
-            />
-        </div>
+        <FormMultiselect
+            name={name}
+            label={label}
+            required={required}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.label }))}
+            values={values}
+            setValues={setValues}
+            className='md:w-full xl:w-full'
+            isPreview
+        />
+    )
+}
+
+const TableRenderer: React.FC<FormField> = ({ options, name, label, required }) => {
+    const [values, setValues] = useState<TableRowI[]>([])
+    return (
+        <FormTable
+            name={name}
+            label={label}
+            required={required}
+            selectOptions={options.map(option => ({ position: option.order, text_label: option.label, value: option.name }))}
+            values={values}
+            setValues={setValues}
+            className='md:w-full xl:w-full'
+            isPreview
+        />
+    )
+}
+
+const AddQuestionnairesRenderer: React.FC<FormField & { module: string }> = ({ name, label, required, module }) => {
+    const [values, setValues] = useState<AddQuestionnaireProps[]>([])
+    return (
+        <FormAddQuestionnaires
+            label={label}
+            name={name}
+            required={required}
+            module={module}
+            values={values}
+            onValueChange={setValues}
+            isPreview
+        />
     )
 }

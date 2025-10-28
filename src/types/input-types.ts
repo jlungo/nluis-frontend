@@ -11,4 +11,8 @@ export type InputType =
   | "table"
   | "members"
   | "zoning"
-  | "landsubdivision";
+  | "existing_land_use"
+  | "proposed_land_use"
+  | "report"
+  | "addquestionnaires"
+  | "viewquestionnaires";
