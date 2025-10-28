@@ -32,6 +32,7 @@ const initialState: SubdivisionState = {
   selectedId: null,
   activePlanId: null,
   inspectorOpen: false,
+  selectedZoneIds: new Set<string | number>(), // Set of rendered feature ids that are selected
 
   // UI state
   isDrawing: false,
@@ -44,27 +45,58 @@ const initialState: SubdivisionState = {
   showPlans: true,
   showParcels: true,
   parcelOpacity: 0.9,
+  plansOpacity: 0.45,
   boundaryGlow: false,
+  colorMode: 'type',
 
   // Measurements
   lastMeasurement: null,
+  // Dialogs
+  pointsDialogOpen: false,
 };
 
 const useSubdivisionStore = create<Store>()(
   persist((set, get) => ({
     ...initialState,
+    // Helper: map feature id should match vector-tile id type (numeric vs string)
+    // Store keeps selection keys as strings for stability, but Mapbox expects
+    // the original id type. Convert digit-only strings back to numbers.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _toMapId: (fid: any) => {
+      try {
+        if (typeof fid === 'number') return fid;
+        if (typeof fid === 'string') {
+          const n = Number(fid);
+          if (Number.isFinite(n) && String(n) === fid) return n;
+        }
+      } catch {}
+      return fid;
+    },
 
     /* =======================
      * MAP / API
      * ======================= */
     setMap: (map: MapboxMap | null) => {
-      if (get().map !== map) set({ map });
+      if (get().map !== map) {
+        set({ map });
+        // When map becomes available, reapply selection to ensure visual state matches store
+        try {
+          if (map) {
+            // small timeout to allow layers/sources to initialize
+            setTimeout(() => {
+              try { (get() as any).applySelectionToMap(); } catch {}
+            }, 50);
+          }
+        } catch {}
+      }
     },
 
     getMap: () => get().map,
 
     setAPI: (api: any) => {
-      if (get().api !== api) set({ api });
+      const prev = get().api || {};
+      // Merge to avoid blowing away existing API methods, like zoning store
+      set({ api: { ...prev, ...(api || {}) } });
     },
 
     setStyleName: (style: string) => {
@@ -119,22 +151,30 @@ const useSubdivisionStore = create<Store>()(
      * ======================= */
     setPlans: (plans) => set({ plans }),
 
-    togglePlan: (id) =>
-      set((state) => ({
-        plans: state.plans.map((plan) =>
-          plan.id === id ? { ...plan, selected: !plan.selected } : plan
+    togglePlan: (id) => {
+      const state = get();
+      const plan = state.plans.find(p => String(p.id) === String(id));
+      if (!plan) return;
+      // Only flip plan selection flag. Zone selection syncing is handled in the UI effect
+      // to avoid double updates and flicker.
+      set({
+        plans: state.plans.map((p) =>
+          p.id === id ? { ...p, selected: !p.selected } : p
         ),
-      })),
+      });
+    },
 
-    selectAll: () =>
-      set((state) => ({
-        plans: state.plans.map((z) => ({ ...z, selected: true })),
-      })),
+    selectAll: () => {
+      const state = get();
+      // Mark all plans selected; zone-level updates handled by panel sync effect
+      set({ plans: state.plans.map((z) => ({ ...z, selected: true })) });
+    },
 
-    deselectAll: () =>
-      set((state) => ({
-        plans: state.plans.map((z) => ({ ...z, selected: false })),
-      })),
+    deselectAll: () => {
+      const state = get();
+      // Mark all plans deselected; panel sync effect will clear zone selection and feature-state
+      set({ plans: state.plans.map((z) => ({ ...z, selected: false })) });
+    },
 
     setActivePlan: (id: string | null) => {
       if (get().activePlanId !== id) set({ activePlanId: id });
@@ -182,8 +222,16 @@ const useSubdivisionStore = create<Store>()(
       if (get().parcelOpacity !== n) set({ parcelOpacity: n });
     },
 
+    setPlansOpacity: (n: number) => {
+      if (get().plansOpacity !== n) set({ plansOpacity: n });
+    },
+
     setBoundaryGlow: (b: boolean) => {
       if (get().boundaryGlow !== b) set({ boundaryGlow: b });
+    },
+
+    setColorMode: (m: 'type' | 'status') => {
+      if ((get().colorMode || 'type') !== m) set({ colorMode: m });
     },
 
     /* =======================
@@ -220,6 +268,149 @@ const useSubdivisionStore = create<Store>()(
     },
 
     /* =======================
+     * ZONE SELECTION
+     * ======================= */
+    selectZone: (fid: string | number) => {
+      const next = new Set(get().selectedZoneIds);
+      next.add(String(fid));
+      set({ selectedZoneIds: next });
+
+      // Persist and sync immediately
+      try { (get() as any).applySelectionToMap(); } catch {}
+
+      // Update map feature state
+      try {
+        const map = get().map;
+        if (!map) {
+          return;
+        }
+        const source = map.getSource('plans-tiles');
+        if (!source) {
+          return;
+        }
+        const layer = map.getLayer('plans-fill');
+        if (!layer) {
+          return;
+        }
+        const mapId = (get() as any)._toMapId(fid);
+        map.setFeatureState(
+          { source: 'plans-tiles', sourceLayer: 'zones', id: mapId },
+          { selected: true }
+        );
+      } catch (err) {
+        // swallow
+      }
+    },
+
+    deselectZone: (fid: string | number) => {
+      const next = new Set(get().selectedZoneIds);
+      next.delete(String(fid));
+      set({ selectedZoneIds: next });
+
+      // Persist and sync
+      try { (get() as any).applySelectionToMap(); } catch {}
+
+      // Update map feature state
+      try {
+        const map = get().map;
+        if (!map) {
+          return;
+        }
+        const source = map.getSource('plans-tiles');
+        if (!source) {
+          return;
+        }
+        const mapId = (get() as any)._toMapId(fid);
+        map.setFeatureState(
+          { source: 'plans-tiles', sourceLayer: 'zones', id: mapId },
+          { selected: false }
+        );
+      } catch (err) {
+        // swallow
+      }
+    },
+
+    clearZoneSelection: () => {
+      const prev = get().selectedZoneIds;
+      set({ selectedZoneIds: new Set() });
+      // Clear map feature state for all previously selected zones
+      try {
+        const map = get().map;
+        if (map) {
+          Array.from(prev).forEach(fid => {
+            const mapId = (get() as any)._toMapId(fid);
+            map.setFeatureState(
+              { source: 'plans-tiles', sourceLayer: 'zones', id: mapId },
+              { selected: false }
+            );
+          });
+        }
+      } catch {}
+      try { (get() as any).applySelectionToMap(); } catch {}
+    },
+
+    setFeatureStateById: (fid: string | number | { id: string | number; sourceLayer?: string }, state: Record<string, any>) => {
+      try {
+        const map = get().map;
+        if (map) {
+          // Support passing through the sourceLayer when caller knows it
+          let idVal: any = fid as any;
+          let sourceLayer = 'zones';
+          if (typeof fid === 'object' && fid !== null && 'id' in fid) {
+            const obj = fid as any;
+            idVal = obj.id;
+            if (obj.sourceLayer) sourceLayer = obj.sourceLayer;
+          }
+          const mapId = (get() as any)._toMapId(idVal);
+          const tryLayers = (sl?: string) => {
+            const layers = sl ? [sl] : ['zones', 'zone_snapshots'];
+            for (const L of layers) {
+              try { map.setFeatureState({ source: 'plans-tiles', sourceLayer: L, id: mapId }, state); } catch {}
+            }
+          };
+          tryLayers(sourceLayer);
+        }
+      } catch {}
+    },
+
+    // Apply the current selection set to the map, clearing previous applied states
+    applySelectionToMap: () => {
+      try {
+        const map = get().map as any;
+        if (!map) return;
+
+        const toMapId = (fid: any) => {
+          if (typeof fid === 'number') return fid;
+          if (typeof fid === 'string') { const n = Number(fid); if (Number.isFinite(n) && String(n) === fid) return n; }
+          return fid;
+        };
+
+        // Previously applied selection snapshot
+        const prevApplied: Set<string> = (get() as any).__appliedSelected || new Set<string>();
+        const curr: Set<string> = new Set<string>(Array.from(get().selectedZoneIds || []).map(String));
+
+        // Clear any previously applied feature-state that's no longer selected
+        prevApplied.forEach((fid) => {
+          if (!curr.has(fid)) {
+            ['zones', 'zone_snapshots'].forEach((layer) => {
+              try { map.setFeatureState({ source: 'plans-tiles', sourceLayer: layer, id: toMapId(fid) }, { selected: false }); } catch {}
+            });
+          }
+        });
+
+        // Apply current selected feature-state
+        curr.forEach((fid) => {
+          ['zones', 'zone_snapshots'].forEach((layer) => {
+            try { map.setFeatureState({ source: 'plans-tiles', sourceLayer: layer, id: toMapId(fid) }, { selected: true }); } catch {}
+          });
+        });
+
+        // Save snapshot
+        (get() as any).__appliedSelected = curr;
+      } catch {}
+    },
+
+    /* =======================
      * MEASUREMENTS
      * ======================= */
     setLastMeasurement: (m) => {
@@ -232,12 +423,13 @@ const useSubdivisionStore = create<Store>()(
     setPointsDialogOpen: (open: boolean) => {
       if (!open) {
         set({
+          pointsDialogOpen: false,
           drawMode: null,
           isDrawing: false,
           interactionMode: 'select',
         });
       } else {
-        set({ drawMode: 'point', isDrawing: true });
+        set({ pointsDialogOpen: true, drawMode: 'point', isDrawing: true });
       }
     },
   }))

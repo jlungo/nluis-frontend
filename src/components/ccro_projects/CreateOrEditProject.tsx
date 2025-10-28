@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, ProjectFunderI, ProjectI } from '@/types/projects';
-import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey, CCRO_MODULE_SLUG } from '@/types/constants';
+import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey,  } from '@/types/constants';
 import { useNavigate } from 'react-router';
 import { canCreateProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
@@ -288,6 +288,7 @@ function Forms({ moduleLevel, redirectPath = '/ccro-management/ccro-projects', l
         return LOCALITY_LEVELS.VILLAGE;
       default:
         return LOCALITY_LEVELS.NATIONAL;
+      
     }
   };
 
@@ -322,7 +323,8 @@ function Forms({ moduleLevel, redirectPath = '/ccro-management/ccro-projects', l
 
     try {
       // For CCRO projects, use the CCRO module slug instead of the generic locality mapping
-      const moduleLevelSlug = CCRO_MODULE_SLUG || MODULE_LEVEL_SLUG[moduleLevel as keyof typeof MODULE_LEVEL_SLUG]?.toLowerCase();
+      //
+      const moduleLevelSlug = MODULE_LEVEL_SLUG[moduleLevel as keyof typeof MODULE_LEVEL_SLUG]?.toLowerCase();
 
       const payload: CreateProjectDataI = {
         name: formData.name,

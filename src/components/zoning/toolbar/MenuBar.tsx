@@ -1,6 +1,7 @@
 import { useZoningStore } from "../store/useZoningStore";
 import { LabelField } from "../types";
 import { useState, useRef, useEffect, useMemo } from "react";
+import SelectByDialog from './SelectByDialog';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Palette, Maximize, Minimize } from "lucide-react";
@@ -74,6 +75,7 @@ export default function MenuBar({
   const hasSelection = selectedIds.length > 0;
 
   const setField = (f: LabelField) => { setLabelField(f); api.setLabelField?.(f); };
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="flex items-center gap-2 px-2 border-b bg-background/95">
@@ -131,6 +133,9 @@ export default function MenuBar({
           <Item onClick={() => api.sendToDraftSelected?.()} disabled={!hasSelection}>
             Send to Draft
           </Item>
+          <Item onClick={() => setDialogOpen(true)}>
+            Select by Type / Status…
+          </Item>
         </Group>
       </MenuButton>
 
@@ -164,6 +169,7 @@ export default function MenuBar({
           </Button>
         )}
       </div>
+      <SelectByDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }

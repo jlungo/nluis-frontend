@@ -36,6 +36,22 @@ export const useDeleteZone = (opts?: { onDone?: () => void }) => {
   });
 };
 
+// Set zone snapshot subdivision flag (can_be_subdivided)
+export const useSetZoneSubdivision = (opts?: { onDone?: () => void }) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, can_be_subdivided }: { id: string | number; can_be_subdivided: boolean }) =>
+      api
+        .patch(`/zoning/zone-snapshots/${id}/subdivision/`, { can_be_subdivided })
+        .then((r) => r.data),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["zone", vars.id] });
+      qc.invalidateQueries({ queryKey: ["zones-tiles"] });
+      opts?.onDone?.();
+    },
+  });
+};
+
 // List zones, optionally filtered by query params (e.g., locality)
 export const useZonesQuery = (params?: { locality?: string | number } | null) =>
   useQuery({

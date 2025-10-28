@@ -1,5 +1,7 @@
 import React from 'react';
 import useSubdivisionStore from '../store/useSubdivisionStore';
+import { ConflictsPanel } from '@/components/zoning/components/ConflictsPanel';
+import { HistoryPanel } from '@/components/zoning/components/HistoryPanel';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -9,15 +11,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+// ...existing code...
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { 
-  X, FileText, AlertTriangle, History, MapPin, Save, RotateCcw, Info, Globe
+  X, FileText, AlertTriangle, History, MapPin, Save, RotateCcw, Info,
+  Layers
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { type PlanSummary } from '../store/types';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function RightDock() {
   const [tab, setTab] = React.useState<'sub' | 'geo' | 'cs'>('sub');
@@ -27,6 +32,42 @@ export default function RightDock() {
   const subdivisions = useSubdivisionStore((s) => s.subdivisions);
   const updateSubdivision = useSubdivisionStore((s) => s.updateSubdivision);
   const setRightPanelOpen = useSubdivisionStore((s) => s.setRightPanelOpen);
+  const selectedZoneIds = useSubdivisionStore((s) => s.selectedZoneIds);
+  const plans = useSubdivisionStore((s) => s.plans);
+
+  // Local state for zone grouping
+  const [planZones, setPlanZones] = React.useState<Record<string, any[]>>({});
+
+  // Load zones when plans change (event-driven, no polling)
+  React.useEffect(() => {
+    const loadZones = () => {
+      try {
+        const api = useSubdivisionStore.getState().api;
+        let feats: any[] = [];
+        if (api?.getPlans) {
+          feats = api.getPlans();
+        } else {
+          const map = useSubdivisionStore.getState().map;
+          if (map?.queryRenderedFeatures) {
+            feats = map.queryRenderedFeatures({ layers: ['plans-fill'] }) || [];
+          }
+        }
+
+        const grouped: Record<string, any[]> = {};
+        feats.forEach((f) => {
+          const planId = String(f.properties?.plan_id ?? f.properties?.planId ?? f.properties?.plan ?? 'unknown');
+          if (!grouped[planId]) grouped[planId] = [];
+          grouped[planId].push(f);
+        });
+
+        setPlanZones(grouped);
+      } catch (err) {
+        console.error('loadZones error:', err);
+      }
+    };
+
+    loadZones();
+  }, [plans]);
 
   const selected = subdivisions.find(
     (s) => s.properties?.id === selectedId || (s.properties as any)?._drawId === selectedId
@@ -34,6 +75,15 @@ export default function RightDock() {
 
   const [draft, setDraft] = React.useState<any>(null);
   const [hasChanges, setHasChanges] = React.useState(false);
+
+  // Attempt to derive plan info from the selected feature properties
+  const planId = (selected as any)?.properties?.plan_id || (selected as any)?.properties?.planId || null;
+  const planName = (selected as any)?.properties?.plan_name || (selected as any)?.properties?.planName || null;
+
+  // If a locality context is present elsewhere you can wire usePlansQuery/usePlanDetailQuery here.
+  // For now we prefer lightweight local display using feature properties to avoid unnecessary requests.
+  // const plansQuery = usePlansQuery(localityId ? { locality: localityId } : null as any);
+  // const { data: planDetail } = usePlanDetailQuery(planId ?? undefined as any);
 
   React.useEffect(() => {
     const initialDraft = selected ? { ...(selected.properties as any) } : null;
@@ -117,8 +167,23 @@ export default function RightDock() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {inspectorOpen && selected ? (
+                  {inspectorOpen && selected ? (
                   <div className="space-y-4">
+                    {/* Plan metadata if present on the selected feature */}
+                    {(planId || planName) && (
+                      <Card className="mb-2 border">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-primary" />
+                            <CardTitle className="text-sm">Plan Info</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="text-sm space-y-1">
+                          {planName && <div><strong>Name:</strong> {planName}</div>}
+                          {planId && <div><strong>ID:</strong> {planId}</div>}
+                        </CardContent>
+                      </Card>
+                    )}
                     {/* Info */}
                     <Alert className="border-primary/20 bg-primary/5">
                       <Info className="h-4 w-4 text-primary" />
@@ -185,6 +250,84 @@ export default function RightDock() {
 
                     <Separator />
 
+                    {/* Listed Zones */}
+                    <Card className="border">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-primary" />
+                            <CardTitle className="text-sm">Zones</CardTitle>
+                          </div>
+                          {selectedZoneIds.size > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {selectedZoneIds.size} selected
+                            </Badge>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="max-h-[200px] overflow-y-auto space-y-2">
+                          {plans.map((plan: PlanSummary) => {
+                            const zones = (planZones[String(plan.id)] || []).filter((z: any) => {
+                              // Only show zones that can be subdivided or are selected
+                              const fid = z.id ?? z.properties?.id;
+                              return selectedZoneIds.has(String(fid)) || z.properties?.can_be_subdivided;
+                            });
+                            if (!zones.length) return null;
+                            return (
+                              <div key={plan.id} className="space-y-1">
+                                <div className="flex items-center gap-2 text-sm font-medium">
+                                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: plan.color || '#666' }} />
+                                  {plan.name}
+                                </div>
+                                <div className="pl-4 space-y-1">
+                                  {zones.map((z: any) => {
+                                    const fid = z.id ?? z.properties?.id;
+                                    const fidStr = String(fid);
+                                    const isSelected = selectedZoneIds.has(fidStr);
+                                    const canBeSubdivided = z.properties?.can_be_subdivided;
+                                    return (
+                                      <div key={fid} className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <Checkbox
+                                            className="w-4 h-4"
+                                            aria-label={`Select zone ${fidStr}`}
+                                            checked={isSelected}
+                                            onCheckedChange={(checked) => {
+                                              if (checked) useSubdivisionStore.getState().selectZone(fidStr); else useSubdivisionStore.getState().deselectZone(fidStr);
+                                              useSubdivisionStore.getState().setFeatureStateById(String(fid), { selected: !!checked });
+                                              try { useSubdivisionStore.getState().applySelectionToMap(); } catch {}
+                                            }}
+                                          />
+                                          <div className="w-3.5 h-3.5 rounded" style={{ backgroundColor: z.properties?.color || z.properties?.fill || '#6b7280' }} />
+                                          <span className="truncate">{z.properties?.name || `Zone ${fid}`}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {isSelected && (
+                                            <Badge variant="default" className="text-[10px] px-1.5">Selected</Badge>
+                                          )}
+                                          {canBeSubdivided && (
+                                            <Badge variant="outline" className="text-[10px] px-1.5 border-green-500 text-green-500">
+                                              Can subdivide
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {!plans.some(p => (planZones[String(p.id)] || []).length > 0) && (
+                            <div className="text-sm text-muted-foreground text-center py-4">
+                              No zones available
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
                     {/* Coordinates */}
                     {(selected.properties as any)?.centroid && (
                       <Card className="border bg-muted/30">
@@ -220,75 +363,26 @@ export default function RightDock() {
           </TabsContent>
 
           {/* Conflicts Tab */}
-          <TabsContent value="geo" className="space-y-4 mt-0">
-            <Card className="border-2 shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-primary" />
-                  <CardTitle className="text-base">Subdivision Conflicts</CardTitle>
-                </div>
-                <CardDescription className="text-xs">
-                  Shows detected conflicts for this subdivision
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {selected?.properties?.conflicts?.length ? (
-                  <div className="max-h-48 overflow-y-auto space-y-2">
-                    {selected.properties.conflicts.map((c: any, i: number) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between border rounded-md p-2 text-xs bg-muted/40 hover:bg-muted/60 transition"
-                      >
-                        <span className="truncate">{c.description || 'Unnamed conflict'}</span>
-                        <Badge variant="destructive">{c.type || 'Conflict'}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription className="text-sm">
-                      No conflicts found for this subdivision.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="geo" className="p-0">
+            {/* Use the shared ConflictsPanel component. Convert selected.properties.conflicts into the expected shape. */}
+            <ConflictsPanel
+              conflicts={(selected?.properties?.conflicts || []).map((c: any, idx: number) => ({
+                id: c.id || String(idx),
+                zones: c.zones || (c.zoneIds ? c.zoneIds : []),
+                overlapArea: c.overlapArea || c.area || 'n/a',
+                severity: c.severity || 'Low',
+              }))}
+              zones={[]}
+            />
           </TabsContent>
 
           {/* Coordinate System Tab */}
-          <TabsContent value="cs" className="space-y-4 mt-0">
-            <Card className="border-2 shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-primary" />
-                  <CardTitle className="text-base">Coordinate Systems</CardTitle>
-                </div>
-                <CardDescription className="text-xs">
-                  Configure coordinate preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition">
-                  <Label htmlFor="wgs84-switch" className="text-sm font-medium cursor-pointer">
-                    WGS84 (Lat/Long)
-                  </Label>
-                  <Switch id="wgs84-switch" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition">
-                  <Label htmlFor="utm-switch" className="text-sm font-medium cursor-pointer">
-                    UTM Coordinates
-                  </Label>
-                  <Switch id="utm-switch" />
-                </div>
-                <Alert className="border-blue-200 bg-blue-50">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-xs text-blue-900">
-                    Coordinate systems can be changed anytime. Data converts automatically.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
+          <TabsContent value="cs" className="p-0">
+            {/* Reuse the HistoryPanel for rollout/history info. Pass a minimal zones list and selected zone id if available. */}
+            <HistoryPanel
+              zones={(selected ? [{ id: (selected.properties as any)?.id || (selected.properties as any)?._drawId || 'unknown', type: 'Subdivision', status: 'Active' }] : []) as any}
+              activeZone={selected ? ((selected.properties as any)?.id || (selected.properties as any)?._drawId) : undefined}
+            />
           </TabsContent>
         </Tabs>
       </div>

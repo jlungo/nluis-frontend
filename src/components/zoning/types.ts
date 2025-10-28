@@ -32,6 +32,10 @@ export type ZoningMapAPI = {
   approveSelected: () => void;
   rejectSelected: () => void;
   sendToDraftSelected: () => void;
+  // Selection helpers
+  selectByType?: (typeId: string | number) => void;
+  selectByStatus?: (status: string) => void;
+  clearSelection?: () => void;
 
   // Right panel actions (exposed by the map)
   approve?: () => void;

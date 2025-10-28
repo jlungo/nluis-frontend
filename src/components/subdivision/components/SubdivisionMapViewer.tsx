@@ -1,6 +1,6 @@
 import { type ParcelFeature, type SubdivisionFeature } from '@/types/subdivision';
 import { useParcelSubdivisionsQuery } from '@/queries/useParcelQuery';
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/mapbox';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import { MapControls } from './MapControls';
@@ -13,7 +13,7 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import useSubdivisionStore from '../store/useSubdivisionStore';
 import api, { getAccessToken } from '@/lib/axios';
-import { usePlanDetailQuery } from '@/queries/usePlansQuery';
+// plan detail query moved to toolbox when needed
 import proj4 from 'proj4';
 import { 
   centroid, 
@@ -21,17 +21,19 @@ import {
   polygonize, 
   length as turfLength, 
   area as turfArea, 
-  intersect as turfIntersect 
+  intersect as turfIntersect,
+  bbox as turfBbox,
 } from '@turf/turf';
-import { featureCollection } from '@turf/helpers';
+import { featureCollection as turfFeatureCollection } from '@turf/helpers';
 import MeasurePanel from '../MeasurePanel';
 import PointDialog from './PointDialog';
+import createToolbox from '../tools/toolbox';
 import { Menu, PanelRight, Minimize, Maximize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePlansQuery } from '@/queries/usePlansQuery';
 
 interface SubdivisionMapViewerProps {
   parentParcel?: ParcelFeature;
-  disabled?: boolean;
   localityId?: string | number | null;
   isMaximized?: boolean;
   onToggleFullscreen?: () => void;
@@ -56,39 +58,94 @@ Object.entries(UTM_ZONES).forEach(([epsg, def]) => {
   } catch {}
 });
 
+// Helper function to calculate bounds from GeoJSON
+const fcToBounds = (fc: any): [[number, number], [number, number]] | null => {
+  if (!fc || !fc.features || !fc.features.length) return null;
+  
+  try {
+    const bbox = turfBbox(fc);
+    return [
+      [bbox[0], bbox[1]],
+      [bbox[2], bbox[3]]
+    ];
+  } catch {
+    return null;
+  }
+};
+
+// Helper to extract coordinates from geometry for zooming
+const extractCoordinatesFromGeometry = (geometry: any): [number, number][] => {
+  const coords: [number, number][] = [];
+  
+  if (!geometry) return coords;
+  
+  const collectCoords = (arr: any[]): void => {
+    arr.forEach(item => {
+      if (Array.isArray(item) && typeof item[0] === 'number') {
+        coords.push([item[0], item[1]]);
+      } else if (Array.isArray(item)) {
+        collectCoords(item);
+      }
+    });
+  };
+
+  if (geometry.type === 'Point') {
+    coords.push(geometry.coordinates as [number, number]);
+  } else if (geometry.type === 'Polygon') {
+    collectCoords(geometry.coordinates[0]);
+  } else if (geometry.type === 'MultiPolygon') {
+    geometry.coordinates.forEach((polygon: any) => {
+      collectCoords(polygon[0]);
+    });
+  } else if (geometry.type === 'LineString') {
+    collectCoords(geometry.coordinates);
+  }
+
+  return coords;
+};
+
 export default function SubdivisionMapViewer({ 
   parentParcel, 
-  disabled, 
   localityId,
   isMaximized,
   onToggleFullscreen,
 }: SubdivisionMapViewerProps) {
+  // Fetch authoritative plan metadata for the locality (if provided)
+  const plansQuery = usePlansQuery(localityId ? { locality: localityId } : null as any);
   // Refs
   const mapRef = useRef<MapRef | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
   const prevHoverRef = useRef<string | number | null>(null);
 
   // Local state (not derived from store)
-  const [pointsOpen, setPointsOpen] = useState(false);
-  const [, setViewState] = useState(INITIAL_VIEW_STATE);
-  const [devTileUrl, setDevTileUrl] = useState<string | null>(null);
-  const [devPlansCount, setDevPlansCount] = useState<number>(0);
+  // Points dialog is driven from the centralized store so toolbar/toolbox can open it
+  const pointsOpen = useSubdivisionStore((s) => s.pointsDialogOpen);
+  const setPointsOpen = useSubdivisionStore((s) => s.setPointsDialogOpen);
+  // dev/debug counters removed for minimal surface
   const [localityBoundary, setLocalityBoundary] = useState<any>(null);
+  const [localityBounds, setLocalityBounds] = useState<[[number, number], [number, number]] | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  // map interactive flag currently unused
+  //
 
   // Backend data
   const { data: backendSubdivisions = [] } = useParcelSubdivisionsQuery(
     parentParcel?.properties.id
   );
+  
   // Store selectors - use shallow comparison for primitive values
   const styleName = useSubdivisionStore((s) => s.styleName);
   const labelsVisible = useSubdivisionStore((s) => s.labelsVisible);
   const showPlans = useSubdivisionStore((s) => s.showPlans);
   const parcelOpacity = useSubdivisionStore((s) => s.parcelOpacity);
+  const plansOpacity = useSubdivisionStore((s) => s.plansOpacity);
   const boundaryGlow = useSubdivisionStore((s) => s.boundaryGlow);
+  const colorMode = useSubdivisionStore((s) => s.colorMode || 'type');
+  const selectedZoneIds = useSubdivisionStore((s) => s.selectedZoneIds);
   const isDrawing = useSubdivisionStore((s) => s.isDrawing);
   const drawMode = useSubdivisionStore((s) => s.drawMode);
   const selectedId = useSubdivisionStore((s) => s.selectedId);
-  const activePlanId = useSubdivisionStore((s) => s.activePlanId);
+  // plansOpacity available in store; not directly used in viewer
 
   // Store actions - stable references
   const setMap = useSubdivisionStore((s) => s.setMap);
@@ -100,25 +157,30 @@ export default function SubdivisionMapViewer({
   const setSelectedId = useSubdivisionStore((s) => s.setSelectedId);
   const setActivePlan = useSubdivisionStore((s) => s.setActivePlan);
 
-  // Fetch plan detail only when needed. If no explicit activePlanId but a localityId is set,
-  // fetch the latest plan for that locality.
-  const planDetailArg = activePlanId ?? (localityId ? { locality: localityId } : undefined);
-  const { data: activePlanDetail } = usePlanDetailQuery(planDetailArg as any);
+  // Fetch plan detail only when needed
+  // planDetailArg is not used in viewer; toolbox can fetch plan details if needed
 
-  // Fetch locality boundary for base map
+  // Fetch locality boundary for base map and calculate bounds
   useEffect(() => {
     if (!localityId) {
       setLocalityBoundary(null);
+      setLocalityBounds(null);
       return;
     }
 
     const fetchBoundary = async () => {
       try {
         const response = await api.get(`/localities/localities/${localityId}/boundary/`);
-        setLocalityBoundary(response.data);
+        const boundaryData = response.data;
+        setLocalityBoundary(boundaryData);
+        
+        // Calculate bounds from locality boundary
+        const bounds = fcToBounds(boundaryData);
+        setLocalityBounds(bounds);
       } catch (error) {
         console.error('Failed to fetch locality boundary:', error);
         setLocalityBoundary(null);
+        setLocalityBounds(null);
       }
     };
 
@@ -169,6 +231,183 @@ export default function SubdivisionMapViewer({
     return { url };
   }, [API_BASE]);
 
+  // Enhanced zoom to feature with detailed level
+  const zoomToFeature = useCallback((feature: any, padding: number = 20, duration: number = 1000) => {
+    const m = getMap();
+    if (!m || !feature) return;
+
+    try {
+      const geometry = feature.geometry || feature.properties?.geometry;
+      if (!geometry) return;
+
+      const coords = extractCoordinatesFromGeometry(geometry);
+      if (coords.length === 0) return;
+
+      const lons = coords.map(p => p[0]);
+      const lats = coords.map(p => p[1]);
+      
+      const bounds: [[number, number], [number, number]] = [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)]
+      ];
+
+      // Calculate area to determine zoom level
+      const width = Math.abs(bounds[1][0] - bounds[0][0]);
+      const height = Math.abs(bounds[1][1] - bounds[0][1]);
+      const area = width * height;
+
+      // Adjust zoom based on area - smaller areas get more zoom
+      let zoomPadding = padding;
+      if (area < 0.0001) { // Very small area
+        zoomPadding = 40; // More padding for very small features
+      } else if (area < 0.01) { // Small area
+        zoomPadding = 60;
+      }
+
+      m.fitBounds(bounds, { 
+        padding: zoomPadding, 
+        duration: duration,
+        maxZoom: 18 // Allow very close zoom for details
+      });
+
+    } catch (error) {
+      console.error('Error zooming to feature:', error);
+    }
+  }, [getMap]);
+
+  // Enhanced plan click handler with selection and detailed zoom (only when not drawing)
+  const handlePlanClick = useCallback((e: any) => {
+    const m = getMap();
+    if (!m) return;
+    
+    // Don't handle plan clicks when in drawing mode
+    if (isDrawing) return;
+    
+    try {
+      const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
+      if (!features.length) return;
+      
+      const feature = features[0];
+      const fid = feature.properties?.id ?? feature.id;
+      
+      if (!fid) return;
+
+      // Make this the active context (for zoom/clip), but do not clear others (multi-select)
+      setSelectedPlan({
+        id: fid,
+        properties: feature.properties,
+        geometry: feature.geometry
+      });
+
+      // Toggle selection in store (multi-select)
+      try {
+        const already = useSubdivisionStore.getState().selectedZoneIds.has(String(fid));
+        if (already) useSubdivisionStore.getState().deselectZone(String(fid));
+        else useSubdivisionStore.getState().selectZone(String(fid));
+      } catch {}
+      setSelectedId(String(fid));
+      const pid = String(feature.properties?.plan_id ?? feature.properties?.planId ?? feature.properties?.plan ?? '');
+      if (pid) setActivePlan(pid);
+
+      // Zoom to the selected plan with detailed view
+      zoomToFeature(feature, 40, 800);
+      
+    } catch (error) {
+      console.error('Error handling plan click:', error);
+    }
+  }, [getMap, selectedPlan, togglePlan, setSelectedId, setActivePlan, zoomToFeature, isDrawing]);
+
+  // Double-click handler for quick zoom to details
+  const handleMapDoubleClick = useCallback((e: any) => {
+    const m = getMap();
+    if (!m) return;
+
+    // If double-clicking on a plan, zoom to it with maximum detail
+    const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
+    if (features.length > 0) {
+      const feature = features[0];
+      zoomToFeature(feature, 80, 600); // More padding for double-click zoom
+      return;
+    }
+
+    // Otherwise, use default double-click zoom behavior
+    const zoom = m.getZoom();
+    m.easeTo({
+      center: e.lngLat,
+      zoom: zoom + 1, // Zoom in one level
+      duration: 400
+    });
+  }, [getMap, zoomToFeature]);
+
+  // Right-click handler for context menu and quick actions
+  const handleMapRightClick = useCallback((e: any) => {
+    e.preventDefault();
+    const m = getMap();
+    if (!m) return;
+
+    // Quick zoom to clicked point
+    m.easeTo({
+      center: e.lngLat,
+      zoom: Math.min(m.getZoom() + 2, 18), // Zoom in but cap at max zoom
+      duration: 500
+    });
+
+    toast.info('Zoomed to location');
+  }, [getMap]);
+
+  //
+
+  // Add parcels to selected plan
+  // addParcelsToSelectedPlan moved to toolbox; keep implementation in toolbox instead
+
+  // Create subdivision feature with clipping and calculations
+  const createSubdivisionFeature = useCallback((geometry: any, drawId: string): SubdivisionFeature => {
+    const tempId = `temp_${Date.now()}`;
+    let geomToUse = geometry;
+    
+    // Clip to selected plan if set
+    if (selectedPlan?.geometry) {
+      try {
+        const clipped = turfIntersect(geomToUse, selectedPlan.geometry);
+        if (clipped?.geometry) geomToUse = clipped.geometry;
+      } catch {}
+    }
+    
+    // Calculate centroid and UTM
+    let centroidPt: any = null;
+    let utm: any = null;
+    
+    if (geomToUse?.type && geomToUse.type !== 'Point') {
+      try {
+        const cen = centroid({ type: 'Feature', geometry: geomToUse });
+        const [lng, lat] = cen.geometry.coordinates;
+        centroidPt = { lng, lat };
+        utm = calculateUTM(lng, lat);
+      } catch {}
+    }
+    
+    return {
+      type: 'Feature',
+      geometry: geomToUse,
+      properties: {
+        id: tempId,
+        title: `Parcel ${tempId}`,
+        size: 0,
+        status: 'Pending',
+        landUseId: '0',
+        parentId: parentParcel?.properties?.id || '',
+        // allow additional properties through any-cast
+        ...(selectedPlan ? ({ planId: selectedPlan.id, parentPlan: (selectedPlan.properties as any)?.name || selectedPlan.id } as any) : {}),
+        allocations: [],
+        subdivisionDate: new Date().toISOString(),
+        approvalStatus: 'Pending',
+        centroid: centroidPt,
+        utm,
+        _drawId: drawId,
+      } as any,
+    } as any as SubdivisionFeature;
+  }, [selectedPlan, parentParcel, calculateUTM]);
+
   // Map style effect - only when styleName changes
   useEffect(() => {
     const m = getMap() as MapboxMap;
@@ -217,19 +456,33 @@ export default function SubdivisionMapViewer({
     return () => setMap(null);
   }, [setMap, getMap]);
 
-  // Plan hover handler - stable callback
+  // Plan hover handler - stable callback (don't show hover when drawing)
   const handleMapMouseMove = useCallback((e: any) => {
     const m = getMap();
     if (!m) return;
     
+    // Don't show hover effects when in drawing mode
+    if (isDrawing) {
+      const canvas = m.getCanvas?.();
+      if (canvas) canvas.style.cursor = 'crosshair';
+      return;
+    }
+    
     try {
-  const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
-      const id = features[0]?.id ?? features[0]?.properties?.id ?? null;
+      const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
+      const id = features[0]?.properties?.id ?? features[0]?.id ?? null;
+      
+      // Don't hover over selected plan
+      if (selectedPlan && id === selectedPlan.id) {
+        const canvas = m.getCanvas?.();
+        if (canvas) canvas.style.cursor = 'pointer';
+        return;
+      }
       
       if (prevHoverRef.current && prevHoverRef.current !== id) {
         try {
           m.setFeatureState(
-            { source: 'plans-tiles', sourceLayer: 'zones', id: prevHoverRef.current },
+            { source: 'plans-tiles', sourceLayer: 'zones', id: String(prevHoverRef.current) },
             { hover: false }
           );
         } catch {}
@@ -239,7 +492,7 @@ export default function SubdivisionMapViewer({
       if (id && id !== prevHoverRef.current) {
         try {
           m.setFeatureState(
-            { source: 'plans-tiles', sourceLayer: 'zones', id },
+            { source: 'plans-tiles', sourceLayer: 'zones', id: String(id) },
             { hover: true }
           );
           prevHoverRef.current = id;
@@ -251,70 +504,7 @@ export default function SubdivisionMapViewer({
         if (canvas) canvas.style.cursor = '';
       }
     } catch {}
-  }, [getMap]);
-
-  // Plan click handler - stable callback
-  const handleMapClick = useCallback((e: any) => {
-    const m = getMap();
-    if (!m) return;
-    
-    try {
-  const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
-      if (!features.length) return;
-      
-      const feature = features[0];
-      const fid = String(
-        feature.id ??
-        feature.properties?.id ??
-        feature.properties?.pk ??
-        feature.properties?.plan_id ??
-        ''
-      );
-      
-      if (!fid) return;
-      
-  togglePlan(fid);
-  setSelectedId(fid);
-  setActivePlan(fid);
-      
-      try {
-        m.setFeatureState(
-          { source: 'plans-tiles', sourceLayer: 'zones', id: fid },
-          { selected: true }
-        );
-      } catch {}
-      
-      // Zoom to feature bounds
-      const geom = feature.geometry || feature.properties?.geometry;
-      if (geom && 'coordinates' in geom) {
-        const coords: [number, number][] = [];
-        const collectCoords = (c: any): void => {
-          if (typeof c[0] === 'number') {
-            coords.push([c[0], c[1]]);
-            return;
-          }
-          c.forEach(collectCoords);
-        };
-        
-        if (geom.type === 'Polygon') {
-          collectCoords(geom.coordinates);
-        } else if (geom.type === 'MultiPolygon') {
-          geom.coordinates.forEach(collectCoords);
-        }
-        
-        if (coords.length) {
-          const lons = coords.map((p) => p[0]);
-          const lats = coords.map((p) => p[1]);
-          try {
-            m.fitBounds(
-              [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-              { padding: 80, duration: 600 }
-            );
-          } catch {}
-        }
-      }
-    } catch {}
-  }, [getMap, togglePlan, setSelectedId, setActivePlan]);
+  }, [getMap, selectedPlan, isDrawing]);
 
   // Sync paint/layout properties when they change
   useEffect(() => {
@@ -345,15 +535,45 @@ export default function SubdivisionMapViewer({
     if (!m) return;
     
     m.on('mousemove', handleMapMouseMove);
-    m.on('click', handleMapClick);
     
     return () => {
       try {
         m.off('mousemove', handleMapMouseMove);
-        m.off('click', handleMapClick);
       } catch {}
     };
-  }, [getMap, handleMapMouseMove, handleMapClick]);
+  }, [getMap, handleMapMouseMove]);
+
+  // Robust store -> map sync for selected zones
+  useEffect(() => {
+    const m = getMap();
+    if (!m) return;
+    const toMapId = (fid: any) => {
+      if (typeof fid === 'number') return fid;
+      if (typeof fid === 'string') {
+        const n = Number(fid);
+        if (Number.isFinite(n) && String(n) === fid) return n;
+      }
+      return fid;
+    };
+    // Track previous selection to compute deltas
+  const prev = ((useSubdivisionStore.getState() as any).__prevSelectedForSync as Set<string>) || new Set<string>();
+    const curr = new Set<string>(Array.from(selectedZoneIds).map(String));
+
+    // Turn off removed
+    prev.forEach((fid) => {
+      if (!curr.has(fid)) {
+        try { m.setFeatureState({ source: 'plans-tiles', sourceLayer: 'zones', id: toMapId(fid) }, { selected: false }); } catch {}
+      }
+    });
+    // Turn on added
+    curr.forEach((fid) => {
+      if (!prev.has(fid)) {
+        try { m.setFeatureState({ source: 'plans-tiles', sourceLayer: 'zones', id: toMapId(fid) }, { selected: true }); } catch {}
+      }
+    });
+    // Save snapshot
+    try { (useSubdivisionStore.getState() as any).__prevSelectedForSync = curr; } catch {}
+  }, [selectedZoneIds, getMap]);
 
   // Recompute plans list or counts from tile source (tries sourceFeatures then rendered)
   const recomputePlans = useCallback(() => {
@@ -375,118 +595,128 @@ export default function SubdivisionMapViewer({
     return feats;
   }, [getMap]);
 
-  // Auto-zoom helper: attempt to zoom to activePlanDetail or to first plan feature
-  const autoZoomToPlans = useCallback(() => {
-    const m = getMap();
-    if (!m) return;
+  // Auto-zoom helper: attempt to zoom to locality bounds, activePlanDetail, or to first plan feature
+  // autoZoomToPlans now provided via toolbox; viewer no longer exposes it here.
 
+  // Helper: recompute plans and push summaries into the store
+  const updatePlanSummariesFromMap = useCallback(() => {
     try {
-      if (activePlanDetail?.geometry) {
-        const coords: [number, number][] = [];
-        const collect = (g: any) => {
-          if (g.type === 'Polygon') {
-            g.coordinates[0].forEach((c: any) => coords.push([c[0], c[1]]));
-          } else if (g.type === 'MultiPolygon') {
-            g.coordinates.forEach((poly: any) => poly[0].forEach((c: any) => coords.push([c[0], c[1]])));
-          }
-        };
-        collect(activePlanDetail.geometry);
-        if (coords.length) {
-          const lons = coords.map((p) => p[0]);
-          const lats = coords.map((p) => p[1]);
-          m.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { padding: 80, duration: 700 });
-          return;
-        }
-      }
-
       const feats = recomputePlans();
-      if (feats && feats.length) {
-        // prefer activePlanId
-        const chosen = activePlanId ? feats.find((f: any) => String(f.id) === String(activePlanId) || String(f.properties?.id) === String(activePlanId)) : feats[0];
-        const feature = chosen || feats[0];
-        const geom = feature.geometry || feature.properties?.geometry;
-        if (geom && 'coordinates' in geom) {
-          const coords: [number, number][] = [];
-          const collectCoords = (c: any): void => {
-            if (typeof c[0] === 'number') {
-              coords.push([c[0], c[1]]);
-              return;
-            }
-            c.forEach(collectCoords);
-          };
-          if (geom.type === 'Polygon') collectCoords(geom.coordinates);
-          else if (geom.type === 'MultiPolygon') geom.coordinates.forEach(collectCoords);
-          if (coords.length) {
-            const lons = coords.map((p) => p[0]);
-            const lats = coords.map((p) => p[1]);
-            m.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { padding: 80, duration: 700 });
-            return;
-          }
-        }
+      if (!feats || feats.length === 0) {
+        // Avoid clearing plans during transient tile reloads; keep previous state
+        return;
       }
+      
 
-      // fallback to parent parcel bounds
-      if (parentParcel?.geometry?.coordinates) {
-        const coords = parentParcel.geometry.coordinates[0][0] || parentParcel.geometry.coordinates[0];
-        if (coords && coords.length) {
-          const lons = coords.map((c: any) => c[0]);
-          const lats = coords.map((c: any) => c[1]);
-          m.fitBounds(
-            [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-            { padding: 80, duration: 700 }
-          );
+      const prevPlans = useSubdivisionStore.getState().plans || [];
+      const prevMap: Record<string, any> = {};
+      prevPlans.forEach((p: any) => { prevMap[String(p.id)] = p; });
+
+      const grouped: Record<string, any[]> = {};
+      (feats || []).forEach((f: any) => {
+        const raw = f.properties?.plan_id ?? f.properties?.plan ?? f.properties?.planId;
+        if (raw == null || raw === '') return; // skip features without a plan id
+        const planId = String(raw);
+        if (!grouped[planId]) grouped[planId] = [];
+        grouped[planId].push(f);
+      });
+
+      let summaries = Object.keys(grouped).map((planId) => {
+        const arr = grouped[planId];
+        const sample = arr[0] || {};
+        const name = sample.properties?.plan_name || sample.properties?.name || `Plan ${planId}`;
+        const color = sample.properties?.color || sample.properties?.colour || (prevMap[planId]?.color) || undefined;
+        return {
+          id: planId,
+          name,
+          color,
+          count: arr.length,
+          selected: !!prevMap[planId]?.selected,
+        };
+      });
+
+      try {
+        if (plansQuery && plansQuery.data && Array.isArray(plansQuery.data)) {
+          const apiMap: Record<string, any> = {};
+          plansQuery.data.forEach((p: any) => {
+            const raw = p.plan_id ?? p.id ?? p.pk ?? p.uuid ?? p.name ?? p.title;
+            const id = String(raw ?? '');
+            apiMap[id] = p;
+          });
+          summaries = summaries.map((s: any) => ({
+            ...s,
+            name: apiMap[String(s.id)]?.name || apiMap[String(s.id)]?.title || s.name,
+            color: s.color || apiMap[String(s.id)]?.color || apiMap[String(s.id)]?.colour || s.color,
+          }));
         }
-      }
-    } catch {}
-  }, [getMap, recomputePlans, activePlanDetail, activePlanId, parentParcel]);
+      } catch {}
 
-  // Listen for source/tile load events so we can recompute plans and auto-zoom when tiles arrive
+      useSubdivisionStore.getState().setPlans(summaries);
+    } catch (err) {}
+  }, [recomputePlans, plansQuery]);
+
+  // Listen for source/tile load events so we can recompute plans and update store
   useEffect(() => {
     const m = getMap();
     if (!m) return;
 
+    const applySelectionToMap = () => {
+      try {
+        const curr = new Set<string>(Array.from(useSubdivisionStore.getState().selectedZoneIds || []).map(String));
+        const toMapId = (fid: any) => {
+          if (typeof fid === 'number') return fid;
+          if (typeof fid === 'string') { const n = Number(fid); if (Number.isFinite(n) && String(n) === fid) return n; }
+          return fid;
+        };
+        curr.forEach((fid) => {
+          try { m.setFeatureState({ source: 'plans-tiles', sourceLayer: 'zones', id: toMapId(fid) }, { selected: true }); } catch {}
+        });
+      } catch {}
+    };
+
     const onSourceData = (e: any) => {
       try {
-        if (import.meta.env.DEV) console.debug('[Subdivision] sourcedata event', e);
         if (e?.sourceId === 'plans-tiles' || e?.source === 'plans-tiles') {
-          // recompute and auto-zoom when plan tiles load
-          recomputePlans();
-          autoZoomToPlans();
+          updatePlanSummariesFromMap();
+          applySelectionToMap();
         }
       } catch {}
     };
 
     const onIdle = () => {
-      try { recomputePlans(); } catch {}
+      try { updatePlanSummariesFromMap(); applySelectionToMap(); } catch {}
     };
 
-    // Listen for a variety of data/movement events (idle/moveend/data) similar to zoning MapEngine
     m.on('sourcedata', onSourceData);
     m.on('data', onSourceData);
     m.on('idle', onIdle);
-    m.on('moveend', onIdle);
     return () => {
       try {
         m.off('sourcedata', onSourceData);
         m.off('data', onSourceData);
         m.off('idle', onIdle);
-        m.off('moveend', onIdle);
       } catch {}
     };
-  }, [getMap, recomputePlans, autoZoomToPlans]);
+  }, [getMap, updatePlanSummariesFromMap]);
 
-  // Update dev overlay state when plans recomputed
+  // Initial plan summary build when dependencies change
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const template = getPlansTilesTemplate();
-    setDevTileUrl(template);
+    updatePlanSummariesFromMap();
     try {
-      const feats = recomputePlans();
-      setDevPlansCount(feats?.length || 0);
-    } catch {
-      setDevPlansCount(0);
-    }
-  }, [getPlansTilesTemplate, recomputePlans, localityId]);
+      const m = getMap();
+      if (m) {
+        const curr = new Set<string>(Array.from(useSubdivisionStore.getState().selectedZoneIds || []).map(String));
+        const toMapId = (fid: any) => {
+          if (typeof fid === 'number') return fid;
+          if (typeof fid === 'string') { const n = Number(fid); if (Number.isFinite(n) && String(n) === fid) return n; }
+          return fid;
+        };
+        curr.forEach((fid) => {
+          try { m.setFeatureState({ source: 'plans-tiles', sourceLayer: 'zones', id: toMapId(fid) }, { selected: true }); } catch {}
+        });
+      }
+    } catch {}
+  }, [updatePlanSummariesFromMap, localityId]);
 
   // Tile error handler & refresh (attach to map once)
   useEffect(() => {
@@ -494,28 +724,29 @@ export default function SubdivisionMapViewer({
     if (!m) return;
 
     const onError = async (e: any) => {
-      if (import.meta.env.DEV) console.debug('[Subdivision] map error event', e);
+      
       const status = e?.error?.status || e?.error?.cause?.status;
 
       // 401: try token refresh and cache-bust
       if (status === 401) {
         try {
-            if (import.meta.env.DEV) console.debug('[Subdivision] 401 tile error - attempting refresh and cache-bust');
+          
           const { refreshAccessToken } = await import('@/lib/axios');
           await refreshAccessToken();
-          const src: any = m.getSource('plans-tiles');
-          if (src?.setTiles) {
-            const template = getPlansTilesTemplate();
-            const [base] = (template || '').split('?');
-            src.setTiles([`${base}?v=${Date.now()}`]);
-          } else {
-            m.triggerRepaint?.();
+          // Guard: only access source when style is loaded to avoid mapbox internals failing
+          if (m.isStyleLoaded?.() && m.getSource && m.getSource('plans-tiles')) {
+            const src: any = m.getSource('plans-tiles');
+            if (src?.setTiles) {
+              const template = getPlansTilesTemplate();
+              const [base] = (template || '').split('?');
+              try { src.setTiles([`${base}?v=${Date.now()}`]); } catch {}
+            } else {
+              try { m.triggerRepaint?.(); } catch {}
+            }
           }
         } catch {}
         return;
       }
-
-      // Zoning approach: only handle 401 (refresh token & cache-bust). Do not attempt 404 parent-zoom fallbacks here.
     };
 
     m.on('error', onError);
@@ -537,63 +768,26 @@ export default function SubdivisionMapViewer({
         s.properties?._drawId === selectedId
       );
       
-      if (found?.geometry?.coordinates?.[0]?.[0]) {
-        const coords = found.geometry.coordinates[0][0];
-        const lngs = coords.map((c: any) => c[0]);
-        const lats = coords.map((c: any) => c[1]);
-        const bbox: [[number, number], [number, number]] = [
-          [Math.min(...lngs), Math.min(...lats)],
-          [Math.max(...lngs), Math.max(...lats)]
-        ];
-        m.fitBounds(bbox, { padding: 80, duration: 700 });
+      if (found) {
+        zoomToFeature(found, 40, 700);
       }
     } catch {}
-  }, [selectedId, getMap]);
+  }, [selectedId, getMap, zoomToFeature]);
 
-  // Auto-zoom when active plan detail is available or when parent parcel is provided
+  // Initial auto-zoom only once on mount (if locality bounds available)
   useEffect(() => {
     const m = getMap();
     if (!m) return;
 
-    try {
-      if (activePlanDetail?.geometry) {
-        // Build coords from geometry bounding box
-        const coords: [number, number][] = [];
-        const collect = (g: any) => {
-          if (g.type === 'Polygon') {
-            g.coordinates[0].forEach((c: any) => coords.push([c[0], c[1]]));
-          } else if (g.type === 'MultiPolygon') {
-            g.coordinates.forEach((poly: any) => poly[0].forEach((c: any) => coords.push([c[0], c[1]])));
-          }
-        };
-
-        collect(activePlanDetail.geometry);
-
-        if (coords.length) {
-          const lons = coords.map((p) => p[0]);
-          const lats = coords.map((p) => p[1]);
-          m.fitBounds(
-            [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-            { padding: 80, duration: 700 }
-          );
-          return;
-        }
-      }
-
-      // Fallback: zoom to parent parcel bounds if provided
-      if (parentParcel?.geometry?.coordinates) {
-        const coords = parentParcel.geometry.coordinates[0][0] || parentParcel.geometry.coordinates[0];
-        if (coords && coords.length) {
-          const lons = coords.map((c: any) => c[0]);
-          const lats = coords.map((c: any) => c[1]);
-          m.fitBounds(
-            [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-            { padding: 80, duration: 700 }
-          );
-        }
-      }
-    } catch {}
-  }, [activePlanDetail, parentParcel, getMap]);
+    // Only auto-zoom once on initial load if locality bounds exist
+    if (localityBounds) {
+      try {
+        m.fitBounds(localityBounds, { padding: 80, duration: 700 });
+      } catch {}
+    }
+    // This effect should only run once when the component first mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - run only on mount
 
   // Handle drawing mode changes and measurement mode
   useEffect(() => {
@@ -699,301 +893,14 @@ export default function SubdivisionMapViewer({
     
     window.addEventListener('subdivision:toggle-fullscreen', handler as EventListener);
     return () => window.removeEventListener('subdivision:toggle-fullscreen', handler as EventListener);
-  }, [getMap]);
+  }, [getMap, isDrawing, drawMode]);
 
-  // Expose subdivision API to store
-  useEffect(() => {
-    const draw = drawRef.current;
-    const map = mapRef.current?.getMap();
-    
-    // Initialize API with methods that don't depend on map/draw first
-  const api = {
-      startSelect: () => {
-        if (!draw || !map) return;
-        try {
-          draw.changeMode('simple_select');
-          setDrawMode(null);
-          setIsDrawing(false);
-          const canvas = map.getCanvas();
-          if (canvas) canvas.style.cursor = 'pointer';
-        } catch (err) {
-          console.error('Failed to start select mode:', err);
-        }
-      },
-      startDrawPolygon: () => {
-        console.log('startDrawPolygon API method called', {
-          hasDraw: !!draw,
-          hasMap: !!map
-        });
-        if (!draw || !map) {
-          console.error('Missing draw or map refs');
-          return;
-        }
-        try {
-          draw.changeMode('draw_polygon');
-          setDrawMode('polygon');
-          setIsDrawing(true);
-          const canvas = map.getCanvas();
-          if (canvas) canvas.style.cursor = 'crosshair';
-          console.log('Successfully started polygon mode');
-        } catch (err) {
-          console.error('Failed to start polygon mode:', err);
-        }
-      },
-      startDrawLine: () => {
-        if (!draw || !map) return;
-        try {
-          draw.changeMode('draw_line_string');
-          setDrawMode('line');
-          setIsDrawing(true);
-          const canvas = map.getCanvas();
-          if (canvas) canvas.style.cursor = 'crosshair';
-        } catch (err) {
-          console.error('Failed to start line mode:', err);
-        }
-      },
-      startDrawPoint: () => {
-        if (!draw || !map) return;
-        try {
-          draw.changeMode('draw_point');
-          setDrawMode('point');
-          setIsDrawing(true);
-          const canvas = map.getCanvas();
-          if (canvas) canvas.style.cursor = 'crosshair';
-        } catch (err) {
-          console.error('Failed to start point mode:', err);
-        }
-      },
-      openAddPoints: () => {
-        console.log('openAddPoints called, setting pointsOpen to true');
-        setDrawMode(null);
-        setIsDrawing(false);
-        setPointsOpen(true);
-        console.log('Current pointsOpen state:', pointsOpen);
-      },
-      toggleLabels: (v?: boolean) => {
-        const newValue = typeof v === 'boolean' ? v : !labelsVisible;
-        useSubdivisionStore.getState().setLabelsVisible(newValue);
-      },
-      setLabelField: (f: string | null) => {
-        useSubdivisionStore.getState().setLabelField(f || '');
-      },
-      selectAll: () => useSubdivisionStore.getState().selectAll(),
-      deselectAll: () => useSubdivisionStore.getState().deselectAll(),
-      saveToAPI: async () => {
-        const subs = useSubdivisionStore.getState().subdivisions || [];
-        console.debug('Subdivision api.saveToAPI called - noop stub', subs.length);
-        return { ok: true };
-      },
-      // Plans helpers
-      getPlans: () => recomputePlans(),
-      getPlansCount: () => recomputePlans().length,
-      refreshPlans: () => {
-        const m = mapRef.current?.getMap?.();
-        if (!m) return;
-        try {
-          const src: any = m.getSource('plans-tiles');
-          if (src?.setTiles) {
-            const template = getPlansTilesTemplate();
-            const [base] = (template || '').split('?');
-            src.setTiles([`${base}?v=${Date.now()}`]);
-          } else {
-            m.triggerRepaint();
-          }
-        } catch {}
-      },
-      autoZoomToPlans: () => {
-        try { autoZoomToPlans(); } catch {}
-      },
-    };
-    
-    const currentApi = useSubdivisionStore.getState().api;
-    const plansPreview = recomputePlans();
-    console.log('API Registration:', {
-      isInitialSetup: !currentApi,
-      methods: Object.keys(api),
-      hasDrawRef: !!drawRef.current,
-      hasMapRef: !!mapRef.current,
-      plansPreviewCount: plansPreview.length,
-    });
-    useSubdivisionStore.getState().setAPI(api);
-    return () => {
-      console.log('Cleaning up API');
-      useSubdivisionStore.getState().setAPI(undefined);
-    };
-  }, [setIsDrawing, setDrawMode, labelsVisible, drawRef, mapRef]);
-
-  // Responsive map resize
-  useEffect(() => {
-    const el = document.querySelector('.sub-main-area');
-    if (!el) return;
-    
-    const handleResize = () => {
-      const m = getMap();
-      m?.resize?.();
-    };
-    
-    const ro = new ResizeObserver(handleResize);
-    ro.observe(el);
-    
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, [getMap]);
-
-  // Refresh plans tiles when locality changes
-  useEffect(() => {
-    const m = getMap();
-    if (!m) return;
-    
-    try {
-  const src: any = m.getSource('plans-tiles');
-      if (src?.setTiles) {
-        const template = getPlansTilesTemplate();
-        src.setTiles([`${template}&v=${Date.now()}`]);
-      } else {
-        m.triggerRepaint?.();
-      }
-    } catch {}
-  }, [localityId, getMap, getPlansTilesTemplate]);
-
-  // Auto-zoom to plans tiles when they become available or when activePlanId changes
-  useEffect(() => {
-    const m = getMap();
-    if (!m) return;
-
-    try {
-      // Try to get features from the vector source (if accessible)
-      let sourceFeatures: any[] = [];
-      try {
-        sourceFeatures = m.querySourceFeatures?.('plans-tiles', { sourceLayer: 'zones' }) || [];
-      } catch {}
-
-      if (!sourceFeatures.length) {
-        // If no source features, try rendered features from the layer
-        try {
-          sourceFeatures = m.queryRenderedFeatures?.({ layers: ['plans-fill'] }) || [];
-        } catch {}
-      }
-
-      if (!sourceFeatures.length) return;
-
-      // If an activePlanId exists, try to find that feature first
-      let chosen: any = null;
-      if (activePlanId) {
-        chosen = sourceFeatures.find((f: any) => String(f.id) === String(activePlanId) || String(f.properties?.id) === String(activePlanId));
-      }
-
-      // Fall back to first available feature
-      if (!chosen) chosen = sourceFeatures[0];
-
-      if (!chosen) return;
-
-      const geom = chosen.geometry || chosen.properties?.geometry;
-      if (geom && ('coordinates' in geom)) {
-        const coords: [number, number][] = [];
-        const collectCoords = (c: any): void => {
-          if (typeof c[0] === 'number') {
-            coords.push([c[0], c[1]]);
-            return;
-          }
-          c.forEach(collectCoords);
-        };
-
-        if (geom.type === 'Polygon') collectCoords(geom.coordinates);
-        else if (geom.type === 'MultiPolygon') geom.coordinates.forEach(collectCoords);
-
-        if (coords.length) {
-          const lons = coords.map((p) => p[0]);
-          const lats = coords.map((p) => p[1]);
-          m.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { padding: 80, duration: 700 });
-        }
-      }
-    } catch {}
-  }, [getMap, localityId, activePlanId, activePlanDetail]);
-
-  // Create subdivision feature with clipping and calculations
-  const createSubdivisionFeature = useCallback((geometry: any, drawId: string): SubdivisionFeature => {
-    const tempId = `temp_${Date.now()}`;
-    let geomToUse = geometry;
-    
-  // Clip to active plan if set
-  if (activePlanId) {
-      const map = mapRef.current?.getMap();
-      if (map) {
-        try {
-          let zoneFeat: any = null;
-          const sourceFeatures = map.querySourceFeatures('plans-tiles', { sourceLayer: 'zones' }) || [];
-          zoneFeat = sourceFeatures.find((z: any) =>
-            String(z.id) === String(activePlanId) ||
-            String(z.properties?.id) === String(activePlanId)
-          );
-          
-          if (!zoneFeat) {
-            const rendered = map.queryRenderedFeatures({ layers: ['plans-fill'] }) || [];
-            zoneFeat = rendered.find((z: any) => 
-              String(z.id) === String(activePlanId) || 
-                String(z.properties?.id) === String(activePlanId)
-            );
-          }
-          
-          if (zoneFeat?.geometry) {
-            const clipped = turfIntersect(geomToUse, zoneFeat.geometry);
-            if (clipped?.geometry) geomToUse = clipped.geometry;
-          }
-          
-          if (activePlanDetail?.geometry) {
-            const clipped = turfIntersect(geomToUse, activePlanDetail.geometry);
-            if (clipped?.geometry) geomToUse = clipped.geometry;
-          }
-        } catch {}
-      }
-    }
-    
-    // Calculate centroid and UTM
-    let centroidPt: any = null;
-    let utm: any = null;
-    
-    if (geomToUse?.type && geomToUse.type !== 'Point') {
-      try {
-        const cen = centroid({ type: 'Feature', geometry: geomToUse });
-        const [lng, lat] = cen.geometry.coordinates;
-        centroidPt = { lng, lat };
-        utm = calculateUTM(lng, lat);
-      } catch {}
-    }
-    
-    return {
-      type: 'Feature',
-      geometry: geomToUse,
-      properties: {
-        id: tempId,
-        title: `Parcel ${tempId}`,
-        size: 0,
-        status: 'Pending',
-        landUseId: '0',
-        parentId: parentParcel?.properties?.id || '',
-        allocations: [],
-        subdivisionDate: new Date().toISOString(),
-        approvalStatus: 'Pending',
-        centroid: centroidPt,
-        utm,
-        _drawId: drawId,
-      },
-    };
-  }, [activePlanId, activePlanDetail, parentParcel, getMap, calculateUTM]);
-
-  // Handle map load and MapboxDraw initialization
+  // Enhanced map load with better interaction settings
   const handleMapLoad = useCallback(() => {
     if (!mapRef.current) return;
     const map = mapRef.current.getMap();
     
-    // Enable default interactions
+    // Enhanced interaction settings
     map.boxZoom.enable();
     map.scrollZoom.enable();
     map.dragRotate.enable();
@@ -1001,6 +908,10 @@ export default function SubdivisionMapViewer({
     map.keyboard.enable();
     map.doubleClickZoom.enable();
     map.touchZoomRotate.enable();
+    
+    // Set more sensitive scroll zoom
+    map.scrollZoom.setWheelZoomRate(1 / 450);
+    map.scrollZoom.setZoomRate(0.1);
     
     setMap(map);
     
@@ -1010,7 +921,7 @@ export default function SubdivisionMapViewer({
       drawRef.current = null;
     }
     
-    // Initialize draw tools with proper configuration
+    // Initialize draw tools with enhanced configuration for parcel subdivision
     const draw = new MapboxDraw({
       displayControlsDefault: false,
       controls: {
@@ -1019,13 +930,11 @@ export default function SubdivisionMapViewer({
         point: true,
         line_string: true,
       },
-      // Show active drawing tools above other UI elements
       userProperties: true,
-      // Keep drawn features around after creation
       persistentDrawing: true,
       defaultMode: 'simple_select',
       styles: [
-        // Point style
+        // Enhanced point style
         {
           'id': 'gl-draw-point',
           'type': 'circle',
@@ -1037,7 +946,7 @@ export default function SubdivisionMapViewer({
             'circle-stroke-color': '#2563eb'
           }
         },
-        // Line style
+        // Enhanced line style
         {
           'id': 'gl-draw-line',
           'type': 'line',
@@ -1052,7 +961,7 @@ export default function SubdivisionMapViewer({
             'line-width': 2
           }
         },
-        // Polygon fill style
+        // Enhanced polygon fill style
         {
           'id': 'gl-draw-polygon-fill',
           'type': 'fill',
@@ -1063,7 +972,7 @@ export default function SubdivisionMapViewer({
             'fill-opacity': 0.1
           }
         },
-        // Polygon stroke style
+        // Enhanced polygon stroke style
         {
           'id': 'gl-draw-polygon-stroke',
           'type': 'line',
@@ -1109,6 +1018,7 @@ export default function SubdivisionMapViewer({
         }
       ]
     });
+    
     map.addControl(draw);
     drawRef.current = draw;
     
@@ -1128,7 +1038,14 @@ export default function SubdivisionMapViewer({
       }
     }
     
-    // Draw event: create
+    // Only auto-zoom to locality bounds once on initial map load (if available)
+    if (localityBounds) {
+      try {
+        map.fitBounds(localityBounds, { padding: 80, duration: 700 });
+      } catch {}
+    }
+    
+    // Enhanced draw event handlers for parcel management
     const onCreate = (e: any) => {
       const features = e.features || [];
       
@@ -1139,7 +1056,7 @@ export default function SubdivisionMapViewer({
         if (f.geometry?.type === 'LineString' && drawMode === 'line' && parentParcel) {
           try {
             const parentLines = polygonToLine(parentParcel);
-            const linesFc = featureCollection([parentLines, f]);
+            const linesFc = turfFeatureCollection([parentLines, f]);
             const polyResult = polygonize(linesFc);
             const pieces = polyResult?.features || [];
             
@@ -1170,7 +1087,6 @@ export default function SubdivisionMapViewer({
                 value: lenKm * 1000,
                 units: 'm',
               });
-              // Remove the measurement line after calculation
               draw.delete(f.id);
             } else if (f.geometry.type === 'Polygon') {
               const a = turfArea(f);
@@ -1179,7 +1095,6 @@ export default function SubdivisionMapViewer({
                 value: a,
                 units: 'm²',
               });
-              // Remove the measurement polygon after calculation
               draw.delete(f.id);
             }
             // Stay in measurement mode
@@ -1195,7 +1110,7 @@ export default function SubdivisionMapViewer({
                 break;
               } catch {}
             }
-            return; // Don't add to subdivisions in measurement mode
+            return;
           }
         } catch {}
       });
@@ -1266,7 +1181,6 @@ export default function SubdivisionMapViewer({
       } catch {}
     };
   }, [
-    getMap,
     setMap,
     isDrawing,
     drawMode,
@@ -1275,7 +1189,23 @@ export default function SubdivisionMapViewer({
     addSubdivision,
     setIsDrawing,
     updateSubdivisions,
+    localityBounds,
   ]);
+
+  // Handle draw mode changes 
+  const handleDrawModeChange = useCallback(({ mode }: { mode: string }) => {
+    const container = mapRef.current?.getContainer();
+    if (!container) return;
+    
+    // Update cursor based on mode
+    if (mode === 'simple_select' || mode === 'direct_select') {
+      container.style.cursor = 'default';
+      setIsDrawing(false);
+    } else if (mode.startsWith('draw_')) {
+      container.style.cursor = 'crosshair';
+      setIsDrawing(true);
+    }
+  }, [setIsDrawing]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1347,6 +1277,7 @@ export default function SubdivisionMapViewer({
         status: 'Pending',
         landUseId: '0',
         parentId: parentParcel?.properties?.id || '',
+        ...(selectedPlan ? ({ planId: selectedPlan.id, parentPlan: (selectedPlan.properties as any)?.name || selectedPlan.id } as any) : {}),
         allocations: [],
         subdivisionDate: new Date().toISOString(),
         approvalStatus: 'Pending',
@@ -1356,25 +1287,10 @@ export default function SubdivisionMapViewer({
     };
     
     addSubdivision(feature);
-    setPointsOpen(false);
+  setPointsOpen(false);
     setDrawMode(null);
     setIsDrawing(false);
-  }, [parentParcel, calculateUTM, addSubdivision, setDrawMode, setIsDrawing]);
-
-  // Handle draw mode changes 
-  const handleDrawModeChange = useCallback(({ mode }: { mode: string }) => {
-    const container = mapRef.current?.getContainer();
-    if (!container) return;
-    
-    // Update cursor based on mode
-    if (mode === 'simple_select' || mode === 'direct_select') {
-      container.style.cursor = 'default';
-      setIsDrawing(false);
-    } else if (mode.startsWith('draw_')) {
-      container.style.cursor = 'crosshair';
-      setIsDrawing(true);
-    }
-  }, [setIsDrawing]);
+  }, [parentParcel, calculateUTM, addSubdivision, setDrawMode, setIsDrawing, selectedPlan]);
 
   // Handle points dialog close
   const handlePointsOpenChange = useCallback((newOpen: boolean) => {
@@ -1383,23 +1299,85 @@ export default function SubdivisionMapViewer({
       setDrawMode(null);
       setIsDrawing(false);
     }
-  }, [setDrawMode, setIsDrawing]);
+  }, [setDrawMode, setIsDrawing, setPointsOpen]);
 
+  // Register centralized toolbox API (safe wiring)
+  useEffect(() => {
+    const toolbox = createToolbox({
+      mapRef,
+      drawRef,
+      recomputePlans,
+      zoomToFeature,
+      getPlansTilesTemplate,
+      getLocalityBounds: () => localityBounds,
+    });
 
+    useSubdivisionStore.getState().setAPI(toolbox as any);
+    return () => {
+      // Don't clear API; it's merged and harmless. Avoids racey resets.
+      try { useSubdivisionStore.getState().setAPI({}); } catch {}
+    };
+  // only re-register if core references change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recomputePlans, zoomToFeature, localityBounds, getPlansTilesTemplate]);
+
+  // Responsive map resize
+  useEffect(() => {
+    const el = document.querySelector('.sub-main-area');
+    if (!el) return;
+    
+    const handleResize = () => {
+      const m = getMap();
+      m?.resize?.();
+    };
+    
+    const ro = new ResizeObserver(handleResize);
+    ro.observe(el);
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [getMap]);
+
+  // Refresh plans tiles when locality changes
+  useEffect(() => {
+    const m = getMap();
+    if (!m) return;
+    
+    try {
+      if (m.isStyleLoaded?.() && m.getSource && m.getSource('plans-tiles')) {
+        const src: any = m.getSource('plans-tiles');
+        if (src?.setTiles) {
+          const template = getPlansTilesTemplate();
+          try { src.setTiles([`${template}&v=${Date.now()}`]); } catch {}
+        } else {
+          try { m.triggerRepaint?.(); } catch {}
+        }
+      }
+    } catch {}
+  }, [localityId, getMap, getPlansTilesTemplate]);
+
+  // Add enhanced map controls UI
+  // Map floating controls have been moved to the top toolbar (toolbar/tools.ts)
 
   return (
     <div className="relative w-full h-full flex flex-col">
       <div className="p-3 flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Map (street view)</h4>
-          {/* <div className="text-xs text-muted-foreground">
-            Mapbox street map — production-ready
-          </div> */}
+          <h4 className="text-sm font-medium">Subdivision Map</h4>
+          <div className="text-xs text-muted-foreground">
+            {selectedPlan ? `Selected Plan: ${selectedPlan.id}` : 'Click on a plan to select'}
+          </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <div>
             Subdivisions: <strong>{backendSubdivisions.length}</strong>
-            {disabled ? ' (read-only)' : ''}
+            {selectedPlan && ` | Plan: ${selectedPlan.id}`}
           </div>
           {onToggleFullscreen && (
             <Button
@@ -1427,6 +1405,9 @@ export default function SubdivisionMapViewer({
             transformRequest={transformRequest}
             initialViewState={INITIAL_VIEW_STATE}
             onLoad={handleMapLoad}
+            onClick={handlePlanClick}
+            onDblClick={handleMapDoubleClick}
+            onContextMenu={handleMapRightClick}
             style={{ width: '100%', height: '100%' }}
             mapStyle="mapbox://styles/mapbox/streets-v12"
             maxZoom={20}
@@ -1437,9 +1418,8 @@ export default function SubdivisionMapViewer({
             boxZoom
             doubleClickZoom
             keyboard
-            interactive
-            interactiveLayerIds={["plans-fill"]}
-            onMove={({ viewState }) => setViewState(viewState)}
+            interactiveLayerIds={isDrawing ? [] : ["plans-fill", "plans-line"]}
+            
             onDragStart={() => {
               const container = mapRef.current?.getContainer();
               if (container && !isDrawing) {
@@ -1460,8 +1440,70 @@ export default function SubdivisionMapViewer({
             }}
           >
             <MapControls map={mapRef} position="top-left" />
+            {/* Map floating controls moved to the top toolbar; in-map UI removed */}
             
-            {/* Locality Boundary - Base layer */}
+            {/* Enhanced plan layers with better selection visuals */}
+            {localityId && (
+              <Source 
+                id="plans-tiles" 
+                type="vector" 
+                tiles={[`${api.defaults.baseURL?.replace(/\/$/, '')}/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`]} 
+                minzoom={1} 
+                maxzoom={22} 
+                promoteId="id"
+              >
+                <Layer
+                  id="plans-fill"
+                  type="fill"
+                  source-layer="zones"
+                  paint={{
+                    'fill-color': [
+                      'case',
+                      ['boolean', ['feature-state', 'selected'], false],
+                      '#10b981',
+                      [
+                        'case',
+                        ['==', ['literal', colorMode], 'status'],
+                        [ 'case', ['to-boolean', ['get', 'can_be_subdivided']], '#10b981', '#9ca3af' ],
+                        ['coalesce', ['get', 'color'], '#6b7280']
+                      ]
+                    ],
+                    'fill-opacity': [
+                      'case',
+                      ['boolean', ['feature-state', 'selected'], false], 0.7,
+                      ['boolean', ['feature-state', 'hover'], false], Math.max(0.05, Math.min(1, plansOpacity || 0.6)),
+                      Math.max(0.05, Math.min(1, plansOpacity || 0.45)),
+                    ],
+                  }}
+                />
+                <Layer
+                  id="plans-line"
+                  type="line"
+                  source-layer="zones"
+                  paint={{
+                    'line-color': [
+                      'case',
+                      ['boolean', ['feature-state', 'selected'], false],
+                      '#059669',
+                      ['boolean', ['feature-state', 'hover'], false],
+                      '#374151',
+                      '#1f2937',
+                    ],
+                    'line-width': [
+                      'case',
+                      ['boolean', ['feature-state', 'selected'], false],
+                      3,
+                      ['boolean', ['feature-state', 'hover'], false],
+                      2,
+                      1.5,
+                    ],
+                    'line-opacity': 0.95,
+                  }}
+                />
+              </Source>
+            )}
+
+            {/* Existing locality and parent parcel layers */}
             {localityBoundary && (
               <Source id="locality-boundary" type="geojson" data={localityBoundary}>
                 <Layer
@@ -1485,63 +1527,7 @@ export default function SubdivisionMapViewer({
                 />
               </Source>
             )}
-            
-            {/* Plans vector tiles */}
-            {(() => {
-              if (!localityId) return null;
-              // Transform request will handle adding auth headers
-              const tileUrl = `${api.defaults.baseURL?.replace(/\/$/, '')}/zoning/plans/latest/${localityId}/tiles/{z}/{x}/{y}.mvt`;
-              return (
-                <Source 
-                  id="plans-tiles" 
-                  type="vector" 
-                  tiles={[tileUrl]} 
-                  minzoom={1} 
-                  maxzoom={22} 
-                  promoteId="id"
-                >
-                  <Layer
-                    id="plans-fill"
-                    type="fill"
-                    source-layer="zones"
-                    paint={{
-                      'fill-color': ['coalesce', ['get', 'color'], '#6b7280'],
-                      'fill-opacity': [
-                        'case',
-                        ['boolean', ['feature-state', 'selected'], false], 0.85,
-                        ['boolean', ['feature-state', 'hover'], false], 0.7,
-                        0.45,
-                      ],
-                    }}
-                  />
-                  <Layer
-                    id="plans-line"
-                    type="line"
-                    source-layer="zones"
-                    paint={{
-                      'line-color': [
-                        'case',
-                        ['boolean', ['feature-state', 'selected'], false],
-                        '#111827',
-                        '#1f2937',
-                      ],
-                      'line-width': [
-                        'case',
-                        ['boolean', ['feature-state', 'selected'], false],
-                        2.5,
-                        0.75,
-                      ],
-                      'line-opacity': 0.95,
-                    }}
-                  />
-                </Source>
-              );
-            })()}
 
-            {/* Auto-zoom to active plan or locality bounds when tiles/features become available */}
-            
-
-            {/* Parent parcel overlay */}
             {parentParcel && (
               <Source id="parent-parcel" type="geojson" data={parentParcel}>
                 <Layer
@@ -1561,37 +1547,9 @@ export default function SubdivisionMapViewer({
           </MapGL>
         </div>
 
-        {/* Dev-only locality / tiles debug overlay */}
-        {import.meta.env.DEV && (
-          <div className="absolute left-3 bottom-3 z-50 bg-white/90 p-2 rounded text-xs shadow-sm max-w-xs break-words">
-            <div><strong>Resolved localityId:</strong> {String(localityId ?? 'none')}</div>
-            <div className="mt-1 break-all"><strong>Tiles URL:</strong> {String(devTileUrl ?? 'n/a')}</div>
-            <div className="mt-1"><strong>Plans features (preview):</strong> {devPlansCount}</div>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  try { (useSubdivisionStore.getState().api as any)?.refreshPlans?.(); } catch {}
-                }}
-                className="px-2 py-1 rounded bg-slate-100"
-              >
-                Refresh tiles
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  try { (useSubdivisionStore.getState().api as any)?.getPlans?.(); (useSubdivisionStore.getState().api as any)?.getPlansCount?.(); } catch {}
-                  try { (useSubdivisionStore.getState().api as any)?.autoZoomToPlans?.(); } catch {}
-                }}
-                className="px-2 py-1 rounded bg-slate-100"
-              >
-                Force auto-zoom
-              </button>
-            </div>
-          </div>
-        )}
+        
 
-        {/* Fullscreen exit button */}
+        {/* Existing UI elements */}
         {isMaximized && (
           <div className="absolute left-3 top-3 z-50">
             <button
@@ -1602,7 +1560,6 @@ export default function SubdivisionMapViewer({
               }}
               className="bg-white/90 text-foreground rounded-full p-2 shadow"
               title="Exit full screen"
-              aria-label="Exit fullscreen"
             >
               <Minimize className="w-4 h-4" />
             </button>

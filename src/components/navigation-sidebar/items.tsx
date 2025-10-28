@@ -108,6 +108,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <FileText className="h-4 w-4" />
           },
           {
+            id: "ccro-application",
+            label: "CCRO Applications",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
             id: "reports",
             label: "CCRO Reports",
             icon: <FileText className="h-4 w-4" />

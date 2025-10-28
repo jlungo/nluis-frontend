@@ -5,13 +5,12 @@ import SubdivisionMapViewer from './components/SubdivisionMapViewer';
 import SubdivisionLeftPanel from './components/SubdivisionLeftPanel';
 import TopToolbar from './components/TopToolbar';
 import RightDock from './components/RightDock';
-import SubdivisionMapEngine from './components/SubdivisionMapEngine';
 import { useSubdivisionValidation } from './hooks/useSubdivisionValidation';
 import { useLocalityPlanQuery } from './hooks/useLocalityPlanQuery';
 
 import useSubdivisionStore from './store/useSubdivisionStore';
+import { useOptionalSidebar } from '@/components/ui/sidebar';
 import { debounce } from '@/lib/debounce';
-import { SubdivisionErrorBoundary } from './components/SubdivisionErrorBoundary';
 
 interface SubdivisionShellProps {
   parentParcel?: ParcelFeature;
@@ -26,7 +25,6 @@ interface SubdivisionShellProps {
 export default function SubdivisionShell({
   parentParcel,
   value,
-  disabled,
   className,
   onChange,
   localityId: propLocalityId,
@@ -188,6 +186,12 @@ export default function SubdivisionShell({
     } catch {}
   }, [map, styleName, drawMode]);
 
+  // If the global app sidebar (nav) is open on mobile, we should hide subdivision
+  // mobile panels/backdrop so they don't overlay the navigation sheet.
+  // Use optional sidebar hook (may be undefined when Subdivision is mounted outside app shell)
+  const optionalSidebar = typeof useOptionalSidebar === 'function' ? useOptionalSidebar() : null;
+  const hideMobilePanels = optionalSidebar ? (optionalSidebar.isMobile && optionalSidebar.openMobile) : false;
+
   return (
     <div className={`flex flex-col w-full h-full border rounded-md overflow-hidden ${isMaximized ? 'sub-fullscreen' : ''} ${className || ''}`}>
       {/* Top toolbar */}
@@ -196,16 +200,11 @@ export default function SubdivisionShell({
         isMaximized={isMaximized}
       />
 
-  {/* Mount lightweight engine to fetch plans (hidden) */}
-      <div className="sr-only" aria-hidden>
-        <SubdivisionErrorBoundary>
-          <SubdivisionMapEngine localityId={localityId} parentParcel={effectiveParent} />
-        </SubdivisionErrorBoundary>
-      </div>
+      
 
-      {/* Mobile backdrop when either panel is open */}
+      {/* Mobile backdrop when either panel is open. Hidden when global sidebar mobile sheet is open. */}
       <div
-        className={`mobile-backdrop md:hidden ${leftOpen || rightOpen ? 'block' : 'hidden'}`}
+        className={`mobile-backdrop md:hidden ${(leftOpen || rightOpen) && !hideMobilePanels ? 'block' : 'hidden'}`}
         onClick={() => {
           useSubdivisionStore.getState().setLeftPanelOpen(false);
           useSubdivisionStore.getState().setRightPanelOpen(false);
@@ -214,9 +213,9 @@ export default function SubdivisionShell({
       />
 
       <div className="flex-1 flex relative">
-        {/* Left panel - legend and layer toggles (render only when open) */}
-        {leftOpen && (
-          <div ref={leftPanelRef} className={`w-72 border-r bg-background/95 overflow-auto sub-left-panel open`}>
+        {/* Left panel - legend and layer toggles (render only when open). Hide on mobile when global nav is open. */}
+        {leftOpen && !hideMobilePanels && (
+          <div ref={leftPanelRef} className={`w-96 border-r bg-background/95 overflow-auto sub-left-panel open`}>
             <SubdivisionLeftPanel />
           </div>
         )}
@@ -225,7 +224,6 @@ export default function SubdivisionShell({
         <div className="flex-1 relative sub-main-area">
           <SubdivisionMapViewer
             parentParcel={effectiveParent}
-            disabled={disabled}
             localityId={localityId}
             // baseMapId={props.baseMapId}
             isMaximized={isMaximized}
@@ -234,7 +232,7 @@ export default function SubdivisionShell({
         </div>
 
         {/* Right panel - details dock (render only when open) */}
-        {rightOpen && (
+        {rightOpen && !hideMobilePanels && (
           <div ref={rightPanelRef} className={`w-96 border-l bg-background/95 overflow-auto sub-right-panel open`}>
             <RightDock />
           </div>

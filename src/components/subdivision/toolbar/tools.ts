@@ -144,14 +144,16 @@ export function useToolbarDefs(): ToolbarSection[] {
           label: "Select",
           icon: MousePointer2,
           onClick: () => {
-            const state = useSubdivisionStore.getState();
-            const api = state.api;
-            if (api) {
-              api.startSelect?.();
-            }
-            state.setInteractionMode("select");
-            state.setIsDrawing(false);
-            state.setSelectedId(null);
+              const state = useSubdivisionStore.getState();
+              const api = state.api;
+              if (api?.startSelect) {
+                api.startSelect();
+              } else {
+                console.warn('Toolbar: startSelect not available on api');
+              }
+              state.setInteractionMode('select');
+              state.setIsDrawing(false);
+              state.setSelectedId(null);
           },
         },
         {
@@ -159,14 +161,12 @@ export function useToolbarDefs(): ToolbarSection[] {
           label: "Draw Polygon",
           icon: Square,
           onClick: () => {
-            console.log('Draw Polygon clicked');
             const state = useSubdivisionStore.getState();
             const api = state.api;
             if (api?.startDrawPolygon) {
-              console.log('Calling startDrawPolygon');
               api.startDrawPolygon();
             } else {
-              console.error('Draw Polygon API method not found', { api });
+              console.warn('Toolbar: startDrawPolygon not available on api');
             }
           },
         },
@@ -188,16 +188,15 @@ export function useToolbarDefs(): ToolbarSection[] {
           icon: PencilRuler,
           onClick: () => {
             const store = useSubdivisionStore.getState();
-            console.log('Add Points clicked:', {
-              hasApi: !!store.api,
-              hasOpenAddPoints: !!store.api?.openAddPoints,
-              api: store.api
-            });
-            if (store.api?.openAddPoints) {
-              console.log('Calling openAddPoints');
-              store.api.openAddPoints();
+            const api = store.api;
+            if (api?.openAddPoints) {
+              api.openAddPoints();
             } else {
-              console.error("Add points API method not found");
+              console.warn('Toolbar: openAddPoints not available on api');
+              // Fallback: open points dialog directly via store if available
+              try {
+                (store as any).setPointsDialogOpen?.(true);
+              } catch {}
             }
           },
         },
@@ -252,6 +251,24 @@ export function useToolbarDefs(): ToolbarSection[] {
           onClick: () => setRightOpen(!rightOpen),
         },
         {
+          id: "zoom-in",
+          label: "Zoom In",
+          icon: RotateCw,
+          onClick: () => {
+            const map = getActions().map;
+            if (map) map.zoomIn?.({ duration: 300 } as any);
+          },
+        },
+        {
+          id: "zoom-out",
+          label: "Zoom Out",
+          icon: RotateCw,
+          onClick: () => {
+            const map = getActions().map;
+            if (map) map.zoomOut?.({ duration: 300 } as any);
+          },
+        },
+        {
           id: "reset-view",
           label: "Reset View",
           icon: RotateCw,
@@ -262,6 +279,51 @@ export function useToolbarDefs(): ToolbarSection[] {
               zoom: 5.8,
               duration: 1000,
             });
+          },
+        },
+        {
+          id: 'view-all',
+          label: 'View All',
+          icon: Layers,
+          onClick: () => {
+            const api = useSubdivisionStore.getState().api;
+            if (api?.zoomToLocalityBounds) api.zoomToLocalityBounds();
+            else {
+              const map = getActions().map;
+              // fallback: do nothing if no bounds
+              if (map && (map as any).fitBounds) {
+                // noop - viewer will manage bounds via toolbar / store
+              }
+            }
+          }
+        }
+      ],
+    },
+
+    // 🏷 Plan actions (depend on selected plan)
+    {
+      id: 'plan',
+      buttons: [
+        {
+          id: 'subdivide-plan',
+          label: 'Subdivide',
+          icon: Layers,
+          onClick: () => {
+            const state = useSubdivisionStore.getState();
+            const api = state.api;
+            if (api?.manipulatePlan) api.manipulatePlan('subdivide');
+            else console.warn('Toolbar: manipulatePlan not available');
+          },
+        },
+        {
+          id: 'edit-boundaries',
+          label: 'Edit Boundaries',
+          icon: PencilRuler,
+          onClick: () => {
+            const state = useSubdivisionStore.getState();
+            const api = state.api;
+            if (api?.manipulatePlan) api.manipulatePlan('edit');
+            else console.warn('Toolbar: manipulatePlan not available');
           },
         },
       ],

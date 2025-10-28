@@ -49,7 +49,10 @@ export interface SubdivisionState {
   showPlans: boolean;
   showParcels: boolean;
   parcelOpacity: number;
+  plansOpacity: number;
   boundaryGlow: boolean;
+  // Coloring strategy (similar to zoning): by land-use type or status
+  colorMode?: 'type' | 'status';
 
   // Interaction mode
   interactionMode: string | null;
@@ -62,9 +65,12 @@ export interface SubdivisionState {
   // Active selection/inspector
   activePlanId: string | null;
   inspectorOpen: boolean;
+  selectedZoneIds: Set<string | number>;
 
   // Measurements
   lastMeasurement: { type: 'area' | 'length'; value: number; units?: string } | null;
+  // Dialog states
+  pointsDialogOpen: boolean;
 }
 
 export interface SubdivisionActions {
@@ -97,6 +103,14 @@ export interface SubdivisionActions {
   // Validation actions
   setValidationErrors: (errors: ValidationError[]) => void;
 
+  // Zone selection actions
+  selectZone: (fid: string | number) => void;
+  deselectZone: (fid: string | number) => void;
+  clearZoneSelection: () => void;
+  setFeatureStateById: (fid: string | number, state: Record<string, any>) => void;
+  // Re-apply current selection to the map (mimics zoning resiliency)
+  applySelectionToMap: () => void;
+
   // Inspector actions
   setInspectorOpen: (open: boolean) => void;
 
@@ -117,7 +131,12 @@ export interface SubdivisionActions {
   setShowParcels: (v: boolean) => void;
   setParcelOpacity: (n: number) => void;
   setBoundaryGlow: (b: boolean) => void;
+  setPlansOpacity: (n: number) => void;
+  // Coloring
+  setColorMode?: (m: 'type' | 'status') => void;
 
   // Labels
   toggleLabels: () => void;
+  // Dialog controls
+  setPointsDialogOpen: (open: boolean) => void;
 }

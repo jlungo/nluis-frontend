@@ -18,6 +18,7 @@ import {
   ScanLine
 } from 'lucide-react';
 import useSubdivisionStore from '@/components/subdivision/store/useSubdivisionStore';
+import { useLandUsesQuery } from '@/queries/useSetupQuery';
 import { cn } from '@/lib/utils';
 
 interface MenuBarProps {
@@ -128,8 +129,24 @@ export default function MenuBar({ isMaximized, onToggleMaximize }: MenuBarProps)
   const leftPanelOpen = useSubdivisionStore((s) => s.leftPanelOpen);
   const rightPanelOpen = useSubdivisionStore((s) => s.rightPanelOpen);
 
+    const { data: landUses = [] } = useLandUsesQuery();
+    const types = (() => {
+      if (landUses && landUses.length) return landUses;
+      // derive from known subdivisions in store
+      try {
+        const subs = useSubdivisionStore.getState().subdivisions || [];
+        const m = new Map<string, any>();
+        for (const s of subs) {
+          const p = s?.properties || {};
+          const name = p.title ?? String(p.landUseId ?? '');
+          if (!name) continue;
+          if (!m.has(String(name))) m.set(String(name), { id: p.landUseId ?? String(name), name, color: undefined });
+        }
+        return Array.from(m.values());
+      } catch { return []; }
+    })();
+
   const [mobileOpen, setMobileOpen] = useState(false);
-  const zones = useSubdivisionStore((s) => s.plans);
   // @ts-ignore - Used in callbacks within store actions
   const selectedId = useSubdivisionStore((s) => s.selectedId);
   const subdivisions = useSubdivisionStore((s) => s.subdivisions);
@@ -367,14 +384,14 @@ export default function MenuBar({ isMaximized, onToggleMaximize }: MenuBarProps)
 
           <Separator orientation="vertical" className="h-6" />
 
-          {/* Type selector */}
+          {/* Type selector (Land Use Types) */}
           <MenuButton label="Type">
             {(close: () => void) => (
               <Group label="Land Use Type">
-                {zones && zones.length ? (
-                  zones.map((z) => (
+                {types && types.length ? (
+                  types.map((lu: any) => (
                     <Item
-                      key={z.id}
+                      key={lu.id}
                       onClick={() => {
                         const state = useSubdivisionStore.getState();
                         const sel = state.selectedId;
@@ -382,26 +399,26 @@ export default function MenuBar({ isMaximized, onToggleMaximize }: MenuBarProps)
                           state.updateSubdivisions((subs) =>
                             subs.map((s) =>
                               s?.properties?.id === sel
-                                ? { ...s, properties: { ...s.properties, landUseId: z.id, title: z.name } }
+                                ? { ...s, properties: { ...s.properties, landUseId: lu.id, title: lu.name } }
                                 : s
                             )
                           );
-                          try { 
-                            state.api?.updateSubdivision?.(sel, { 
-                              properties: { landUseId: z.id, title: z.name } 
-                            }); 
+                          try {
+                            state.api?.updateSubdivision?.(sel, {
+                              properties: { landUseId: lu.id, title: lu.name }
+                            });
                           } catch {}
                         } else {
-                          state.setActivePlan(z.id as any);
+                          // no selected subdivision — set active plan (noop for land use), keep behavior minimal
                         }
                         close();
                       }}
                     >
-                      <span 
-                        className="inline-block w-3 h-3 rounded border border-white shadow-sm" 
-                        style={{ backgroundColor: z.color || '#ddd' }} 
+                      <span
+                        className="inline-block w-3 h-3 rounded border border-white shadow-sm"
+                        style={{ backgroundColor: lu.color || '#ddd' }}
                       />
-                      {z.name}
+                      {lu.name}
                     </Item>
                   ))
                 ) : (
@@ -417,40 +434,33 @@ export default function MenuBar({ isMaximized, onToggleMaximize }: MenuBarProps)
           <MenuButton label="Status">
             {(close: () => void) => (
               <Group label="Subdivision Status">
-                {zones && zones.length ? (
-                  zones.map((z) => (
-                    <Item
-                      key={`status-${z.id}`}
-                      onClick={() => {
-                        const state = useSubdivisionStore.getState();
-                        const sel = state.selectedId;
-                        if (sel) {
-                          const newStatus = String(z.name).includes('Active') ? 'Active' : 'Pending';
-                          state.updateSubdivisions((subs) =>
-                            subs.map((s) => 
-                              (s?.properties?.id === sel 
-                                ? { ...s, properties: { ...s.properties, status: newStatus as any } } 
-                                : s
-                              )
+                {(['Pending', 'Active', 'Inactive'] as const).map((status) => (
+                  <Item
+                    key={`status-${status}`}
+                    onClick={() => {
+                      const state = useSubdivisionStore.getState();
+                      const sel = state.selectedId;
+                      if (sel) {
+                        state.updateSubdivisions((subs) =>
+                          subs.map((s) =>
+                            (s?.properties?.id === sel
+                              ? { ...s, properties: { ...s.properties, status } }
+                              : s
                             )
-                          );
-                          try { 
-                            state.api?.updateSubdivision?.(sel, { 
-                              properties: { status: String(newStatus) } 
-                            }); 
-                          } catch {}
-                        }
-                        close();
-                      }}
-                    >
-                      {z.name}
-                    </Item>
-                  ))
-                ) : (
-                  <div className="px-3 py-2 text-xs text-muted-foreground text-center">
-                    No statuses available
-                  </div>
-                )}
+                          )
+                        );
+                        try {
+                          state.api?.updateSubdivision?.(sel, {
+                            properties: { status }
+                          });
+                        } catch {}
+                      }
+                      close();
+                    }}
+                  >
+                    {status}
+                  </Item>
+                ))}
               </Group>
             )}
           </MenuButton>

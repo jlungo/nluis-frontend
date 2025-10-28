@@ -1,6 +1,6 @@
 import Page from "./page";
 import CcroProjects from "./ccro-projects";
-import CcroPage from "./ccro";
+import CcroPage from "./ccro-application";
 import LandFormalizationPage from "./land-formalization";
 import ReportsPage from "./reports";
 import type { RouteObject } from "react-router";

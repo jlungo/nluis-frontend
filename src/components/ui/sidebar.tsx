@@ -51,6 +51,11 @@ function useSidebar() {
   return context
 }
 
+// A non-throwing variant for components that may be mounted outside the provider.
+export function useOptionalSidebar() {
+  return React.useContext(SidebarContext);
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,

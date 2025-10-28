@@ -54,6 +54,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
   const drawRef = useRef<any>(null);
   // client-side hide list (e.g., after delete) to mask features until tiles update
   const hiddenIdsRef = useRef<Set<string | number>>(new Set());
+  const selectedIdsRef = useRef<Set<string | number>>(new Set());
 
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [baseMapBounds, setBaseMapBounds] = useState<
@@ -600,6 +601,42 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
 
   // expose API to store (menus/toolbar)
   useEffect(() => {
+    // helper: clear previous selection feature states
+    const clearSelection = () => {
+      try {
+        const map = mapGLRef.current?.getMap?.() || mapGLRef.current;
+        if (!map) return;
+        selectedIdsRef.current.forEach((id) => {
+          try { map.setFeatureState({ source: 'zones-tiles', sourceLayer: 'zones', id: Number(id) || id }, { selected: false }); } catch {}
+        });
+      } catch (e) { console.error('clearSelection', e); }
+      selectedIdsRef.current.clear();
+    };
+
+    const selectByFilter = (predicate: (props: any) => boolean) => {
+      try {
+        const map = mapGLRef.current?.getMap?.() || mapGLRef.current;
+        if (!map) return;
+        // clear previous
+        clearSelection();
+        const feats = map.queryRenderedFeatures({ layers: ['zones-fill'] }) || [];
+        feats.forEach((f: any) => {
+          const id = f.id ?? f.properties?.id;
+          if (id === undefined || id === null) return;
+          const props = f.properties || {};
+          if (predicate(props)) {
+            try { map.setFeatureState({ source: 'zones-tiles', sourceLayer: 'zones', id: Number(id) || id }, { selected: true }); } catch {}
+            selectedIdsRef.current.add(String(id));
+          }
+        });
+        // set active zone to first selected
+        const first = selectedIdsRef.current.values().next().value;
+        if (first) setActiveZone(String(first));
+      } catch (e) {
+        console.error('selectByFilter', e);
+      }
+    };
+
     setAPI({
       // saving
       saveToAPI: onSaveDrawChanges,
@@ -614,7 +651,14 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         updateLabelsField(f);
       },
       // selection helpers for menus
-      getSelectedIds: () => (activeZone ? [activeZone] : []),
+      getSelectedIds: () => Array.from(selectedIdsRef.current),
+      selectByType: (typeId: string | number) => {
+        selectByFilter((p) => String(p.land_use) === String(typeId) || String(p.land_use_name) === String(typeId));
+      },
+      selectByStatus: (status: string) => {
+        selectByFilter((p) => String(p.status) === String(status));
+      },
+      clearSelection: () => clearSelection(),
       // allow toolbar to switch back to selection tool
       startSelect: () => {
         const draw = drawRef.current;
