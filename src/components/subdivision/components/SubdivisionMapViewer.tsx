@@ -12,7 +12,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import useSubdivisionStore from '../store/useSubdivisionStore';
-import api, { getAccessToken, refreshAccessToken } from '@/lib/axios';
+import api, { getAccessToken } from '@/lib/axios';
 // plan detail query moved to toolbox when needed
 import proj4 from 'proj4';
 import { 
@@ -730,6 +730,8 @@ export default function SubdivisionMapViewer({
       // 401: try token refresh and cache-bust
       if (status === 401) {
         try {
+          
+          const { refreshAccessToken } = await import('@/lib/axios');
           await refreshAccessToken();
           // Guard: only access source when style is loaded to avoid mapbox internals failing
           if (m.isStyleLoaded?.() && m.getSource && m.getSource('plans-tiles')) {

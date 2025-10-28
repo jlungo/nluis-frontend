@@ -1,4 +1,4 @@
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { ArrowLeft, Bell, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Tooltip,
@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { ThemeTogglePopover } from "./ToggleTheme";
+import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "@/store/auth";
@@ -99,7 +100,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
 
         {/* Top Bar Actions */}
         <div className="flex items-center gap-2">
-          {/* <TooltipProvider>
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -118,7 +119,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
                 <p>Notifications (3)</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider> */}
+          </TooltipProvider>
 
           {/* User Profile - Desktop */}
           <div className="hidden md:flex items-center gap-3 ml-2">
@@ -136,7 +137,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
                     className="p-1"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage alt="User" />
+                      <AvatarImage src="/api/placeholder/32/32" alt="User" />
                       <AvatarFallback className="bg-primary text-primary-foreground dark:text-white">
                         {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                       </AvatarFallback>

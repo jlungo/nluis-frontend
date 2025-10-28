@@ -17,7 +17,7 @@ export interface SelectOptionProps {
 }
 
 export interface FieldsProps {
-  id: number;
+  id: 0;
   label: string;
   type: InputType;
   type_display: string;
@@ -44,7 +44,6 @@ export interface FormProps {
   name: string;
   description: string;
   is_active: boolean;
-  edit_if_prev_filled: boolean;
   section_slug: string;
   section_name: string;
   workflow_slug: string;
@@ -65,8 +64,6 @@ export interface SectionProps {
   position: number;
   approval_roles: RoleT[];
   is_active: boolean;
-  edit_if_prev_approved: boolean;
-  edit_if_prev_filled: boolean;
   workflow_slug: string;
   workflow_name: string;
   module_level_slug: string;
@@ -95,7 +92,7 @@ interface DataProps extends APIResponse {
   results: WorkflowProps[];
 }
 
-export const workflowQueryKey = "workflow";
+export const workflowQueryKey = "workflowKey";
 
 export const useWorkflowsQuery = (
   limit: number,

@@ -167,7 +167,7 @@ export default function Page() {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Card
-                                        className="border w-full sm:w-fit sm:min-w-[25rem] md:min-w-[22.25rem] lg:min-w-[25rem] xl:min-w-[22rem] group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
+                                        className="border w-full mx-auto sm:w-fit sm:min-w-[25rem] md:min-w-[22.25rem] lg:min-w-[25rem] xl:min-w-[22rem] group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
                                         onClick={() => navigate(`/${module.id}`)}
                                     >
                                         <CardHeader className="pb-3">

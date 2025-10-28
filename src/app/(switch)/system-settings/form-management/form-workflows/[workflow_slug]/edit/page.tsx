@@ -16,6 +16,7 @@ export default function Page() {
         setPage({
             module: 'system-settings',
             title: "Edit Workflow",
+
         })
     }, [setPage])
 
@@ -44,8 +45,6 @@ export default function Page() {
         description: section.description,
         order: section.position,
         is_active: section.is_active,
-        edit_if_prev_approved: section.edit_if_prev_approved,
-        edit_if_prev_filled: section.edit_if_prev_filled,
         forms: section.forms.map(form => ({
             id: form.slug,
             name: form.name,
@@ -53,7 +52,6 @@ export default function Page() {
             description: form.description,
             order: form.position,
             is_active: form.is_active,
-            edit_if_prev_filled: form.edit_if_prev_filled,
             form_fields: form.form_fields.map(field => ({
                 id: `${field.id}`,
                 name: field.name,

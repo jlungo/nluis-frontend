@@ -1,7 +1,5 @@
 import Layout from "./layout";
 import Page from "./page";
-import QuestionnaireSlugPage from "./[questionnaire_slug]";
-import QuestionnaireBuilder from "./questionnaire-builder";
 
 const Index = {
   path: "questionnaires",
@@ -11,8 +9,6 @@ const Index = {
       index: true,
       Component: Page,
     },
-    QuestionnaireSlugPage,
-    QuestionnaireBuilder,
   ],
 };
 
