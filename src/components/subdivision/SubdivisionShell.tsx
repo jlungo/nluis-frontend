@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import type { ParcelFeature } from '@/types/subdivision';
 import { useThemeStore } from '@/store/themeStore';
-import SubdivisionMapViewer from './components/SubdivisionMapViewer';
+import React, { Suspense } from 'react';
+const SubdivisionMapViewer = React.lazy(() => import('./components/SubdivisionMapViewer'));
 import SubdivisionLeftPanel from './components/SubdivisionLeftPanel';
 import TopToolbar from './components/TopToolbar';
 import RightDock from './components/RightDock';
@@ -222,13 +223,15 @@ export default function SubdivisionShell({
 
         {/* Map area - will contain SubdivisionMapViewer */}
         <div className="flex-1 relative sub-main-area">
-          <SubdivisionMapViewer
-            parentParcel={effectiveParent}
-            localityId={localityId}
-            // baseMapId={props.baseMapId}
-            isMaximized={isMaximized}
-            onToggleFullscreen={() => setIsMaximized((v) => !v)}
-          />
+          <Suspense fallback={<div className="h-full flex items-center justify-center text-muted-foreground">Loading map…</div>}>
+            <SubdivisionMapViewer
+              parentParcel={effectiveParent}
+              localityId={localityId}
+              // baseMapId={props.baseMapId}
+              isMaximized={isMaximized}
+              onToggleFullscreen={() => setIsMaximized((v) => !v)}
+            />
+          </Suspense>
         </div>
 
         {/* Right panel - details dock (render only when open) */}

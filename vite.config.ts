@@ -28,13 +28,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            // split mapbox-gl into its own chunk
-            if (id.includes("mapbox-gl")) {
-              return "vendor-mapbox-gl";
-            }
-            return "vendor";
+          if (!id.includes('node_modules')) return undefined;
+
+          if (id.includes('mapbox-gl') || id.includes('react-map-gl')) {
+            return 'vendor-mapbox-gl';
           }
+          if (id.includes('@turf')) return 'vendor-turf';
+          if (id.includes('@tanstack')) return 'vendor-tanstack';
+          if (id.includes('@dnd-kit')) return 'vendor-dndkit';
+          if (id.includes('framer-motion')) return 'vendor-framer-motion';
+          if (id.match(/node_modules[\\/]react($|[\\/])/)) return 'vendor-react';
+          if (id.includes('mapbox-gl-draw')) return 'vendor-mapbox-gl-draw';
+
+          return 'vendor';
         }
       }
     }
