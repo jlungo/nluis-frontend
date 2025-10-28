@@ -1,14 +1,15 @@
 import { Spinner } from "@/components/ui/spinner";
-import { SectionedForm } from "./sectioned-form";
 import { useQuestionnaireQuery } from "@/queries/useQuestionnaireQuery";
 import { usePageStore } from "@/store/pageStore";
 import { useEffect, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useQuestionnaireDataQuery } from "@/queries/useQuestionnaireDataQuery";
+import { useQuestionnaireDataBatchQuery } from "@/queries/useQuestionnaireDataBatchQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
 import { Link, useNavigate } from "react-router";
-import { buttonVariants } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { ArrowLeft } from "lucide-react";
 
 type Props = {
     pageTitle: string;
@@ -19,25 +20,16 @@ type Props = {
     questionnaireId: string;
 }
 
-export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
+export default function Batches({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnaireQuery(questionnaireId);
-    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId)
+    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataBatchQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
-
-    // const questionnaireProgress =
-    //     questionnaire && values
-    //         ? (values.length /
-    //             questionnaire.questionnaire_sections
-    //                 .flatMap(q => q.questionnaire_section_forms)
-    //                 .flatMap(f => f.custom_form_fields).length) *
-    //         100
-    //         : 0;
 
     const approval_status =
         project?.localities && project.localities.length > 0
@@ -60,7 +52,7 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
 
     if (isLoadingQuestionnaire || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
-        <p className="text-muted-foreground mt-4">Loading questionnaire and data...</p>
+        <p className="text-muted-foreground mt-4">Loading questionnaire batches...</p>
     </div>
 
     if (!project)
@@ -86,20 +78,54 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
 
     if (!values)
         return <div className='flex flex-col items-center justify-center h-60'>
-            <p className='text-muted-foreground'>Failed to fetch questionnaire data!</p>
+            <p className='text-muted-foreground'>Failed to fetch questionnaire data batches!</p>
         </div>
 
+    console.log(values)
+
     return (
-        <SectionedForm
-            data={questionnaire}
-            values={values}
-            projectLocalityId={projectLocalityId}
-            projectName={project.name}
-            projectLocaleName={projectLocaleName}
-            projectLocaleId={projectLocaleId}
-            moduleLevel={moduleLevel}
-            projectId={projectId}
-        // questionnaireProgress={questionnaireProgress}
-        />
+        <div className="h-fit flex flex-col mb-20">
+            <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6`}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Button type='button' variant="ghost" size="sm" onClick={() => navigate(-1)}>
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Button>
+                        <div>
+                            <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground/70">Submissions{projectLocaleName ? <span className='text-foreground'>: {projectLocaleName}</span> : null}{projectLocaleName ? <span className='text-foreground'> - {project.name}</span> : null}</h1>
+                            <p className="text-xs lg:text-sm text-muted-foreground">
+                                {questionnaire?.description || ''}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+
+                    </div>
+                </div>
+            </div>
+            <div className="px-4">
+                <div className="rounded-xl bg-card shadow border">
+                    <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card">
+                            <TableRow>
+                                <TableHead>No.</TableHead>
+                                {/* <TableHead>Submission Number</TableHead>
+                                <TableHead>Method</TableHead>
+                                <TableHead>Amount</TableHead> */}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell>1</TableCell>
+                                {/* <TableCell>Paid</TableCell>
+                                <TableCell>Credit Card</TableCell>
+                                <TableCell>$250.00</TableCell> */}
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+        </div>
     )
 }

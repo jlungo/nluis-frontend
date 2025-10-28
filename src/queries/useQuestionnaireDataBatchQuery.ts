@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import api from "@/lib/axios"
 import { InputType } from "@/types/input-types"
 
-export interface questionnaireDataI {
+export interface questionnaireDataBatchI {
   slug: string
   field_id: number
   form_slug: string
@@ -11,21 +11,21 @@ export interface questionnaireDataI {
   is_approved: boolean
 }
 
-export const questionnaireDataQueryKey = "questionnaireData"
+export const questionnaireDataBatchesQueryKey = "questionnaireDataBatch"
 
-export const useQuestionnaireDataQuery = (
+export const useQuestionnaireDataBatchQuery = (
   questionnaire_slug?: string,
   locality_project_id?: string
 ) => {
-  return useQuery<questionnaireDataI[]>({
+  return useQuery<questionnaireDataBatchI[]>({
     queryKey: [
-      questionnaireDataQueryKey,
+      questionnaireDataBatchesQueryKey,
       { questionnaire_slug, locality_project_id },
     ],
     queryFn: () =>
       api
         .get(
-          `/collect/questionnaire/data/?questionnaire_slug=${questionnaire_slug}&locality_project_id=${locality_project_id}`
+          `/collect/questionnaire/batches/?questionnaire_slug=${questionnaire_slug}&locality_project_id=${locality_project_id}`
         )
         .then((res) => res.data),
     enabled:

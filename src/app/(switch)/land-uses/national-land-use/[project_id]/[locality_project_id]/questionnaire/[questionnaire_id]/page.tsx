@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import ViewQuestionnaire from "@/components/questionnaire/ViewQuestionnaire";
+import Batches from "@/components/questionnaire/batches";
 
 export default function Page() {
   const { project_id, locality_project_id, questionnaire_id } = useParams<{ locality_project_id: string; project_id: string; questionnaire_id: string; }>();
@@ -20,7 +20,7 @@ export default function Page() {
     </div>
 
   return (
-    <ViewQuestionnaire
+    <Batches
       pageTitle={"National Land Use Project Questionnaire"}
       projectId={project_id}
       projectLocalityId={locality_project_id}

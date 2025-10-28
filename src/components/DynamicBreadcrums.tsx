@@ -7,7 +7,7 @@ export default function DynamicBreadcrums() {
 
     return (
         <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
+            <BreadcrumbList className="flex flex-nowrap items-center gap-2">
                 {segments.map((segment, index) => {
                     const href = "/" + segments.slice(0, index + 1).join("/")
                     const isFirst = index === 0
