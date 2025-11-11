@@ -3,13 +3,14 @@ import { useQuestionnaireQuery } from "@/queries/useQuestionnaireQuery";
 import { usePageStore } from "@/store/pageStore";
 import { useEffect, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useQuestionnaireDataBatchQuery } from "@/queries/useQuestionnaireDataBatchQuery";
+import { type QuestionnaireDataBatchI, useQuestionnaireDataBatchQuery } from "@/queries/useQuestionnaireDataBatchQuery";
 import type { ModuleTypes } from "@/types/modules";
 import { useProjectQuery } from "@/queries/useProjectQuery";
 import { Link, useNavigate } from "react-router";
 import { Button, buttonVariants } from "../ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { ArrowLeft } from "lucide-react";
+import { DataTable } from "../DataTable";
+import { BatchColumns } from "./batch-columns";
 
 type Props = {
     pageTitle: string;
@@ -81,8 +82,6 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
             <p className='text-muted-foreground'>Failed to fetch questionnaire data batches!</p>
         </div>
 
-    console.log(values)
-
     return (
         <div className="h-fit flex flex-col mb-20">
             <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6`}>
@@ -105,26 +104,14 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
                 </div>
             </div>
             <div className="px-4">
-                <div className="rounded-xl bg-card shadow border">
-                    <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card">
-                            <TableRow>
-                                <TableHead>No.</TableHead>
-                                {/* <TableHead>Submission Number</TableHead>
-                                <TableHead>Method</TableHead>
-                                <TableHead>Amount</TableHead> */}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>1</TableCell>
-                                {/* <TableCell>Paid</TableCell>
-                                <TableCell>Credit Card</TableCell>
-                                <TableCell>$250.00</TableCell> */}
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                <DataTable<QuestionnaireDataBatchI, unknown>
+                    columns={BatchColumns}
+                    data={values?.results || []}
+                    isLoading={isLoadingValues}
+                    enableGlobalFilter={false}
+                    initialPageSize={10}
+                    pageSizeOptions={[5, 10, 20, 50]}
+                />
             </div>
         </div>
     )
