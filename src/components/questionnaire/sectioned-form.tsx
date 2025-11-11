@@ -127,6 +127,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
                 // Include project slug for field
                 formData.append(`${field_id}`, project_locality_id);
+                // Include questionnaireId
+                formData.append(`${field_id}-questionnaire_slug`, data.slug);
             });
 
             toast.promise(mutateAsync(formData), {

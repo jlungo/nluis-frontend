@@ -1,17 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
-// import api from "@/lib/axios";
-import { InputType } from "@/types/input-types";
+import { useQuery } from "@tanstack/react-query"
+import api from "@/lib/axios"
+import { InputType } from "@/types/input-types"
 
 export interface questionnaireDataI {
-  slug: string;
-  field_id: number;
-  form_slug: string;
-  value: string;
-  type: InputType;
-  is_approved: boolean;
+  slug: string
+  field_id: number
+  form_slug: string
+  value: string
+  type: InputType
+  is_approved: boolean
 }
 
-export const questionnaireDataQueryKey = "questionnaireData";
+export const questionnaireDataQueryKey = "questionnaireData"
 
 export const useQuestionnaireDataQuery = (
   questionnaire_slug?: string,
@@ -22,15 +22,13 @@ export const useQuestionnaireDataQuery = (
       questionnaireDataQueryKey,
       { questionnaire_slug, locality_project_id },
     ],
-    // TODO: Add actual function that loads data form endpoint when available
-    // queryFn: () =>
-    //   api
-    //     .get(
-    //       `/collect/questionnaire/?questionnaire_slug=${questionnaire_slug}&locality_project_id=${locality_project_id}`
-    //     )
-    //     .then((res) => res.data),
-    queryFn: async () => [],
+    queryFn: () =>
+      api
+        .get(
+          `/collect/questionnaire/data/?questionnaire_slug=${questionnaire_slug}&locality_project_id=${locality_project_id}`
+        )
+        .then((res) => res.data),
     enabled:
       questionnaire_slug !== undefined && locality_project_id !== undefined,
-  });
-};
+  })
+}
