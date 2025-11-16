@@ -13,6 +13,7 @@ export interface ReportTemplateProps {
   module_slug: string;
   locality_level: number;
   level_name: string;
+  level_slug: string;
   template_file: string;
   placeholders: string[];
   placeholder_mappings: Record<string, string>;

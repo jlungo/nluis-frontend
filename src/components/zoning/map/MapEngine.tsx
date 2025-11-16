@@ -851,7 +851,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       const mapRef = mapGLRef.current;
       const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
       const f = map?.queryRenderedFeatures(e.point, {
-        layers: ["zones-fill"],
+        layers: ["zones-fill", "zones-linestring", "zones-point"],
       })?.[0];
       if (!f) return;
       const id = f.id ?? f.properties?.id;
@@ -925,7 +925,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     (e: any) => {
       const mapRef = mapGLRef.current;
       const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-      const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill"] })?.[0];
+      const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill", "zones-linestring", "zones-point"] })?.[0];
       if (!f) return;
       const id = f.id ?? f.properties?.id;
       if (id === undefined || id === null) return;
@@ -1104,27 +1104,37 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     const mapRef = mapGLRef.current;
     const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
     if (!map) return;
+
     const { solidColorByLU, patternByLU } = parseLandUseStyles(landUses, map);
 
+    // Build fill-color expression from solidColorByLU, fall back to MVT color or default gray
     const colorPairs: any[] = [];
     solidColorByLU.forEach((color, id) => colorPairs.push(id, color));
     const baseColorExpr = colorPairs.length
       ? [
-        "match",
-        ["get", "land_use"],
-        ...colorPairs,
-        ["coalesce", ["get", "color"], "#6b7280"],
-      ]
+          "match",
+          ["coalesce", ["get", "land_use_id"], ["get", "land_use"]],
+          ...colorPairs,
+          ["coalesce", ["get", "color"], "#6b7280"],
+        ]
       : ["coalesce", ["get", "color"], "#6b7280"];
 
+    // Build fill-pattern expression from patternByLU. Use empty string as fallback so Mapbox
+    // always receives a string (it does not accept null inside the expression array).
     const patternPairs: any[] = [];
     patternByLU.forEach((patt, id) =>
       patternPairs.push(id, `lu-pattern-${patt.key}`)
     );
     const patternExpr = patternPairs.length
-      ? ["match", ["get", "land_use"], ...patternPairs, null]
-      : null;
+      ? [
+          "match",
+          ["coalesce", ["get", "land_use_id"], ["get", "land_use"]],
+          ...patternPairs,
+          "", // no pattern for other land uses
+        ]
+      : "";
 
+    // Status-based color expression (no pattern in status mode)
     const statusColorExpr = [
       "case",
       ["==", ["feature-state", "status"], "Approved"],
@@ -1141,16 +1151,16 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     ];
 
     try {
-      // Switch styling based on colorMode:
-      // - type: use land use colors/patterns
-      // - status: override color by status, no pattern
+      if (!map.getLayer("zones-fill")) return;
+
       const fillColor = colorMode === "status" ? statusColorExpr : baseColorExpr;
-      const fillPattern = colorMode === "status" ? null : patternExpr;
+      const fillPattern = colorMode === "status" ? "" : patternExpr;
+
       map.setPaintProperty("zones-fill", "fill-color", fillColor);
       map.setPaintProperty("zones-fill", "fill-opacity", 0.5);
       map.setPaintProperty("zones-fill", "fill-pattern", fillPattern);
     } catch (e: unknown) {
-      console.log(e)
+      console.error("Error applying land use styles:", e);
     }
 
     // Conflicts GeoJSON source and layers (filled overlap + outline)
@@ -1376,20 +1386,50 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           maxzoom={22}
           promoteId="id"
         >
+          {/* Polygon fill layer */}
           <Layer
             id="zones-fill"
             type="fill"
             source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
             paint={{
               "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
               "fill-opacity": 0.5,
             }}
           />
+          {/* Polygon outline layer */}
           <Layer
             id="zones-line"
             type="line"
             source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
             paint={{ "line-color": "#1f2937", "line-width": 0.75 }}
+          />
+          {/* LineString layer */}
+          <Layer
+            id="zones-linestring"
+            type="line"
+            source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
+            paint={{
+              "line-color": ["coalesce", ["get", "color"], "#6b7280"],
+              "line-width": 3,
+              "line-opacity": 0.8,
+            }}
+          />
+          {/* Point layer (circle) */}
+          <Layer
+            id="zones-point"
+            type="circle"
+            source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
+            paint={{
+              "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
+              "circle-radius": 8,
+              "circle-opacity": 0.8,
+              "circle-stroke-color": "#1f2937",
+              "circle-stroke-width": 2,
+            }}
           />
         </Source>
 
@@ -1403,23 +1443,54 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             maxzoom={22}
             promoteId="id"
           >
+            {/* Polygon fill */}
             <Layer
               id="existing-overlay-fill"
               type="fill"
               source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
               paint={{
                 "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
                 "fill-opacity": 0.25,
               }}
             />
+            {/* Polygon outline */}
             <Layer
               id="existing-overlay-line"
               type="line"
               source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
               paint={{ 
                 "line-color": "#64748b", 
                 "line-width": 1,
                 "line-dasharray": [2, 2]
+              }}
+            />
+            {/* LineString overlay */}
+            <Layer
+              id="existing-overlay-linestring"
+              type="line"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
+              paint={{
+                "line-color": ["coalesce", ["get", "color"], "#6b7280"],
+                "line-width": 2,
+                "line-opacity": 0.4,
+                "line-dasharray": [2, 2]
+              }}
+            />
+            {/* Point overlay */}
+            <Layer
+              id="existing-overlay-point"
+              type="circle"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
+              paint={{
+                "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
+                "circle-radius": 6,
+                "circle-opacity": 0.4,
+                "circle-stroke-color": "#64748b",
+                "circle-stroke-width": 1,
               }}
             />
           </Source>

@@ -212,8 +212,8 @@ export default function ReportTemplateBuilder({ previousData }: { previousData?:
             name: previousData.module_name || '',
         });
         setSelectedLevel({
-            slug: previousData.module_level || '',
-            name: previousData.module_level_name || '',
+            slug: previousData.level_slug || '',
+            name: previousData.level_name || '',
             module_slug: previousData.module_slug || '',
             module_name: previousData.module_name || '',
         });
