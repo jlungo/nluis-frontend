@@ -88,6 +88,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <Building2 className="h-4 w-4" />,
             // badge: "12"
           },
+          {
+            id: "land-use-plans",
+            label: "Land Use Plans",
+            icon: <FileText className="h-4 w-4" />
+          },
         ];
       case "ccro-management":
         return [

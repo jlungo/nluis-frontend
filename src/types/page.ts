@@ -25,6 +25,7 @@ export type Page =
   | "regional-land-use"
   | "district-land-use"
   | "village-land-use"
+  | "land-use-plans"
 
   // CCRO Management pages
   | "overview"
