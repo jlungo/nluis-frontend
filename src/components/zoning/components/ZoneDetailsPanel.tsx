@@ -24,6 +24,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useLandUsesQuery, LandUseDto } from "@/queries/useSetupQuery";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface Zone {
   id: string | number;
@@ -83,6 +93,10 @@ export function ZoneDetailsPanel({
   const availableLUs = (landUses?.length ? landUses : fetchedLUs) ?? [];
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     if (!zone) return;
@@ -196,6 +210,7 @@ export function ZoneDetailsPanel({
 
   const handleDelete = () => {
     if (!zone) return;
+    setShowDeleteDialog(false);
     if (onDelete) {
       onDelete();
       return;
@@ -207,8 +222,10 @@ export function ZoneDetailsPanel({
 
   const handleApprove = () => {
     if (!zone) return;
+    setShowApproveDialog(false);
     if (onApprove) {
       onApprove();
+      toast.success(`Zone ${zone.id} approved`);
       return;
     }
     const updatedZones = zones.map((z) =>
@@ -220,15 +237,23 @@ export function ZoneDetailsPanel({
 
   const handleReject = () => {
     if (!zone) return;
+    if (!rejectReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+    setShowRejectDialog(false);
     if (onReject) {
       onReject();
+      toast.error(`Zone ${zone.id} rejected: ${rejectReason}`);
+      setRejectReason("");
       return;
     }
     const updatedZones = zones.map((z) =>
       String(z.id) === String(zone.id) ? { ...z, status: "Rejected" } : z
     );
     onUpdateZone(updatedZones);
-    toast.error(`Zone ${zone.id} rejected`);
+    toast.error(`Zone ${zone.id} rejected: ${rejectReason}`);
+    setRejectReason("");
   };
 
   if (!activeZone || !zone) {
@@ -440,7 +465,7 @@ export function ZoneDetailsPanel({
               <Button
                 type="button"
                 variant="destructive"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
                 className="text-xs py-1 px-2"
               >
                 <Trash2 className="w-3 h-3" />
@@ -451,7 +476,7 @@ export function ZoneDetailsPanel({
                     type="button"
                     variant="default"
                     size="sm"
-                    onClick={handleApprove}
+                    onClick={() => setShowApproveDialog(true)}
                     className="text-xs py-1"
                   >
                     <ThumbsUp className="w-3 h-3 mr-1" /> Approve
@@ -460,7 +485,7 @@ export function ZoneDetailsPanel({
                     type="button"
                     variant="destructive"
                     size="sm"
-                    onClick={handleReject}
+                    onClick={() => setShowRejectDialog(true)}
                     className="text-xs py-1"
                   >
                     <ThumbsDown className="w-3 h-3 mr-1" /> Reject
@@ -470,6 +495,83 @@ export function ZoneDetailsPanel({
             </>
           )}
         </div>
+
+        {/* Approve Confirmation Dialog */}
+        <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve Zone</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to approve zone <strong>{zone?.id}</strong>?
+                <br />
+                <span className="text-sm mt-2 block">Land Use: <strong>{getLandUseName(zone)}</strong></span>
+                This action will mark the zone as approved and it cannot be edited without changing the status.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleApprove} className="bg-green-600 hover:bg-green-700">
+                <ThumbsUp className="w-3 h-3 mr-1" /> Approve
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Reject Confirmation Dialog */}
+        <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reject Zone</AlertDialogTitle>
+              <AlertDialogDescription>
+                Please provide a reason for rejecting zone <strong>{zone?.id}</strong>:
+                <br />
+                <span className="text-sm mt-1 block">Land Use: <strong>{getLandUseName(zone)}</strong></span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="px-6 pb-4">
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Enter rejection reason (required)..."
+                rows={3}
+                className="text-sm"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setRejectReason("")}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleReject} 
+                className="bg-red-600 hover:bg-red-700"
+                disabled={!rejectReason.trim()}
+              >
+                <ThumbsDown className="w-3 h-3 mr-1" /> Reject
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Zone</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete zone <strong>{zone?.id}</strong>?
+                <br />
+                <span className="text-sm mt-2 block">Land Use: <strong>{getLandUseName(zone)}</strong></span>
+                <span className="text-sm text-destructive">This action cannot be undone.</span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                <Trash2 className="w-3 h-3 mr-1" /> Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

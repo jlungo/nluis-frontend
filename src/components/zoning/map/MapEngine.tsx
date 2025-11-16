@@ -80,12 +80,15 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
   // Store hooks
   const setCounts = useZoningStore((s) => s.setCounts);
   const basemapVisible = useZoningStore((s) => s.basemapVisible);
+  const existingOverlay = useZoningStore((s) => s.existingLandUseOverlay);
   const labelsVisible = useZoningStore((s) => s.labelsVisible);
   const labelField = useZoningStore((s) => s.labelField);
   const setStatusBar = useZoningStore((s) => s.setStatusBar);
   const setActiveZoneInStore = useZoningStore((s) => s.setActiveZone);
   const setConflicts = useZoningStore((s) => s.setConflicts);
   const setAPI = useZoningStore((s) => s.setAPI);
+  const visibleTypes = useZoningStore((s) => s.visibleTypes);
+  const visibleStatuses = useZoningStore((s) => s.visibleStatuses);
 
   // Data
   const API_BASE = useMemo(
@@ -99,6 +102,14 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     if (isProposed !== undefined) q.set("is_proposed", isProposed ? "1" : "0");
     return `${API_BASE}/zoning/zones/tiles/{z}/{x}/{y}.mvt?${q.toString()}`;
   }, [API_BASE, baseMapId, isProposed]);
+
+  // Existing land use overlay tiles (for proposed mode)
+  const existingTilesTemplate = useMemo(() => {
+    const q = new URLSearchParams();
+    if (baseMapId) q.set("locality", baseMapId);
+    q.set("is_proposed", "0"); // Always show existing (non-proposed)
+    return `${API_BASE}/zoning/zones/tiles/{z}/{x}/{y}.mvt?${q.toString()}`;
+  }, [API_BASE, baseMapId]);
 
   const transformRequest = useCallback(
     (url: string) => {
@@ -326,32 +337,63 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
 
     const byType: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
-    // Build a set of IDs that currently exist in the Draw editor so we don't double count them
+    
+    // Use a Set to track ALL counted IDs (from both tiles and draw) to prevent duplicates
+    const countedIds = new Set<string | number>();
+    
+    // First, get draw entries
     const drawEntries = Array.from(drawStates.values());
-    const drawIds = new Set<string | number>();
-    for (const { feature } of drawEntries) {
-      const fid = (feature && (feature.id ?? feature.properties?.id)) as any;
-      if (fid !== undefined && fid !== null) drawIds.add(Number(fid) || String(fid));
-    }
-    // Count server tiles, excluding any id currently present in Draw
+    
+    // Count features from tiles FIRST, deduplicating by ID
     for (const f of feats) {
       const fid = (f.id ?? f.properties?.id) as any;
       const idKey = fid !== undefined && fid !== null ? (Number(fid) || String(fid)) : undefined;
-      if (idKey !== undefined && drawIds.has(idKey)) continue; // skip to avoid double-count
+      
+      // Skip if we've already counted this ID (handles tile boundary duplicates)
+      if (idKey !== undefined && countedIds.has(idKey)) continue;
+      
+      // Check if this zone is currently being edited in Draw
+      const inDraw = drawEntries.some(({ feature }) => {
+        const drawFid = (feature?.id ?? feature?.properties?.id) as any;
+        return drawFid !== undefined && drawFid !== null && 
+               (Number(drawFid) || String(drawFid)) === idKey;
+      });
+      
+      // Skip if it's in Draw - we'll count it from Draw state instead
+      if (inDraw) continue;
+      
       const p = f.properties || {};
-      const lu = String(p.land_use ?? p.land_use_id ?? p.landuse ?? p.lu ?? "");
+      const luRaw = p.land_use ?? p.land_use_id ?? p.landuse ?? p.lu ?? "";
+      const lu = String(luRaw);
       const st = (f.state?.status || p.status || p.zone_status || "Draft") as string;
-      if (lu) byType[lu] = (byType[lu] || 0) + 1;
+      
+      if (lu && lu !== "" && lu !== "null" && lu !== "undefined") {
+        byType[lu] = (byType[lu] || 0) + 1;
+        if (idKey !== undefined) countedIds.add(idKey);
+      }
       if (st) byStatus[st] = (byStatus[st] || 0) + 1;
     }
-    // Then add Draw features once
+    
+    // Then add Draw features (these override tile data for zones being edited)
     for (const { feature } of drawEntries) {
+      const fid = (feature?.id ?? feature?.properties?.id) as any;
+      const idKey = fid !== undefined && fid !== null ? (Number(fid) || String(fid)) : undefined;
+      
+      // Skip if already counted (shouldn't happen, but safety check)
+      if (idKey !== undefined && countedIds.has(idKey)) continue;
+      
       const p = feature?.properties || {};
-      const lu = String(p.land_use ?? p.land_use_id ?? p.landuse ?? p.lu ?? "");
+      const luRaw = p.land_use ?? p.land_use_id ?? p.landuse ?? p.lu ?? "";
+      const lu = String(luRaw);
       const st = (p.status || p.zone_status || "Draft") as string;
-      if (lu) byType[lu] = (byType[lu] || 0) + 1;
+      
+      if (lu && lu !== "" && lu !== "null" && lu !== "undefined") {
+        byType[lu] = (byType[lu] || 0) + 1;
+        if (idKey !== undefined) countedIds.add(idKey);
+      }
       if (st) byStatus[st] = (byStatus[st] || 0) + 1;
     }
+    
     setCounts(byType, byStatus);
   }, [setCounts, drawStates]);
 
@@ -809,7 +851,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       const mapRef = mapGLRef.current;
       const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
       const f = map?.queryRenderedFeatures(e.point, {
-        layers: ["zones-fill"],
+        layers: ["zones-fill", "zones-linestring", "zones-point"],
       })?.[0];
       if (!f) return;
       const id = f.id ?? f.properties?.id;
@@ -883,7 +925,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     (e: any) => {
       const mapRef = mapGLRef.current;
       const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
-      const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill"] })?.[0];
+      const f = map?.queryRenderedFeatures(e.point, { layers: ["zones-fill", "zones-linestring", "zones-point"] })?.[0];
       if (!f) return;
       const id = f.id ?? f.properties?.id;
       if (id === undefined || id === null) return;
@@ -1017,33 +1059,82 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     }
   }
 
+  // Apply layer visibility filters based on colorMode and visibility settings
+  useEffect(() => {
+    if (!isMapLoaded) return;
+    const map = mapGLRef.current?.getMap?.() || mapGLRef.current;
+    if (!map || !map.getLayer("zones-fill")) return;
+
+    let filter: any = ["all"];
+
+    if (colorMode === "type") {
+      // Filter by land use type visibility
+      const hiddenTypes = Object.entries(visibleTypes)
+        .filter(([, visible]) => visible === false)
+        .map(([id]) => Number(id) || String(id));
+      
+      if (hiddenTypes.length > 0) {
+        filter.push(["!", ["in", ["get", "land_use"], ["literal", hiddenTypes]]]);
+      }
+    } else {
+      // Filter by status visibility
+      const hiddenStatuses = Object.entries(visibleStatuses)
+        .filter(([, visible]) => visible === false)
+        .map(([status]) => status);
+      
+      if (hiddenStatuses.length > 0) {
+        filter.push(["!", ["in", ["get", "status"], ["literal", hiddenStatuses]]]);
+      }
+    }
+
+    try {
+      map.setFilter("zones-fill", filter.length > 1 ? filter : null);
+      map.setFilter("zones-line", filter.length > 1 ? filter : null);
+      if (map.getLayer("zones-labels")) {
+        map.setFilter("zones-labels", filter.length > 1 ? filter : null);
+      }
+    } catch (e: unknown) {
+      console.log(e);
+    }
+  }, [isMapLoaded, colorMode, visibleTypes, visibleStatuses]);
+
   // styles registration
   useEffect(() => {
     if (!isMapLoaded || !landUses?.length) return;
     const mapRef = mapGLRef.current;
     const map = mapRef?.getMap ? mapRef.getMap() : mapRef;
     if (!map) return;
+
     const { solidColorByLU, patternByLU } = parseLandUseStyles(landUses, map);
 
+    // Build fill-color expression from solidColorByLU, fall back to MVT color or default gray
     const colorPairs: any[] = [];
     solidColorByLU.forEach((color, id) => colorPairs.push(id, color));
     const baseColorExpr = colorPairs.length
       ? [
-        "match",
-        ["get", "land_use"],
-        ...colorPairs,
-        ["coalesce", ["get", "color"], "#6b7280"],
-      ]
+          "match",
+          ["coalesce", ["get", "land_use_id"], ["get", "land_use"]],
+          ...colorPairs,
+          ["coalesce", ["get", "color"], "#6b7280"],
+        ]
       : ["coalesce", ["get", "color"], "#6b7280"];
 
+    // Build fill-pattern expression from patternByLU. Use empty string as fallback so Mapbox
+    // always receives a string (it does not accept null inside the expression array).
     const patternPairs: any[] = [];
     patternByLU.forEach((patt, id) =>
       patternPairs.push(id, `lu-pattern-${patt.key}`)
     );
     const patternExpr = patternPairs.length
-      ? ["match", ["get", "land_use"], ...patternPairs, null]
-      : null;
+      ? [
+          "match",
+          ["coalesce", ["get", "land_use_id"], ["get", "land_use"]],
+          ...patternPairs,
+          "", // no pattern for other land uses
+        ]
+      : "";
 
+    // Status-based color expression (no pattern in status mode)
     const statusColorExpr = [
       "case",
       ["==", ["feature-state", "status"], "Approved"],
@@ -1060,16 +1151,16 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     ];
 
     try {
-      // Switch styling based on colorMode:
-      // - type: use land use colors/patterns
-      // - status: override color by status, no pattern
+      if (!map.getLayer("zones-fill")) return;
+
       const fillColor = colorMode === "status" ? statusColorExpr : baseColorExpr;
-      const fillPattern = colorMode === "status" ? null : patternExpr;
+      const fillPattern = colorMode === "status" ? "" : patternExpr;
+
       map.setPaintProperty("zones-fill", "fill-color", fillColor);
       map.setPaintProperty("zones-fill", "fill-opacity", 0.5);
       map.setPaintProperty("zones-fill", "fill-pattern", fillPattern);
     } catch (e: unknown) {
-      console.log(e)
+      console.error("Error applying land use styles:", e);
     }
 
     // Conflicts GeoJSON source and layers (filled overlap + outline)
@@ -1295,22 +1386,115 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           maxzoom={22}
           promoteId="id"
         >
+          {/* Polygon fill layer */}
           <Layer
             id="zones-fill"
             type="fill"
             source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
             paint={{
               "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
               "fill-opacity": 0.5,
             }}
           />
+          {/* Polygon outline layer */}
           <Layer
             id="zones-line"
             type="line"
             source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
             paint={{ "line-color": "#1f2937", "line-width": 0.75 }}
           />
+          {/* LineString layer */}
+          <Layer
+            id="zones-linestring"
+            type="line"
+            source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
+            paint={{
+              "line-color": ["coalesce", ["get", "color"], "#6b7280"],
+              "line-width": 3,
+              "line-opacity": 0.8,
+            }}
+          />
+          {/* Point layer (circle) */}
+          <Layer
+            id="zones-point"
+            type="circle"
+            source-layer="zones"
+            filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
+            paint={{
+              "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
+              "circle-radius": 8,
+              "circle-opacity": 0.8,
+              "circle-stroke-color": "#1f2937",
+              "circle-stroke-width": 2,
+            }}
+          />
         </Source>
+
+        {/* EXISTING LAND USE OVERLAY (for proposed mode) */}
+        {isProposed && existingOverlay && (
+          <Source
+            id="existing-overlay-tiles"
+            type="vector"
+            tiles={[existingTilesTemplate]}
+            minzoom={1}
+            maxzoom={22}
+            promoteId="id"
+          >
+            {/* Polygon fill */}
+            <Layer
+              id="existing-overlay-fill"
+              type="fill"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
+              paint={{
+                "fill-color": ["coalesce", ["get", "color"], "#6b7280"],
+                "fill-opacity": 0.25,
+              }}
+            />
+            {/* Polygon outline */}
+            <Layer
+              id="existing-overlay-line"
+              type="line"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
+              paint={{ 
+                "line-color": "#64748b", 
+                "line-width": 1,
+                "line-dasharray": [2, 2]
+              }}
+            />
+            {/* LineString overlay */}
+            <Layer
+              id="existing-overlay-linestring"
+              type="line"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
+              paint={{
+                "line-color": ["coalesce", ["get", "color"], "#6b7280"],
+                "line-width": 2,
+                "line-opacity": 0.4,
+                "line-dasharray": [2, 2]
+              }}
+            />
+            {/* Point overlay */}
+            <Layer
+              id="existing-overlay-point"
+              type="circle"
+              source-layer="zones"
+              filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
+              paint={{
+                "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
+                "circle-radius": 6,
+                "circle-opacity": 0.4,
+                "circle-stroke-color": "#64748b",
+                "circle-stroke-width": 1,
+              }}
+            />
+          </Source>
+        )}
       </MapGL>
 
       {/* Add Points modal */}

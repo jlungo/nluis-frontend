@@ -194,6 +194,18 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
 
   const visibleLayers = useMemo(() => layers.filter(l => l.visible), [layers]);
 
+  // Generate all interactive layer IDs for all geometry types
+  const interactiveLayerIds = useMemo(() => {
+    const layerIds: string[] = [];
+    visibleLayers.forEach(layer => {
+      layerIds.push(`${layer.id}-fill`);
+      layerIds.push(`${layer.id}-line`);
+      layerIds.push(`${layer.id}-linestring`);
+      layerIds.push(`${layer.id}-point`);
+    });
+    return layerIds;
+  }, [visibleLayers]);
+
   const resolvedMapboxStyle = mapboxStyle ?? (isDarkMode ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v11');
 
   // Loading states
@@ -235,7 +247,7 @@ export const ShapefileMap: React.FC<ShapefileMapPropsType> = ({
         onClick={handleMapClick}
         mapStyle={resolvedMapboxStyle}
         mapboxAccessToken={mapboxAccessToken}
-        interactiveLayerIds={visibleLayers.map(l => l.id)}
+        interactiveLayerIds={interactiveLayerIds}
         maxZoom={20}
         minZoom={baseMapBounds ? 4 : 1}
       >

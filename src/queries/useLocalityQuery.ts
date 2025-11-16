@@ -4,6 +4,26 @@ import { GeoJSONFeatureCollectionType } from "@/types/zoning";
 import { useQuery } from "@tanstack/react-query";
 
 export const localityQueryKey = "locality";
+export const localityLevelQueryKey = "locality-level";
+
+export interface LocalityLevel {
+  id: number;
+  name: string;
+  code?: string;
+  parent?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const useLocalityLevelsQuery = () => {
+  return useQuery<LocalityLevel[]>({
+    queryKey: [localityLevelQueryKey],
+    queryFn: () =>
+      api
+        .get("/localities/levels/")
+        .then((res) => res.data),
+  });
+};
 
 export const useLocalitiesQuery = (parent?: number) => {
   return useQuery<LocalityI[]>({
