@@ -17,15 +17,16 @@ type Props = {
     module: ModuleTypes;
     moduleLevel: string;
     questionnaireId: string;
+    batch: string;
 }
 
-export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
+export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId, batch }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnaireQuery(questionnaireId);
-    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId)
+    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId, batch)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id

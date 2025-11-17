@@ -111,6 +111,7 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
                     enableGlobalFilter={false}
                     initialPageSize={10}
                     pageSizeOptions={[5, 10, 20, 50]}
+                    onRowClick={({ id }) => navigate(`/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)}
                 />
             </div>
         </div>
