@@ -161,7 +161,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
                   className="md:hidden p-1"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="User" />
+                    <AvatarImage alt="User" />
                     <AvatarFallback className="bg-primary text-primary-foreground dark:text-white">
                       {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                     </AvatarFallback>
