@@ -19,6 +19,7 @@ export default function Page() {
       pageTitle={"District Land Use Compliance Project Workflow"}
       projectId={project_id}
       projectLocalityId={locality_project_id}
+      topLevelModule={"compliance"}
       module={"land-uses"}
       moduleLevel={"district-land-use-compliance"}
       worklowCategory={"workflow"}
