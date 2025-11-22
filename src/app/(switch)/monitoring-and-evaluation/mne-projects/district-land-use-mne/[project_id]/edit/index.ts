@@ -1,9 +1,7 @@
-import Layout from "./layout";
 import Page from "./page";
 
 const Index = {
-  path: "/management-evaluation",
-  Component: Layout,
+  path: "edit",
   children: [
     {
       index: true,

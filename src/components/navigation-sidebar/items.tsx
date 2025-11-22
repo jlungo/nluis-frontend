@@ -136,54 +136,40 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <FileText className="h-4 w-4" />
           },
         ];
-      case "management-evaluation":
+      case "monitoring-and-evaluation":
         return [
           {
-            id: "overview",
-            label: "Dashboard",
-            icon: <BarChart3 className="h-4 w-4" />,
-            badge: "5"
-          },
-          {
-            id: "projects/create",
-            label: "Create M&E Project",
-            icon: <ClipboardPlus className="h-4 w-4" />
-          },
-          {
-            id: "projects",
+            id: "land-uses",
             label: "M&E Projects",
-            icon: <List className="h-4 w-4" />
+            icon: <LayoutDashboard className="h-4 w-4" />,
+            items: [
+              {
+                id: "national-land-use-mne",
+                label: "National Land Use M&E",
+                icon: <Flag className="h-4 w-4" />,
+              },
+              {
+                id: "zonal-land-use-mne",
+                label: "Zonal Land Use M&E",
+                icon: <LandPlot className="h-4 w-4" />,
+              },
+              {
+                id: "regional-land-use-mne",
+                label: "Regional Land Use M&E",
+                icon: <Map className="h-4 w-4" />
+              },
+              {
+                id: "district-land-use-mne",
+                label: "District Land Use M&E",
+                icon: <Layers className="h-4 w-4" />
+              },
+              {
+                id: "village-land-use-mne",
+                label: "Village Land Use M&E",
+                icon: <Building2 className="h-4 w-4" />,
+              },
+            ]
           },
-          {
-            id: "indicators",
-            label: "Indicators",
-            icon: <ListChecks className="h-4 w-4" />
-          },
-          {
-            id: "villages",
-            label: "Village Tracking",
-            icon: <MapPin className="h-4 w-4" />
-          },
-          {
-            id: "reports",
-            label: "M&E Reports",
-            icon: <FileText className="h-4 w-4" />
-          },
-          {
-            id: "analysis",
-            label: "Data Analysis",
-            icon: <TrendingUp className="h-4 w-4" />
-          },
-          {
-            id: "satellite",
-            label: "Satellite Monitoring",
-            icon: <Satellite className="h-4 w-4" />
-          },
-          {
-            id: "projections",
-            label: "Projections",
-            icon: <LineChart className="h-4 w-4" />
-          }
         ];
       case "reports":
         return [];
