@@ -3,6 +3,7 @@ import {
   Home,
   Shield,
   BarChart3,
+  AlertTriangle,
   FileText,
   List,
   LayoutDashboard,
@@ -97,8 +98,18 @@ export const getNavigationItems = (page: PageMetadata | null): (
             // badge: "8"
           },
           {
+            id: "ccro-projects",
+            label: "CCRO Projects",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
             id: "land-formalization",
             label: "Land Formalization",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
+            id: "ccro-application",
+            label: "CCRO Applications",
             icon: <FileText className="h-4 w-4" />
           },
           {
@@ -110,52 +121,14 @@ export const getNavigationItems = (page: PageMetadata | null): (
       case "compliance":
         return [
           {
-            id: "compliance-dashboard",
-            label: "Dashboard",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            id: "overview",
+            label: "Compliance Overview",
+            icon: <AlertTriangle className="h-4 w-4" />
           },
           {
-            id: "land-uses",
-            label: "Land Use Compliance",
-            icon: <Map className="h-4 w-4" />,
-            items: [
-              {
-                id: "land-uses",
-                label: "Land Uses Overview",
-                icon: <LayoutDashboard className="h-4 w-4" />,
-                hidden: true
-              },
-              {
-                id: "national-land-use-compliance",
-                label: "National Land Use",
-                icon: <Flag className="h-4 w-4" />
-              },
-              {
-                id: "zonal-land-use-compliance",
-                label: "Zonal Land Use",
-                icon: <LandPlot className="h-4 w-4" />
-              },
-              {
-                id: "regional-land-use-compliance",
-                label: "Regional Land Use",
-                icon: <Map className="h-4 w-4" />
-              },
-              {
-                id: "district-land-use-compliance",
-                label: "District Land Use",
-                icon: <Layers className="h-4 w-4" />
-              },
-              {
-                id: "village-land-use-compliance",
-                label: "Village Land Use",
-                icon: <Building2 className="h-4 w-4" />
-              },
-            ]
-          },
-          {
-            id: "ccro-management",
-            label: "CCRO Compliance",
-            icon: <Shield className="h-4 w-4" />,
+            id: "projects",
+            label: "Compliance Projects",
+            icon: <List className="h-4 w-4" />,
           },
           {
             id: "reports",
@@ -170,6 +143,16 @@ export const getNavigationItems = (page: PageMetadata | null): (
             label: "Dashboard",
             icon: <BarChart3 className="h-4 w-4" />,
             badge: "5"
+          },
+          {
+            id: "projects/create",
+            label: "Create M&E Project",
+            icon: <ClipboardPlus className="h-4 w-4" />
+          },
+          {
+            id: "projects",
+            label: "M&E Projects",
+            icon: <List className="h-4 w-4" />
           },
           {
             id: "indicators",
@@ -231,11 +214,6 @@ export const getNavigationItems = (page: PageMetadata | null): (
                 id: "questionnaires",
                 label: "Questionnaires",
                 icon: <FileQuestionMark className="h-4 w-4" />
-              },
-              {
-                id: "reports",
-                label: "Report Templates",
-                icon: <FileText className="h-4 w-4" />
               },
               {
                 id: "module-levels",
