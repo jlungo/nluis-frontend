@@ -3,7 +3,7 @@
  */
 import { useCallback } from 'react';
 import type { Map as MapboxMap } from 'mapbox-gl';
-import { extractCoordinatesFromGeometry, calculateBoundsFromFeature, calculateAreaFromBounds, getZoomPaddingForArea } from '../utils/geometryHelpers';
+import { calculateBoundsFromFeature, calculateAreaFromBounds, getZoomPaddingForArea } from '../utils/geometryHelpers';
 
 export const useZoomToFeature = (getMap: () => MapboxMap | any) => {
   return useCallback((

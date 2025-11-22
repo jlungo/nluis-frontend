@@ -30,7 +30,7 @@ export default function SubdivisionLeftPanel() {
     setBoundaryGlow,
     colorMode,
     setLeftPanelOpen,
-  selectAll,
+    // plan selection
   deselectAll,
     plansOpacity,
     setPlansOpacity,

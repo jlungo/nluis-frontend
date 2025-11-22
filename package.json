@@ -53,6 +53,7 @@
     "date-fns": "^4.1.0",
     "docx-preview": "^0.3.7",
     "dompurify": "^3.2.7",
+    "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.534.0",
     "mammoth": "^1.11.0",

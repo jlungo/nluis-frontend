@@ -15,7 +15,7 @@ export function PlansLayers({
   localityId,
   plansOpacity,
   colorMode,
-  showPlans,
+  
 }: PlansLayersProps) {
   if (!localityId) return null;
 

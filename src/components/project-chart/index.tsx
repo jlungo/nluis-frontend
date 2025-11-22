@@ -9,7 +9,8 @@ import { useDataStore } from "./useDataStore";
 import { dataProcessor } from "./dataProcessor";
 import PieChartComponent from "./pie-chart";
 
-type ChartModuleLevelProps = "" | "village-land-use" | "district-land-use" | "regional-land-use" | "zonal-land-use" | "national-land-use"
+// Include ccro module-level slug so charts can render CCRO tabs
+type ChartModuleLevelProps = "" | "village-land-use" | "district-land-use" | "regional-land-use" | "zonal-land-use" | "national-land-use" | "ccro-projects"
 export type TabProps = { value: ChartModuleLevelProps; label: string; }
 
 type ChartTypeProps = 'area' | 'bar' | 'line' | 'pie'
