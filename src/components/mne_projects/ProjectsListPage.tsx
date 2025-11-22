@@ -4,7 +4,7 @@ import { Plus, Search } from 'lucide-react';
 import { useProjectsQuery, useDeleteProject } from '@/queries/useProjectQuery';
 import { ErrorDialog } from '@/components/ErrorDialog';
 import { DataTable } from '@/components/DataTable';
-import { ProjectsDataTableColumn } from '@/components/project/ProjectDataTableColumns';
+import { ProjectsDataTableColumn } from './ProjectDataTableColumns';
 import type { ApiError } from '@/types/api-response';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,10 +45,10 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     setFilters(prev => ({ ...prev, [key]: value }));
 
   const handleRowClick = (project: ProjectI) =>
-    navigate(`/${module}/projects/${project.id}`);
+    navigate(`/${module}/${moduleLevel}/${project.id}`);
 
   const handleCreate = () =>
-    navigate(`/${module}/projects/create`, {
+    navigate(`/${module}/${moduleLevel}/create`, {
       state: { type: pageTitle, from: location.pathname },
     });
 

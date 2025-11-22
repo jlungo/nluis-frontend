@@ -36,6 +36,12 @@ export function NidaVerificationModal({
       return;
     }
 
+    // Validate NIDA format (20 digits for Tanzania)
+    if (nidaId.length !== 20 || !/^\d+$/.test(nidaId)) {
+      setError("Invalid NIDA format. Must be exactly 20 digits");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -60,20 +66,28 @@ export function NidaVerificationModal({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="nida-id">NIDA Number</Label>
+            <Label htmlFor="nida-id">NIDA Number (20 digits)</Label>
             <Input
               id="nida-id"
-              value={nidaId}
+              value={nidaId || ''}
               readOnly
-              className="bg-muted"
+              className="bg-muted font-mono"
+              placeholder="NIDA not provided"
             />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleVerify} disabled={loading}>
+            <Button 
+              onClick={handleVerify} 
+              disabled={loading || !nidaId}
+            >
               {loading ? "Verifying..." : "Verify"}
             </Button>
           </div>

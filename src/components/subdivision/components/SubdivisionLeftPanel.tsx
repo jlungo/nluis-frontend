@@ -301,14 +301,14 @@ export default function SubdivisionLeftPanel() {
                   </Badge>
                 )}
               </div>
-              <div className="flex gap-1">
+              {/* <div className="flex gap-1">
                 <Button size="sm" variant="ghost" onClick={selectAll} className="h-6 px-2 text-xs">
                   All
                 </Button>
                 <Button size="sm" variant="ghost" onClick={deselectAll} className="h-6 px-2 text-xs">
                   None
                 </Button>
-              </div>
+              </div> */}
             </CardHeader>
 
             <CardContent className="p-2 pt-0">

@@ -126,6 +126,20 @@ export interface UpdateProjectDataI {
   locality_ids: string[];
 }
 
+// Compliance Project Specific Types
+export interface ComplianceProjectDataI extends CreateProjectDataI {
+  compliance_type?: 'environmental' | 'regulatory' | 'social';
+  monitoring_frequency?: 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
+  enforcement_level?: 'low' | 'medium' | 'high';
+}
+
+// MNE (Monitoring & Evaluation) Project Specific Types
+export interface MNEProjectDataI extends CreateProjectDataI {
+  mne_type?: 'land-acquisition' | 'land-development' | 'land-rights' | 'land-tenure';
+  survey_type?: 'topographic' | 'boundary' | 'cadastral' | 'deed';
+  documentation_level?: 'basic' | 'standard' | 'comprehensive';
+}
+
 export interface ProjectUser {
   id: string;
   user_id: string;

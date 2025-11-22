@@ -1,5 +1,6 @@
 import Layout from "./layout";
 import Page from "./page";
+import Projects from "./projects";
 
 const Index = {
   path: "/compliance",
@@ -9,6 +10,7 @@ const Index = {
       index: true,
       Component: Page,
     },
+    Projects,
   ],
 };
 

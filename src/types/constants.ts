@@ -68,6 +68,8 @@ export const LOCALITY_LEVELS = {
   WARD: "6",
   VILLAGE: "7",
   CCRO_PROJECT: "8",  // Added CCRO project level
+  COMPLIANCE: "compliance-all",  // Compliance can select all levels
+  MNE: "mne-all",                // M&E can select all levels
 } as const;
 
 export const LOCALITY_LEVEL_NAMES = {
@@ -78,6 +80,8 @@ export const LOCALITY_LEVEL_NAMES = {
   [LOCALITY_LEVELS.WARD]: "Ward",
   [LOCALITY_LEVELS.VILLAGE]: "Village",
   [LOCALITY_LEVELS.CCRO_PROJECT]: "CCRO Project",
+  [LOCALITY_LEVELS.COMPLIANCE]: "All Levels",
+  [LOCALITY_LEVELS.MNE]: "All Levels",
 } as const;
 
 export const MODULE_LEVEL_SLUG = {
@@ -88,6 +92,8 @@ export const MODULE_LEVEL_SLUG = {
   [LOCALITY_LEVELS.WARD]: "ward-land-use",
   [LOCALITY_LEVELS.VILLAGE]: "village-land-use",
   [LOCALITY_LEVELS.CCRO_PROJECT]: "ccro-projects",
+  [LOCALITY_LEVELS.COMPLIANCE]: "compliance-all",
+  [LOCALITY_LEVELS.MNE]: "mne-all",
 } as const;
 
 export const ProjectApprovalStatus: Record<number, string> = {

@@ -126,6 +126,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <AlertTriangle className="h-4 w-4" />
           },
           {
+            id: "projects",
+            label: "Compliance Projects",
+            icon: <List className="h-4 w-4" />,
+          },
+          {
             id: "reports",
             label: "Compliance Reports",
             icon: <FileText className="h-4 w-4" />
@@ -138,6 +143,16 @@ export const getNavigationItems = (page: PageMetadata | null): (
             label: "Dashboard",
             icon: <BarChart3 className="h-4 w-4" />,
             badge: "5"
+          },
+          {
+            id: "projects/create",
+            label: "Create M&E Project",
+            icon: <ClipboardPlus className="h-4 w-4" />
+          },
+          {
+            id: "projects",
+            label: "M&E Projects",
+            icon: <List className="h-4 w-4" />
           },
           {
             id: "indicators",

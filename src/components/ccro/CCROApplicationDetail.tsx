@@ -2,126 +2,217 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CCROApplication } from "@/types/ccro";
+import { CCROApplication, NIDA_STATUS_LABELS } from "@/types/ccro";
 import { CCROStatusBadge } from "@/components/ccro/CCROStatusBadge";
 import { Button } from "@/components/ui/button";
 import { NidaVerificationModal } from "./NidaVerificationModal";
+import { useCCROStore } from "@/store/ccroStore";
 
 interface CCROApplicationDetailProps {
   application: CCROApplication;
-  // onVerify should be a zero-arg callback because the modal receives the prefilled NIDA ID
-  onVerify: () => Promise<void>;
-  onIssueCCRO: () => void;
 }
 
 export function CCROApplicationDetail({ 
   application,
-  onVerify,
-  onIssueCCRO
 }: CCROApplicationDetailProps) {
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
-  const [selectedParty, setSelectedParty] = useState<typeof application.partyInfo[0] | null>(null);
+  const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const allPartiesVerified = application.partyInfo.every(
-    party => party.verificationStatus === 'verified'
-  );
+  const { verifyPartyNida, checkNidaStatus, approveCCRO, issueCCRO, error } = useCCROStore();
+  
+  const canApprove = 
+    application.stage === 'submitted' && 
+    application.nida_check_status === 'verified';
+  
+  const canIssue = 
+    application.stage === 'approved' && 
+    application.nida_check_status === 'verified';
 
-  const handleVerifyClick = (party: typeof application.partyInfo[0]) => {
-    setSelectedParty(party);
+  const handleVerifyClick = (partyId: number) => {
+    setSelectedPartyId(partyId);
     setVerificationModalOpen(true);
+  };
+
+  const handleVerifyNida = async () => {
+    if (!selectedPartyId) return;
+    
+    setIsLoading(true);
+    try {
+      await verifyPartyNida(selectedPartyId);
+      // Recheck NIDA status after verification
+      await checkNidaStatus(application.id);
+      setVerificationModalOpen(false);
+      setSelectedPartyId(null);
+    } catch (err) {
+      console.error('NIDA verification failed:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApproveCCRO = async () => {
+    setIsLoading(true);
+    try {
+      await approveCCRO(application.id);
+    } catch (err) {
+      console.error('Approve CCRO failed:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleIssueCCRO = async () => {
+    setIsLoading(true);
+    try {
+      await issueCCRO(application.id);
+    } catch (err) {
+      console.error('Issue CCRO failed:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold">Application Details</h3>
-          <p className="text-gray-500">Claim No: {application.claimNo}</p>
+          <h3 className="text-2xl font-bold">CCRO Application Details</h3>
+          <p className="text-gray-500">Application ID: {application.id}</p>
         </div>
-        <CCROStatusBadge status={application.status} />
+        <CCROStatusBadge status={application.stage} />
       </div>
 
-      <Card>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* NIDA Validation Gate Status */}
+      <Card className="border-orange-200 bg-orange-50">
         <CardHeader>
-          <CardTitle>Location</CardTitle>
+          <CardTitle className="text-orange-900">NIDA Verification Status</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="space-y-2">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Village</p>
-              <p className="font-medium">{application.locality.village}</p>
+              <p className="font-medium">{NIDA_STATUS_LABELS[application.nida_check_status]}</p>
+              {application.nida_check_notes && (
+                <p className="text-sm text-gray-600 mt-1">{application.nida_check_notes}</p>
+              )}
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Hamlet</p>
-              <p className="font-medium">{application.locality.hamlet}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Area</p>
-              <p className="font-medium">{application.parcel.area}</p>
-            </div>
+            {(application.nida_check_status === 'missing' || application.nida_check_status === 'invalid') && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleVerifyClick(application.party)}
+              >
+                Verify NIDA
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Parties</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {application.partyInfo.map((party, index) => (
-              <div key={index} className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <p className="font-medium">{party.name}</p>
-                  {party.idNumber && (
-                    <p className="text-sm text-gray-500">ID: {party.idNumber}</p>
-                  )}
+      {/* Parcel Information */}
+      {application.parcel_details && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Parcel Information</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Parcel Number</p>
+              <p className="font-medium">{application.parcel_details.parcel_number}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Area (sqm)</p>
+              <p className="font-medium">{application.parcel_details.area_sqm.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Stage</p>
+              <p className="font-medium">{application.parcel_details.stage}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Locality</p>
+              <p className="font-medium">{application.parcel_details.locality_name}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Party/Parties Information */}
+      {application.parcel_details?.allocations && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Owners (Allocations)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {application.parcel_details.allocations.map((allocation) => (
+                <div key={allocation.id} className="flex items-center justify-between border-b pb-4">
+                  <div>
+                    <p className="font-medium">{allocation.party_name}</p>
+                    <p className="text-sm text-gray-500">Share: {allocation.proposed_share}%</p>
+                    {allocation.proposed_right_type && (
+                      <p className="text-sm text-gray-500">Right Type: {allocation.proposed_right_type}</p>
+                    )}
+                  </div>
+                  <div className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                    {allocation.status}
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className={`text-sm px-2 py-1 rounded-full ${
-                    party.verificationStatus === 'verified'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {party.verificationStatus}
-                  </span>
-                  {party.verificationStatus !== 'verified' && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleVerifyClick(party)}
-                    >
-                      Verify
-                    </Button>
-                  )}
-                </div>
+              ))}
+              
+              {/* Total shares validation */}
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm font-medium">
+                  Total Share: {application.parcel_details.allocations.reduce((sum, a) => sum + (a.proposed_share || 0), 0)}%
+                </p>
+                {application.parcel_details.allocations.reduce((sum, a) => sum + (a.proposed_share || 0), 0) !== 100 && (
+                  <p className="text-xs text-red-600 mt-1">⚠️ Shares must total exactly 100%</p>
+                )}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      <div className="flex justify-end">
-        <Button
-          size="lg"
-          disabled={!allPartiesVerified || application.status !== 'approved'}
-          onClick={onIssueCCRO}
-        >
-          Issue CCRO
-        </Button>
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        {application.stage === 'submitted' && (
+          <Button
+            size="lg"
+            variant="outline"
+            disabled={!canApprove || isLoading}
+            onClick={handleApproveCCRO}
+          >
+            {isLoading ? 'Approving...' : 'Approve CCRO'}
+          </Button>
+        )}
+        
+        {application.stage === 'approved' && (
+          <Button
+            size="lg"
+            disabled={!canIssue || isLoading}
+            onClick={handleIssueCCRO}
+          >
+            {isLoading ? 'Issuing...' : 'Issue CCRO Certificate'}
+          </Button>
+        )}
       </div>
 
-      {selectedParty && (
+      {/* NIDA Verification Modal */}
+      {selectedPartyId && (
         <NidaVerificationModal
           open={verificationModalOpen}
           onOpenChange={setVerificationModalOpen}
-          // pass the party's NIDA ID into the modal and call onVerify without args
           onVerify={async () => {
-            await onVerify();
-            setVerificationModalOpen(false);
+            await handleVerifyNida();
           }}
-          partyName={selectedParty.name}
-          nidaId={selectedParty.idNumber}
+          partyName={application.party_details?.individual_party?.full_name || 'Unknown'}
+          nidaId={application.party_details?.individual_party?.nida_number}
         />
       )}
     </div>
