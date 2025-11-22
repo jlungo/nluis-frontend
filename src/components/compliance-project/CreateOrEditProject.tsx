@@ -96,7 +96,7 @@ export default function CreateOrEditProject(props: Props) {
   )
 }
 
-function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, project, organizationId }: FormProps) {
+function Forms({ moduleLevel, redirectPath, localities, funders, project, organizationId }: FormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { mutateAsync: mutateAsyncCreate, isPending: isPendingCreate } = useCreateProject();

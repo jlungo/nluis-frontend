@@ -16,12 +16,13 @@ type Props = {
     pageTitle: string;
     projectId: string;
     projectLocalityId: string;
+    topLevelModule?: ModuleTypes;
     module: ModuleTypes;
     moduleLevel: string;
     questionnaireId: string;
 }
 
-export default function Batches({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
+export default function Batches({ pageTitle, projectId, projectLocalityId, topLevelModule, module, moduleLevel, questionnaireId }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
@@ -40,16 +41,24 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
             : 2
 
     useLayoutEffect(() => {
-        setPage({
+        if (topLevelModule) setPage({
+            module: topLevelModule,
+            title: pageTitle,
+            isFormPage: true
+        })
+        else setPage({
             module: module,
             title: pageTitle,
             isFormPage: true
         });
-    }, [module, pageTitle, setPage]);
+    }, [topLevelModule, module, pageTitle, setPage]);
 
     useEffect(() => {
-        if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
-    }, [approval_status, module, moduleLevel, navigate, projectId])
+        if (approval_status !== 2) {
+            if (topLevelModule) navigate(`/${topLevelModule}/${module}/${moduleLevel}/${projectId}`, { replace: true })
+            else navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
+        }
+    }, [approval_status, topLevelModule, module, moduleLevel, navigate, projectId])
 
     if (isLoadingQuestionnaire || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
@@ -64,7 +73,12 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
     if (approval_status !== 2)
         return <div className='flex flex-col items-center justify-center h-80 gap-12'>
             <p className='text-muted-foreground'>This project is not approved!</p>
-            <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
+            <Link
+                to={topLevelModule ? `/${topLevelModule}/${module}/${moduleLevel}/${projectId}` : `/${module}/${moduleLevel}/${projectId}`}
+                className={cn(buttonVariants({ size: 'sm' }))}
+            >
+                Go to project Details
+            </Link>
         </div>
 
     if ((!projectLocaleName || !projectLocaleId) && !isLoadingQuestionnaire && !isLoadingValues && !isLoadingProject)
@@ -111,7 +125,11 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, modul
                     enableGlobalFilter={false}
                     initialPageSize={10}
                     pageSizeOptions={[5, 10, 20, 50]}
-                    onRowClick={({ id }) => navigate(`/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)}
+                    onRowClick={({ id }) => {
+                        if (topLevelModule)
+                            return navigate(`/${topLevelModule}/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)
+                        return navigate(`/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)
+                    }}
                 />
             </div>
         </div>
