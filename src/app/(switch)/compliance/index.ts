@@ -1,5 +1,6 @@
-import Layout from "./layout";
-import Page from "./page";
+import Layout from "./layout"
+import Page from "./page"
+import LandUses from "./land-uses"
 
 const Index = {
   path: "/compliance",
@@ -9,7 +10,8 @@ const Index = {
       index: true,
       Component: Page,
     },
+    LandUses,
   ],
-};
+}
 
-export default Index;
+export default Index
