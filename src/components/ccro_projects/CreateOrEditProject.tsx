@@ -8,7 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CreateProjectDataI, LocalityI, ProjectFunderI, ProjectI } from '@/types/projects';
-import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey,  } from '@/types/constants';
+import { LOCALITY_LEVEL_NAMES, LOCALITY_LEVELS, MODULE_LEVEL_SLUG, tanzaniaLocalityKey, } from '@/types/constants';
 import { useNavigate } from 'react-router';
 import { canCreateProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
@@ -73,7 +73,7 @@ export default function CreateOrEditProject(props: Props) {
       />
     );
 
-  if ((isLoadingProject || !isError) && props?.projectId) {
+  if (isLoadingProject && !isError && props?.projectId) {
     return (
       <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
@@ -116,7 +116,7 @@ function Forms({ moduleLevel, redirectPath = '/ccro-management/ccro-projects', l
     authorization_date: project?.authorization_date || '',
     budget: project?.budget || '',
     module_level: '',
-  funder_ids: project?.funders?.map((f: any) => String(f.id)) || [],
+    funder_ids: project?.funders?.map((f: any) => String(f.id)) || [],
     locality_ids: project?.localities?.map((l: any) => l.locality__id) || [],
   });
 
@@ -288,7 +288,7 @@ function Forms({ moduleLevel, redirectPath = '/ccro-management/ccro-projects', l
         return LOCALITY_LEVELS.VILLAGE;
       default:
         return LOCALITY_LEVELS.NATIONAL;
-      
+
     }
   };
 
@@ -307,7 +307,7 @@ function Forms({ moduleLevel, redirectPath = '/ccro-management/ccro-projects', l
   const isFormValid = (): boolean => {
     const { name, description, registration_date, authorization_date, budget, funder_ids } = formData;
 
-  const basicFieldsValid = !!(name && description && registration_date && authorization_date && budget && (funder_ids && funder_ids.length > 0));
+    const basicFieldsValid = !!(name && description && registration_date && authorization_date && budget && (funder_ids && funder_ids.length > 0));
 
     if (!basicFieldsValid) return false;
 
