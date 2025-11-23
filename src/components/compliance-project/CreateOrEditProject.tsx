@@ -69,7 +69,7 @@ export default function CreateOrEditProject(props: Props) {
       />
     );
 
-  if ((isLoadingProject || !isError) && props?.projectId) {
+  if (isLoadingProject && !isError && props?.projectId) {
     return (
       <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />

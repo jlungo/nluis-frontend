@@ -1,4 +1,4 @@
-import type { ProjectI } from "@/types/projects";
+import type { ProjectI } from "@/types/projects"
 
 export function approvalStatus(localities?: ProjectI["localities"]) {
   return localities && localities.length > 0
@@ -7,7 +7,7 @@ export function approvalStatus(localities?: ProjectI["localities"]) {
       : localities.every((loc) => loc.approval_status === 3)
       ? 3
       : 1
-    : 1;
+    : 1
 }
 
 export function approvalStatusAtleastOne(localities?: ProjectI["localities"]) {
@@ -17,5 +17,5 @@ export function approvalStatusAtleastOne(localities?: ProjectI["localities"]) {
       : localities.some((loc) => loc.approval_status === 3)
       ? 3
       : 1
-    : 1;
+    : 1
 }
