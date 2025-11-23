@@ -8,10 +8,10 @@ export default function Page() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "compliance",
-      title: "Create National Land Use Compliance Project",
+      module: "monitoring-and-evaluation",
+      title: "Create National Land Use MNE Project",
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.NATIONAL} redirectPath="/compliance/land-uses/national-land-use-compliance" />;
+  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.NATIONAL} redirectPath="/monitoring-and-evaluation/mne-projects/national-land-use-mne" />;
 }

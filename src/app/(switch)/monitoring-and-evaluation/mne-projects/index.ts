@@ -7,6 +7,7 @@ import RegionalLandUse from "./regional-land-use-mne"
 import VillageLandUse from "./village-land-use-mne"
 
 const Index = {
+  path: "/mne-projects",
   Component: Layout,
   children: [
     {

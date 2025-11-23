@@ -14,7 +14,7 @@ export default function ZonalLandUseMnePage() {
 
   return (
     <ProjectsListPage
-      module="land-uses"
+      module="monitoring-and-evaluation/mne-projects"
       moduleLevel="zonal-land-use-mne"
       pageTitle="Zonal Land Use MNE"
     />

@@ -14,7 +14,7 @@ export default function DistrictLandUsePage() {
 
   return (
     <ProjectsListPage
-      module="mne-projects"
+      module="monitoring-and-evaluation/mne-projects"
       moduleLevel="district-land-use-mne"
       pageTitle="District Land Use MNE"
     />

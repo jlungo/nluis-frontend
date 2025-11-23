@@ -8,10 +8,10 @@ export default function Page() {
 
   useLayoutEffect(() => {
     setPage({
-      module: "compliance",
-      title: "Create Zonal Land Use Compliance Project",
+      module: "monitoring-and-evaluation",
+      title: "Create Zonal Land Use MNE Project",
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.ZONAL} redirectPath="/compliance/land-uses/zonal-land-use-compliance" />;
+  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.ZONAL} redirectPath="/monitoring-and-evaluation/mne-projects/zonal-land-use-mne" />;
 }

@@ -14,7 +14,7 @@ export default function NationalUsePage() {
 
   return (
     <ProjectsListPage
-      module="land-uses"
+      module="monitoring-and-evaluation/mne-projects"
       moduleLevel="national-land-use-mne"
       pageTitle="National Land Use MNE"
     />

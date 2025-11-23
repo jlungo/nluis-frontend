@@ -14,7 +14,7 @@ export default function Page() {
 
   return (
     <ProjectsList
-      module="land-uses"
+      module="monitoring-and-evaluation/mne-projects"
       moduleLevel="village-land-use-mne"
       pageTitle="Village Land Use MNE"
     />

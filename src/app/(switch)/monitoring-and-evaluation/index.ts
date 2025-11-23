@@ -9,10 +9,10 @@ const Index = {
   children: [
     {
       index: true,
-      element: React.createElement(Navigate, { to: "land-uses", replace: true }),
+      element: React.createElement(Navigate, { to: "mne-projects", replace: true }),
     },
     {
-      path: "land-uses",
+      path: "mne-projects",
       Component: MneProjects.Component,
       children: MneProjects.children,
     },

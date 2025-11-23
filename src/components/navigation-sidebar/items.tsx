@@ -2,7 +2,6 @@ import type { PageMetadata } from "@/store/pageStore";
 import {
   Home,
   Shield,
-  BarChart3,
   AlertTriangle,
   FileText,
   List,
@@ -15,11 +14,6 @@ import {
   Layers,
   Building2,
   FileQuestionMark,
-  ListChecks,
-  MapPin,
-  TrendingUp,
-  Satellite,
-  LineChart,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -139,7 +133,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
       case "monitoring-and-evaluation":
         return [
           {
-            id: "land-uses",
+            id: "mne-projects",
             label: "M&E Projects",
             icon: <LayoutDashboard className="h-4 w-4" />,
             items: [
