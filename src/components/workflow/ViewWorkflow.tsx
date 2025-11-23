@@ -26,7 +26,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const workflowKey = getCategoryKey(worklowCategory) ?? 6
-    const { data: workflow, isLoading: isLoadingWorkflow } = useWorkflowsQuery(1, 0, '', module, moduleLevel, workflowKey);
+    const { data: workflow, isLoading: isLoadingWorkflow } = useWorkflowsQuery(1, 0, '', topLevelModule ? topLevelModule : module, moduleLevel, workflowKey);
     const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflow && workflow?.results && workflow.results.length > 0 ? workflow.results[0].slug : undefined, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
