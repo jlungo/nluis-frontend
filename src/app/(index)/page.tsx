@@ -136,6 +136,12 @@ export default function Page() {
               >
                 MAPSHOP
               </Link>
+              <Link
+                to='/lookup'
+                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              >
+                CCRO LOOKUP
+              </Link>
             </nav>
 
             {/* Action buttons and controls */}

@@ -2,7 +2,6 @@ import type { PageMetadata } from "@/store/pageStore";
 import {
   Home,
   Shield,
-  BarChart3,
   FileText,
   List,
   LayoutDashboard,
@@ -14,11 +13,6 @@ import {
   Layers,
   Building2,
   FileQuestionMark,
-  ListChecks,
-  MapPin,
-  TrendingUp,
-  Satellite,
-  LineChart,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -97,8 +91,18 @@ export const getNavigationItems = (page: PageMetadata | null): (
             // badge: "8"
           },
           {
+            id: "ccro-projects",
+            label: "CCRO Projects",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
             id: "land-formalization",
             label: "Land Formalization",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
+            id: "ccro-application",
+            label: "CCRO Applications",
             icon: <FileText className="h-4 w-4" />
           },
           {
@@ -163,44 +167,40 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <FileText className="h-4 w-4" />
           },
         ];
-      case "management-evaluation":
+      case "monitoring-and-evaluation":
         return [
           {
-            id: "overview",
-            label: "Dashboard",
-            icon: <BarChart3 className="h-4 w-4" />,
-            badge: "5"
+            id: "mne-projects",
+            label: "M&E Projects",
+            icon: <LayoutDashboard className="h-4 w-4" />,
+            items: [
+              {
+                id: "national-land-use-mne",
+                label: "National Land Use M&E",
+                icon: <Flag className="h-4 w-4" />,
+              },
+              {
+                id: "zonal-land-use-mne",
+                label: "Zonal Land Use M&E",
+                icon: <LandPlot className="h-4 w-4" />,
+              },
+              {
+                id: "regional-land-use-mne",
+                label: "Regional Land Use M&E",
+                icon: <Map className="h-4 w-4" />
+              },
+              {
+                id: "district-land-use-mne",
+                label: "District Land Use M&E",
+                icon: <Layers className="h-4 w-4" />
+              },
+              {
+                id: "village-land-use-mne",
+                label: "Village Land Use M&E",
+                icon: <Building2 className="h-4 w-4" />,
+              },
+            ]
           },
-          {
-            id: "indicators",
-            label: "Indicators",
-            icon: <ListChecks className="h-4 w-4" />
-          },
-          {
-            id: "villages",
-            label: "Village Tracking",
-            icon: <MapPin className="h-4 w-4" />
-          },
-          {
-            id: "reports",
-            label: "M&E Reports",
-            icon: <FileText className="h-4 w-4" />
-          },
-          {
-            id: "analysis",
-            label: "Data Analysis",
-            icon: <TrendingUp className="h-4 w-4" />
-          },
-          {
-            id: "satellite",
-            label: "Satellite Monitoring",
-            icon: <Satellite className="h-4 w-4" />
-          },
-          {
-            id: "projections",
-            label: "Projections",
-            icon: <LineChart className="h-4 w-4" />
-          }
         ];
       case "reports":
         return [];
@@ -231,11 +231,6 @@ export const getNavigationItems = (page: PageMetadata | null): (
                 id: "questionnaires",
                 label: "Questionnaires",
                 icon: <FileQuestionMark className="h-4 w-4" />
-              },
-              {
-                id: "reports",
-                label: "Report Templates",
-                icon: <FileText className="h-4 w-4" />
               },
               {
                 id: "module-levels",

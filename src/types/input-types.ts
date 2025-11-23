@@ -15,4 +15,5 @@ export type InputType =
   | "proposed_land_use"
   | "report"
   | "addquestionnaires"
-  | "viewquestionnaires";
+  | "viewquestionnaires"
+  | "landsubdivision";

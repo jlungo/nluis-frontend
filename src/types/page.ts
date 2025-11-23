@@ -15,6 +15,7 @@ export type Page =
   | "billing"
   | "document-management"
   | "equipment-management"
+  | "monitoring-and-evaluation"
 
   // Dashboard pages
 
@@ -38,6 +39,8 @@ export type Page =
   // Management & Evaluation pages
   | "overview"
   | "reports"
+
+  // Monitoring & Evaluation pages
 
   // MapShop Management pages
 

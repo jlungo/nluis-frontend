@@ -23,9 +23,9 @@ import ProjectLocalitiesApproval from './ProjectLocalitiesApproval';
 import { Progress } from '../ui/progress';
 import { approvalStatus, approvalStatusAtleastOne } from './utils';
 import { ProjectStatusBadge } from './project-status-badge';
-import type { ModuleTypes } from '@/types/modules';
+import { Page } from '@/types/page';
 
-export default function ViewProjectPage({ module, moduleLevel }: { module: ModuleTypes; moduleLevel: string; }) {
+export default function ViewProjectPage({ module, moduleLevel }: { module: string; moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
   const { setPage } = usePageStore();
 
@@ -34,11 +34,10 @@ export default function ViewProjectPage({ module, moduleLevel }: { module: Modul
   useEffect(() => {
     if (project)
       setPage({
-        module: 'compliance',
+        module: module as Page,
         title: project.name,
       });
-  }, [project, setPage]);
-
+  }, [project, setPage, module]);
   if (isLoading)
     return (
       <div className='flex flex-col items-center justify-center h-60'>
@@ -214,7 +213,7 @@ export default function ViewProjectPage({ module, moduleLevel }: { module: Modul
   );
 }
 
-const ButtonsComponent: React.FC<{ module: ModuleTypes, moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ module, moduleLevel, project, approval_status, approval_status_atleast_one }) => {
+const ButtonsComponent: React.FC<{ module: string, moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ module, moduleLevel, project, approval_status, approval_status_atleast_one }) => {
   const { user } = useAuth()
   const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
   const navigate = useNavigate()
@@ -230,7 +229,7 @@ const ButtonsComponent: React.FC<{ module: ModuleTypes, moduleLevel: string, pro
         loading: "Deleting project...",
         success: () => {
           setOpenDelete(false)
-          navigate(`/compliance/${module}/${moduleLevel}`, { replace: true })
+          navigate(`/${module}/${moduleLevel}`, { replace: true })
           return `Project deleted successfully`
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -280,7 +279,7 @@ const ButtonsComponent: React.FC<{ module: ModuleTypes, moduleLevel: string, pro
         : null}
 
       {canEditProject(user.role.name, approval_status_atleast_one) ?
-        <Link to={`/compliance/${module}/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
+        <Link to={`/${module}/${moduleLevel}/${project.id}/edit`} className={cn(buttonVariants({ size: 'sm' }), "gap-2 w-fit")}>
           <Edit className="h-4 w-4 hidden md:inline-block" />
           Edit Project
         </Link> : null}

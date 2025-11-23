@@ -73,7 +73,7 @@ export default function Page() {
             bgColor: 'bg-orange-500/10'
         },
         {
-            id: 'management-evaluation',
+            id: 'monitoring-and-evaluation',
             title: 'Monitoring & Evaluation',
             description: 'Project monitoring, evaluation, and reporting',
             icon: <BarChart3 className="h-8 w-8" />,
@@ -140,8 +140,16 @@ export default function Page() {
 
     // Filter modules based on user role
     const visibleModules: ModuleTile[] = modules.filter(module => {
-        if (user?.modules) return user.modules.some(userModule => userModule.slug === module.id)
-        else return []
+        if (user?.modules) {
+            // TODO: Remove 'management-evaluation' check after backend user module slugs are updated.
+            if (module.id === 'monitoring-and-evaluation') {
+                return user.modules.some(userModule => 
+                    userModule.slug === 'monitoring-and-evaluation' || userModule.slug === 'management-evaluation'
+                );
+            }
+            return user.modules.some(userModule => userModule.slug === module.id);
+        }
+        return false;
     });
 
     if (!user) {
