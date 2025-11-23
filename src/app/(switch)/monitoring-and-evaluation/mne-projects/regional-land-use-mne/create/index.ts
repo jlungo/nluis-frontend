@@ -2,7 +2,12 @@ import Page from "./page";
 
 const Index = {
   path: "create",
-  Component: Page,
+  children: [
+    {
+      index: true,
+      Component: Page,
+    },
+  ],
 };
 
 export default Index;

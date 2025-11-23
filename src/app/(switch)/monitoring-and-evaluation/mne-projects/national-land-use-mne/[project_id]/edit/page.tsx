@@ -1,4 +1,4 @@
-import CreateOrEditProject from '@/components/compliance-project/CreateOrEditProject';
+import CreateOrEditProject from '@/components/monitoring-and-evaluation/CreateOrEditProject';
 import { usePageStore } from '@/store/pageStore';
 import { LOCALITY_LEVELS } from '@/types/constants';
 import { useLayoutEffect } from 'react';
