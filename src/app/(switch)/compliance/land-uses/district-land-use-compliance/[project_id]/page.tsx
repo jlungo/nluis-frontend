@@ -1,5 +1,5 @@
 import ViewProjectPage from '@/components/compliance-project/ViewProjectPage';
 
 export default function Page() {
-  return <ViewProjectPage moduleLevel="district-land-use-compliance" />
+  return <ViewProjectPage module='land-uses' moduleLevel="district-land-use-compliance" />
 }

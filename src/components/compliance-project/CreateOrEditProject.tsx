@@ -328,7 +328,7 @@ function Forms({ moduleLevel, redirectPath, localities, funders, project, organi
         registration_date: formData.registration_date,
         authorization_date: formData.authorization_date,
         budget: formData.budget,
-        module_level: moduleLevelSlug || '',
+        module_level: moduleLevelSlug ? `${moduleLevelSlug}-compliance` : '',
         funder_ids: formData.funder_ids,
         locality_ids:
           moduleLevel == LOCALITY_LEVELS.NATIONAL
