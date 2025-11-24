@@ -36,7 +36,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
     return (
         <div className="space-y-4 2xl:space-y-6 mb-20">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-5 gap-4">
                 {tabs.map(tab => <LocalityProjects key={tab.value} tab={tab} />)}
             </div>
 
