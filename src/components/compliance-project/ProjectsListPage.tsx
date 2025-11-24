@@ -44,13 +44,19 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
   const handleChange = (key: 'status' | 'name' | 'approval_status', value: string) =>
     setFilters(prev => ({ ...prev, [key]: value }));
 
-  const handleRowClick = (project: ProjectI) =>
-    navigate(`/compliance/${module}/${moduleLevel}/${project.id}`);
+  const handleRowClick = (project: ProjectI) => {
+    if (module) navigate(`/compliance/${module}/${moduleLevel}/${project.id}`);
+    else navigate(`/compliance/${moduleLevel}/${project.id}`);
+  }
 
-  const handleCreate = () =>
-    navigate(`/compliance/${module}/${moduleLevel}/create`, {
+  const handleCreate = () => {
+    if (module) navigate(`/compliance/${module}/${moduleLevel}/create`, {
       state: { type: pageTitle, from: location.pathname },
-    });
+    })
+    else navigate(`/compliance/${moduleLevel}/create`, {
+      state: { type: pageTitle, from: location.pathname },
+    })
+  }
 
   const handleDelete = (project: ProjectI) => {
     if (!user || !user.role?.name) return

@@ -1,6 +1,7 @@
 import Layout from "./layout"
 import Page from "./page"
 import LandUses from "./land-uses"
+import CCROProjectsCompliance from "./ccro-projects-compliance"
 
 const Index = {
   path: "/compliance",
@@ -11,6 +12,7 @@ const Index = {
       Component: Page,
     },
     LandUses,
+    CCROProjectsCompliance,
   ],
 }
 
