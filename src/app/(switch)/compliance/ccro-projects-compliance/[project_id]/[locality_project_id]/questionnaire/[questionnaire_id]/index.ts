@@ -1,18 +1,16 @@
 import Layout from "./layout"
 import Page from "./page"
-import LandUses from "./land-uses"
-import CCROProjectsCompliance from "./ccro-projects-compliance"
+import Batch from "./[batch]"
 
 const Index = {
-  path: "/compliance",
+  path: ":questionnaire_id",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    LandUses,
-    CCROProjectsCompliance,
+    Batch,
   ],
 }
 

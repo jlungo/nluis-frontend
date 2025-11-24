@@ -7,7 +7,7 @@ import type { ModuleTypes } from "@/types/modules";
 import { useDataStore } from "../project-chart/useDataStore";
 
 const ccroTabs: TabProps[] = [
-    { value: "", label: "All" },
+    // { value: "", label: "All" },
     { value: "ccro-projects", label: "CCRO Projects" },
 ]
 
@@ -15,7 +15,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
     const { setPage } = usePageStore();
     const { clearLocalities } = useDataStore();
 
-    const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
+    const [tab, setTab] = useState<TabProps>({ value: "ccro-projects", label: "CCRO Projects" });
 
     useLayoutEffect(() => {
         // Clear data store when mounting to ensure only CCRO data is displayed
@@ -26,7 +26,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
         });
     }, [module, setPage, title, clearLocalities]);
 
-    let tabs: TabProps[] = [{ value: "", label: "All" }]
+    let tabs: TabProps[] = [{ value: "ccro-projects", label: "CCRO Projects" }]
     if (module === "ccro-management") tabs = ccroTabs
 
     return (
