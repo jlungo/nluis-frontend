@@ -4,6 +4,7 @@ import { LocalityProjects } from "../project-chart/locality-projects";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
+import { useDataStore } from "../project-chart/useDataStore";
 
 const ccroTabs: TabProps[] = [
     { value: "", label: "All" },
@@ -12,15 +13,18 @@ const ccroTabs: TabProps[] = [
 
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
+    const { clearLocalities } = useDataStore();
 
     const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
 
     useLayoutEffect(() => {
+        // Clear data store when mounting to ensure only CCRO data is displayed
+        clearLocalities();
         setPage({
             module: module,
             title: title,
         });
-    }, [module, setPage, title]);
+    }, [module, setPage, title, clearLocalities]);
 
     let tabs: TabProps[] = [{ value: "", label: "All" }]
     if (module === "ccro-management") tabs = ccroTabs

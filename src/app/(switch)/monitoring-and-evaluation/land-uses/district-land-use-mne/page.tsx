@@ -1,4 +1,4 @@
-import ProjectsListPage from '@/components/compliance-project/ProjectsListPage';
+import ProjectsListPage from '@/components/monitoring-and-evaluation/ProjectsListPage';
 import { usePageStore } from '@/store/pageStore';
 import { useEffect } from 'react';
 
@@ -7,16 +7,16 @@ export default function DistrictLandUsePage() {
 
   useEffect(() => {
     setPage({
-      module: 'compliance',
-      title: "District Land Use Compliance Projects",
+      module: 'monitoring-and-evaluation',
+      title: "District Land Use Monitoring-and-Evaluation Projects",
     });
   }, [setPage]);
 
   return (
     <ProjectsListPage
       module="land-uses"
-      moduleLevel="district-land-use-compliance"
-      pageTitle="District Land Use Compliance"
+      moduleLevel="district-land-use-mne"
+      pageTitle="District Land Use Monitoring-and-Evaluation Projects"
     />
   );
 }

@@ -4,27 +4,31 @@ import { LocalityProjects } from "../project-chart/locality-projects";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
+import { useDataStore } from "../project-chart/useDataStore";
 
 const landUseTabs: TabProps[] = [
     { value: "", label: "All" },
-    { value: "village-land-use", label: "Village" },
-    { value: "district-land-use", label: "District" },
-    { value: "regional-land-use", label: "Regional" },
-    { value: "zonal-land-use", label: "Zonal" },
-    { value: "national-land-use", label: "National" },
+    { value: "village-land-use-mne", label: "Village" },
+    { value: "district-land-use-mne", label: "District" },
+    { value: "regional-land-use-mne", label: "Regional" },
+    { value: "zonal-land-use-mne", label: "Zonal" },
+    { value: "national-land-use-mne", label: "National" },
 ]
 
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
+    const { clearLocalities } = useDataStore();
 
     const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
 
     useLayoutEffect(() => {
+        // Clear data store when mounting to ensure only M&E data is displayed
+        clearLocalities();
         setPage({
-            module: module,
+            module: "monitoring-and-evaluation",
             title: title,
         });
-    }, [module, setPage, title]);
+    }, [module, setPage, title, clearLocalities]);
 
     let tabs: TabProps[] = [{ value: "", label: "All" }]
     if (module === "land-uses") tabs = landUseTabs

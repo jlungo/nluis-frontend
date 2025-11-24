@@ -170,10 +170,21 @@ export const getNavigationItems = (page: PageMetadata | null): (
       case "monitoring-and-evaluation":
         return [
           {
+            id: "monitoring-and-evaluation-dashboard",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-4 w-4" />
+          },
+          {
             id: "land-uses",
             label: "M&E Projects",
-            icon: <LayoutDashboard className="h-4 w-4" />,
+            icon: <Map className="h-4 w-4" />,
             items: [
+              {
+                id: "land-uses",
+                label: "M&E Overview",
+                icon: <LayoutDashboard className="h-4 w-4" />,
+                hidden: true
+              },
               {
                 id: "national-land-use-mne",
                 label: "National Land Use M&E",
