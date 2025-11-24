@@ -4,6 +4,7 @@ import { LocalityProjects } from "../project-chart/locality-projects";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
+import { useDataStore } from "../project-chart/useDataStore";
 
 const landUseTabs: TabProps[] = [
     { value: "", label: "All" },
@@ -16,15 +17,18 @@ const landUseTabs: TabProps[] = [
 
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
+    const { clearLocalities } = useDataStore();
 
     const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
 
     useLayoutEffect(() => {
+        // Clear data store when mounting to ensure only compliance data is displayed
+        clearLocalities();
         setPage({
             module: module,
             title: title,
         });
-    }, [module, setPage, title]);
+    }, [module, setPage, title, clearLocalities]);
 
     let tabs: TabProps[] = [{ value: "", label: "All" }]
     if (module === "land-uses") tabs = landUseTabs
