@@ -1,6 +1,19 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLayoutEffect } from "react";
+import { usePageStore } from "@/store/pageStore";
 
 export default function CCROReportsPage() {
+  const { setPage } = usePageStore();
+
+  useLayoutEffect(() => {
+    setPage({
+      module: "ccro-management",
+      title: "CCRO Reports",
+    });
+  }, [setPage]);
+
   return (
     <div className="space-y-4 p-8 pt-6">
       <h2 className="text-3xl font-bold tracking-tight">CCRO Reports</h2>
