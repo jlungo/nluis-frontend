@@ -26,8 +26,10 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const workflowKey = getCategoryKey(worklowCategory) ?? 6
-    const { data: workflow, isLoading: isLoadingWorkflow } = useWorkflowsQuery(1, 0, '', topLevelModule ? topLevelModule : module, moduleLevel, workflowKey);
-    const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflow && workflow?.results && workflow.results.length > 0 ? workflow.results[0].slug : undefined, projectLocalityId)
+    const { data: workflow, isLoading: isLoadingWorkflow, isError: isErrorWorkflow, error: workflowError } = useWorkflowsQuery(1, 0, '', topLevelModule ? topLevelModule : module, moduleLevel, workflowKey);
+
+    const workflowSlug = Array.isArray(workflow?.results) && workflow.results.length > 0 ? workflow.results[0].slug : undefined;
+    const { data: values, isLoading: isLoadingValues } = useFormDataQuery(workflowSlug, projectLocalityId)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
@@ -69,6 +71,15 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
         <p className="text-muted-foreground mt-4">Loading workflow and data...</p>
     </div>
 
+    if (isErrorWorkflow) {
+        // Prefer backend-provided message if available
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const msg = (workflowError as any)?.response?.data?.message || (workflowError as any)?.response?.data?.detail || (workflowError as any)?.message || 'Failed to fetch workflow';
+        return <div className='flex flex-col items-center justify-center h-60'>
+            <p className='text-destructive'>{msg}</p>
+        </div>
+    }
+
     if (!project)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>No project with this data found!</p>
@@ -90,7 +101,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             <p className='text-muted-foreground'>Project Locality not found!</p>
         </div>
 
-    if (!workflow || !workflow?.results || workflow.results.length === 0)
+    if (!workflow || !Array.isArray(workflow.results) || workflow.results.length === 0)
         return <div className='flex flex-col items-center justify-center h-60'>
             <p className='text-muted-foreground'>No workflow data found!</p>
         </div>
