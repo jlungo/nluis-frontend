@@ -25,7 +25,7 @@ import { approvalStatus, approvalStatusAtleastOne } from './utils';
 import { ProjectStatusBadge } from './project-status-badge';
 import type { ModuleTypes } from '@/types/modules';
 
-export default function ViewProjectPage({ module, moduleLevel }: { module: ModuleTypes; moduleLevel: string; }) {
+export default function ViewProjectPage({ module, moduleLevel }: { module?: ModuleTypes; moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
   const { setPage } = usePageStore();
 
@@ -214,7 +214,7 @@ export default function ViewProjectPage({ module, moduleLevel }: { module: Modul
   );
 }
 
-const ButtonsComponent: React.FC<{ module: ModuleTypes, moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ module, moduleLevel, project, approval_status, approval_status_atleast_one }) => {
+const ButtonsComponent: React.FC<{ module?: ModuleTypes, moduleLevel: string, project: ProjectI, approval_status: number, approval_status_atleast_one: number }> = ({ module, moduleLevel, project, approval_status, approval_status_atleast_one }) => {
   const { user } = useAuth()
   const { mutateAsync: mutateAsyncDelete, isPending: isPendingDelete } = useDeleteProject();
   const navigate = useNavigate()
@@ -230,7 +230,8 @@ const ButtonsComponent: React.FC<{ module: ModuleTypes, moduleLevel: string, pro
         loading: "Deleting project...",
         success: () => {
           setOpenDelete(false)
-          navigate(`/monitoring-and-evaluation/${module}/${moduleLevel}`, { replace: true })
+          if (module) navigate(`/monitoring-and-evaluation/${module}/${moduleLevel}`, { replace: true })
+          navigate(`/monitoring-and-evaluation/${moduleLevel}`, { replace: true })
           return `Project deleted successfully`
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

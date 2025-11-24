@@ -171,7 +171,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           },
           {
             id: "land-uses",
-            label: "M&E Projects",
+            label: "M&E Land Use Projects",
             icon: <Map className="h-4 w-4" />,
             items: [
               {
@@ -205,8 +205,13 @@ export const getNavigationItems = (page: PageMetadata | null): (
                 label: "Village Land Use M&E",
                 icon: <Building2 className="h-4 w-4" />,
               },
-            ]
+            ],
           },
+          {
+            id: "ccro-projects-mne",
+            label: "CCRO M&E Projects",
+            icon: <Shield className="h-4 w-4" />,
+          }
         ];
       case "reports":
         return [];
