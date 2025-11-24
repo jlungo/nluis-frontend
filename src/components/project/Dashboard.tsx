@@ -6,7 +6,7 @@ import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
 
 const landUseTabs: TabProps[] = [
-    { value: "", label: "All" },
+    // { value: "", label: "All" },
     { value: "village-land-use", label: "Village" },
     { value: "district-land-use", label: "District" },
     { value: "regional-land-use", label: "Regional" },
@@ -17,7 +17,7 @@ const landUseTabs: TabProps[] = [
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
 
-    const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
+    const [tab, setTab] = useState<TabProps>({ value: "village-land-use", label: "Village" });
 
     useLayoutEffect(() => {
         setPage({
@@ -26,13 +26,13 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
         });
     }, [module, setPage, title]);
 
-    let tabs: TabProps[] = [{ value: "", label: "All" }]
+    let tabs: TabProps[] = [{ value: "village-land-use", label: "Village" }]
     if (module === "land-uses") tabs = landUseTabs
 
     return (
         <div className="space-y-4 2xl:space-y-6 mb-20">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-5 gap-4">
                 {tabs.map(tab => <LocalityProjects key={tab.value} tab={tab} />)}
             </div>
 

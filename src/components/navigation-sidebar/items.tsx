@@ -157,15 +157,10 @@ export const getNavigationItems = (page: PageMetadata | null): (
             ]
           },
           {
-            id: "ccro-management",
+            id: "ccro-projects-compliance",
             label: "CCRO Compliance",
             icon: <Shield className="h-4 w-4" />,
-          },
-          {
-            id: "reports",
-            label: "Compliance Reports",
-            icon: <FileText className="h-4 w-4" />
-          },
+          }
         ];
       case "monitoring-and-evaluation":
         return [

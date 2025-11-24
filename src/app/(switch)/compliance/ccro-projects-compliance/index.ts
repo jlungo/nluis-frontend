@@ -1,18 +1,18 @@
 import Layout from "./layout"
 import Page from "./page"
-import LandUses from "./land-uses"
-import CCROProjectsCompliance from "./ccro-projects-compliance"
+import projectId from "./[project_id]"
+import Create from "./create"
 
 const Index = {
-  path: "/compliance",
+  path: "ccro-projects-compliance",
   Component: Layout,
   children: [
     {
       index: true,
       Component: Page,
     },
-    LandUses,
-    CCROProjectsCompliance,
+    Create,
+    projectId,
   ],
 }
 

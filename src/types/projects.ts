@@ -27,7 +27,7 @@ export interface ProjectI {
 }
 
 export interface ProjectsListPageProps {
-  module: string
+  module?: string
   moduleLevel: string
   pageTitle: string
 }

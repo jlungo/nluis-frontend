@@ -6,14 +6,14 @@ import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
 
 const ccroTabs: TabProps[] = [
-    { value: "", label: "All" },
+    // { value: "", label: "All" },
     { value: "ccro-projects", label: "CCRO Projects" },
 ]
 
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
 
-    const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
+    const [tab, setTab] = useState<TabProps>({ value: "ccro-projects", label: "CCRO Projects" });
 
     useLayoutEffect(() => {
         setPage({
@@ -22,7 +22,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
         });
     }, [module, setPage, title]);
 
-    let tabs: TabProps[] = [{ value: "", label: "All" }]
+    let tabs: TabProps[] = [{ value: "ccro-projects", label: "CCRO Projects" }]
     if (module === "ccro-management") tabs = ccroTabs
 
     return (
