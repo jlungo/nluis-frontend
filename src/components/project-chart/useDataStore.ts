@@ -12,6 +12,7 @@ interface ActionsProps {
   setCount: (level: string, count: number) => void;
   addResponse: (level: string, res: ProjectI[]) => void;
   setOffset: (level: string, offset: number) => void;
+  clearLocalities: () => void;
 }
 
 export const useDataStore = create<ActionsProps>()((set) => ({
@@ -53,4 +54,8 @@ export const useDataStore = create<ActionsProps>()((set) => ({
         },
       };
     }),
+  clearLocalities: () =>
+    set(() => ({
+      localities: {},
+    })),
 }));

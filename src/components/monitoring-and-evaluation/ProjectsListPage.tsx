@@ -45,10 +45,10 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     setFilters(prev => ({ ...prev, [key]: value }));
 
   const handleRowClick = (project: ProjectI) =>
-    navigate(`/${module}/${moduleLevel}/${project.id}`);
+    navigate(`/monitoring-and-evaluation/${module}/${moduleLevel}/${project.id}`);
 
   const handleCreate = () =>
-    navigate(`/${module}/${moduleLevel}/create`, {
+    navigate(`/monitoring-and-evaluation/${module}/${moduleLevel}/create`, {
       state: { type: pageTitle, from: location.pathname },
     });
 
@@ -82,8 +82,8 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
 
       <div className='flex justify-between items-start'>
         <div className='space-y-1'>
-          <h1 className="text-lg lg:text-2xl font-semibold capitalize">{decodeURIComponent(moduleLevel.replace(/-/g, " "))} Projects</h1>
-          <p className="text-muted-foreground text-sm">Manage and track land use planning projects</p>
+          <h1 className="text-lg lg:text-2xl font-semibold capitalize">{decodeURIComponent(moduleLevel.replace(/-/g, " "))} monitoring-and-evaluation Projects</h1>
+          <p className="text-muted-foreground text-sm">Manage and track land use planning monitoring-and-evaluation projects</p>
         </div>
         {canCreate() ? (
           <Button type='button' onClick={handleCreate} size='sm' className="gap-2 text-xs md:text-sm">

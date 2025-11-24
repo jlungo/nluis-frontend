@@ -1,21 +1,7 @@
-import { usePageStore } from "@/store/pageStore";
-import { useEffect } from "react";
+import Dashboard from '@/components/monitoring-and-evaluation/Dashboard';
 
-const Page = () => {
-  const { setPage } = usePageStore();
-
-  useEffect(() => {
-    setPage({
-      module: 'monitoring-and-evaluation',
-      title: 'Monitoring & Evaluation',
-    });
-  }, [setPage]);
-
+export default function Page() {
   return (
-    <div>
-      <h1>Monitoring and Evaluation</h1>
-    </div>
+    <Dashboard module="land-uses" title="Monitoring and Evaluation Dashboard" />
   );
-};
-
-export default Page;
+}

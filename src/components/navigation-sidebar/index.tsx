@@ -46,7 +46,12 @@ export default function NavigationSidebar({
         if (!page || !page?.module) return "";
         const parts = id.split("/");
         if (parts[0] === page.module) return `/${parts.slice(0).join("/")}`;
-        if (parts[parts.length - 1].endsWith('-dashboard') && parts[parts.length - 1].split(`-`)[0] === page.module) return `/${page.module}`;
+        if (parts[parts.length - 1].endsWith('-dashboard')) {
+            // Handle both single-word (compliance-dashboard) and multi-word (monitoring-and-evaluation-dashboard)
+            const dashboardId = parts[parts.length - 1];
+            const moduleFromId = dashboardId.replace('-dashboard', '');
+            if (moduleFromId === page.module) return `/${page.module}`;
+        }
         return `/${page.module}/${id}`
     };
 

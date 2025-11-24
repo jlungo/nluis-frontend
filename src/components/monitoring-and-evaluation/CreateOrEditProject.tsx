@@ -69,7 +69,7 @@ export default function CreateOrEditProject(props: Props) {
       />
     );
 
-  if ((isLoadingProject || !isError) && props?.projectId) {
+  if (isLoadingProject && !isError && props?.projectId) {
     return (
       <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
@@ -96,7 +96,7 @@ export default function CreateOrEditProject(props: Props) {
   )
 }
 
-function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, project, organizationId }: FormProps) {
+function Forms({ moduleLevel, redirectPath, localities, funders, project, organizationId }: FormProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { mutateAsync: mutateAsyncCreate, isPending: isPendingCreate } = useCreateProject();
@@ -328,7 +328,7 @@ function Forms({ moduleLevel, redirectPath = '/land-uses', localities, funders, 
         registration_date: formData.registration_date,
         authorization_date: formData.authorization_date,
         budget: formData.budget,
-        module_level: moduleLevelSlug || '',
+        module_level: moduleLevelSlug ? `${moduleLevelSlug}-mne` : '',
         funder_ids: formData.funder_ids,
         locality_ids:
           moduleLevel == LOCALITY_LEVELS.NATIONAL
