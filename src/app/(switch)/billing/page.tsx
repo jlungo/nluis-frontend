@@ -6,7 +6,7 @@ export default function Page() {
     useLayoutEffect(() => {
         setPage({
             module: 'billing',
-            title: "Billing & Payments",
+            title: "Sales and Billing",
         })
     }, [setPage])
 

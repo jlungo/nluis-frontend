@@ -130,8 +130,8 @@ export default function Page() {
         },
         {
             id: 'billing',
-            title: 'Billing & Payments',
-            description: 'Tool inventory management, checkout, and maintenance tracking',
+            title: 'Sales and Billing',
+            description: 'Manage sales and Billing information',
             icon: <CreditCard className="h-8 w-8" />,
             color: 'text-purple-500',
             bgColor: 'bg-purple-500/10'
