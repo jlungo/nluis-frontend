@@ -10,19 +10,26 @@ import { dataProcessor } from "./dataProcessor";
 import PieChartComponent from "./pie-chart";
 
 // Include ccro and mne module-level slugs so charts can render all tab variants
-type ChartModuleLevelProps = 
-  | "" 
-  | "village-land-use" 
-  | "district-land-use" 
-  | "regional-land-use" 
-  | "zonal-land-use" 
-  | "national-land-use" 
-  | "village-land-use-mne" 
-  | "district-land-use-mne" 
-  | "regional-land-use-mne" 
-  | "zonal-land-use-mne" 
-  | "national-land-use-mne" 
-  | "ccro-projects"
+type ChartModuleLevelProps =
+    | ""
+    | "village-land-use"
+    | "district-land-use"
+    | "regional-land-use"
+    | "zonal-land-use"
+    | "national-land-use"
+    | "ccro-projects"
+    | "village-land-use-compliance"
+    | "district-land-use-compliance"
+    | "regional-land-use-compliance"
+    | "zonal-land-use-compliance"
+    | "national-land-use-compliance"
+    | "ccro-projects-compliance"
+    | "village-land-use-mne"
+    | "district-land-use-mne"
+    | "regional-land-use-mne"
+    | "zonal-land-use-mne"
+    | "national-land-use-mne"
+    | "ccro-projects-mne"
 export type TabProps = { value: ChartModuleLevelProps; label: string; }
 
 type ChartTypeProps = 'area' | 'bar' | 'line' | 'pie'

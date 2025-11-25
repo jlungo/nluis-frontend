@@ -19,7 +19,7 @@ export default function Page() {
 
     const data = [
         {
-            id: 'national-land-use',
+            id: 'national-land-use-compliance',
             title: 'National Land Use Compliance',
             description: 'Create, edit, and manage all your National Land Use Compliance projects',
             icon: <Flag className="h-8 w-8" />,
@@ -27,7 +27,7 @@ export default function Page() {
             bgColor: 'bg-primary/10'
         },
         {
-            id: 'zonal-land-use',
+            id: 'zonal-land-use-compliance',
             title: 'Zonal Land Use Compliance',
             description: 'Create, edit, and manage all Zonal Land Use compliance projects',
             icon: <LandPlot className="h-8 w-8" />,
@@ -35,7 +35,7 @@ export default function Page() {
             bgColor: 'bg-chart-2/10'
         },
         {
-            id: 'regional-land-use',
+            id: 'regional-land-use-compliance',
             title: 'Regional Land Use Compliance',
             description: 'Create, edit, and manage all your Regional Land Use Compliance projects',
             icon: <Map className="h-8 w-8" />,
@@ -43,7 +43,7 @@ export default function Page() {
             bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'district-land-use',
+            id: 'district-land-use-compliance',
             title: 'District Land Use Compliance',
             description: 'Create, edit, and manage all District Land Use compliance projects',
             icon: <Layers className="h-8 w-8" />,
@@ -51,7 +51,7 @@ export default function Page() {
             bgColor: 'bg-orange-500/10'
         },
         {
-            id: 'village-land-use',
+            id: 'village-land-use-compliance',
             title: 'Village Land Use Compliance',
             description: 'Create, edit, and manage all Village Land Use compliance projects',
             icon: <Building2 className="h-8 w-8" />,

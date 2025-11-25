@@ -7,36 +7,37 @@ import type { ModuleTypes } from "@/types/modules";
 import { useDataStore } from "../project-chart/useDataStore";
 
 const landUseTabs: TabProps[] = [
-    { value: "", label: "All" },
-    { value: "village-land-use", label: "Village" },
-    { value: "district-land-use", label: "District" },
-    { value: "regional-land-use", label: "Regional" },
-    { value: "zonal-land-use", label: "Zonal" },
-    { value: "national-land-use", label: "National" },
+    // { value: "", label: "All" },
+    { value: "village-land-use-compliance", label: "Village" },
+    { value: "district-land-use-compliance", label: "District" },
+    { value: "regional-land-use-compliance", label: "Regional" },
+    { value: "zonal-land-use-compliance", label: "Zonal" },
+    { value: "national-land-use-compliance", label: "National" },
+    { value: "ccro-projects-compliance", label: "CCRO Compliance" },
 ]
 
 export default function Dashboard({ module, title }: { module: ModuleTypes; title: string }) {
     const { setPage } = usePageStore();
     const { clearLocalities } = useDataStore();
 
-    const [tab, setTab] = useState<TabProps>({ value: "", label: "All" });
+    const [tab, setTab] = useState<TabProps>({ value: "village-land-use-compliance", label: "Village" });
 
     useLayoutEffect(() => {
         // Clear data store when mounting to ensure only compliance data is displayed
         clearLocalities();
         setPage({
-            module: module,
+            module: "compliance",
             title: title,
         });
     }, [module, setPage, title, clearLocalities]);
 
-    let tabs: TabProps[] = [{ value: "", label: "All" }]
+    let tabs: TabProps[] = [{ value: "village-land-use-compliance", label: "Village" }]
     if (module === "land-uses") tabs = landUseTabs
 
     return (
         <div className="space-y-4 2xl:space-y-6 mb-20">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-4">
                 {tabs.map(tab => <LocalityProjects key={tab.value} tab={tab} />)}
             </div>
 
