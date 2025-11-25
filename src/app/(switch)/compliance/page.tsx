@@ -1,6 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Dashboard from "@/components/compliance-project/Dashboard";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePageStore } from "@/store/pageStore";
-import { CheckCircle, Clock, FileText, XCircle } from "lucide-react";
+// import { CheckCircle, Clock, FileText, XCircle } from "lucide-react";
 import { useLayoutEffect } from "react";
 
 export default function Page() {
@@ -9,20 +10,20 @@ export default function Page() {
   useLayoutEffect(() => {
     setPage({
       module: "compliance",
-      title: "Compliance",
+      title: "Compliance Monitoring",
     });
   }, [setPage]);
 
-  const stats = {
-    total: 4,
-    compliant: 2,
-    nonCompliant: 1,
-    pending: 1
-  };
+  // const stats = {
+  //   total: 4,
+  //   compliant: 2,
+  //   nonCompliant: 1,
+  //   pending: 1
+  // };
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Audits</CardTitle>
@@ -63,7 +64,9 @@ export default function Page() {
             <p className="text-xs text-muted-foreground">Awaiting assessment</p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
+
+      <Dashboard module="land-uses" title="Monitoring and Evaluation Dashboard" />
 
     </>
   )

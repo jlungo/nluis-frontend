@@ -13,47 +13,47 @@ export default function Page() {
     useLayoutEffect(() => {
         setPage({
             module: 'monitoring-and-evaluation',
-            title: "Land Uses monitoring-and-evaluation",
+            title: "Land Uses Monitoring and Evaluation",
         })
     }, [setPage])
 
     const data = [
         {
-            id: 'national-land-use',
-            title: 'National Land Use monitoring-and-evaluation',
-            description: 'Create, edit, and manage all your National Land Use monitoring-and-evaluation projects',
+            id: 'national-land-use-mne',
+            title: 'National Land Use Monitoring and Evaluation',
+            description: 'Create, edit, and manage all your National Land Use Monitoring and Evaluation projects',
             icon: <Flag className="h-8 w-8" />,
             color: 'text-primary',
             bgColor: 'bg-primary/10'
         },
         {
-            id: 'zonal-land-use',
-            title: 'Zonal Land Use monitoring-and-evaluation',
-            description: 'Create, edit, and manage all Zonal Land Use monitoring-and-evaluation projects',
+            id: 'zonal-land-use-mne',
+            title: 'Zonal Land Use Monitoring and Evaluation',
+            description: 'Create, edit, and manage all Zonal Land Use Monitoring and Evaluation projects',
             icon: <LandPlot className="h-8 w-8" />,
             color: 'text-chart-2',
             bgColor: 'bg-chart-2/10'
         },
         {
-            id: 'regional-land-use',
-            title: 'Regional Land Use monitoring-and-evaluation',
-            description: 'Create, edit, and manage all your Regional Land Use monitoring-and-evaluation projects',
+            id: 'regional-land-use-mne',
+            title: 'Regional Land Use Monitoring and Evaluation',
+            description: 'Create, edit, and manage all your Regional Land Use Monitoring and Evaluation projects',
             icon: <Map className="h-8 w-8" />,
             color: 'text-chart-4',
             bgColor: 'bg-chart-4/10'
         },
         {
-            id: 'district-land-use',
-            title: 'District Land Use monitoring-and-evaluation',
-            description: 'Create, edit, and manage all District Land Use monitoring-and-evaluation projects',
+            id: 'district-land-use-mne',
+            title: 'District Land Use Monitoring and Evaluation',
+            description: 'Create, edit, and manage all District Land Use Monitoring and Evaluation projects',
             icon: <Layers className="h-8 w-8" />,
             color: 'text-orange-500',
             bgColor: 'bg-orange-500/10'
         },
         {
-            id: 'village-land-use',
-            title: 'Village Land Use monitoring-and-evaluation',
-            description: 'Create, edit, and manage all Village Land Use monitoring-and-evaluation projects',
+            id: 'village-land-use-mne',
+            title: 'Village Land Use Monitoring and Evaluation',
+            description: 'Create, edit, and manage all Village Land Use Monitoring and Evaluation projects',
             icon: <Building2 className="h-8 w-8" />,
             color: 'text-progress-completed',
             bgColor: 'bg-progress-completed/10'

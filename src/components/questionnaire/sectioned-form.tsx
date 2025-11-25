@@ -453,8 +453,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
                                                             {isFilledForm(form.slug)
-                                                                ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800" />
-                                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />}
+                                                                ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800 shrink-0" />
+                                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground shrink-0" />}
                                                             <div>
                                                                 <div className="font-medium text-sm">{form.name}</div>
                                                                 <div className="text-xs text-muted-foreground">{form?.description || null}</div>
