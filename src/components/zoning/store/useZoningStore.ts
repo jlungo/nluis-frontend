@@ -11,6 +11,8 @@ type ZoneSummary = {
   status: string;
   notes?: string;
   lastModified?: string;
+  geometryType?: string;
+  attributes?: Record<string, string>;
 };
 
 type ZoningStore = {
@@ -27,6 +29,14 @@ type ZoningStore = {
   labelField: LabelField;
   setLabelsVisible: (v: boolean) => void;
   setLabelField: (f: LabelField) => void;
+  existingLandUseOverlay: boolean;
+  setExistingLandUseOverlay: (v: boolean) => void;
+  
+  // Layer visibility
+  visibleTypes: Record<string | number, boolean>;
+  visibleStatuses: Partial<Record<StatusKey, boolean>>;
+  setTypeVisibility: (id: string | number, visible: boolean) => void;
+  setStatusVisibility: (status: StatusKey, visible: boolean) => void;
 
   // Legend counts
   countsByType: Record<string | number, number>;
@@ -52,6 +62,9 @@ type ZoningStore = {
   // Map API (registered by MapEngine)
   api: Partial<ZoningMapAPI>;
   setAPI: (api: Partial<ZoningMapAPI>) => void;
+  
+  // Reset visibility when switching modes
+  resetVisibility: () => void;
 };
 
 export const useZoningStore = create<ZoningStore>((set) => ({
@@ -68,6 +81,18 @@ export const useZoningStore = create<ZoningStore>((set) => ({
   labelField: "land_use_name",
   setLabelsVisible: (v) => set({ labelsVisible: v }),
   setLabelField: (f) => set({ labelField: f }),
+  existingLandUseOverlay: false,
+  setExistingLandUseOverlay: (v) => set({ existingLandUseOverlay: v }),
+  
+  // Layer visibility (all visible by default)
+  visibleTypes: {},
+  visibleStatuses: {},
+  setTypeVisibility: (id, visible) => set((s) => ({
+    visibleTypes: { ...s.visibleTypes, [String(id)]: visible }
+  })),
+  setStatusVisibility: (status, visible) => set((s) => ({
+    visibleStatuses: { ...s.visibleStatuses, [status]: visible }
+  })),
 
   // Legend counts
   countsByType: {},
@@ -92,4 +117,6 @@ export const useZoningStore = create<ZoningStore>((set) => ({
 
   api: {},
   setAPI: (api) => set((s) => ({ api: { ...s.api, ...api } })),
+  
+  resetVisibility: () => set({ visibleTypes: {}, visibleStatuses: {} }),
 }));

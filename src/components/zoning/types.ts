@@ -42,6 +42,7 @@ export type ZoningMapAPI = {
   reject?: () => void;
   deleteZone?: () => void;
   assignLandUseToActive?: (landUseId: number) => void;
+  updateActiveAttributes?: (attrs: Record<string, string>) => void;
   // conflicts
   resolveTrim?: (withId?: string | number) => Promise<void>;
   resolveSplit?: (withIds?: Array<string | number>) => Promise<void>;

@@ -1,6 +1,7 @@
-import Layout from "./layout";
-import Page from "./page";
-import Projects from "./projects";
+import Layout from "./layout"
+import Page from "./page"
+import LandUses from "./land-uses"
+import CCROProjectsCompliance from "./ccro-projects-compliance"
 
 const Index = {
   path: "/compliance",
@@ -10,8 +11,9 @@ const Index = {
       index: true,
       Component: Page,
     },
-    Projects,
+    LandUses,
+    CCROProjectsCompliance,
   ],
-};
+}
 
-export default Index;
+export default Index

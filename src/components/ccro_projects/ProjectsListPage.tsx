@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { Plus, Search } from 'lucide-react';
 import { useCCROProjectsQuery as useProjectsQuery, useDeleteCCROProject as useDeleteProject } from '@/queries/useCCROProjectQuery';
@@ -14,15 +14,24 @@ import { ProjectsListPageProps } from '@/types/projects';
 import ActionButtons from '@/components/ActionButtons';
 import { canCreateProject, canDeleteProject, canEditProject } from './permissions';
 import { useAuth } from '@/store/auth';
+import { usePageStore } from '@/store/pageStore';
 import { approvalStatus, approvalStatusAtleastOne } from './utils';
 
 export default function ProjectsListPage({ module, moduleLevel, pageTitle }: ProjectsListPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth()
+  const { setPage } = usePageStore();
 
   const [filters, setFilters] = useState({ status: '', name: '' });
   const [error, setError] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    setPage({
+      module: "ccro-management",
+      title: pageTitle,
+    });
+  }, [setPage, pageTitle]);
 
   const { data, isLoading, error: queryError, refetch } = useProjectsQuery({
     limit: 20,

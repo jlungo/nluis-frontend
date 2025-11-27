@@ -14,6 +14,7 @@ import { useAuth } from "@/store/auth";
 import { LogoutButton } from "./LogoutButton";
 import logo from "@/assets/nluis.png"
 import { usePageStore } from "@/store/pageStore";
+import { moduleTiles } from "./module-tiles";
 
 interface MainHeaderProps {
   showLogo?: boolean;
@@ -77,20 +78,26 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
 
         {/* Back Button */}
         {page ? (
-          <Button type="button" variant="outline" size="sm" onClick={() => {
-            if (user?.modules && user.modules.length === 1) navigate('/', { replace: true })
-            else navigate('/board', { replace: true })
-          }}>
-            <ArrowLeft />
-            <span>
-              <span className="hidden md:inline">
-                Back to{" "}
+          <>
+            <Button type="button" variant="outline" size="sm" onClick={() => {
+              if (user?.modules && user.modules.length === 1) navigate('/', { replace: true })
+              else navigate('/board', { replace: true })
+            }}
+            >
+              <ArrowLeft />
+              <span>
+                <span className="hidden md:inline">
+                  Back to{" "}
+                </span>
+                <span className="block md:inline">
+                  {user?.modules && user.modules.length === 1 ? "Home" : "Modules"}
+                </span>
               </span>
-              <span className="block md:inline">
-                {user?.modules && user.modules.length === 1 ? "Home" : "Modules"}
-              </span>
-            </span>
-          </Button>
+            </Button>
+            <p className="text-base lg:text-lg font-semibold text-primary line-clamp-1 hidden sm:block">
+              {moduleTiles.find(m => m.id === page.module)?.title ?? ""}
+            </p>
+          </>
         ) : null}
       </div>
 
@@ -162,7 +169,7 @@ export function MainHeader({ showLogo = false, sidebarOpen, toggleSidebar }: Mai
                   className="md:hidden p-1"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/api/placeholder/32/32" alt="User" />
+                    <AvatarImage alt="User" />
                     <AvatarFallback className="bg-primary text-primary-foreground dark:text-white">
                       {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                     </AvatarFallback>

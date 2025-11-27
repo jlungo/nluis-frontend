@@ -3,7 +3,9 @@ export type ModuleTypes =
   | "land-uses"
   | "ccro-management"
   | "compliance"
+  // TODO: Remove "management-evaluation" once backend user module slugs are updated.
   | "management-evaluation"
+  | "monitoring-and-evaluation"
   | "mapshop-management"
   | "reports"
   | "organizations"

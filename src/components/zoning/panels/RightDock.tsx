@@ -3,7 +3,6 @@ import { useState, useMemo } from "react";
 import { useZoningStore } from "../store/useZoningStore";
 import { ZoneDetailsPanel } from "../components/ZoneDetailsPanel";
 import { useLandUsesQuery } from "@/queries/useSetupQuery";
-import { getOuterRing } from "../utils/geo";
 import { ConflictsPanel } from "../components/ConflictsPanel";
 import { HistoryPanel } from "../components/HistoryPanel";
 
@@ -24,11 +23,12 @@ export default function RightDock() {
         id: activeSummary.id,
         type: activeSummary.type,
         color: activeSummary.color || "#888",
-        coordinates: getOuterRing({ type: "Polygon", coordinates: [activeSummary.coordinates] }),
+        coordinates: activeSummary.coordinates,
         status: activeSummary.status || "Draft",
-        attributes: {},
+        attributes: activeSummary.attributes || {},
         notes: activeSummary.notes || "",
         lastModified: activeSummary.lastModified,
+        geometryType: activeSummary.geometryType,
       }]
       : [];
   }, [activeSummary]);
@@ -47,7 +47,13 @@ export default function RightDock() {
           <ZoneDetailsPanel
             activeZone={activeZoneId}
             zones={zones}
-            onUpdateZone={() => api.saveToAPI?.()}
+            onUpdateZone={(updated) => {
+              const z = updated[0];
+              if (z) {
+                api.updateActiveAttributes?.(z.attributes);
+              }
+              api.saveToAPI?.();
+            }}
             landUses={landUses}
             isNewZone={isNew}
             onAssignLandUse={(_zoneId, lu) => api.assignLandUseToActive?.(lu.id)}

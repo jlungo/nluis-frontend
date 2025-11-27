@@ -5,9 +5,10 @@ import { CCROApplication, STAGE_LABELS, NIDA_STATUS_LABELS } from "@/types/ccro"
 import { DataTable } from "@/components/DataTable";
 import { CCROStatusBadge } from "@/components/ccro/CCROStatusBadge";
 import ActionButtons from "@/components/ActionButtons";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useCCROStore } from "@/store/ccroStore";
+import { usePageStore } from "@/store/pageStore";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -18,6 +19,7 @@ interface Filters {
 
 export default function CCROPage() {
   const navigate = useNavigate();
+  const { setPage } = usePageStore();
   const { 
     applications, 
     error,
@@ -28,6 +30,13 @@ export default function CCROPage() {
     stage: 'all',
     village: 'all',
   });
+
+  useLayoutEffect(() => {
+    setPage({
+      module: "ccro-management",
+      title: "CCRO Applications",
+    });
+  }, [setPage]);
 
   useEffect(() => {
     fetchApplications({});

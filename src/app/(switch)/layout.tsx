@@ -47,7 +47,13 @@ export default function Layout() {
   useEffect(() => {
     if (!user) navigate(`/auth/signin`, { replace: true })
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
-    else if (page?.module && !user.modules.some(m => m.slug === page.module)) navigate(`/board`, { replace: true })
+    else if (page?.module && !user.modules.some(m => {
+      // TODO: Remove 'management-evaluation' check after backend user module slugs are updated.
+      if (page.module === 'monitoring-and-evaluation') {
+        return m.slug === 'monitoring-and-evaluation' || m.slug === 'management-evaluation';
+      }
+      return m.slug === page.module;
+    })) navigate(`/board`, { replace: true })
   }, [navigate, page?.module, user])
 
   // Hydrate module context from the URL on initial load/refresh so the
