@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { saleProductsQueryKey } from "@/queries/useSalesProductsQuery";
 import { useQueryClient } from "@tanstack/react-query";
+import { useFeesQuery } from "@/queries/useFeesQuery";
 
 interface LandUsePlanDto {
   id: number;
@@ -46,6 +47,9 @@ export function SalesAddItemDialog({ open, onOpenChange }: SalesAddItemDialogPro
   const [basePrice, setBasePrice] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedFeeId, setSelectedFeeId] = useState<number | "" | null>(null);
+
+  const { data: fees = [], isLoading: feesLoading } = useFeesQuery();
 
   // Load plans when dialog opens
   useEffect(() => {
@@ -114,6 +118,7 @@ export function SalesAddItemDialog({ open, onOpenChange }: SalesAddItemDialogPro
     setBasePrice("");
     setIsActive(true);
     setSaving(false);
+    setSelectedFeeId(null);
   };
 
   const handleClose = (nextOpen: boolean) => {
@@ -132,6 +137,10 @@ export function SalesAddItemDialog({ open, onOpenChange }: SalesAddItemDialogPro
       toast.error("Please enter a base price.");
       return;
     }
+    if (!selectedFeeId) {
+      toast.error("Please select a billing fee.");
+      return;
+    }
 
     try {
       setSaving(true);
@@ -141,6 +150,7 @@ export function SalesAddItemDialog({ open, onOpenChange }: SalesAddItemDialogPro
         description: description || undefined,
         base_price: basePrice,
         is_active: isActive,
+        fee: selectedFeeId,
       });
 
       toast.success("Sale item created.");
@@ -319,6 +329,29 @@ export function SalesAddItemDialog({ open, onOpenChange }: SalesAddItemDialogPro
                   placeholder="e.g. 10000"
                   className="h-8"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium" htmlFor="sale-fee">
+                  Billing fee
+                </label>
+                <select
+                  id="sale-fee"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  value={selectedFeeId ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedFeeId(v ? Number(v) : "");
+                  }}
+                  disabled={feesLoading}
+                >
+                  <option value="">Select fee...</option>
+                  {fees.map((fee) => (
+                    <option key={fee.id} value={fee.id}>
+                      {fee.name} ({fee.price})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex items-center gap-2 pt-1">

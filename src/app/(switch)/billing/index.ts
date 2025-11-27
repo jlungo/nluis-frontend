@@ -7,6 +7,7 @@ import Payments from "./payments";
 import Receipts from "./receipts";
 import Orders from "./orders";
 import BillingReports from "./billing-reports";
+import BillingConfigurations from "./configurations";
 
 const Index = {
   path: "/billing",
@@ -23,6 +24,7 @@ const Index = {
     Receipts,
     Orders,
     BillingReports,
+    BillingConfigurations,
   ],
 };
 

@@ -54,6 +54,29 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <Home className="h-4 w-4" />,
           },
         ];
+      case "me":
+        return [
+          {
+            id: "dashboard",
+            label: "My Dashboard",
+            icon: <Home className="h-4 w-4" />,
+          },
+          {
+            id: "downloads",
+            label: "My Products",
+            icon: <FileText className="h-4 w-4" />,
+          },
+          {
+            id: "bills",
+            label: "My Bills",
+            icon: <CreditCard className="h-4 w-4" />,
+          },
+          {
+            id: "orders",
+            label: "My Orders",
+            icon: <List className="h-4 w-4" />,
+          },
+        ];
       case "land-uses":
         return [
           {
@@ -201,6 +224,18 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "billing-reports",
                 label: "Billing Reports",
+                icon: <CreditCard className="h-4 w-4" />,
+              },
+            ],
+          },
+          {
+            id: "configurations",
+            label: "Configurations",
+            icon: <List className="h-4 w-4" />,
+            items: [
+              {
+                id: "fees",
+                label: "Fees",
                 icon: <CreditCard className="h-4 w-4" />,
               },
             ],

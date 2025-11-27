@@ -15,6 +15,7 @@ export type Page =
   | "billing"
   | "document-management"
   | "equipment-management"
+  | "me"
 
   // Dashboard pages
 

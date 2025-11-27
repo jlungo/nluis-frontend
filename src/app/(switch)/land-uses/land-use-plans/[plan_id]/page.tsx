@@ -66,6 +66,15 @@ export default function LandUsePlanDetailPage() {
     file: null as File | null,
     thumbnail: null as File | null,
   });
+  const [isEditDocDialogOpen, setIsEditDocDialogOpen] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<PlanDocumentDto | null>(null);
+  const [editDocForm, setEditDocForm] = useState({
+    document_type: "Plan Document",
+    title: "",
+    description: "",
+    file: null as File | null,
+    thumbnail: null as File | null,
+  });
 
   useEffect(() => {
     setPage({ module: "land-uses", title: "Land use Plan" });
@@ -251,6 +260,48 @@ export default function LandUsePlanDetailPage() {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const openEditDocumentDialog = (doc: PlanDocumentDto) => {
+    setSelectedDoc(doc);
+    setEditDocForm({
+      document_type: doc.document_type,
+      title: doc.title,
+      description: doc.description || "",
+      file: null,
+      thumbnail: null,
+    });
+    setIsEditDocDialogOpen(true);
+  };
+
+  const handleDocumentUpdate = async () => {
+    if (!selectedDoc) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("document_type", editDocForm.document_type);
+      formData.append("title", editDocForm.title);
+      formData.append("description", editDocForm.description || "");
+      if (editDocForm.file) {
+        formData.append("file", editDocForm.file);
+      }
+      if (editDocForm.thumbnail) {
+        formData.append("thumbnail", editDocForm.thumbnail);
+      }
+
+      const res = await api.patch(`/zoning/plan-documents/${selectedDoc.id}/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const updated = res.data as PlanDocumentDto;
+      setDocuments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+      setIsEditDocDialogOpen(false);
+      setSelectedDoc(null);
+      toast.success("Document updated");
+    } catch (e) {
+      console.error("Failed to update document", e);
+      toast.error("Failed to update document");
+    }
   };
 
   return (
@@ -573,6 +624,15 @@ export default function LandUsePlanDetailPage() {
                           <Button
                             size="icon"
                             variant="outline"
+                            className="h-7 w-7 text-xs"
+                            onClick={() => openEditDocumentDialog(doc)}
+                            title="Edit document"
+                          >
+                            ✎
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="outline"
                             className="h-7 w-7 text-xs text-red-600"
                             onClick={() => handleDocumentDelete(doc.id)}
                             title="Delete"
@@ -587,6 +647,101 @@ export default function LandUsePlanDetailPage() {
               </div>
             </CardContent>
           </Card>
+          <Dialog open={isEditDocDialogOpen} onOpenChange={setIsEditDocDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Edit plan document</DialogTitle>
+              </DialogHeader>
+              {selectedDoc && (
+                <div className="space-y-4 mt-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Document type</Label>
+                    <select
+                      className="border rounded-md px-2 py-1 text-sm w-full"
+                      value={editDocForm.document_type}
+                      onChange={(e) =>
+                        setEditDocForm((prev) => ({
+                          ...prev,
+                          document_type: e.target.value,
+                        }))
+                      }
+                    >
+                      <option value="Plan Document">Plan Document</option>
+                      <option value="Shapefile">Shapefile</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Title</Label>
+                    <Input
+                      value={editDocForm.title}
+                      onChange={(e) =>
+                        setEditDocForm((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                      placeholder="Document title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Description (optional)</Label>
+                    <Textarea
+                      rows={2}
+                      value={editDocForm.description}
+                      onChange={(e) =>
+                        setEditDocForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Replace file (optional)</Label>
+                    <Input
+                      type="file"
+                      onChange={(e) =>
+                        setEditDocForm((prev) => ({
+                          ...prev,
+                          file: e.target.files?.[0] ?? null,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Replace thumbnail (optional)</Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setEditDocForm((prev) => ({
+                          ...prev,
+                          thumbnail: e.target.files?.[0] ?? null,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditDocDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleDocumentUpdate}
+                      disabled={!editDocForm.title}
+                    >
+                      Save changes
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>

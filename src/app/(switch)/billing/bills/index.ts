@@ -1,5 +1,6 @@
 import Layout from "../layout";
 import Page from "./page";
+import BillDetailPage from "./BillDetailPage";
 
 const Index = {
   path: "bills",
@@ -8,6 +9,10 @@ const Index = {
     {
       index: true,
       Component: Page,
+    },
+    {
+      path: ":id",
+      Component: BillDetailPage,
     },
   ],
 };

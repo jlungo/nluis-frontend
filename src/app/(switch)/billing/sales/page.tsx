@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
+import { useFeesQuery } from "@/queries/useFeesQuery";
 
 export default function SalesAdminPage() {
   const { setPage } = usePageStore();
@@ -32,6 +33,8 @@ export default function SalesAdminPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<SaleProductDto | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  const { data: fees = [], isLoading: feesLoading } = useFeesQuery();
 
   const { data, isLoading, isError } = useSaleProductsQuery({
     is_active: statusFilter === "all" ? undefined : statusFilter,
@@ -256,6 +259,30 @@ export default function SalesAdminPage() {
                   }
                 />
               </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium" htmlFor="edit-fee">
+                  Billing fee
+                </label>
+                <select
+                  id="edit-fee"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  value={editing.fee ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      fee: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  disabled={feesLoading}
+                >
+                  <option value="">Select fee...</option>
+                  {fees.map((fee) => (
+                    <option key={fee.id} value={fee.id}>
+                      {fee.name} ({fee.price})
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center gap-2 pt-1">
                 <Checkbox
                   id="edit-active"
@@ -293,6 +320,7 @@ export default function SalesAdminPage() {
                     description: editing.description ?? null,
                     base_price: editing.base_price,
                     is_active: editing.is_active,
+                    fee: editing.fee,
                   });
                   toast.success("Sale item updated");
                   setEditing(null);

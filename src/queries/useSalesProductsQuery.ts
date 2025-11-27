@@ -16,6 +16,7 @@ export interface SaleProductDto {
   currency_name?: string;
   fee_name?: string | null;
   target_label?: string | null;
+  thumbnail_url?: string | null;
 }
 
 export interface SaleProductFilters {
@@ -23,6 +24,8 @@ export interface SaleProductFilters {
   is_active?: "1" | "0";
   limit?: number;
   offset?: number;
+  locality?: string; // comma-separated locality ids, e.g. "1,2,3"
+  document_type?: string; // comma-separated PlanDocument.document_type values, e.g. "Plan Document,Shapefile"
 }
 
 export const saleProductsQueryKey = "sale-products";
@@ -32,7 +35,7 @@ export const useSaleProductsQuery = (filters?: SaleProductFilters) => {
     queryKey: [saleProductsQueryKey, filters],
     queryFn: async () => {
       const res = await api.get<PaginatedResponseI<SaleProductDto>>(
-        "/sales/products/",
+        "/sales/products/public/",
         { params: filters }
       );
       return res.data;
