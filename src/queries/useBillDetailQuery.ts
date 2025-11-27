@@ -13,9 +13,10 @@ export const useBillDetailQuery = (id: number | undefined) => {
       const res = await api.get<BillDto>(`/billing/bills/${id}`);
       return res.data;
     },
-    refetchInterval: (data) => {
-      if (!data) return false;
-      return data.status === "Pending" ? 5000 : false;
+    refetchInterval: (query) => {
+      const bill = query.state.data;
+      if (!bill) return false;
+      return bill.status === "Pending" ? 5000 : false;
     },
   });
 };

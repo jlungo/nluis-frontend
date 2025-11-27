@@ -11,9 +11,8 @@ import { useSaleProductsQuery } from '@/queries/useSalesProductsQuery';
 import { useAuth } from '@/store/auth';
 import { Link, useNavigate } from 'react-router';
 
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
+
 import type { LocalityI } from '@/types/projects';
 import { tanzaniaLocalityKey } from '@/types/constants';
 import { Spinner } from '@/components/ui/spinner';
