@@ -34,6 +34,16 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
             </div>
         )
 
+    if (questionnaires && questionnaires.results?.length === 0)
+        return (
+            <div className="w-full">
+                <Label htmlFor={name}>{label} {required ? <Asterisk className="text-destructive h-3 w-3" /> : null}</Label>
+                <div className="w-full flex flex-col items-center justify-center gap-2">
+                    <p className="text-center text-muted-foreground text-xs md:text-sm">No questionnaires found!</p>
+                </div>
+            </div>
+        )
+
     if (isError || (!questionnaires || !questionnaires.results?.length))
         return (
             <div className="w-full">
@@ -43,6 +53,7 @@ export default function FormAddQuestionnaires({ name, label, required, module, v
                 </div>
             </div>
         )
+
 
     const selectedQuestionnaires = questionnaires.results.filter(q =>
         values.some(v => v.slug === q.slug)
