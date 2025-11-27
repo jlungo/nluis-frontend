@@ -282,6 +282,8 @@ function Forms({ moduleLevel, redirectPath, localities, funders, project, organi
         return LOCALITY_LEVELS.WARD;
       case LOCALITY_LEVELS.VILLAGE:
         return LOCALITY_LEVELS.VILLAGE;
+      case LOCALITY_LEVELS.CCRO_PROJECT:
+        return LOCALITY_LEVELS.VILLAGE;
       default:
         return LOCALITY_LEVELS.NATIONAL;
     }

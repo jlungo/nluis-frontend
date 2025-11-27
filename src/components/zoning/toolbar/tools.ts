@@ -1,4 +1,4 @@
-import { Save, Layers, Type, PencilRuler, Eye , Square, MousePointer2 } from "lucide-react";
+import { Save, Layers, Type, Eye, MousePointer2, Circle, Slash, Triangle } from "lucide-react";
 import { useZoningStore } from "../store/useZoningStore";
 
 export function useToolbarDefs() {
@@ -52,17 +52,23 @@ export function useToolbarDefs() {
           onClick: () => api.startSelect?.(),
         },
         {
-          id: "add-points",
-          label: "Add Points",
-          icon: PencilRuler,
-          onClick: () => api.openAddPoints?.(),
+          id: "draw-point",
+          label: "Draw Point",
+          icon: Circle,
+          onClick: () => api.startDrawPoint?.(),
         },
         {
-          id: "draw-poly",
+          id: "draw-line",
+          label: "Draw Line",
+          icon: Slash,
+          onClick: () => api.startDrawLine?.(),
+        },
+        {
+          id: "draw-polygon",
           label: "Draw Polygon",
-          icon: Square,
+          icon: Triangle,
           onClick: () => api.startDrawPolygon?.(),
-        }, // <-- add
+        },
       ],
     },
     {

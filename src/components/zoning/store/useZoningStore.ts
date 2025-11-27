@@ -11,6 +11,8 @@ type ZoneSummary = {
   status: string;
   notes?: string;
   lastModified?: string;
+  geometryType?: string;
+  attributes?: Record<string, string>;
 };
 
 type ZoningStore = {

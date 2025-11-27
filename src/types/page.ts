@@ -15,6 +15,7 @@ export type Page =
   | "billing"
   | "document-management"
   | "equipment-management"
+  | "me"
   | "monitoring-and-evaluation"
 
   // Dashboard pages
@@ -26,6 +27,7 @@ export type Page =
   | "regional-land-use"
   | "district-land-use"
   | "village-land-use"
+  | "land-use-plans"
 
   // CCRO Management pages
   | "overview"

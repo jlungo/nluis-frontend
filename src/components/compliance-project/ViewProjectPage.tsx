@@ -10,7 +10,7 @@ import { Edit, MapPin, Calendar, Building, DollarSign, FileText, Users, Trash2, 
 import { ProjectI } from '@/types/projects';
 import { DataTable } from '@/components/DataTable';
 import { Spinner } from '@/components/ui/spinner';
-import { LocalityColumns } from '@/components/project/locality-columns';
+import { createLocalityColumnsWithRequirements } from '@/components/project/locality-columns-with-requirements';
 import { ProjectApprovalStatus } from '@/types/constants';
 import { cn } from '@/lib/utils';
 import { canApproveProject, canDeleteProject, canEditProject } from './permissions';
@@ -24,6 +24,7 @@ import { Progress } from '../ui/progress';
 import { approvalStatus, approvalStatusAtleastOne } from './utils';
 import { ProjectStatusBadge } from './project-status-badge';
 import type { ModuleTypes } from '@/types/modules';
+import { WorkflowButton } from '@/components/workflow/WorkflowButton';
 
 export default function ViewProjectPage({ module, moduleLevel }: { module?: ModuleTypes; moduleLevel: string; }) {
   const { project_id } = useParams<{ project_id: string }>();
@@ -209,7 +210,7 @@ export default function ViewProjectPage({ module, moduleLevel }: { module?: Modu
         </CardContent>
       </Card>
 
-      <CoverageAreasCard project={project} />
+      <CoverageAreasCard project={project} moduleLevel={moduleLevel} />
     </div>
   );
 }
@@ -221,6 +222,15 @@ const ButtonsComponent: React.FC<{ module?: ModuleTypes, moduleLevel: string, pr
 
   const [openDelete, setOpenDelete] = useState(false)
 
+  // Build navigation path based on whether module exists
+  const getNavigatePath = () => {
+    if (module) {
+      return `/compliance/${module}/${moduleLevel}`;
+    } else {
+      return `/compliance/${moduleLevel}`;
+    }
+  };
+
   const handleDelete = () => {
     try {
       if (!user || !user?.role?.name) return
@@ -230,8 +240,7 @@ const ButtonsComponent: React.FC<{ module?: ModuleTypes, moduleLevel: string, pr
         loading: "Deleting project...",
         success: () => {
           setOpenDelete(false)
-          if (module) navigate(`/compliance/${module}/${moduleLevel}`, { replace: true })
-          else navigate(`/compliance/${moduleLevel}`, { replace: true })
+          navigate(getNavigatePath(), { replace: true })
           return `Project deleted successfully`
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -302,8 +311,9 @@ const ButtonsComponent: React.FC<{ module?: ModuleTypes, moduleLevel: string, pr
   )
 }
 
-const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
+const CoverageAreasCard: React.FC<{ project: ProjectI; moduleLevel: string }> = ({ project, moduleLevel }) => {
   const navigate = useNavigate()
+  const columns = createLocalityColumnsWithRequirements(moduleLevel);
 
   const [statusFilter, setStatusFilter] = useState<number | null>(null)
 
@@ -330,7 +340,7 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
       <CardContent>
         {project.localities && project.localities.length > 0 ?
           <DataTable
-            columns={LocalityColumns}
+            columns={columns}
             data={localities}
             enableGlobalFilter={true}
             searchPlaceholder="Search localities..."
@@ -338,15 +348,12 @@ const CoverageAreasCard: React.FC<{ project: ProjectI }> = ({ project }) => {
             showRowNumbers={true}
             shadowed={false}
             rowActions={(locality) => (
-              <Button
-                type='button'
-                size="sm"
-                className={"disabled:opacity-10 mr-5 bg-primary/20 text-primary hover:bg-primary/30 dark:text-primary"}
-                disabled={locality.approval_status !== 2}
+              <WorkflowButton
+                locality_id={locality.locality__id}
+                moduleLevel={moduleLevel}
+                approval_status={locality.approval_status}
                 onClick={() => navigate(`${locality.id}/workflow`)}
-              >
-                Workflow
-              </Button>
+              />
             )}
             rightToolbar={
               <div className='flex gap-0.5'>

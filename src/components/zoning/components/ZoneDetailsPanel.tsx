@@ -44,6 +44,7 @@ export interface Zone {
   attributes: Record<string, string>;
   notes: string;
   lastModified?: string;
+  geometryType?: string;
 }
 
 interface ZoneDetailsPanelProps {
@@ -276,6 +277,10 @@ export function ZoneDetailsPanel({
 
   const landUseEmpty = !luLoading && availableLUs.length === 0;
 
+  const geometryType = zone.geometryType;
+  const isLineGeometry =
+    geometryType === "LineString" || geometryType === "MultiLineString";
+
   return (
     <div
       className="p-3"
@@ -365,6 +370,37 @@ export function ZoneDetailsPanel({
               {zone.coordinates.length} coordinates
             </span>
           </div>
+
+          {isLineGeometry && (
+            <div className="grid grid-cols-5 gap-2">
+              <span className="text-muted-foreground col-span-2 text-xs">
+                Width (m):
+              </span>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  className="col-span-3 h-6 text-xs"
+                  value={editForm.attributes["road_width_m"] ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEditForm((prev) => ({
+                      ...prev,
+                      attributes: {
+                        ...prev.attributes,
+                        road_width_m: value,
+                      },
+                    }));
+                  }}
+                />
+              ) : (
+                <span className="col-span-3 text-xs">
+                  {zone.attributes?.road_width_m ?? ""}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Color (visible in edit) */}
           {isEditing && (

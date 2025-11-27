@@ -13,6 +13,7 @@ import {
   Layers,
   Building2,
   FileQuestionMark,
+  CreditCard,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -43,7 +44,30 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "dashboard",
             label: "System Overview",
-            icon: <Home className="h-4 w-4" />
+            icon: <Home className="h-4 w-4" />,
+          },
+        ];
+      case "me":
+        return [
+          {
+            id: "dashboard",
+            label: "My Dashboard",
+            icon: <Home className="h-4 w-4" />,
+          },
+          {
+            id: "downloads",
+            label: "My Products",
+            icon: <FileText className="h-4 w-4" />,
+          },
+          {
+            id: "bills",
+            label: "My Bills",
+            icon: <CreditCard className="h-4 w-4" />,
+          },
+          {
+            id: "orders",
+            label: "My Orders",
+            icon: <List className="h-4 w-4" />,
           },
         ];
       case "land-uses":
@@ -51,7 +75,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "land-uses",
             label: "Land Uses Overview",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            icon: <LayoutDashboard className="h-4 w-4" />,
           },
           {
             id: "national-land-use",
@@ -68,18 +92,23 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "regional-land-use",
             label: "Regional Land Use",
-            icon: <Map className="h-4 w-4" />
+            icon: <Map className="h-4 w-4" />,
           },
           {
             id: "district-land-use",
             label: "District Land Use",
-            icon: <Layers className="h-4 w-4" />
+            icon: <Layers className="h-4 w-4" />,
           },
           {
             id: "village-land-use",
             label: "Village Land Use",
             icon: <Building2 className="h-4 w-4" />,
             // badge: "12"
+          },
+          {
+            id: "land-use-plans",
+            label: "Land Use Plans",
+            icon: <FileText className="h-4 w-4" />,
           },
         ];
       case "ccro-management":
@@ -236,19 +265,24 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "form-workflows",
                 label: "Form Workflows",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "questionnaires",
                 label: "Questionnaires",
-                icon: <FileQuestionMark className="h-4 w-4" />
+                icon: <FileQuestionMark className="h-4 w-4" />,
+              },
+              {
+                id: "reports",
+                label: "Report Templates",
+                icon: <FileText className="h-4 w-4" />
               },
               {
                 id: "module-levels",
                 label: "Module Levels",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "locality-management",
@@ -258,14 +292,14 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "locality-management",
                 label: "Localities",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "locality-levels",
                 label: "Locality Levels",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "user-management",
@@ -275,24 +309,24 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "user-management",
                 label: "Users",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "user-roles",
                 label: "User Roles",
-                icon: <List className="h-4 w-4" />
+                icon: <List className="h-4 w-4" />,
               },
               {
                 id: "permissions",
                 label: "Permissions",
-                icon: <List className="h-4 w-4" />
+                icon: <List className="h-4 w-4" />,
               },
               {
                 id: "user-groups",
                 label: "User Groups",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "organization-management",
@@ -302,9 +336,9 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "organization-management",
                 label: "Organization Types",
-                icon: <ClipboardPlus className="h-4 w-4" />
-              }
-            ]
+                icon: <ClipboardPlus className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "land-use-management",
@@ -314,9 +348,21 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "land-use-management",
                 label: "Land Uses",
-                icon: <ClipboardPlus className="h-4 w-4" />
-              }
-            ]
+                icon: <ClipboardPlus className="h-4 w-4" />,
+              },
+            ],
+          },
+          {
+            id: "setups-currency",
+            label: "Setups",
+            icon: <List className="h-4 w-4" />,
+            items: [
+              {
+                id: "setups-currency",
+                label: "Currency",
+                icon: <CreditCard className="h-4 w-4" />,
+              },
+            ],
           },
         ];
       case "organizations":
@@ -324,7 +370,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "organizations",
             label: "Dashboard",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            icon: <LayoutDashboard className="h-4 w-4" />,
           },
           {
             id: "organizations-list",

@@ -2,6 +2,7 @@ import Layout from "./layout";
 import Page from "./page";
 import FormManagement from "./form-management";
 import UserManagement from "./user-management";
+import SetupsCurrency from "./setups-currency";
 import type { RouteObject } from "react-router";
 
 const Index: RouteObject = {
@@ -14,6 +15,7 @@ const Index: RouteObject = {
     },
     FormManagement,
     UserManagement,
+    SetupsCurrency,
   ],
 };
 

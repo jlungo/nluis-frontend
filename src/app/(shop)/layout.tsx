@@ -3,8 +3,8 @@ import { ArrowLeft, LogIn, User } from "lucide-react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import nlupcLogo from '@/assets/nluis.png';
 import tanzaniaCoatOfArms from '@/assets/bibi_na_bwana.png';
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
 import { ThemeTogglePopover } from "@/components/ToggleTheme";
 import { useAuth } from "@/store/auth";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -52,27 +52,29 @@ export default function Layout() {
 
                             <ThemeTogglePopover />
 
-                            {/* User Status Indicator */}
+                            {/* Auth actions */}
                             {!user ? (
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-muted-foreground hidden lg:flex">
-                                        <User className="h-3 w-3 mr-1" />
-                                        Guest Mode
-                                    </Badge>
-                                    <Link to="/auth/signin" className={cn(buttonVariants(), "gap-2")}>
+                                    <Link
+                                        to="/auth/register"
+                                        className={cn(buttonVariants({ variant: "outline" }), "gap-2")}
+                                    >
+                                        <User className="h-4 w-4 hidden lg:block" />
+                                        <span className="text-sm">Register</span>
+                                    </Link>
+                                    <Link
+                                        to="/auth/signin"
+                                        className={cn(buttonVariants(), "gap-2")}
+                                    >
                                         <LogIn className="h-4 w-4 hidden lg:block" />
-                                        Login<span className="sr-only lg:not-sr-only"> for Full Access</span>
+                                        <span className="text-sm">Login</span>
                                     </Link>
                                 </div>
                             ) : (
                                 <>
                                     {location.pathname === '/mapshop' ? (
                                         <div className="flex items-center gap-2">
-                                            <Badge className="bg-green-100 dark:bg-green-800/20 text-green-800 border-green-200 dark:border-green-800  hidden lg:flex">
-                                                <User className="h-3 w-3 mr-1" />
-                                                Buyer Account
-                                            </Badge>
-                                            <Link to="/portal" className={cn(buttonVariants({ variant: 'outline' }))}>
+                                            <Link to="/me" className={cn(buttonVariants({ variant: 'outline' }))}>
                                                 My Account
                                             </Link>
                                         </div>

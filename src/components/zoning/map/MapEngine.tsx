@@ -18,7 +18,6 @@ import {
 import { useZoningStore } from "../store/useZoningStore";
 import { parseLandUseStyles } from "./useLandUseStyles";
 import {
-  ensureMultiPolygon,
   closeRing,
   fcToBounds,
   getOuterRing,
@@ -246,7 +245,6 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
           } catch (e: unknown) {
             console.log(e)
           }
-          // Update right panel summary for newly created feature
           try {
             setActiveZoneInStore(
               id,
@@ -257,6 +255,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
                 color: f.properties?.color || "#888",
                 coordinates: getOuterRing(f.geometry),
                 notes: "",
+                geometryType: f.geometry?.type,
+                attributes:
+                  f.properties?.road_width_m != null
+                    ? { road_width_m: String(f.properties.road_width_m) }
+                    : {},
               },
               true
             );
@@ -570,12 +573,15 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
         land_use: s.feature.properties?.land_use,
         status: s.feature.properties?.status ?? "Draft",
         is_proposed: s.feature.properties?.is_proposed ?? isProposed ?? false,
+        // Optional road width for line features (e.g., roads)
+        road_width_m: s.feature.properties?.road_width_m,
       };
       return {
         type: "Feature",
         id: props.id,
         properties: props,
-        geometry: ensureMultiPolygon(s.feature.geometry),
+        // Keep geometry as-is so we can support Polygon, LineString, and Point
+        geometry: s.feature.geometry,
       };
     });
     const missingMeta = features.some(
@@ -618,7 +624,8 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     const feats = Array.from(drawStates.values()).map(({ feature }) => ({
       type: "Feature" as const,
       properties: { ...feature.properties, id: feature.id },
-      geometry: ensureMultiPolygon(feature.geometry),
+      // Export geometry as-is to support all geometry types
+      geometry: feature.geometry,
     }));
     const fc = { type: "FeatureCollection" as const, features: feats };
     const blob = new Blob([JSON.stringify(fc)], {
@@ -630,11 +637,17 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
   const saveAsShapefile = useCallback(async () => {
     try {
       const shpWrite = await import("shp-write");
-      const feats = Array.from(drawStates.values()).map(({ feature }) => ({
-        type: "Feature" as const,
-        properties: { ...feature.properties, id: feature.id },
-        geometry: ensureMultiPolygon(feature.geometry),
-      }));
+      // Shapefile writer expects homogeneous geometry types; for now we
+      // include only polygonal features in the export.
+      const feats = Array.from(drawStates.values())
+        .map(({ feature }) => ({
+          type: "Feature" as const,
+          properties: { ...feature.properties, id: feature.id },
+          geometry: feature.geometry,
+        }))
+        .filter((f) =>
+          f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon"
+        );
       const fc = { type: "FeatureCollection" as const, features: feats };
       const options = { folder: "project", types: { polygon: "zones" } } as any;
       const zipBlob: Blob = (shpWrite.zip(fc, options) as unknown) as Blob;
@@ -651,6 +664,44 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
       saveToAPI: onSaveDrawChanges,
       saveAsGeoJSON,
       saveAsShapefile,
+      updateActiveAttributes: (attrs: Record<string, string>) => {
+        if (!activeZone) return;
+        setDrawStates((prev) => {
+          const next = new Map(prev);
+          const s = next.get(String(activeZone));
+          if (!s) return prev;
+          const existingProps = s.feature?.properties || {};
+          const updatedProps: any = {
+            ...existingProps,
+            ...attrs,
+          };
+          if (attrs.road_width_m !== undefined) {
+            const v = attrs.road_width_m;
+            updatedProps.road_width_m = v === "" ? undefined : Number(v);
+          }
+          const updatedFeature = {
+            ...s.feature,
+            properties: updatedProps,
+          };
+          next.set(String(activeZone), {
+            ...s,
+            feature: updatedFeature,
+          });
+          try {
+            if (s.feature?.id != null) {
+              const widthVal = updatedProps.road_width_m;
+              drawRef.current?.setFeatureProperty(
+                s.feature.id,
+                "road_width_m",
+                widthVal
+              );
+            }
+          } catch (e: unknown) {
+            console.log(e);
+          }
+          return next;
+        });
+      },
       // dialogs / toggles
       openAddPoints: () => setPointsOpen(true),
       toggleLabels: (v: boolean) => {
@@ -895,6 +946,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             coordinates: getOuterRing(zoneDetail.geom),
             notes: (zoneDetail as any).notes,
             lastModified: zoneDetail.updated_at?.slice(0, 10),
+            geometryType: zoneDetail.geom?.type,
+            attributes:
+              (zoneDetail as any).road_width_m != null
+                ? { road_width_m: String((zoneDetail as any).road_width_m) }
+                : {},
           },
           false
         );
@@ -910,6 +966,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
               color: s.feature?.properties?.color || "#888",
               coordinates: getOuterRing(s.feature?.geometry),
               notes: "",
+              geometryType: s.feature?.geometry?.type,
+              attributes:
+                s.feature?.properties?.road_width_m != null
+                  ? { road_width_m: String(s.feature.properties.road_width_m) }
+                  : {},
             },
             true
           );
@@ -1068,30 +1129,67 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
     let filter: any = ["all"];
 
     if (colorMode === "type") {
-      // Filter by land use type visibility
+      // Filter by land use type visibility (coalesce id/name to match styling logic)
       const hiddenTypes = Object.entries(visibleTypes)
         .filter(([, visible]) => visible === false)
         .map(([id]) => Number(id) || String(id));
-      
+
       if (hiddenTypes.length > 0) {
-        filter.push(["!", ["in", ["get", "land_use"], ["literal", hiddenTypes]]]);
+        filter.push([
+          "!",
+          [
+            "in",
+            [
+              "coalesce",
+              ["get", "land_use_id"],
+              ["get", "land_use"],
+            ],
+            ["literal", hiddenTypes],
+          ],
+        ]);
       }
     } else {
-      // Filter by status visibility
+      // Filter by status visibility (use the plain `status` property as before)
       const hiddenStatuses = Object.entries(visibleStatuses)
         .filter(([, visible]) => visible === false)
         .map(([status]) => status);
-      
+
       if (hiddenStatuses.length > 0) {
-        filter.push(["!", ["in", ["get", "status"], ["literal", hiddenStatuses]]]);
+        filter.push([
+          "!",
+          ["in", ["get", "status"], ["literal", hiddenStatuses]],
+        ]);
       }
     }
 
+    const finalFilter = filter.length > 1 ? filter : null;
+
     try {
-      map.setFilter("zones-fill", filter.length > 1 ? filter : null);
-      map.setFilter("zones-line", filter.length > 1 ? filter : null);
+      // Proposed zones: polygons + outlines + lines + points + labels
+      map.setFilter("zones-fill", finalFilter);
+      map.setFilter("zones-line", finalFilter);
+      if (map.getLayer("zones-linestring")) {
+        map.setFilter("zones-linestring", finalFilter);
+      }
+      if (map.getLayer("zones-point")) {
+        map.setFilter("zones-point", finalFilter);
+      }
       if (map.getLayer("zones-labels")) {
-        map.setFilter("zones-labels", filter.length > 1 ? filter : null);
+        map.setFilter("zones-labels", finalFilter);
+      }
+
+      // Existing overlay (when enabled) should respect the same filters
+      if (map.getLayer("existing-overlay-fill")) {
+        map.setFilter("existing-overlay-fill", finalFilter);
+      }
+      if (map.getLayer("existing-overlay-line")) {
+        map.setFilter("existing-overlay-line", finalFilter);
+      }
+      if (map.getLayer("existing-overlay-linestring")) {
+        map.setFilter("existing-overlay-linestring", finalFilter);
+      }
+      if (map.getLayer("existing-overlay-point")) {
+        map.setFilter("existing-overlay-point", finalFilter);
       }
     } catch (e: unknown) {
       console.log(e);
@@ -1405,7 +1503,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             filter={["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]]}
             paint={{ "line-color": "#1f2937", "line-width": 0.75 }}
           />
-          {/* LineString layer */}
+          {/* LineString layer (uses optional road_width_m attribute for width) */}
           <Layer
             id="zones-linestring"
             type="line"
@@ -1413,7 +1511,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
             paint={{
               "line-color": ["coalesce", ["get", "color"], "#6b7280"],
-              "line-width": 3,
+              "line-width": [
+                "coalesce",
+                ["get", "road_width_m"],
+                3,
+              ],
               "line-opacity": 0.8,
             }}
           />
@@ -1425,10 +1527,10 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
             filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
             paint={{
               "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
-              "circle-radius": 8,
+              "circle-radius": 4,
               "circle-opacity": 0.8,
               "circle-stroke-color": "#1f2937",
-              "circle-stroke-width": 2,
+              "circle-stroke-width": 1,
             }}
           />
         </Source>
@@ -1466,7 +1568,7 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
                 "line-dasharray": [2, 2]
               }}
             />
-            {/* LineString overlay */}
+            {/* LineString overlay (also honours road_width_m when present) */}
             <Layer
               id="existing-overlay-linestring"
               type="line"
@@ -1474,7 +1576,11 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
               filter={["in", ["geometry-type"], ["literal", ["LineString", "MultiLineString"]]]}
               paint={{
                 "line-color": ["coalesce", ["get", "color"], "#6b7280"],
-                "line-width": 2,
+                "line-width": [
+                  "coalesce",
+                  ["get", "road_width_m"],
+                  2,
+                ],
                 "line-opacity": 0.4,
                 "line-dasharray": [2, 2]
               }}
@@ -1487,10 +1593,10 @@ export default function MapEngine({ baseMapId, defaultLandUseId, colorMode = "ty
               filter={["in", ["geometry-type"], ["literal", ["Point", "MultiPoint"]]]}
               paint={{
                 "circle-color": ["coalesce", ["get", "color"], "#6b7280"],
-                "circle-radius": 6,
+                "circle-radius": 3,
                 "circle-opacity": 0.4,
                 "circle-stroke-color": "#64748b",
-                "circle-stroke-width": 1,
+                "circle-stroke-width": 0.75,
               }}
             />
           </Source>

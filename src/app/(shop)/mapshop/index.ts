@@ -1,6 +1,7 @@
 import type { RouteObject } from "react-router";
 import Layout from "./layout";
 import Page from "./page";
+import ProductDetailPage from "./ProductDetailPage";
 
 const Index: RouteObject = {
   path: "/mapshop",
@@ -9,6 +10,10 @@ const Index: RouteObject = {
     {
       index: true,
       Component: Page,
+    },
+    {
+      path: "products/:id",
+      Component: ProductDetailPage,
     },
   ],
 };
