@@ -125,10 +125,10 @@ export default function Batches({ pageTitle, projectId, projectLocalityId, topLe
                     enableGlobalFilter={false}
                     initialPageSize={10}
                     pageSizeOptions={[5, 10, 20, 50]}
-                    onRowClick={({ id }) => {
+                    onRowClick={({ batch }) => {
                         if (topLevelModule)
-                            return navigate(`/${topLevelModule}/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)
-                        return navigate(`/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${id}`)
+                            return navigate(`/${topLevelModule}/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${batch}`)
+                        return navigate(`/${module}/${moduleLevel}/${projectId}/${projectLocalityId}/questionnaire/${questionnaireId}/${batch}`)
                     }}
                 />
             </div>
