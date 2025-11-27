@@ -22,7 +22,8 @@ type FormViewQuestionnairesProps = {
 };
 
 export default function FormViewQuestionnaires({ name, label, required, disabled, module, projectLocalityId, href, isPreview }: FormViewQuestionnairesProps) {
-    const { data: questionnaires, isLoading, isError } = useQuestionnairesQuery(0, 0, '', module, "", projectLocalityId)
+    const categoryId = typeof projectLocalityId === 'number' ? projectLocalityId : (projectLocalityId ? parseInt(projectLocalityId as string) : 0)
+    const { data: questionnaires, isLoading, isError } = useQuestionnairesQuery(0, 0, '', module, "", categoryId)
 
     if (isLoading)
         return (

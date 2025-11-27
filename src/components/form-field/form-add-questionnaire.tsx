@@ -21,7 +21,7 @@ type FormAddQuestionnairesProps = {
 };
 
 export default function FormAddQuestionnaires({ name, label, required, module, values, onValueChange }: FormAddQuestionnairesProps) {
-    const { data: questionnaires, isLoading, isError } = useQuestionnairesQuery(0, 0, '', module, "")
+    const { data: questionnaires, isLoading, isError } = useQuestionnairesQuery(0, 0, '', module, "", 0)
 
     if (isLoading)
         return (

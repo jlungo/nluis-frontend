@@ -2,8 +2,9 @@
 export { default as CreateOrEditProject } from './CreateOrEditProject';
 
 // Specialized project components (re-exported from their own folders)
-export { CreateComplianceProject } from '../compliance_projects';
-export { CreateMNEProject } from '../mne_projects';
+// Note: CreateComplianceProject and CreateMNEProject are not separate modules yet
+// export { CreateComplianceProject } from '../compliance-project';
+// export { CreateMNEProject } from '../mne-project';
 
 // Project utilities and helpers
 export { default as Dashboard } from './Dashboard';

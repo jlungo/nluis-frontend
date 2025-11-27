@@ -1,7 +1,7 @@
 import { type ParcelFeature, type SubdivisionFeature } from '@/types/subdivision';
 import { useParcelSubdivisionsQuery } from '@/queries/useParcelQuery';
 import { useRef, useEffect, useCallback, useState } from 'react';
-import MapGL, { Source, Layer, type MapRef } from 'react-map-gl/mapbox';
+import MapGL, { type MapRef } from 'react-map-gl/mapbox';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import { MapControls } from './MapControls';
 import { type MapPoint } from './types';
@@ -12,13 +12,11 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import useSubdivisionStore from '../store/useSubdivisionStore';
-import api, { getAccessToken, refreshAccessToken } from '@/lib/axios';
 import { 
   polygonToLine, 
   polygonize, 
   length as turfLength, 
-  area as turfArea, 
-  intersect as turfIntersect,
+  area as turfArea,
 } from '@turf/turf';
 import { featureCollection as turfFeatureCollection } from '@turf/helpers';
 import MeasurePanel from '../MeasurePanel';
@@ -26,20 +24,12 @@ import PointDialog from './PointDialog';
 import createToolbox from '../tools/toolbox';
 import { Minimize, Maximize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { usePlansQuery } from '@/queries/usePlansQuery';
 
 // ============================================================================
 // IMPORTS: Extracted utilities and hooks
 // ============================================================================
-import { 
-  fcToBounds, 
-  extractCoordinatesFromGeometry, 
-  calculateBoundsFromFeature, 
-  calculateAreaFromBounds, 
-  getZoomPaddingForArea 
-} from '../utils/geometryHelpers';
+import { getPlansTilesTemplate, invalidateTiles } from '../utils/tilesHelpers';
 import { calculateUTM, convertCoordinates } from '../utils/projectionHelpers';
-import { getPlansTilesTemplate, isApiUrl, invalidateTiles } from '../utils/tilesHelpers';
 
 // Custom hooks
 import { useZoomToFeature } from '../hooks/useZoomToFeature';
@@ -79,7 +69,6 @@ export default function SubdivisionMapViewer({
   // ============================================================================
   // QUERIES & REFS
   // ============================================================================
-  const plansQuery = usePlansQuery(localityId ? { locality: localityId } : null as any);
   const mapRef = useRef<MapRef | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
 
@@ -88,7 +77,7 @@ export default function SubdivisionMapViewer({
   // ============================================================================
   const pointsOpen = useSubdivisionStore((s) => s.pointsDialogOpen);
   const setPointsOpen = useSubdivisionStore((s) => s.setPointsDialogOpen);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlan] = useState<any>(null);
 
   // ============================================================================
   // BACKEND DATA
@@ -120,8 +109,6 @@ export default function SubdivisionMapViewer({
   const setDrawMode = useSubdivisionStore((s) => s.setDrawMode);
   const addSubdivision = useSubdivisionStore((s) => s.addSubdivision);
   const updateSubdivisions = useSubdivisionStore((s) => s.updateSubdivisions);
-  const setSelectedId = useSubdivisionStore((s) => s.setSelectedId);
-  const setActivePlan = useSubdivisionStore((s) => s.setActivePlan);
 
   // ============================================================================
   // EXTRACTED CUSTOM HOOKS
@@ -141,7 +128,7 @@ export default function SubdivisionMapViewer({
 
   const createSubdivisionFeature = useCreateSubdivision(selectedPlan, parentParcel);
   
-  const { recomputePlans, updatePlanSummariesFromMap, applySelectionToMap } = 
+  const { recomputePlans } = 
     usePlanSummaries(getMap, localityId);
 
   // Apply style and paint effects

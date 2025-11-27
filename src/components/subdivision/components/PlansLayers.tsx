@@ -17,7 +17,7 @@ export function PlansLayers({
   colorMode,
   showPlans,
 }: PlansLayersProps) {
-  if (!localityId) return null;
+  if (!localityId || !showPlans) return null;
 
   const source = getPlansTilesSource(localityId);
   if (!source) return null;

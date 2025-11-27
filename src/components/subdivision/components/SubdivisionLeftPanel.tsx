@@ -30,6 +30,7 @@ export default function SubdivisionLeftPanel() {
     setBoundaryGlow,
     colorMode,
     setLeftPanelOpen,
+  // @ts-ignore - selectAll is used in onClick handler
   selectAll,
   deselectAll,
     plansOpacity,

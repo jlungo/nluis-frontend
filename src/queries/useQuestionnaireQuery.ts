@@ -44,6 +44,8 @@ export interface FormProps {
   module_name: string;
   position: number;
   form_fields: FieldsProps[];
+  custom_form_fields?: FieldsProps[];
+  edit_if_prev_filled?: boolean;
 }
 
 export interface SectionProps {
@@ -57,6 +59,9 @@ export interface SectionProps {
   module_slug: string;
   module_name: string;
   forms: FormProps[];
+  questionnaire_section_forms?: FormProps[];
+  edit_if_prev_approved?: boolean;
+  edit_if_prev_filled?: boolean;
 }
 
 export interface QuestionnaireProps {
@@ -70,6 +75,7 @@ export interface QuestionnaireProps {
   module_name: string;
   sections_count: number;
   sections: SectionProps[];
+  questionnaire_sections?: SectionProps[];
 }
 
 interface DataProps extends APIResponse {

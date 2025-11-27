@@ -55,6 +55,7 @@ export interface FormProps {
   position: number;
   editor_roles: RoleT[];
   form_fields: FieldsProps[];
+  edit_if_prev_filled?: boolean;
 }
 
 export interface SectionProps {
@@ -71,6 +72,8 @@ export interface SectionProps {
   module_slug: string;
   module_name: string;
   forms: FormProps[];
+  edit_if_prev_approved?: boolean;
+  edit_if_prev_filled?: boolean;
 }
 
 export interface WorkflowProps {
