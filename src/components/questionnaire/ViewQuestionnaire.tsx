@@ -14,18 +14,20 @@ type Props = {
     pageTitle: string;
     projectId: string;
     projectLocalityId: string;
+    topLevelModule?: ModuleTypes;
     module: ModuleTypes;
     moduleLevel: string;
     questionnaireId: string;
+    batch: string;
 }
 
-export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, module, moduleLevel, questionnaireId }: Props) {
+export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalityId, topLevelModule, module, moduleLevel, questionnaireId, batch }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
     const { data: project, isLoading: isLoadingProject } = useProjectQuery(projectId);
     const { data: questionnaire, isLoading: isLoadingQuestionnaire } = useQuestionnaireQuery(questionnaireId);
-    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId)
+    const { data: values, isLoading: isLoadingValues } = useQuestionnaireDataQuery(questionnaire ? questionnaire.slug : undefined, projectLocalityId, batch)
 
     const projectLocaleName = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__name
     const projectLocaleId = project?.localities?.find(locale => `${locale.id}` === projectLocalityId)?.locality__id
@@ -47,16 +49,24 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
             : 2
 
     useLayoutEffect(() => {
-        setPage({
+        if (topLevelModule) setPage({
+            module: topLevelModule,
+            title: pageTitle,
+            isFormPage: true
+        })
+        else setPage({
             module: module,
             title: pageTitle,
             isFormPage: true
         });
-    }, [module, pageTitle, setPage]);
+    }, [topLevelModule, module, pageTitle, setPage]);
 
     useEffect(() => {
-        if (approval_status !== 2) navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
-    }, [approval_status, module, moduleLevel, navigate, projectId])
+        if (approval_status !== 2) {
+            if (topLevelModule) navigate(`/${topLevelModule}/${module}/${moduleLevel}/${projectId}`, { replace: true })
+            else navigate(`/${module}/${moduleLevel}/${projectId}`, { replace: true })
+        }
+    }, [approval_status, topLevelModule, module, moduleLevel, navigate, projectId])
 
     if (isLoadingQuestionnaire || isLoadingValues || isLoadingProject) return <div className='flex flex-col items-center justify-center h-60'>
         <Spinner />
@@ -71,7 +81,12 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
     if (approval_status !== 2)
         return <div className='flex flex-col items-center justify-center h-80 gap-12'>
             <p className='text-muted-foreground'>This project is not approved!</p>
-            <Link to={`/${module}/${moduleLevel}/${projectId}`} className={cn(buttonVariants({ size: 'sm' }))}>Go to project Details</Link>
+            <Link
+                to={topLevelModule ? `/${topLevelModule}/${module}/${moduleLevel}/${projectId}` : `/${module}/${moduleLevel}/${projectId}`}
+                className={cn(buttonVariants({ size: 'sm' }))}
+            >
+                Go to project Details
+            </Link>
         </div>
 
     if ((!projectLocaleName || !projectLocaleId) && !isLoadingQuestionnaire && !isLoadingValues && !isLoadingProject)
@@ -97,6 +112,7 @@ export default function ViewQuestionnaire({ pageTitle, projectId, projectLocalit
             projectName={project.name}
             projectLocaleName={projectLocaleName}
             projectLocaleId={projectLocaleId}
+            subLevelModule={topLevelModule ? module : undefined}
             moduleLevel={moduleLevel}
             projectId={projectId}
         // questionnaireProgress={questionnaireProgress}

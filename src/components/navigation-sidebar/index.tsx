@@ -46,6 +46,12 @@ export default function NavigationSidebar({
         if (!page || !page?.module) return "";
         const parts = id.split("/");
         if (parts[0] === page.module) return `/${parts.slice(0).join("/")}`;
+        if (parts[parts.length - 1].endsWith('-dashboard')) {
+            // Handle both single-word (compliance-dashboard) and multi-word (monitoring-and-evaluation-dashboard)
+            const dashboardId = parts[parts.length - 1];
+            const moduleFromId = dashboardId.replace('-dashboard', '');
+            if (moduleFromId === page.module) return `/${page.module}`;
+        }
         return `/${page.module}/${id}`
     };
 
@@ -53,8 +59,10 @@ export default function NavigationSidebar({
 
     const renderNavigationItem = (item: NavigationItem, group?: NavigationGroup) => {
         const link = group ? group.id === item.id ? group.id : `${group.id}/${item.id}` : item.id
-        const parts = link.split("/");
-        const isPathnameActive = parts[0] === page?.module ? pathname.endsWith(page.module) : pathname.includes(link)
+        const noDashboardLink = link.split("-").slice(0, -1).join("-")
+        const isPathnameActive
+            = (noDashboardLink === page?.module && pathname.endsWith(`/${noDashboardLink}`)) ||
+                link.split("/")[0] === page?.module ? pathname.endsWith(page.module) : pathname.includes(link)
 
         const buttonContent = (
             <Link

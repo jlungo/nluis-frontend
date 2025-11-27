@@ -35,12 +35,13 @@ type Props = {
     projectName?: string;
     projectLocaleName?: string
     projectLocaleId?: string
+    subLevelModule?: string
     moduleLevel?: string
     projectId?: string
     questionnaireProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, moduleLevel, projectId, questionnaireProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, subLevelModule, moduleLevel, projectId, questionnaireProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -278,7 +279,13 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             project_locality_id={projectLocalityId || ""}
                                             baseMapId={projectLocaleId || undefined}
                                             module={data.module_slug}
-                                            href={`/${data.module_slug}/${moduleLevel}/${projectId}/${projectLocalityId}`}
+                                            href={
+                                                moduleLevel && subLevelModule
+                                                    ? `/${data.module_slug}/${subLevelModule}/${moduleLevel}/${projectId}/${projectLocalityId}`
+                                                    : moduleLevel
+                                                        ? `/${data.module_slug}/${moduleLevel}/${projectId}/${projectLocalityId}`
+                                                        : undefined
+                                            }
                                             {...field}
                                         />
                                     ))}
@@ -446,8 +453,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center gap-2">
                                                             {isFilledForm(form.slug)
-                                                                ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800" />
-                                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />}
+                                                                ? <CheckCircle className="h-4 w-4 text-green-700 dark:text-green-800 shrink-0" />
+                                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground shrink-0" />}
                                                             <div>
                                                                 <div className="font-medium text-sm">{form.name}</div>
                                                                 <div className="text-xs text-muted-foreground">{form?.description || null}</div>

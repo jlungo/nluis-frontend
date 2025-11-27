@@ -6,12 +6,13 @@ import Board from "./board";
 import Switch from "./(switch)";
 import Shop from "./(shop)";
 import Me from "./me";
+import Lookup from "./lookup";
 
 const Index = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    children: [Home, Auth, Board, Switch, Shop, Me],
+    children: [Home, Auth, Board, Switch, Shop, Lookup, Me],
   },
 ]);
 

@@ -3,7 +3,7 @@ import Dashboard from "./dashboard";
 import LandUses from "./land-uses";
 import CCROManagement from "./ccro-management";
 import Compliance from "./compliance";
-import ManagementEvaluation from "./management-evaluation";
+import MonitoringAndEvaluation from "./monitoring-and-evaluation";
 import MapShopManagement from "./mapshop-management";
 import Reports from "./reports";
 import Organizations from "./organizations";
@@ -21,7 +21,7 @@ const Index: RouteObject = {
     LandUses,
     CCROManagement,
     Compliance,
-    ManagementEvaluation,
+    MonitoringAndEvaluation,
     MapShopManagement,
     Reports,
     Organizations,

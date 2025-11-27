@@ -2,8 +2,6 @@ import type { PageMetadata } from "@/store/pageStore";
 import {
   Home,
   Shield,
-  BarChart3,
-  AlertTriangle,
   FileText,
   List,
   LayoutDashboard,
@@ -21,6 +19,8 @@ import {
   Satellite,
   LineChart,
   CreditCard,
+  AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -127,9 +127,19 @@ export const getNavigationItems = (page: PageMetadata | null): (
             // badge: "8"
           },
           {
+            id: "ccro-projects",
+            label: "CCRO Projects",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
             id: "land-formalization",
             label: "Land Formalization",
             icon: <FileText className="h-4 w-4" />,
+          },
+          {
+            id: "ccro-application",
+            label: "CCRO Applications",
+            icon: <FileText className="h-4 w-4" />
           },
           {
             id: "reports",
@@ -142,104 +152,52 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "overview",
             label: "Compliance Overview",
-            icon: <AlertTriangle className="h-4 w-4" />,
+            icon: <AlertTriangle className="h-4 w-4" />
           },
           {
             id: "reports",
             label: "Compliance Reports",
-            icon: <FileText className="h-4 w-4" />,
+            icon: <FileText className="h-4 w-4" />
           },
         ];
       case "management-evaluation":
         return [
           {
-            id: "overview",
+            id: "monitoring-and-evaluation-dashboard",
             label: "Dashboard",
             icon: <BarChart3 className="h-4 w-4" />,
-            badge: "5",
+            badge: "5"
           },
           {
             id: "indicators",
             label: "Indicators",
-            icon: <ListChecks className="h-4 w-4" />,
+            icon: <ListChecks className="h-4 w-4" />
           },
           {
             id: "villages",
             label: "Village Tracking",
-            icon: <MapPin className="h-4 w-4" />,
+            icon: <MapPin className="h-4 w-4" />
           },
           {
             id: "reports",
             label: "M&E Reports",
-            icon: <FileText className="h-4 w-4" />,
+            icon: <FileText className="h-4 w-4" />
           },
           {
             id: "analysis",
             label: "Data Analysis",
-            icon: <TrendingUp className="h-4 w-4" />,
+            icon: <TrendingUp className="h-4 w-4" />
           },
           {
             id: "satellite",
             label: "Satellite Monitoring",
-            icon: <Satellite className="h-4 w-4" />,
+            icon: <Satellite className="h-4 w-4" />
           },
           {
             id: "projections",
             label: "Projections",
-            icon: <LineChart className="h-4 w-4" />,
-          },
-        ];
-      case "billing":
-        return [
-          {
-            id: "sales",
-            label: "Sales",
-            icon: <TrendingUp className="h-4 w-4" />,
-          },
-          {
-            id: "billing",
-            label: "Billing",
-            icon: <CreditCard className="h-4 w-4" />,
-            items: [
-              {
-                id: "bills",
-                label: "Bills",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-              {
-                id: "payments",
-                label: "Payments",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-              {
-                id: "receipts",
-                label: "Receipts",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-              {
-                id: "orders",
-                label: "Orders",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-              {
-                id: "billing-reports",
-                label: "Billing Reports",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-            ],
-          },
-          {
-            id: "configurations",
-            label: "Configurations",
-            icon: <List className="h-4 w-4" />,
-            items: [
-              {
-                id: "fees",
-                label: "Fees",
-                icon: <CreditCard className="h-4 w-4" />,
-              },
-            ],
-          },
+            icon: <LineChart className="h-4 w-4" />
+          }
         ];
       case "reports":
         return [];
@@ -274,7 +232,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "reports",
                 label: "Report Templates",
-                icon: <FileText className="h-4 w-4" />,
+                icon: <FileText className="h-4 w-4" />
               },
               {
                 id: "module-levels",

@@ -1,5 +1,6 @@
-import Layout from "./layout";
-import Page from "./page";
+import Layout from "./layout"
+import Page from "./page"
+import Batch from "./[batch]"
 
 const Index = {
   path: ":questionnaire_id",
@@ -9,7 +10,8 @@ const Index = {
       index: true,
       Component: Page,
     },
+    Batch,
   ],
-};
+}
 
-export default Index;
+export default Index
