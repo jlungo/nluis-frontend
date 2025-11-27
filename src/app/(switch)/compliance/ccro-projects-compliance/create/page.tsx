@@ -13,5 +13,5 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.VILLAGE} redirectPath="/compliance/ccro-projects-compliance" />;
+  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.CCRO_PROJECT} redirectPath="/compliance/ccro-projects-compliance" />;
 }

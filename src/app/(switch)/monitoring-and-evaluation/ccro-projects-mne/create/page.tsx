@@ -13,5 +13,5 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.VILLAGE} redirectPath="/monitoring-and-evaluation/ccro-projects-mne" />;
+  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.CCRO_PROJECT} redirectPath="/monitoring-and-evaluation/ccro-projects-mne" />;
 }

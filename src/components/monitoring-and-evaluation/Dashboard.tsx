@@ -5,6 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChart, { type TabProps } from "@/components/project-chart";
 import type { ModuleTypes } from "@/types/modules";
 import { useDataStore } from "../project-chart/useDataStore";
+import SatelliteChangeDetection from "./SatelliteChangeDetection";
+import BeforeAfterAnalysis from "./BeforeAfterAnalysis";
+import ProjectionAnalysis from "./ProjectionAnalysis";
+import RealTimeMap from "./RealTimeMap";
 
 const landUseTabs: TabProps[] = [
     // { value: "", label: "All" },
@@ -20,7 +24,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
     const { setPage } = usePageStore();
     const { clearLocalities } = useDataStore();
 
-    const [tab, setTab] = useState<TabProps>({ value: "village-land-use-mne", label: "Village" });
+    const [tab, setTab] = useState<string>("village-land-use-mne");
 
     useLayoutEffect(() => {
         // Clear data store when mounting to ensure only M&E data is displayed
@@ -42,23 +46,50 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
             </div>
 
             <Tabs
-                value={tab.value}
-                onValueChange={e => setTab(tabs.find(t => t.value === e) ?? tabs[0])}
+                value={tab}
+                onValueChange={setTab}
                 className="w-full"
             >
-                <TabsList className="rounded-full w-full">
-                    {tabs.map(tab => (
+                <TabsList className="rounded-full w-full flex-wrap h-auto p-1">
+                    {tabs.map(t => (
                         <TabsTrigger
-                            key={tab.value}
-                            value={tab.value}
+                            key={t.value}
+                            value={t.value}
                             className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm"
                         >
-                            {tab.label}<span className="hidden lg:inline"> Projects</span>
+                            {t.label}<span className="hidden lg:inline"> Projects</span>
                         </TabsTrigger>
                     ))}
+                    <TabsTrigger value="satellite-analysis" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
+                        Satellite Analysis
+                    </TabsTrigger>
+                    <TabsTrigger value="impact-analysis" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
+                        Impact Analysis
+                    </TabsTrigger>
+                    <TabsTrigger value="real-time-map" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
+                        Real-time Map
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent value={tab.value}>
-                    <ProjectChart tab={tab} />
+
+                {tabs.map(t => (
+                    <TabsContent key={t.value} value={t.value}>
+                        <ProjectChart tab={t} />
+                    </TabsContent>
+                ))}
+
+                <TabsContent value="satellite-analysis" className="space-y-4">
+                    <SatelliteChangeDetection />
+                </TabsContent>
+
+                <TabsContent value="impact-analysis" className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <BeforeAfterAnalysis />
+                        <ProjectionAnalysis />
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="real-time-map" className="space-y-4">
+                    <RealTimeMap />
                 </TabsContent>
             </Tabs>
         </div>
