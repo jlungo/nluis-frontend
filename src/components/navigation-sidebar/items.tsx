@@ -13,6 +13,14 @@ import {
   Layers,
   Building2,
   FileQuestionMark,
+  ListChecks,
+  MapPin,
+  TrendingUp,
+  Satellite,
+  LineChart,
+  CreditCard,
+  AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -43,7 +51,30 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "dashboard",
             label: "System Overview",
-            icon: <Home className="h-4 w-4" />
+            icon: <Home className="h-4 w-4" />,
+          },
+        ];
+      case "me":
+        return [
+          {
+            id: "dashboard",
+            label: "My Dashboard",
+            icon: <Home className="h-4 w-4" />,
+          },
+          {
+            id: "downloads",
+            label: "My Products",
+            icon: <FileText className="h-4 w-4" />,
+          },
+          {
+            id: "bills",
+            label: "My Bills",
+            icon: <CreditCard className="h-4 w-4" />,
+          },
+          {
+            id: "orders",
+            label: "My Orders",
+            icon: <List className="h-4 w-4" />,
           },
         ];
       case "land-uses":
@@ -51,7 +82,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "land-uses",
             label: "Land Uses Overview",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            icon: <LayoutDashboard className="h-4 w-4" />,
           },
           {
             id: "national-land-use",
@@ -68,18 +99,23 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "regional-land-use",
             label: "Regional Land Use",
-            icon: <Map className="h-4 w-4" />
+            icon: <Map className="h-4 w-4" />,
           },
           {
             id: "district-land-use",
             label: "District Land Use",
-            icon: <Layers className="h-4 w-4" />
+            icon: <Layers className="h-4 w-4" />,
           },
           {
             id: "village-land-use",
             label: "Village Land Use",
             icon: <Building2 className="h-4 w-4" />,
             // badge: "12"
+          },
+          {
+            id: "land-use-plans",
+            label: "Land Use Plans",
+            icon: <FileText className="h-4 w-4" />,
           },
         ];
       case "ccro-management":
@@ -98,7 +134,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "land-formalization",
             label: "Land Formalization",
-            icon: <FileText className="h-4 w-4" />
+            icon: <FileText className="h-4 w-4" />,
           },
           {
             id: "ccro-application",
@@ -108,109 +144,59 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "reports",
             label: "CCRO Reports",
-            icon: <FileText className="h-4 w-4" />
+            icon: <FileText className="h-4 w-4" />,
           },
         ];
       case "compliance":
         return [
           {
-            id: "compliance-dashboard",
-            label: "Dashboard",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            id: "overview",
+            label: "Compliance Overview",
+            icon: <AlertTriangle className="h-4 w-4" />
           },
           {
-            id: "land-uses",
-            label: "Land Use Compliance",
-            icon: <Map className="h-4 w-4" />,
-            items: [
-              {
-                id: "land-uses",
-                label: "Land Uses Overview",
-                icon: <LayoutDashboard className="h-4 w-4" />,
-                hidden: true
-              },
-              {
-                id: "national-land-use-compliance",
-                label: "National Land Use",
-                icon: <Flag className="h-4 w-4" />
-              },
-              {
-                id: "zonal-land-use-compliance",
-                label: "Zonal Land Use",
-                icon: <LandPlot className="h-4 w-4" />
-              },
-              {
-                id: "regional-land-use-compliance",
-                label: "Regional Land Use",
-                icon: <Map className="h-4 w-4" />
-              },
-              {
-                id: "district-land-use-compliance",
-                label: "District Land Use",
-                icon: <Layers className="h-4 w-4" />
-              },
-              {
-                id: "village-land-use-compliance",
-                label: "Village Land Use",
-                icon: <Building2 className="h-4 w-4" />
-              },
-            ]
+            id: "reports",
+            label: "Compliance Reports",
+            icon: <FileText className="h-4 w-4" />
           },
-          {
-            id: "ccro-projects-compliance",
-            label: "CCRO Compliance",
-            icon: <Shield className="h-4 w-4" />,
-          }
         ];
-      case "monitoring-and-evaluation":
+      case "management-evaluation":
         return [
           {
             id: "monitoring-and-evaluation-dashboard",
             label: "Dashboard",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            icon: <BarChart3 className="h-4 w-4" />,
+            badge: "5"
           },
           {
-            id: "land-uses",
-            label: "M&E Land Use Projects",
-            icon: <Map className="h-4 w-4" />,
-            items: [
-              {
-                id: "land-uses",
-                label: "M&E Overview",
-                icon: <LayoutDashboard className="h-4 w-4" />,
-                hidden: true
-              },
-              {
-                id: "national-land-use-mne",
-                label: "National Land Use M&E",
-                icon: <Flag className="h-4 w-4" />,
-              },
-              {
-                id: "zonal-land-use-mne",
-                label: "Zonal Land Use M&E",
-                icon: <LandPlot className="h-4 w-4" />,
-              },
-              {
-                id: "regional-land-use-mne",
-                label: "Regional Land Use M&E",
-                icon: <Map className="h-4 w-4" />
-              },
-              {
-                id: "district-land-use-mne",
-                label: "District Land Use M&E",
-                icon: <Layers className="h-4 w-4" />
-              },
-              {
-                id: "village-land-use-mne",
-                label: "Village Land Use M&E",
-                icon: <Building2 className="h-4 w-4" />,
-              },
-            ],
+            id: "indicators",
+            label: "Indicators",
+            icon: <ListChecks className="h-4 w-4" />
           },
           {
-            id: "ccro-projects-mne",
-            label: "CCRO M&E Projects",
-            icon: <Shield className="h-4 w-4" />,
+            id: "villages",
+            label: "Village Tracking",
+            icon: <MapPin className="h-4 w-4" />
+          },
+          {
+            id: "reports",
+            label: "M&E Reports",
+            icon: <FileText className="h-4 w-4" />
+          },
+          {
+            id: "analysis",
+            label: "Data Analysis",
+            icon: <TrendingUp className="h-4 w-4" />
+          },
+          {
+            id: "satellite",
+            label: "Satellite Monitoring",
+            icon: <Satellite className="h-4 w-4" />
+          },
+          {
+            id: "projections",
+            label: "Projections",
+            icon: <LineChart className="h-4 w-4" />
           }
         ];
       case "reports":
@@ -236,19 +222,24 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "form-workflows",
                 label: "Form Workflows",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "questionnaires",
                 label: "Questionnaires",
-                icon: <FileQuestionMark className="h-4 w-4" />
+                icon: <FileQuestionMark className="h-4 w-4" />,
+              },
+              {
+                id: "reports",
+                label: "Report Templates",
+                icon: <FileText className="h-4 w-4" />
               },
               {
                 id: "module-levels",
                 label: "Module Levels",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "locality-management",
@@ -258,14 +249,14 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "locality-management",
                 label: "Localities",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "locality-levels",
                 label: "Locality Levels",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "user-management",
@@ -275,24 +266,24 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "user-management",
                 label: "Users",
-                icon: <ClipboardPlus className="h-4 w-4" />
+                icon: <ClipboardPlus className="h-4 w-4" />,
               },
               {
                 id: "user-roles",
                 label: "User Roles",
-                icon: <List className="h-4 w-4" />
+                icon: <List className="h-4 w-4" />,
               },
               {
                 id: "permissions",
                 label: "Permissions",
-                icon: <List className="h-4 w-4" />
+                icon: <List className="h-4 w-4" />,
               },
               {
                 id: "user-groups",
                 label: "User Groups",
-                icon: <List className="h-4 w-4" />
-              }
-            ]
+                icon: <List className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "organization-management",
@@ -302,9 +293,9 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "organization-management",
                 label: "Organization Types",
-                icon: <ClipboardPlus className="h-4 w-4" />
-              }
-            ]
+                icon: <ClipboardPlus className="h-4 w-4" />,
+              },
+            ],
           },
           {
             id: "land-use-management",
@@ -314,9 +305,21 @@ export const getNavigationItems = (page: PageMetadata | null): (
               {
                 id: "land-use-management",
                 label: "Land Uses",
-                icon: <ClipboardPlus className="h-4 w-4" />
-              }
-            ]
+                icon: <ClipboardPlus className="h-4 w-4" />,
+              },
+            ],
+          },
+          {
+            id: "setups-currency",
+            label: "Setups",
+            icon: <List className="h-4 w-4" />,
+            items: [
+              {
+                id: "setups-currency",
+                label: "Currency",
+                icon: <CreditCard className="h-4 w-4" />,
+              },
+            ],
           },
         ];
       case "organizations":
@@ -324,7 +327,7 @@ export const getNavigationItems = (page: PageMetadata | null): (
           {
             id: "organizations",
             label: "Dashboard",
-            icon: <LayoutDashboard className="h-4 w-4" />
+            icon: <LayoutDashboard className="h-4 w-4" />,
           },
           {
             id: "organizations-list",

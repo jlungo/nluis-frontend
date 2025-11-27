@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { Asterisk, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -25,8 +25,18 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         const [open, setOpen] = useState(false);
         const [date, setDate] = useState<Date | undefined>(dateValue);
 
+        // Keep internal date state in sync with external value
+        useEffect(() => {
+            setDate(dateValue);
+        }, [dateValue]);
+
         const handleSelect = (d: Date | undefined) => {
-            if (!d) return
+            console.log('DatePicker handleSelect called with:', d);
+            if (!d) {
+                console.log('DatePicker: date is undefined, returning');
+                return;
+            }
+            console.log('DatePicker: setting date and calling onDateChange');
             setDate(d);
             setOpen(false);
             onDateChange?.(d);
