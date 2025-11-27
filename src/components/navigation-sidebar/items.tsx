@@ -242,6 +242,42 @@ export const getNavigationItems = (page: PageMetadata | null): (
             icon: <Shield className="h-4 w-4" />,
           }
         ];
+        case "billing":
+  return [
+    {
+      id: "billing",
+      label: "Billing",
+      icon: <CreditCard className="h-4 w-4" />,
+      items: [
+        {
+          id: "bills",
+          label: "Bills",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+        {
+          id: "payments",
+          label: "Payments",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+        {
+          id: "receipts",
+          label: "Receipts",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+        {
+          id: "orders",
+          label: "Orders",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+        {
+          id: "billing-reports",
+          label: "Billing Reports",
+          icon: <CreditCard className="h-4 w-4" />,
+        },
+      ],
+    },
+  ];
+
       case "reports":
         return [];
       case "system-settings":
