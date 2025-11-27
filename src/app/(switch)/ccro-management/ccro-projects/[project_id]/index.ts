@@ -12,6 +12,6 @@ const Index = {
     Edit,
     LocalityProjectId,
   ],
-}
+};
 
-export default Index
+export default Index;

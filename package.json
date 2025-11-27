@@ -46,6 +46,8 @@
     "@tiptap/extension-underline": "^3.6.2",
     "@tiptap/react": "^3.6.2",
     "@tiptap/starter-kit": "^3.6.2",
+    "@turf/helpers": "^7.3.1",
+    "@turf/turf": "^7.3.1",
     "@types/leaflet": "^1.9.20",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
