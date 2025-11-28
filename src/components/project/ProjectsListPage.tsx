@@ -45,10 +45,10 @@ export default function ProjectsListPage({ module, moduleLevel, pageTitle }: Pro
     setFilters(prev => ({ ...prev, [key]: value }));
 
   const handleRowClick = (project: ProjectI) =>
-    navigate(`/${module}/projects/${project.id}`);
+    navigate(`/${module}/${moduleLevel}/${project.id}`);
 
   const handleCreate = () =>
-    navigate(`/${module}/projects/create`, {
+    navigate(`/${module}/${moduleLevel}/create`, {
       state: { type: pageTitle, from: location.pathname },
     });
 
