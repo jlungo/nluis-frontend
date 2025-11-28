@@ -233,13 +233,6 @@ export default function Page() {
                     <ShoppingCart className="h-4 w-4" />
                     MapShop
                   </Link>
-                  <Link
-                    to='/lookup'
-                    className="flex items-center gap-2 w-full px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
-                  >
-                    <Search className="h-4 w-4" />
-                    CCRO Lookup
-                  </Link>
                 </div>
               </div>
             </div>
