@@ -42,7 +42,7 @@ type Props = {
     projectLocaleProgress?: number
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, projectLocaleProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, subLevelModule, moduleLevel, projectId, projectLocaleProgress }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -359,7 +359,14 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
                                             baseMapId={projectLocaleId || undefined}
-                                            isFilled={isFilled}
+                                            module={data.module_slug}
+                                            href={
+                                                moduleLevel && subLevelModule
+                                                    ? `/${data.module_slug}/${subLevelModule}/${moduleLevel}/${projectId}/${projectLocalityId}`
+                                                    : moduleLevel
+                                                        ? `/${data.module_slug}/${moduleLevel}/${projectId}/${projectLocalityId}`
+                                                        : undefined
+                                            }
                                             {...field}
                                         />
                                     ))}

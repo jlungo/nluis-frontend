@@ -75,7 +75,7 @@ export default function Page() {
                             <TooltipTrigger asChild>
                                 <Card
                                     className="border w-full mx-auto md:w-[48%] lg:w-fit lg:min-w-[25rem] xl:min-w-[22rem] group shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:border-primary/20"
-                                    onClick={() => navigate(`/compliance/land-uses/${item.id}/`)}
+                                    onClick={() => navigate(`/compliance/land-uses/${item.id}`)}
                                 >
                                     <CardHeader className="pb-3">
                                         <div className="flex items-start justify-between">

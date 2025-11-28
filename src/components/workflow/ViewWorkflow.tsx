@@ -121,6 +121,8 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             projectLocaleId={projectLocaleId}
             subLevelModule={topLevelModule ? module : undefined}
             projectLocaleProgress={projectLocaleProgress}
+            moduleLevel={moduleLevel}
+            projectId={projectId}
         />
     )
 }

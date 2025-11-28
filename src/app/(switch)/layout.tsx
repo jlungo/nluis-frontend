@@ -10,7 +10,7 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import logo from "@/assets/nluis.png"
 import { MainHeader } from '@/components/MainHeader';
 import { usePageStore } from '@/store/pageStore';
@@ -18,13 +18,16 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { useEffect } from "react";
 import { useAuth } from '@/store/auth';
 import DynamicBreadcrums from '@/components/DynamicBreadcrums';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const { page, setPage } = usePageStore()
+  const isMobile = useIsMobile()
+  const { page } = usePageStore()
   const navigate = useNavigate();
+  const { pathname } = useLocation()
   const { user } = useAuth()
 
   const toggleSidebar = () => {
@@ -45,6 +48,10 @@ export default function Layout() {
   };
 
   useEffect(() => {
+    if (isMobile) setSidebarOpen(false)
+  }, [pathname, isMobile])
+
+  useEffect(() => {
     if (!user) navigate(`/auth/signin`, { replace: true })
     else if (!user?.modules || !Array.isArray(user?.modules) || user?.modules?.length === 0) navigate(`/portal`, { replace: true })
     else if (page?.module && !user.modules.some(m => {
@@ -55,32 +62,6 @@ export default function Layout() {
       return m.slug === page.module;
     })) navigate(`/board`, { replace: true })
   }, [navigate, page?.module, user])
-
-  // Hydrate module context from the URL on initial load/refresh so the
-  // navigation sidebar can render module-specific items even if the
-  // zustand `page` store hasn't been populated yet by client navigation.
-  useEffect(() => {
-    if (!page) {
-      try {
-        const path = window.location.pathname || "";
-        const parts = path.split('/').filter(Boolean);
-        const first = parts[0];
-        if (first) {
-          // Create a friendly title from the slug: "ccro-management" -> "CCRO Management"
-          const title = first
-            .split('-')
-            .map(s => s.charAt(0).toUpperCase() + s.slice(1))
-            .join(' ');
-
-          setPage({ module: first as any, title, showBreadcrums: true });
-        }
-      } catch (err) {
-        // ignore
-      }
-    }
-    // Only run on mount or when page changes to null
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   if (!user) return null
   return (
@@ -154,7 +135,7 @@ export default function Layout() {
             <div className="flex-shrink-0 p-3 border-t border-sidebar-border">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/api/placeholder/32/32" alt="User" />
+                  <AvatarImage alt="User" />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                     {`${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase()}
                   </AvatarFallback>

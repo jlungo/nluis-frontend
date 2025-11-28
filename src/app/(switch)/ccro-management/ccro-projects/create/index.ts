@@ -8,6 +8,6 @@ const Index = {
       Component: Page,
     },
   ],
-}
+};
 
-export default Index
+export default Index;

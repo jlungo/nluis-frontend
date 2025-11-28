@@ -28,8 +28,8 @@ import { Button } from '@/components/ui/button';
 // ============================================================================
 // IMPORTS: Extracted utilities and hooks
 // ============================================================================
-import { getPlansTilesTemplate, invalidateTiles } from '../utils/tilesHelpers';
 import { calculateUTM, convertCoordinates } from '../utils/projectionHelpers';
+import { getPlansTilesTemplate, invalidateTiles } from '../utils/tilesHelpers';
 
 // Custom hooks
 import { useZoomToFeature } from '../hooks/useZoomToFeature';

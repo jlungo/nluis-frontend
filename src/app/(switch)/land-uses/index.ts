@@ -7,6 +7,7 @@ import RegionalLandUse from "./regional-land-use";
 import VillageLandUse from "./village-land-use";
 import LandUseDashboard from "./land-uses-dashboard";
 import LandUsesOverviewPage from "./land-uses-overview";
+import LandUsePlans from "./land-use-plans";
 
 const Index = {
   path: "/land-uses",
@@ -21,6 +22,7 @@ const Index = {
     ZonalLandUse,
     RegionalLandUse,
     VillageLandUse,
+    LandUsePlans,
     LandUseDashboard,
     LandUsesOverviewPage,
   ],

@@ -1,11 +1,11 @@
 import { forwardRef, type TextareaHTMLAttributes } from "react";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import type { FieldsProps } from "@/queries/useWorkflowQuery";
 import { Asterisk } from "lucide-react";
+import { FieldI } from ".";
 
 type FormTextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-    data: FieldsProps;
+    data: FieldI;
 };
 
 const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(

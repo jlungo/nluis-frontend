@@ -32,10 +32,6 @@ export type ZoningMapAPI = {
   approveSelected: () => void;
   rejectSelected: () => void;
   sendToDraftSelected: () => void;
-  // Selection helpers
-  selectByType?: (typeId: string | number) => void;
-  selectByStatus?: (status: string) => void;
-  clearSelection?: () => void;
 
   // Right panel actions (exposed by the map)
   approve?: () => void;
@@ -47,4 +43,8 @@ export type ZoningMapAPI = {
   resolveTrim?: (withId?: string | number) => Promise<void>;
   resolveSplit?: (withIds?: Array<string | number>) => Promise<void>;
   resolveIgnore?: (withIds?: Array<string | number>) => Promise<void>;
+  
+  // Select/Filter
+  selectByType?: (typeValue: string) => void;
+  selectByStatus?: (statusValue: string) => void;
 };

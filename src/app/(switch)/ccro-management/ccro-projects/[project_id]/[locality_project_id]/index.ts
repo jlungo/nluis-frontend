@@ -12,6 +12,6 @@ const Index = {
     },
     Workflow,
   ],
-}
+};
 
-export default Index
+export default Index;

@@ -13,7 +13,7 @@ interface DataProps extends APIResponse {
   results: LevelProps[];
 }
 
-export const levelQueryKey = "levelKey";
+export const levelQueryKey = "moduleLevel";
 
 export const useLevelsQuery = (
   limit: number,

@@ -1,5 +1,5 @@
-import Layout from "./layout"
-import Page from "./page"
+import Layout from "./layout";
+import Page from "./page";
 
 const Index = {
   path: "workflow",
@@ -10,6 +10,6 @@ const Index = {
       Component: Page,
     },
   ],
-}
+};
 
-export default Index
+export default Index;
