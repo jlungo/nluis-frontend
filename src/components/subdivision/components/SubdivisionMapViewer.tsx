@@ -831,7 +831,6 @@ export default function SubdivisionMapViewer({
               localityId={localityId}
               plansOpacity={plansOpacity}
               colorMode={colorMode}
-              showPlans={showPlans}
             />
 
             <LocalityLayers localityBoundary={localityBoundary} />
