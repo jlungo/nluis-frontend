@@ -11,6 +11,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ["@turf/turf"],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /@turf/],
+    },
+  },
   server: {
     host: true, // or '0.0.0.0'
     port: 3000, // or any other port
