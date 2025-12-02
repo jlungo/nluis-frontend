@@ -13,5 +13,11 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.DISTRICT} redirectPath="/monitoring-and-evaluation/land-uses/district-land-use-mne" />
+  return (
+    <CreateOrEditProject
+      moduleLevel={LOCALITY_LEVELS.DISTRICT}
+      redirectPath="/monitoring-and-evaluation/land-uses/district-land-use-mne"
+      level='district-land-use'
+    />
+  );
 }

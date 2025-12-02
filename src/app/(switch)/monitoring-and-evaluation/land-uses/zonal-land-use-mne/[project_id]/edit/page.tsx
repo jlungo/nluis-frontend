@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.ZONAL} redirectPath="/monitoring-and-evaluation/land-uses/zonal-land-use-mne" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.ZONAL}
+      redirectPath="/monitoring-and-evaluation/land-uses/zonal-land-use-mne"
+      level='zonal-land-use'
+    />
+  )
 }
