@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.REGION} redirectPath="/monitoring-and-evaluation/land-uses/regional-land-use-mne" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.REGION}
+      redirectPath="/monitoring-and-evaluation/land-uses/regional-land-use-mne"
+      level='regional-land-use'
+    />
+  )
 }

@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.DISTRICT} redirectPath="/compliance/land-uses/district-land-use-compliance" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.DISTRICT}
+      redirectPath="/compliance/land-uses/district-land-use-compliance"
+      level="district-land-use"
+    />
+  )
 }
