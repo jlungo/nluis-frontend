@@ -1,12 +1,14 @@
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Define build argument for API URL
+# Define build arguments
 ARG VITE_API_URL
+ARG VITE_MAPBOX_TOKEN
 
-# Set environment variable from build arg
+# Set environment variables from build args
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN
 
 COPY package*.json ./
 
@@ -16,8 +18,8 @@ COPY . .
 
 # Create a .env file with build-time values
 RUN echo "VITE_API_URL=$VITE_API_URL" > .env
-
-RUN echo "VITE_MEDIA_PATH=$VITE_MEDIA_PATH" > .env
+RUN echo "VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN" >> .env
+RUN echo "VITE_MEDIA_PATH=$VITE_MEDIA_PATH" >> .env
 
 RUN npm run build
 

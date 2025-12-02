@@ -60,7 +60,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
                             {t.label}<span className="hidden lg:inline"> Projects</span>
                         </TabsTrigger>
                     ))}
-                    <TabsTrigger value="satellite-analysis" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
+                    {/* <TabsTrigger value="satellite-analysis" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
                         Satellite Analysis
                     </TabsTrigger>
                     <TabsTrigger value="impact-analysis" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
@@ -68,7 +68,7 @@ export default function Dashboard({ module, title }: { module: ModuleTypes; titl
                     </TabsTrigger>
                     <TabsTrigger value="real-time-map" className="rounded-full text-xs md:text-sm lg:text-xs xl:text-sm">
                         Real-time Map
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                 </TabsList>
 
                 {tabs.map(t => (

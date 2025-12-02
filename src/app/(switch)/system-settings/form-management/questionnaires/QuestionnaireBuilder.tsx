@@ -50,6 +50,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableField, SortableForm, SortableOption, SortableSection } from './SortableContext';
 
+const unwantedModules = ["me", "dashboard", "management-evaluation", "mapshop-management", "reports", "organizations", "system-settings", "billing", "document-management", "equipment-management"]
+
 export default function QuestionnaireBuilder({ previousData, sections }: { previousData?: QuestionnaireProps; sections?: FormSection[] }) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
@@ -713,7 +715,7 @@ export default function QuestionnaireBuilder({ previousData, sections }: { previ
 
                         {!isLoadingModules && modules && modules.length > 0 ?
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {modules.map((module: ModuleProps) => (
+                                {modules.filter(m => !unwantedModules.includes(m.slug)).map((module: ModuleProps) => (
                                     <Card
                                         key={module.slug}
                                         className={`py-4 md:py-6 cursor-pointer transition-all hover:shadow-md ${selectedModule?.slug === module.slug

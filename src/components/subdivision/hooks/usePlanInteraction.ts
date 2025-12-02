@@ -18,6 +18,9 @@ export const usePlanInteraction = (
     if (isDrawing) return;
     
     try {
+      // Check if the layer exists before querying
+      if (!m.getLayer('plans-fill')) return;
+      
       const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
       if (!features.length) return;
       
@@ -57,6 +60,9 @@ export const usePlanInteraction = (
     }
     
     try {
+      // Check if the layer exists before querying
+      if (!m.getLayer('plans-fill')) return;
+      
       const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
       const id = features[0]?.properties?.id ?? features[0]?.id ?? null;
       
@@ -90,6 +96,9 @@ export const usePlanInteraction = (
   const handleMapDoubleClick = useCallback((e: any) => {
     const m = getMap();
     if (!m) return;
+
+    // Check if the layer exists before querying
+    if (!m.getLayer('plans-fill')) return;
 
     const features = m.queryRenderedFeatures(e.point, { layers: ['plans-fill'] }) || [];
     if (features.length > 0) {

@@ -2,6 +2,7 @@ import { type ParcelFeature, type SubdivisionFeature } from '@/types/subdivision
 import { useParcelSubdivisionsQuery } from '@/queries/useParcelQuery';
 import { useRef, useEffect, useCallback, useState } from 'react';
 import MapGL, { type MapRef } from 'react-map-gl/mapbox';
+import mapboxgl from 'mapbox-gl';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import { MapControls } from './MapControls';
 import { type MapPoint } from './types';
@@ -66,6 +67,12 @@ export default function SubdivisionMapViewer({
   isMaximized,
   onToggleFullscreen,
 }: SubdivisionMapViewerProps) {
+  // Set Mapbox access token for this component
+  const MAPBOX_TOKEN = "pk.eyJ1IjoiY3Jlc2NlbnRzYW1iaWxhIiwiYSI6ImNtZWx5ZXR4OTA5Y3gyanNkOHM0cjFtN2sifQ.RC22kROvjoVE5LdsCSPSsA";
+  if (MAPBOX_TOKEN) {
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+  }
+
   // ============================================================================
   // QUERIES & REFS
   // ============================================================================
@@ -831,7 +838,6 @@ export default function SubdivisionMapViewer({
               localityId={localityId}
               plansOpacity={plansOpacity}
               colorMode={colorMode}
-              showPlans={showPlans}
             />
 
             <LocalityLayers localityBoundary={localityBoundary} />
@@ -873,3 +879,7 @@ export default function SubdivisionMapViewer({
     </div>
   );
 }
+
+// ============================================================================
+// END OF FILE
+// ============================================================================

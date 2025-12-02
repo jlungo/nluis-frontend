@@ -17,6 +17,7 @@ import FormProposedLandUse from "./form-proposed-land-use";
 import FormReport from "./form-report";
 import FormMultiselect from "./form-multiselect";
 import FormTable from "./form-table";
+import FormSubdivision from "./form-subdivision";
 
 export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[] | AddQuestionnaireProps[]
 
@@ -154,7 +155,7 @@ export default function Index(
                     name={data.name}
                     // disabled={data.disabled}
                     required={data.required}
-                    // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 // value={data?.value}
                 // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
@@ -207,6 +208,18 @@ export default function Index(
                     href={data?.href}
                 // values={data?.value || []}
                 // onValueChange={(e) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('landsubdivision'):
+            return (
+                <FormSubdivision
+                    label={data.label}
+                    name={data.name}
+                    disabled={data.disabled}
+                    required={data.required}
+                    localityId={data.baseMapId ?? data.project_locality_id}
+                    value={data?.value}
+                    onChange={(e: any) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:

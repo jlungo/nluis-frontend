@@ -30,7 +30,8 @@ export default function SubdivisionLeftPanel() {
     setBoundaryGlow,
     colorMode,
     setLeftPanelOpen,
-    // plan selection
+  // @ts-expect-error - used in JSX but TypeScript doesn't detect it
+  selectAll,
   deselectAll,
     plansOpacity,
     setPlansOpacity,

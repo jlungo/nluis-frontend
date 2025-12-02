@@ -43,4 +43,8 @@ export type ZoningMapAPI = {
   resolveTrim?: (withId?: string | number) => Promise<void>;
   resolveSplit?: (withIds?: Array<string | number>) => Promise<void>;
   resolveIgnore?: (withIds?: Array<string | number>) => Promise<void>;
+  
+  // Selection by criteria
+  selectByType?: (typeValue: string) => void;
+  selectByStatus?: (statusValue: string) => void;
 };

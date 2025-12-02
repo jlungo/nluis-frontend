@@ -8,14 +8,12 @@ interface PlansLayersProps {
   localityId?: string | number | null;
   plansOpacity: number;
   colorMode: string;
-  showPlans: boolean;
 }
 
 export function PlansLayers({
   localityId,
   plansOpacity,
   colorMode,
-  
 }: PlansLayersProps) {
   if (!localityId) return null;
 
@@ -23,7 +21,7 @@ export function PlansLayers({
   if (!source) return null;
 
   return (
-    <Source 
+    <Source
       id={source.id}
       type={source.type}
       tiles={source.tiles}
