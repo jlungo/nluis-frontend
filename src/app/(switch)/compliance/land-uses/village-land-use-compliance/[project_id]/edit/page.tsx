@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.VILLAGE} redirectPath="/compliance/land-uses/village-land-use-compliance" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.VILLAGE}
+      redirectPath="/compliance/land-uses/village-land-use-compliance"
+      level="village-land-use"
+    />
+  )
 }

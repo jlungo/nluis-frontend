@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.VILLAGE} redirectPath="/monitoring-and-evaluation/land-uses/village-land-use-mne" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.VILLAGE}
+      redirectPath="/monitoring-and-evaluation/land-uses/village-land-use-mne"
+      level='village-land-use'
+    />
+  )
 }

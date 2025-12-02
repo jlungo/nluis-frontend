@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.NATIONAL} redirectPath="/compliance/land-uses/national-land-use-compliance" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.NATIONAL}
+      redirectPath="/compliance/land-uses/national-land-use-compliance"
+      level="national-land-use"
+    />
+  )
 }
