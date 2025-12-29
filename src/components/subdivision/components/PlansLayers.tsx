@@ -3,22 +3,45 @@
  */
 import { Source, Layer } from 'react-map-gl/mapbox';
 import { getPlansTilesSource } from '../utils/tilesHelpers';
+import { useEffect } from 'react';
 
 interface PlansLayersProps {
   localityId?: string | number | null;
   plansOpacity: number;
   colorMode: string;
+  showPlans: boolean;
 }
 
 export function PlansLayers({
   localityId,
   plansOpacity,
   colorMode,
+  showPlans,
 }: PlansLayersProps) {
-  if (!localityId) return null;
+  // Early return if plans are disabled or no locality
+  if (!showPlans || !localityId) {
+    console.log('🗺️ PlansLayers: Not showing plans', { showPlans, localityId });
+    return null;
+  }
 
   const source = getPlansTilesSource(localityId);
-  if (!source) return null;
+
+  useEffect(() => {
+    if (source) {
+      console.log('🗺️ PlansLayers: Tile source configured', {
+        localityId,
+        tileURL: source.tiles[0],
+        opacity: plansOpacity,
+        colorMode,
+        showPlans
+      });
+    }
+  }, [source, localityId, plansOpacity, colorMode, showPlans]);
+
+  if (!source) {
+    console.warn('⚠️ PlansLayers: No tile source available for locality', localityId);
+    return null;
+  }
 
   return (
     <Source
@@ -54,6 +77,9 @@ export function PlansLayers({
             Math.max(0.05, Math.min(1, plansOpacity || 0.45)),
           ],
         }}
+        layout={{
+          'visibility': 'visible'
+        }}
       />
       <Layer
         id="plans-line"
@@ -77,6 +103,9 @@ export function PlansLayers({
             1.5,
           ],
           'line-opacity': 0.95,
+        }}
+        layout={{
+          'visibility': 'visible'
         }}
       />
     </Source>

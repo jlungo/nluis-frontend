@@ -218,14 +218,7 @@ export default function Page() {
                     {item.label}
                   </button>
                 ))}
-                <div className="pt-2 border-t border-border">
-                  <Link
-                    to='/auth/signup'
-                    className="flex items-center gap-2 w-full px-4 py-2 text-chart-2 hover:bg-chart-2/10 rounded-lg transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Create Account
-                  </Link>
+                <div className="pt-2 border-t border-border space-y-2">
                   <Link
                     to='/mapshop'
                     className="flex items-center gap-2 w-full px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
@@ -233,6 +226,39 @@ export default function Page() {
                     <ShoppingCart className="h-4 w-4" />
                     MapShop
                   </Link>
+                  <Link
+                    to='/lookup'
+                    className="flex items-center gap-2 w-full px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <Search className="h-4 w-4" />
+                    CCRO Lookup
+                  </Link>
+                  {!user ? (
+                    <>
+                      <Link
+                        to='/auth/signup'
+                        className="flex items-center gap-2 w-full px-4 py-2 text-chart-2 hover:bg-chart-2/10 rounded-lg transition-colors"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Create Account
+                      </Link>
+                      <Link
+                        to='/auth/signin'
+                        className="flex items-center gap-2 w-full px-4 py-2 bg-primary/10 text-primary rounded-lg transition-colors"
+                      >
+                        <Users className="h-4 w-4" />
+                        Login
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      to='/board'
+                      className="flex items-center gap-2 w-full px-4 py-2 bg-primary/10 text-primary rounded-lg transition-colors"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Access System
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

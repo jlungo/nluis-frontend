@@ -15,8 +15,12 @@ interface CCROStore {
   fetchApplicationDetail: (id: number) => Promise<void>;
   verifyPartyNida: (partyId: number) => Promise<void>;
   checkNidaStatus: (applicationId: number) => Promise<void>;
+  createApplication: (data: any) => Promise<CCROApplication>;
   approveCCRO: (applicationId: number) => Promise<void>;
+  rejectCCRO: (applicationId: number) => Promise<void>;
   issueCCRO: (applicationId: number) => Promise<void>;
+  checkParcelShares: (parcelId: number) => Promise<any>;
+  confirmAllocation: (allocationId: number) => Promise<void>;
 }
 
 export const useCCROStore = create<CCROStore>((set, get) => ({
@@ -119,6 +123,19 @@ export const useCCROStore = create<CCROStore>((set, get) => ({
     }
   },
   
+  // Create CCRO application
+  createApplication: async (data: any) => {
+    set({ error: null });
+    try {
+      const response = await api.post(`/ccro/ccro-applications/`, data);
+      return response.data;
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.response?.data?.detail || error?.message || 'Failed to create application';
+      set({ error: message });
+      throw error;
+    }
+  },
+  
   // Issue CCRO certificates
   issueCCRO: async (applicationId: number) => {
     set({ error: null });
@@ -129,6 +146,52 @@ export const useCCROStore = create<CCROStore>((set, get) => ({
       await get().fetchApplicationDetail(applicationId);
     } catch (error: any) {
       const message = error?.response?.data?.error || error?.response?.data?.detail || error?.response?.data?.reason || error?.message || 'Failed to issue CCRO';
+      set({ error: message });
+      throw error;
+    }
+  },
+  
+  // Reject CCRO application
+  rejectCCRO: async (applicationId: number) => {
+    set({ error: null });
+    try {
+      await api.post(`/ccro/ccro-applications/${applicationId}/reject/`);
+      
+      // Refresh application
+      await get().fetchApplicationDetail(applicationId);
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.response?.data?.detail || error?.response?.data?.reason || error?.message || 'Failed to reject CCRO';
+      set({ error: message });
+      throw error;
+    }
+  },
+  
+  // Check parcel shares total 100%
+  checkParcelShares: async (parcelId: number) => {
+    set({ error: null });
+    try {
+      const response = await api.get(`/ccro/allocations/check_parcel_shares/?parcel=${parcelId}`);
+      return response.data;
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.response?.data?.detail || error?.message || 'Failed to check parcel shares';
+      set({ error: message });
+      throw error;
+    }
+  },
+  
+  // Confirm allocation (transition from proposed to confirmed)
+  confirmAllocation: async (allocationId: number) => {
+    set({ error: null });
+    try {
+      await api.post(`/ccro/allocations/${allocationId}/confirm/`);
+      
+      // Refresh selected application if it exists
+      const app = get().selectedApplication;
+      if (app) {
+        await get().fetchApplicationDetail(app.id);
+      }
+    } catch (error: any) {
+      const message = error?.response?.data?.error || error?.response?.data?.detail || error?.message || 'Failed to confirm allocation';
       set({ error: message });
       throw error;
     }
