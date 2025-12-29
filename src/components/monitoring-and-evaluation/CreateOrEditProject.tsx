@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { MapPin, Calendar, DollarSign, FileText, X, ChevronDown, ChevronRight } from 'lucide-react';
-import { useFunders, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery } from '@/queries/useProjectQuery';
+import { MapPin, Calendar, DollarSign, FileText, X, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react';
+import { useFunders, useCreateProject, queryProjectKey, useUpdateProject, useProjectQuery, useProjectsQuery } from '@/queries/useProjectQuery';
 import { FormFieldInput } from '@/components/FormFieldInput';
 import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
@@ -17,12 +17,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { useLocalitiesQuery } from '@/queries/useLocalityQuery';
-import { approvalStatus } from './utils';
+import { approvalStatus, approvalStatusAtleastOne } from './utils';
+import { Input } from '../ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface Props {
   moduleLevel: string;
   redirectPath: string;
   projectId?: string;
+  level: string
 }
 
 interface FormProps {
@@ -35,6 +38,82 @@ interface FormProps {
 }
 
 export default function CreateOrEditProject(props: Props) {
+  const { user } = useAuth();
+
+  const [search, setSearch] = useState('')
+  const [projectId, setProjectId] = useState<string | null>(null)
+
+  const { data, isLoading } = useProjectsQuery({
+    limit: 20,
+    offset: 0,
+    organization: user?.organization?.id || '',
+    module_level: props.level,
+    search: search,
+  });
+
+  if (projectId) return <CreateOrEdit {...props} projectId={projectId} isEdit={props?.projectId !== undefined} />
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <Card className='pt-0 md:pt-0 overflow-hidden'>
+        <CardHeader className="border-b pt-5 md:pt-6 [.border-b]:pb-4 md:[.border-b]:pb-4 bg-accent dark:bg-input/30">
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Select Project
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Label htmlFor='search'>Search Project</Label>
+          <Input
+            id="search"
+            placeholder='Type to filter a land use project to initialize MNE'
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <Accordion
+            type="single"
+            collapsible
+            className="w-full"
+            defaultValue="item-1"
+          >
+            {isLoading && (
+              <div className='h-60 flex flex-col items-center justify-center'>
+                <Spinner />
+              </div>
+            )}
+            {data?.results && data.results.filter(p => approvalStatusAtleastOne(p?.localities)).map(item => (
+              <AccordionItem value={item.id} className='rounded-lg px-2 bg-muted dark:bg-input/30 my-2'>
+                <AccordionTrigger className='cursor-pointer'>{item.name}</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-4 text-balance">
+                  {item.description && <p className='text-muted-foreground text-sm mb-2'>{item.description}</p>}
+                  <div className='flex flex-wrap gap-2'>
+                    {item.localities?.map(locality => (
+                      <div
+                        key={locality.id}
+                        className='rounded-full bg-accent border w-fit py-2 px-3'
+                      >
+                        {locality.locality__name}
+                      </div>
+                    ))}
+                  </div>
+                  <div className='flex justify-end'>
+                    <Button
+                      onClick={() => setProjectId(item.id)}
+                    >
+                      Select <ArrowRight />
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function CreateOrEdit(props: Props & { isEdit: boolean }) {
   const { user } = useAuth();
   const { data: funders, isLoading: loadingFunders } = useFunders();
   const { data: localities, isLoading: loadingLocalities } = useLocalitiesQuery(tanzaniaLocalityKey);
@@ -78,7 +157,18 @@ export default function CreateOrEditProject(props: Props) {
     );
   }
 
-  if (canEdit() && user?.organization?.id)
+  if (props.isEdit && canEdit() && user?.organization?.id)
+    return (
+      <Forms
+        {...props}
+        funders={funders}
+        localities={localities}
+        organizationId={user.organization.id}
+        project={project}
+      />
+    );
+
+  if (props.isEdit === false && user?.organization?.id)
     return (
       <Forms
         {...props}
@@ -371,7 +461,7 @@ function Forms({ moduleLevel, redirectPath, localities, funders, project, organi
       <div className="space-y-4">
         <Dialog open={isLocalityModalOpen} onOpenChange={setIsLocalityModalOpen}>
           <DialogTrigger asChild>
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" className='hidden'>
               <MapPin className="h-4 w-4 mr-2" />
               Select Localities
             </Button>
@@ -441,7 +531,7 @@ function Forms({ moduleLevel, redirectPath, localities, funders, project, organi
         {/* Display selected localities outside the modal */}
         {selectedLocalities.length > 0 && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Selected Localities:</h4>
+            <h4 className="font-medium text-sm mb-2">Project Localities:</h4>
             <div className="flex flex-wrap gap-2">
               {selectedLocalities.map(locality => (
                 <Badge key={locality.id} variant="secondary" className="px-3 py-1">

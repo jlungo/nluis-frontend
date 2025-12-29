@@ -15,5 +15,12 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject projectId={project_id as string} moduleLevel={LOCALITY_LEVELS.ZONAL} redirectPath="/compliance/land-uses/zonal-land-use-compliance" />
+  return (
+    <CreateOrEditProject
+      projectId={project_id as string}
+      moduleLevel={LOCALITY_LEVELS.ZONAL}
+      redirectPath="/compliance/land-uses/zonal-land-use-compliance"
+      level="zonal-land-use"
+    />
+  )
 }

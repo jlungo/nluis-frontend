@@ -13,5 +13,11 @@ export default function Page() {
     });
   }, [setPage]);
 
-  return <CreateOrEditProject moduleLevel={LOCALITY_LEVELS.NATIONAL} redirectPath="/monitoring-and-evaluation/land-uses/national-land-use-mne" />;
+  return (
+    <CreateOrEditProject
+      moduleLevel={LOCALITY_LEVELS.NATIONAL}
+      redirectPath="/monitoring-and-evaluation/land-uses/national-land-use-mne"
+      level='national-land-use'
+    />
+  );
 }
