@@ -360,6 +360,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                             project_locality_id={projectLocalityId || ""}
                                             baseMapId={projectLocaleId || undefined}
                                             module={data.module_slug}
+                                            projectId={projectId}
                                             href={
                                                 moduleLevel && subLevelModule
                                                     ? `/${data.module_slug}/${subLevelModule}/${moduleLevel}/${projectId}/${projectLocalityId}`

@@ -3,11 +3,8 @@ import api from "@/lib/axios";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import LandApplicationModal from "@/components/ccro/LandApplicationModal";
 
 export type LandApplicationsTableMode = "application" | "review";
 export type LandApplicationsTableScope = "project" | "global";
@@ -38,33 +35,13 @@ type Props = {
   mode: LandApplicationsTableMode;
   scope: LandApplicationsTableScope;
   localityProjectId?: string;
+  projectId?: string;
   disabled?: boolean;
   onValueChange?: (value: string) => void;
 };
 
-const OWNERSHIP_TYPES: Array<{ value: string; label: string }> = [
-  { value: "individual", label: "Individual" },
-  { value: "joint_spouse", label: "Joint (Spouse)" },
-  { value: "group_resident", label: "Group (Resident)" },
-  { value: "group_non_resident", label: "Group (Non-resident)" },
-  { value: "institution", label: "Institution" },
-];
-
-function isGroupOwnership(ownershipType: string) {
-  return ["group_resident", "group_non_resident", "institution"].includes(ownershipType);
-}
-
-function needsGuarantor(ownershipType: string) {
-  return ["group_non_resident", "institution"].includes(ownershipType);
-}
-
-export default function LandApplicationsTable({
-  mode,
-  scope,
-  localityProjectId,
-  disabled,
-  onValueChange,
-}: Props) {
+export default function LandApplicationsTable(props: Props) {
+  const { mode, scope, localityProjectId, disabled, onValueChange } = props;
   const [items, setItems] = useState<LandApplicationListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,15 +51,8 @@ export default function LandApplicationsTable({
     onValueChangeRef.current = onValueChange;
   }, [onValueChange]);
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-
-  const [ownershipType, setOwnershipType] = useState<string>("individual");
-  const [applicantName, setApplicantName] = useState<string>("");
-  const [entityName, setEntityName] = useState<string>("");
-  const [guarantorName, setGuarantorName] = useState<string>("");
-  const [estimatedAreaAcres, setEstimatedAreaAcres] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeApplicationId, setActiveApplicationId] = useState<number | undefined>(undefined);
 
   const canCreate = mode === "application" && scope === "project" && !disabled;
 
@@ -123,85 +93,6 @@ export default function LandApplicationsTable({
     const ids = items.map((r) => r.id);
     cb(ids.length ? JSON.stringify(ids) : "");
   }, [items]);
-
-  const handleCreate = async () => {
-    if (!canCreate) return;
-    if (!localityProjectId) {
-      toast.error("Missing locality project id");
-      return;
-    }
-
-    const requiresEntity = isGroupOwnership(ownershipType);
-    const requiresGuarantor = needsGuarantor(ownershipType);
-
-    if (!applicantName.trim()) {
-      toast.error("Applicant name is required");
-      return;
-    }
-    if (requiresEntity && !entityName.trim()) {
-      toast.error("Entity name is required for this ownership type");
-      return;
-    }
-    if (requiresGuarantor && !guarantorName.trim()) {
-      toast.error("At least one guarantor is required for this ownership type");
-      return;
-    }
-
-    setCreating(true);
-    try {
-      const payload: any = {
-        ownership_type: ownershipType,
-        locality_project: Number(localityProjectId),
-        estimated_area_acres: estimatedAreaAcres.trim() ? Number(estimatedAreaAcres) : null,
-        notes: notes.trim() ? notes.trim() : null,
-        parties: [
-          {
-            party_order: 1,
-            role: "applicant",
-            full_name: applicantName.trim(),
-            share_percentage: 100,
-          },
-        ],
-      };
-
-      if (isGroupOwnership(ownershipType)) {
-        payload.entity_name = entityName.trim();
-      }
-
-      if (needsGuarantor(ownershipType)) {
-        payload.parties.push({
-          party_order: 2,
-          role: "guarantor",
-          full_name: guarantorName.trim(),
-          share_percentage: null,
-        });
-      }
-
-      await api.post(`/ccro/land-applications/`, payload);
-      toast.success("Application created (draft)");
-      setCreateOpen(false);
-
-      // Reset minimal form
-      setOwnershipType("individual");
-      setApplicantName("");
-      setEntityName("");
-      setGuarantorName("");
-      setEstimatedAreaAcres("");
-      setNotes("");
-
-      await load();
-    } catch (e: any) {
-      const msg =
-        e?.response?.data?.detail ||
-        e?.response?.data?.error ||
-        (typeof e?.response?.data === "object" ? JSON.stringify(e.response.data) : null) ||
-        e?.message ||
-        "Failed to create application";
-      toast.error(msg);
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const handleGenerateCertificate = async (row: LandApplicationListItem) => {
     if (disabled) return;
@@ -298,6 +189,18 @@ export default function LandApplicationsTable({
               type="button"
               variant="outline"
               size="sm"
+              disabled={disabled}
+              onClick={() => {
+                setActiveApplicationId(row.id);
+                setModalOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               disabled={disabled || row.status !== "draft"}
               onClick={() => handleSubmit(row)}
             >
@@ -309,6 +212,18 @@ export default function LandApplicationsTable({
 
       return (
         <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => {
+              setActiveApplicationId(row.id);
+              setModalOpen(true);
+            }}
+          >
+            View
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -338,7 +253,15 @@ export default function LandApplicationsTable({
         <Button type="button" variant="outline" size="sm" onClick={load} disabled={isLoading}>
           Refresh
         </Button>
-        <Button type="button" size="sm" onClick={() => setCreateOpen(true)} disabled={isLoading}>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => {
+            setActiveApplicationId(undefined);
+            setModalOpen(true);
+          }}
+          disabled={isLoading}
+        >
           Add New
         </Button>
       </div>
@@ -362,69 +285,19 @@ export default function LandApplicationsTable({
         emptyText={emptyText}
       />
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>New Land Application (Draft)</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Ownership Type</Label>
-              <Select value={ownershipType} onValueChange={setOwnershipType} disabled={creating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select ownership" />
-                </SelectTrigger>
-                <SelectContent>
-                  {OWNERSHIP_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Estimated Area (Acres)</Label>
-              <Input value={estimatedAreaAcres} onChange={(e) => setEstimatedAreaAcres(e.target.value)} disabled={creating} />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Applicant Name</Label>
-              <Input value={applicantName} onChange={(e) => setApplicantName(e.target.value)} disabled={creating} />
-            </div>
-
-            {isGroupOwnership(ownershipType) ? (
-              <div className="space-y-2 md:col-span-2">
-                <Label>Entity Name</Label>
-                <Input value={entityName} onChange={(e) => setEntityName(e.target.value)} disabled={creating} />
-              </div>
-            ) : null}
-
-            {needsGuarantor(ownershipType) ? (
-              <div className="space-y-2 md:col-span-2">
-                <Label>Guarantor Name</Label>
-                <Input value={guarantorName} onChange={(e) => setGuarantorName(e.target.value)} disabled={creating} />
-              </div>
-            ) : null}
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Notes</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} disabled={creating} />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleCreate} disabled={creating}>
-              {creating ? "Creating..." : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {scope === "project" && localityProjectId ? (
+        <LandApplicationModal
+          open={modalOpen}
+          onOpenChange={(o) => setModalOpen(o)}
+          localityProjectId={localityProjectId}
+          projectId={props.projectId || ""}
+          applicationId={activeApplicationId}
+          disabled={disabled}
+          onSaved={async () => {
+            await load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

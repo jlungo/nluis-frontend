@@ -42,6 +42,7 @@ export default function Index(
         module: string;
         href?: string
         projectLocalityId?: string;
+        projectId?: string;
     }
 ) {
     const formSlug = 'form_slug' in data && data.form_slug
@@ -229,6 +230,7 @@ export default function Index(
                 <FormCCRORegisterApplication
                     disabled={data.disabled}
                     projectLocalityId={data.project_locality_id}
+                    projectId={data.projectId}
                     onValueChange={(v) => data.setValue(formSlug, v, data.type, data.id, data.project_locality_id)}
                 />
             )
@@ -237,6 +239,7 @@ export default function Index(
                 <FormCCROReviewApplication
                     disabled={data.disabled}
                     projectLocalityId={data.project_locality_id}
+                    projectId={data.projectId}
                     onValueChange={(v) => data.setValue(formSlug, v, data.type, data.id, data.project_locality_id)}
                 />
             )
