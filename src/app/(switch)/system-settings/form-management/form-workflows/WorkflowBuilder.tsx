@@ -41,7 +41,8 @@ import { Switch } from '@/components/ui/switch';
 import type { WorkflowSubmission } from '@/types/submission';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; import {
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
     DndContext,
     closestCenter,
     useSensor,
@@ -99,6 +100,8 @@ export default function WorkflowBuilder({ previousData, sections }: { previousDa
             { value: 'report', label: 'Report' },
             { value: 'addquestionnaires', label: 'Add Questionnaires' },
             { value: 'viewquestionnaires', label: 'View Questionnaires' },
+            { value: 'ccro_register_application', label: 'CCRO: Register New Application' },
+            { value: 'ccro_review_application', label: 'CCRO: Review Application' },
         ],
         []
     );

@@ -18,6 +18,8 @@ import FormReport from "./form-report";
 import FormMultiselect from "./form-multiselect";
 import FormTable from "./form-table";
 import FormSubdivision from "./form-subdivision";
+import FormCCRORegisterApplication from "./form-ccro-register-application";
+import FormCCROReviewApplication from "./form-ccro-review-application";
 
 export type ValueType = string | string[] | File[] | MembersI[] | TableRowI[] | AddQuestionnaireProps[]
 
@@ -220,6 +222,22 @@ export default function Index(
                     localityId={data.baseMapId ?? data.project_locality_id}
                     value={data?.value}
                     onChange={(e: any) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('ccro_register_application'):
+            return (
+                <FormCCRORegisterApplication
+                    disabled={data.disabled}
+                    projectLocalityId={data.project_locality_id}
+                    onValueChange={(v) => data.setValue(formSlug, v, data.type, data.id, data.project_locality_id)}
+                />
+            )
+        case ('ccro_review_application'):
+            return (
+                <FormCCROReviewApplication
+                    disabled={data.disabled}
+                    projectLocalityId={data.project_locality_id}
+                    onValueChange={(v) => data.setValue(formSlug, v, data.type, data.id, data.project_locality_id)}
                 />
             )
         default:
