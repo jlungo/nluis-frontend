@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { APIResponse } from "@/types/api-response";
 import { formatDate } from "@/lib/utils";
@@ -47,11 +48,20 @@ export default function PartiesPage() {
   const [search, setSearch] = useState("");
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [createType, setCreateType] = useState<"individual" | "organization">("individual");
+
   const [nidaNumber, setNidaNumber] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
 
   const [prefill, setPrefill] = useState<NidaLookupResponse | null>(null);
+
+  const [orgName, setOrgName] = useState("");
+  const [orgRegistrationNumber, setOrgRegistrationNumber] = useState("");
+  const [orgTin, setOrgTin] = useState("");
+  const [orgPhone, setOrgPhone] = useState("");
+  const [orgEmail, setOrgEmail] = useState("");
+  const [orgAddress, setOrgAddress] = useState("");
 
   useLayoutEffect(() => {
     setPage({
@@ -78,10 +88,57 @@ export default function PartiesPage() {
     }
   };
 
+  const onCreateOrganization = async () => {
+    const name = orgName.trim();
+    if (!name) {
+      toast.error("Organization name is required");
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      await api.post(`/ccro/parties/`, {
+        party_type: "organization",
+        group_data: {
+          name,
+          registration_number: orgRegistrationNumber.trim() || null,
+          tin: orgTin.trim() || null,
+          phone: orgPhone.trim() || null,
+          email: orgEmail.trim() || null,
+          address: orgAddress.trim() || null,
+        },
+      });
+
+      toast.success("Organization party created");
+      setCreateOpen(false);
+      await load();
+    } catch (e: any) {
+      const msg = e?.response?.data?.detail || e?.response?.data?.error || e?.message || "Failed to create organization";
+      toast.error(msg);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!createOpen) return;
+
+    setCreateType("individual");
+    setNidaNumber("");
+    setPrefill(null);
+
+    setOrgName("");
+    setOrgRegistrationNumber("");
+    setOrgTin("");
+    setOrgPhone("");
+    setOrgEmail("");
+    setOrgAddress("");
+  }, [createOpen]);
 
   const columns: ColumnDef<PartyListItem>[] = useMemo(() => {
     return [
@@ -205,62 +262,127 @@ export default function PartiesPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Add New Party (Individual)</DialogTitle>
+            <DialogTitle>Add New Party</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>NIDA Number (20 digits)</Label>
-              <Input
-                value={nidaNumber}
-                onChange={(e) => setNidaNumber(e.target.value)}
-                placeholder="Enter NIDA number"
-              />
-            </div>
+            <Tabs
+              value={createType}
+              onValueChange={(v) => {
+                const next = v === "organization" ? "organization" : "individual";
+                setCreateType(next);
+                setPrefill(null);
+                setNidaNumber("");
+              }}
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="individual">Individual</TabsTrigger>
+                <TabsTrigger value="organization">Organization</TabsTrigger>
+              </TabsList>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="secondary" onClick={onLookup} disabled={lookupLoading}>
-                {lookupLoading ? "Looking up..." : "Lookup"}
-              </Button>
-            </div>
-
-            {prefill ? (
-              <div className="border rounded p-3 space-y-2">
-                <div className="text-sm text-muted-foreground">Fetched details</div>
-                {prefill.existing_party_id ? (
-                  <div className="text-sm">
-                    A party with this NIDA number already exists (Party ID: <span className="font-medium">{prefill.existing_party_id}</span>).
-                  </div>
-                ) : null}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-xs text-muted-foreground">First name</div>
-                    <div className="font-medium">{prefill.first_name}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Middle name</div>
-                    <div className="font-medium">{prefill.middle_name || "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Last name</div>
-                    <div className="font-medium">{prefill.last_name}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">Gender</div>
-                    <div className="font-medium">{prefill.gender || "-"}</div>
-                  </div>
+              <TabsContent value="individual" className="space-y-4">
+                <div className="space-y-2">
+                  <Label>NIDA Number (20 digits)</Label>
+                  <Input
+                    value={nidaNumber}
+                    onChange={(e) => setNidaNumber(e.target.value)}
+                    placeholder="Enter NIDA number"
+                  />
                 </div>
 
-                <div className="flex justify-end mt-3">
-                  <Button type="button" onClick={onCreate} disabled={createLoading || !!prefill.existing_party_id}>
-                    {createLoading ? "Saving..." : "Save Party"}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={onLookup} disabled={lookupLoading}>
+                    {lookupLoading ? "Looking up..." : "Lookup"}
                   </Button>
                 </div>
-              </div>
-            ) : null}
+
+                {prefill ? (
+                  <div className="border rounded p-3 space-y-2">
+                    <div className="text-sm text-muted-foreground">Fetched details</div>
+                    {prefill.existing_party_id ? (
+                      <div className="text-sm">
+                        A party with this NIDA number already exists (Party ID:{" "}
+                        <span className="font-medium">{prefill.existing_party_id}</span>).
+                      </div>
+                    ) : null}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground">First name</div>
+                        <div className="font-medium">{prefill.first_name}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Middle name</div>
+                        <div className="font-medium">{prefill.middle_name || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Last name</div>
+                        <div className="font-medium">{prefill.last_name}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Gender</div>
+                        <div className="font-medium">{prefill.gender || "-"}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end mt-3">
+                      <Button type="button" onClick={onCreate} disabled={createLoading || !!prefill.existing_party_id}>
+                        {createLoading ? "Saving..." : "Save Party"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </TabsContent>
+
+              <TabsContent value="organization" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Organization name</Label>
+                    <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Enter organization name" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Registration number</Label>
+                    <Input
+                      value={orgRegistrationNumber}
+                      onChange={(e) => setOrgRegistrationNumber(e.target.value)}
+                      placeholder="Optional"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>TIN</Label>
+                    <Input value={orgTin} onChange={(e) => setOrgTin(e.target.value)} placeholder="Optional" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input value={orgPhone} onChange={(e) => setOrgPhone(e.target.value)} placeholder="Optional" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input value={orgEmail} onChange={(e) => setOrgEmail(e.target.value)} placeholder="Optional" />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Address</Label>
+                    <Input value={orgAddress} onChange={(e) => setOrgAddress(e.target.value)} placeholder="Optional" />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={onCreateOrganization} disabled={createLoading}>
+                    {createLoading ? "Saving..." : "Save Organization"}
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </DialogContent>
       </Dialog>

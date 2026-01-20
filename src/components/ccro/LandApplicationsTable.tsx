@@ -53,6 +53,7 @@ export default function LandApplicationsTable(props: Props) {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeApplicationId, setActiveApplicationId] = useState<number | undefined>(undefined);
+  const [activeLocalityProjectId, setActiveLocalityProjectId] = useState<string | undefined>(undefined);
 
   const canCreate = mode === "application" && scope === "project" && !disabled;
 
@@ -192,6 +193,9 @@ export default function LandApplicationsTable(props: Props) {
               disabled={disabled}
               onClick={() => {
                 setActiveApplicationId(row.id);
+                setActiveLocalityProjectId(
+                  row.locality_project == null ? undefined : String(row.locality_project)
+                );
                 setModalOpen(true);
               }}
             >
@@ -219,6 +223,9 @@ export default function LandApplicationsTable(props: Props) {
             disabled={disabled}
             onClick={() => {
               setActiveApplicationId(row.id);
+              setActiveLocalityProjectId(
+                row.locality_project == null ? undefined : String(row.locality_project)
+              );
               setModalOpen(true);
             }}
           >
@@ -297,6 +304,26 @@ export default function LandApplicationsTable(props: Props) {
             await load();
           }}
         />
+      ) : null}
+
+      {scope === "global" && activeApplicationId && activeLocalityProjectId ? (
+        <LandApplicationModal
+          open={modalOpen}
+          onOpenChange={(o) => setModalOpen(o)}
+          localityProjectId={activeLocalityProjectId}
+          projectId={props.projectId || ""}
+          applicationId={activeApplicationId}
+          disabled={disabled}
+          onSaved={async () => {
+            await load();
+          }}
+        />
+      ) : null}
+
+      {scope === "global" && modalOpen && activeApplicationId && !activeLocalityProjectId ? (
+        <div className="text-sm text-destructive break-words">
+          Selected application is missing locality_project, cannot open modal.
+        </div>
       ) : null}
     </div>
   );

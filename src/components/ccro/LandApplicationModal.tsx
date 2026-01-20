@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
@@ -56,6 +58,7 @@ type LandApplication = {
   status_display?: string;
   ownership_type?: string;
   ownership_type_display?: string;
+  presented_by_party?: number | null;
   locality_project?: number;
   hamlet?: string | null;
   estimated_area_acres?: number | null;
@@ -92,6 +95,17 @@ type ApplicationNeighbor = {
   neighbor_type?: string;
 };
 
+type PartyListItem = {
+  id: number;
+  party_type: "individual" | "organization";
+  name: string;
+  contact?: string | null;
+  nida_number?: string | null;
+  nida_verified?: boolean | null;
+};
+
+type PartyRegistryTypeFilter = "all" | "individual" | "organization";
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -124,11 +138,11 @@ function needsGuarantor(ownershipType: string) {
 }
 
 function hasApplicant(parties: ApplicationParty[]) {
-  return parties.some((p) => p.role === "applicant" && !!(p.full_name || "").trim());
+  return parties.some((p) => p.role === "owner" && p.party != null);
 }
 
 function hasGuarantor(parties: ApplicationParty[]) {
-  return parties.some((p) => p.role === "guarantor" && !!(p.full_name || "").trim());
+  return parties.some((p) => p.role === "guarantor" && p.party != null);
 }
 
 export default function LandApplicationModal({
@@ -149,6 +163,7 @@ export default function LandApplicationModal({
 
   const [ownershipType, setOwnershipType] = useState<string>("individual");
   const [entityName, setEntityName] = useState<string>("");
+  const [presentedByPartyId, setPresentedByPartyId] = useState<number | null>(null);
   const [hamlet, setHamlet] = useState<string>("");
   const [estimatedAreaAcres, setEstimatedAreaAcres] = useState<string>("");
   const [currentLandUse, setCurrentLandUse] = useState<string>("");
@@ -159,6 +174,20 @@ export default function LandApplicationModal({
 
   const [parties, setParties] = useState<ApplicationParty[]>([]);
   const [neighbors, setNeighbors] = useState<ApplicationNeighbor[]>([]);
+
+  const [partyRegistry, setPartyRegistry] = useState<PartyListItem[]>([]);
+  const [partyRegistryLoading, setPartyRegistryLoading] = useState(false);
+  const [partyRegistrySearch, setPartyRegistrySearch] = useState("");
+  const [partyPickerOpenIndex, setPartyPickerOpenIndex] = useState<number | null>(null);
+  const [ownerAddOpen, setOwnerAddOpen] = useState(false);
+  const [familyAddOpen, setFamilyAddOpen] = useState(false);
+  const [repPickerOpen, setRepPickerOpen] = useState(false);
+  const [partyRegistryType, setPartyRegistryType] = useState<PartyRegistryTypeFilter>("all");
+  const [partyRegistryPage, setPartyRegistryPage] = useState(1);
+  const [partyRegistryHasNext, setPartyRegistryHasNext] = useState(false);
+
+  const partyRegistrySearchRef = useRef("");
+  const partyRegistryTypeRef = useRef<PartyRegistryTypeFilter>("all");
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamLoading, setTeamLoading] = useState(false);
@@ -175,6 +204,7 @@ export default function LandApplicationModal({
   }, [
     ownershipType,
     entityName,
+    presentedByPartyId,
     hamlet,
     estimatedAreaAcres,
     currentLandUse,
@@ -196,6 +226,7 @@ export default function LandApplicationModal({
 
       setOwnershipType(data.ownership_type || "individual");
       setEntityName(data.entity_name || "");
+      setPresentedByPartyId(data.presented_by_party ?? null);
       setHamlet(data.hamlet || "");
       setEstimatedAreaAcres(data.estimated_area_acres == null ? "" : String(data.estimated_area_acres));
       setCurrentLandUse(data.current_land_use || "");
@@ -207,7 +238,7 @@ export default function LandApplicationModal({
       setParties(Array.isArray(data.parties) ? data.parties.map((p) => ({
         id: p.id,
         role: p.role,
-        full_name: p.full_name ?? "",
+        full_name: "",
         age_years: p.age_years ?? null,
         gender: p.gender ?? null,
         citizenship: p.citizenship ?? null,
@@ -253,6 +284,52 @@ export default function LandApplicationModal({
   }, [projectId]);
 
   useEffect(() => {
+    partyRegistrySearchRef.current = partyRegistrySearch;
+  }, [partyRegistrySearch]);
+
+  useEffect(() => {
+    partyRegistryTypeRef.current = partyRegistryType;
+  }, [partyRegistryType]);
+
+  const loadPartyRegistry = useCallback(
+    async ({ page, append }: { page: number; append: boolean }) => {
+      setPartyRegistryLoading(true);
+      try {
+        const params = new URLSearchParams();
+        const q = (partyRegistrySearchRef.current || "").trim();
+        if (q) params.set("search", q);
+        const typ = partyRegistryTypeRef.current;
+        if (typ !== "all") params.set("party_type", typ);
+        params.set("page", String(page));
+
+        const res = await api.get(`/ccro/parties/?${params.toString()}`);
+        const data = res.data as any;
+
+        const results = Array.isArray(data) ? data : data?.results || [];
+        const hasNext = Array.isArray(data) ? false : Boolean(data?.next);
+
+        setPartyRegistry((prev) => (append ? [...prev, ...(results as PartyListItem[])] : (results as PartyListItem[])));
+        setPartyRegistryHasNext(hasNext);
+        setPartyRegistryPage(page);
+      } catch (e: any) {
+        const msg = e?.response?.data?.detail || e?.response?.data?.error || e?.message || "Failed to load parties";
+        toast.error(msg);
+      } finally {
+        setPartyRegistryLoading(false);
+      }
+    },
+    []
+  );
+
+  const partyLabelById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const p of partyRegistry) {
+      map.set(p.id, p.name);
+    }
+    return map;
+  }, [partyRegistry]);
+
+  useEffect(() => {
     if (!open) return;
     setActiveTab("basic");
 
@@ -265,6 +342,7 @@ export default function LandApplicationModal({
     } else {
       setOwnershipType("individual");
       setEntityName("");
+      setPresentedByPartyId(null);
       setHamlet("");
       setEstimatedAreaAcres("");
       setCurrentLandUse("");
@@ -279,7 +357,32 @@ export default function LandApplicationModal({
     }
 
     loadTeamMembers();
-  }, [open, applicationId, loadDetail, loadTeamMembers]);
+    loadPartyRegistry({ page: 1, append: false });
+  }, [open, applicationId, loadDetail, loadTeamMembers, loadPartyRegistry]);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      setPartyRegistry([]);
+      setPartyRegistryHasNext(false);
+      loadPartyRegistry({ page: 1, append: false });
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [open, partyRegistrySearch, partyRegistryType, loadPartyRegistry]);
+
+  const handlePartyRegistryScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      if (partyRegistryLoading) return;
+      if (!partyRegistryHasNext) return;
+
+      const el = e.currentTarget;
+      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 48;
+      if (!nearBottom) return;
+
+      loadPartyRegistry({ page: partyRegistryPage + 1, append: true });
+    },
+    [partyRegistryLoading, partyRegistryHasNext, partyRegistryPage, loadPartyRegistry]
+  );
 
   const preview = useMemo(() => {
     const base = server || (localId ? { id: localId } as LandApplication : null);
@@ -287,6 +390,7 @@ export default function LandApplicationModal({
       ...(base || ({} as LandApplication)),
       id: base?.id || (localId as number),
       ownership_type: ownershipType,
+      presented_by_party: presentedByPartyId,
       hamlet: hamlet || null,
       estimated_area_acres: estimatedAreaAcres.trim() ? Number(estimatedAreaAcres) : null,
       current_land_use: currentLandUse || null,
@@ -323,6 +427,7 @@ export default function LandApplicationModal({
     const payload: any = {
       ownership_type: ownershipType,
       locality_project: Number(localityProjectId),
+      presented_by_party: presentedByPartyId,
       hamlet: hamlet.trim() ? hamlet.trim() : null,
       estimated_area_acres: estimatedAreaAcres.trim() ? Number(estimatedAreaAcres) : null,
       current_land_use: currentLandUse.trim() ? currentLandUse.trim() : null,
@@ -342,13 +447,15 @@ export default function LandApplicationModal({
     }
 
     const res = await api.patch(`/ccro/land-applications/${id}/`, payload);
-    return res.data as LandApplication;
+    return { ...(res.data as any), id } as LandApplication;
   };
 
   const syncParties = async (appId: number) => {
     const existing = server?.parties || [];
     const existingIds = new Set(existing.map((p) => p.id).filter(Boolean) as number[]);
     const nextIds = new Set(parties.map((p) => p.id).filter(Boolean) as number[]);
+
+    const ownerCount = parties.filter((p) => p.role === "owner" || p.role === "co_owner").length;
 
     const toDelete = Array.from(existingIds).filter((id) => !nextIds.has(id));
 
@@ -357,10 +464,11 @@ export default function LandApplicationModal({
     }
 
     for (const p of parties) {
+      const normalizedShare =
+        ownerCount === 1 && (p.role === "owner" || p.role === "co_owner") ? 100 : p.share_percentage;
       const payload: any = {
         application: appId,
         role: p.role,
-        full_name: (p.full_name || "").trim() || null,
         age_years: p.age_years == null ? null : Number(p.age_years),
         gender: (p.gender || "").trim() || null,
         citizenship: (p.citizenship || "").trim() || null,
@@ -368,7 +476,7 @@ export default function LandApplicationModal({
         birth_certificate_ref: (p.birth_certificate_ref || "").trim() || null,
         address: (p.address || "").trim() || null,
         relationship: (p.relationship || "").trim() || null,
-        share_percentage: p.share_percentage == null ? null : Number(p.share_percentage),
+        share_percentage: normalizedShare == null ? null : Number(normalizedShare),
         party: p.party ?? null,
       };
 
@@ -416,10 +524,42 @@ export default function LandApplicationModal({
   const handleSave = async () => {
     if (!canSave) return;
 
+    if (presentedByPartyId == null) {
+      toast.error("Presented by party is required");
+      return;
+    }
+
+    const owners = (parties || []).filter((p) => p.role === "owner" || p.role === "co_owner");
+    if (owners.length < 1) {
+      toast.error("Add at least one owner before saving");
+      return;
+    }
+
+    if (owners.length > 1) {
+      if (owners.some((p) => p.share_percentage == null || Number.isNaN(Number(p.share_percentage)))) {
+        toast.error("Enter share % for all owners");
+        return;
+      }
+      const sum = owners.reduce((acc, p) => acc + Number(p.share_percentage || 0), 0);
+      const rounded = Math.round(sum * 100) / 100;
+      if (Math.abs(rounded - 100) > 0.01) {
+        toast.error(`Owner shares must sum to 100 (current: ${rounded})`);
+        return;
+      }
+    }
+
+    if ((parties || []).some((p) => p.party == null)) {
+      toast.error("Select a party from the registry for all party rows before saving");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const app = await persistBasic(localId ?? undefined);
-      const id = app.id;
+      const id = (localId ?? app.id) as number | undefined;
+      if (!id) {
+        throw new Error("Missing application id after save");
+      }
       setLocalId(id);
 
       await syncParties(id);
@@ -483,7 +623,15 @@ export default function LandApplicationModal({
   const partyColumns: ColumnDef<ApplicationParty>[] = useMemo(() => {
     return [
       { id: "role", header: "Role", accessorFn: (r) => r.role },
-      { id: "name", header: "Full name", accessorFn: (r) => r.full_name || "" },
+      {
+        id: "party",
+        header: "Party",
+        accessorFn: (r) => {
+          if (r.party == null) return "";
+          const label = partyLabelById.get(r.party);
+          return label ? label : `#${r.party}`;
+        },
+      },
       { id: "relationship", header: "Relationship", accessorFn: (r) => r.relationship || "" },
       { id: "age", header: "Age", accessorFn: (r) => (r.age_years == null ? "" : String(r.age_years)) },
       { id: "gender", header: "Gender", accessorFn: (r) => r.gender || "" },
@@ -497,6 +645,75 @@ export default function LandApplicationModal({
         accessorFn: (r) => (r.share_percentage == null ? "" : String(r.share_percentage)),
       },
     ];
+  }, [partyLabelById]);
+
+  const ownerColumns: ColumnDef<ApplicationParty>[] = useMemo(() => {
+    return [
+      {
+        id: "owner",
+        header: "Owner",
+        accessorFn: (r) => {
+          if (r.party == null) return "";
+          const label = partyLabelById.get(r.party);
+          return label ? label : `#${r.party}`;
+        },
+      },
+      {
+        id: "type",
+        header: "Type",
+        accessorFn: (r) => (r.role === "owner" ? "Primary" : "Co-owner"),
+      },
+      {
+        id: "share",
+        header: "Share %",
+        accessorFn: (r) => (r.share_percentage == null ? "" : String(r.share_percentage)),
+      },
+    ];
+  }, [partyLabelById]);
+
+  const familyColumns: ColumnDef<ApplicationParty>[] = useMemo(() => {
+    return [
+      {
+        id: "party",
+        header: "Party",
+        accessorFn: (r) => {
+          if (r.party == null) return "";
+          const label = partyLabelById.get(r.party);
+          return label ? label : `#${r.party}`;
+        },
+      },
+      { id: "role", header: "Role", accessorFn: (r) => (r.role === "spouse" ? "Spouse" : "Family member") },
+      { id: "relationship", header: "Relationship", accessorFn: (r) => r.relationship || "" },
+    ];
+  }, [partyLabelById]);
+
+  const recalcOwnerShares = useCallback(() => {
+    dirtyRef.current.parties = true;
+    setParties((prev) => {
+      const ownerIdx = prev
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.role === "owner" || p.role === "co_owner");
+
+      const n = ownerIdx.length;
+      if (n === 0) return prev;
+
+      const next = [...prev];
+
+      if (n === 1) {
+        const i = ownerIdx[0].idx;
+        next[i] = { ...next[i], role: "owner", share_percentage: 100 };
+        return next;
+      }
+
+      const base = Math.floor((100 / n) * 100) / 100;
+      let remainder = 100 - base * (n - 1);
+      remainder = Math.round(remainder * 100) / 100;
+
+      ownerIdx.forEach(({ idx }, k) => {
+        next[idx] = { ...next[idx], role: k === 0 ? "owner" : "co_owner", share_percentage: k === n - 1 ? remainder : base };
+      });
+      return next;
+    });
   }, []);
 
   const neighborColumns: ColumnDef<ApplicationNeighbor>[] = useMemo(() => {
@@ -515,7 +732,7 @@ export default function LandApplicationModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-hidden">
+      <DialogContent className="flex flex-col w-[95vw] sm:w-[80vw] max-w-none sm:max-w-none h-[70vh] max-h-[70vh] overflow-visible">
         <DialogHeader>
           <DialogTitle>
             {localId ? `Land Application #${localId}` : "New Land Application"}
@@ -524,10 +741,12 @@ export default function LandApplicationModal({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 overflow-hidden">
           <TabsList className="w-full flex flex-wrap h-auto">
             <TabsTrigger value="basic">Basic</TabsTrigger>
-            <TabsTrigger value="parties">Parties</TabsTrigger>
+            <TabsTrigger value="owners">Owners</TabsTrigger>
+            <TabsTrigger value="representative">Representative</TabsTrigger>
+            {isGroupOwnership(ownershipType) ? null : <TabsTrigger value="family">Family</TabsTrigger>}
             <TabsTrigger value="neighbors">Neighbors</TabsTrigger>
             <TabsTrigger value="surveyor">Surveyor</TabsTrigger>
             <TabsTrigger value="workflow">Workflow</TabsTrigger>
@@ -537,6 +756,63 @@ export default function LandApplicationModal({
           <TabsContent value="basic">
             <div className="max-h-[60vh] overflow-auto pr-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:col-span-2">
+                <Label>Presented by (Party)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-start" disabled={disabled}>
+                      {presentedByPartyId == null
+                        ? "Select party"
+                        : partyLabelById.get(presentedByPartyId) || `Party #${presentedByPartyId}`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[420px] max-w-[calc(80vw-3rem)] p-0"
+                    align="start"
+                    portal={false}
+                    onInteractOutside={(e) => e.preventDefault()}
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onFocusOutside={(e) => e.preventDefault()}
+                  >
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Search party name or NIDA..."
+                        value={partyRegistrySearch}
+                        onValueChange={setPartyRegistrySearch}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.preventDefault();
+                        }}
+                      />
+                      <CommandList onScroll={handlePartyRegistryScroll}>
+                        <CommandEmpty>
+                          {partyRegistryLoading ? "Loading..." : "No party found."}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {partyRegistry.map((p) => (
+                            <CommandItem
+                              key={p.id}
+                              onSelect={() => {
+                                dirtyRef.current.basic = true;
+                                setPresentedByPartyId(p.id);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex flex-col">
+                                <div className="text-sm">{p.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {p.party_type}
+                                  {p.nida_number ? ` • ${p.nida_number}` : ""}
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               <div className="space-y-2">
                 <Label>Ownership Type</Label>
                 <Select
@@ -674,48 +950,126 @@ export default function LandApplicationModal({
             </div>
           </TabsContent>
 
-          <TabsContent value="parties">
+          <TabsContent value="owners">
             <div className="max-h-[60vh] overflow-auto pr-1">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-muted-foreground">
-                At least one applicant is required before sending to field work.
+                Add owners and make sure shares sum to 100.
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={disabled}
-                onClick={() => {
-                  dirtyRef.current.parties = true;
-                  setParties((prev) => [
-                    ...prev,
-                    {
-                      role: "member",
-                      full_name: "",
-                      relationship: null,
-                      age_years: null,
-                      gender: null,
-                      citizenship: null,
-                      citizenship_ref: null,
-                      birth_certificate_ref: null,
-                      address: null,
-                      share_percentage: null,
-                      party: null,
-                    },
-                  ]);
-                }}
-              >
-                Add party
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={recalcOwnerShares}>
+                  Auto-split shares
+                </Button>
+                <Popover open={ownerAddOpen} onOpenChange={setOwnerAddOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" size="sm" variant="outline" disabled={disabled}>
+                      Add owner
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[420px] max-w-[calc(80vw-3rem)] p-0"
+                    align="end"
+                    portal={false}
+                    onInteractOutside={(e) => e.preventDefault()}
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onFocusOutside={(e) => e.preventDefault()}
+                  >
+                    <Command shouldFilter={false}>
+                      <div className="p-2 border-b flex items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={partyRegistryType === "all" ? "default" : "outline"}
+                          onClick={() => setPartyRegistryType("all")}
+                        >
+                          All
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={partyRegistryType === "individual" ? "default" : "outline"}
+                          onClick={() => setPartyRegistryType("individual")}
+                        >
+                          Individual
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={partyRegistryType === "organization" ? "default" : "outline"}
+                          onClick={() => setPartyRegistryType("organization")}
+                        >
+                          Organization
+                        </Button>
+                      </div>
+                      <CommandInput
+                        placeholder="Search party name or NIDA..."
+                        value={partyRegistrySearch}
+                        onValueChange={setPartyRegistrySearch}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.preventDefault();
+                        }}
+                      />
+                      <CommandList onScroll={handlePartyRegistryScroll}>
+                        <CommandEmpty>
+                          {partyRegistryLoading ? "Loading..." : "No party found."}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {partyRegistry.map((p) => (
+                            <CommandItem
+                              key={p.id}
+                              onSelect={() => {
+                                dirtyRef.current.parties = true;
+                                setParties((prev) => {
+                                  if (prev.some((x) => x.party === p.id)) return prev;
+                                  const ownerCount = prev.filter((x) => x.role === "owner" || x.role === "co_owner").length;
+                                  const role = ownerCount === 0 ? "owner" : "co_owner";
+                                  const next = [
+                                    ...prev,
+                                    {
+                                      role,
+                                      full_name: null,
+                                      relationship: null,
+                                      age_years: null,
+                                      gender: null,
+                                      citizenship: null,
+                                      citizenship_ref: null,
+                                      birth_certificate_ref: null,
+                                      address: null,
+                                      share_percentage: null,
+                                      party: p.id,
+                                    },
+                                  ];
+                                  return next;
+                                });
+                                setOwnerAddOpen(false);
+                                window.setTimeout(() => recalcOwnerShares(), 0);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex flex-col">
+                                <div className="text-sm">{p.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {p.party_type}
+                                  {p.nida_number ? ` • ${p.nida_number}` : ""}
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             <DataTable
-              columns={partyColumns}
-              data={parties}
+              columns={ownerColumns}
+              data={parties.filter((p) => p.role === "owner" || p.role === "co_owner")}
               shadowed={false}
               enableGlobalFilter={false}
               showPagination={false}
-              emptyText="No parties added"
+              emptyText="No owners added"
               rowActions={
                 disabled
                   ? undefined
@@ -728,21 +1082,10 @@ export default function LandApplicationModal({
                           onClick={() => {
                             const i = parties.indexOf(row);
                             if (i < 0) return;
-                            const role = prompt("Role (applicant/spouse/member/guarantor)", row.role) || row.role;
-                            const full = prompt("Full name", row.full_name || "") ?? (row.full_name || "");
-                            const relationship = prompt("Relationship (optional)", row.relationship || "") ?? (row.relationship || "");
-                            const ageRaw = prompt("Age years (optional)", row.age_years == null ? "" : String(row.age_years));
-                            const age = ageRaw == null || ageRaw.trim() === "" ? null : Number(ageRaw);
-                            const gender = (prompt("Gender (male/female) (optional)", row.gender || "") ?? (row.gender || "")).trim();
-                            const citizenship = prompt("Citizenship (optional)", row.citizenship || "") ?? (row.citizenship || "");
-                            const kumb =
-                              prompt("Citizenship reference (KUMB) (optional)", row.citizenship_ref || "") ??
-                              (row.citizenship_ref || "");
-                            const cheti =
-                              prompt("Birth certificate reference (CHETI) (optional)", row.birth_certificate_ref || "") ??
-                              (row.birth_certificate_ref || "");
-                            const address = prompt("Address (optional)", row.address || "") ?? (row.address || "");
-                            const shareRaw = prompt("Share % (optional)", row.share_percentage == null ? "" : String(row.share_percentage));
+                            const shareRaw = prompt(
+                              "Share %",
+                              row.share_percentage == null ? "" : String(row.share_percentage)
+                            );
                             const share = shareRaw == null || shareRaw === "" ? null : Number(shareRaw);
                             dirtyRef.current.parties = true;
                             setParties((prev) =>
@@ -750,15 +1093,6 @@ export default function LandApplicationModal({
                                 idx === i
                                   ? {
                                       ...p,
-                                      role,
-                                      full_name: full,
-                                      relationship: relationship.trim() ? relationship.trim() : null,
-                                      age_years: age,
-                                      gender: gender ? gender : null,
-                                      citizenship: citizenship.trim() ? citizenship.trim() : null,
-                                      citizenship_ref: kumb.trim() ? kumb.trim() : null,
-                                      birth_certificate_ref: cheti.trim() ? cheti.trim() : null,
-                                      address: address.trim() ? address.trim() : null,
                                       share_percentage: share,
                                     }
                                   : p
@@ -766,7 +1100,7 @@ export default function LandApplicationModal({
                             );
                           }}
                         >
-                          Edit
+                          Edit share
                         </Button>
                         <Button
                           type="button"
@@ -789,6 +1123,240 @@ export default function LandApplicationModal({
             />
             </div>
           </TabsContent>
+
+          <TabsContent value="representative">
+            <div className="max-h-[60vh] overflow-auto pr-1">
+              <div className="space-y-3">
+                <div className="text-sm text-muted-foreground">Optional. Select a representative if someone is acting on behalf of the owners.</div>
+
+                <Popover open={repPickerOpen} onOpenChange={setRepPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" disabled={disabled}>
+                      {parties.find((p) => p.role === "representative")?.party
+                        ? partyLabelById.get(parties.find((p) => p.role === "representative")!.party as number) || "Change representative"
+                        : "Select representative"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[420px] max-w-[calc(80vw-3rem)] p-0"
+                    align="start"
+                    portal={false}
+                    onInteractOutside={(e) => e.preventDefault()}
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onFocusOutside={(e) => e.preventDefault()}
+                  >
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Search party name or NIDA..."
+                        value={partyRegistrySearch}
+                        onValueChange={setPartyRegistrySearch}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.preventDefault();
+                        }}
+                      />
+                      <CommandList onScroll={handlePartyRegistryScroll}>
+                        <CommandEmpty>{partyRegistryLoading ? "Loading..." : "No party found."}</CommandEmpty>
+                        <CommandGroup>
+                          {partyRegistry.map((p) => (
+                            <CommandItem
+                              key={p.id}
+                              onSelect={() => {
+                                dirtyRef.current.parties = true;
+                                setParties((prev) => {
+                                  const idx = prev.findIndex((x) => x.role === "representative");
+                                  if (idx >= 0) {
+                                    const next = [...prev];
+                                    next[idx] = { ...next[idx], party: p.id };
+                                    return next;
+                                  }
+                                  return [
+                                    ...prev,
+                                    {
+                                      role: "representative",
+                                      party: p.id,
+                                      relationship: null,
+                                      age_years: null,
+                                      gender: null,
+                                      citizenship: null,
+                                      citizenship_ref: null,
+                                      birth_certificate_ref: null,
+                                      address: null,
+                                      share_percentage: null,
+                                      full_name: null,
+                                    },
+                                  ];
+                                });
+                                setRepPickerOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex flex-col">
+                                <div className="text-sm">{p.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {p.party_type}
+                                  {p.nida_number ? ` • ${p.nida_number}` : ""}
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {disabled ? null : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive justify-start px-0"
+                    onClick={() => {
+                      if (!confirm("Remove representative?") ) return;
+                      dirtyRef.current.parties = true;
+                      setParties((prev) => prev.filter((p) => p.role !== "representative"));
+                    }}
+                  >
+                    Remove representative
+                  </Button>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {isGroupOwnership(ownershipType) ? null : (
+            <TabsContent value="family">
+              <div className="max-h-[60vh] overflow-auto pr-1">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-muted-foreground">Optional. Add spouse and other family members.</div>
+                  <Popover open={familyAddOpen} onOpenChange={setFamilyAddOpen}>
+                    <PopoverTrigger asChild>
+                      <Button type="button" size="sm" variant="outline" disabled={disabled}>
+                        Add family member
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[420px] max-w-[calc(80vw-3rem)] p-0"
+                      align="end"
+                      portal={false}
+                      onInteractOutside={(e) => e.preventDefault()}
+                      onPointerDownOutside={(e) => e.preventDefault()}
+                      onFocusOutside={(e) => e.preventDefault()}
+                    >
+                      <Command shouldFilter={false}>
+                        <CommandInput
+                          placeholder="Search party name or NIDA..."
+                          value={partyRegistrySearch}
+                          onValueChange={setPartyRegistrySearch}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.preventDefault();
+                          }}
+                        />
+                        <CommandList onScroll={handlePartyRegistryScroll}>
+                          <CommandEmpty>{partyRegistryLoading ? "Loading..." : "No party found."}</CommandEmpty>
+                          <CommandGroup>
+                            {partyRegistry.map((p) => (
+                              <CommandItem
+                                key={p.id}
+                                onSelect={() => {
+                                  dirtyRef.current.parties = true;
+                                  setParties((prev) => {
+                                    if (prev.some((x) => x.party === p.id)) return prev;
+                                    return [
+                                      ...prev,
+                                      {
+                                        role: "family_member",
+                                        party: p.id,
+                                        relationship: null,
+                                        age_years: null,
+                                        gender: null,
+                                        citizenship: null,
+                                        citizenship_ref: null,
+                                        birth_certificate_ref: null,
+                                        address: null,
+                                        share_percentage: null,
+                                        full_name: null,
+                                      },
+                                    ];
+                                  });
+                                  setFamilyAddOpen(false);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex flex-col">
+                                  <div className="text-sm">{p.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {p.party_type}
+                                    {p.nida_number ? ` • ${p.nida_number}` : ""}
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <DataTable
+                  columns={familyColumns}
+                  data={parties.filter((p) => p.role === "family_member" || p.role === "spouse")}
+                  shadowed={false}
+                  enableGlobalFilter={false}
+                  showPagination={false}
+                  emptyText="No family members added"
+                  rowActions={
+                    disabled
+                      ? undefined
+                      : (row) => (
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const i = parties.indexOf(row);
+                                if (i < 0) return;
+                                const role = prompt("Role (spouse/family_member)", row.role) || row.role;
+                                const relationship = prompt("Relationship", row.relationship || "") ?? (row.relationship || "");
+                                dirtyRef.current.parties = true;
+                                setParties((prev) =>
+                                  prev.map((p, idx) =>
+                                    idx === i
+                                      ? {
+                                          ...p,
+                                          role: role === "spouse" ? "spouse" : "family_member",
+                                          relationship: relationship.trim() ? relationship.trim() : null,
+                                        }
+                                      : p
+                                  )
+                                );
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => {
+                                const i = parties.indexOf(row);
+                                if (i < 0) return;
+                                if (!confirm("Remove this family member?") ) return;
+                                dirtyRef.current.parties = true;
+                                setParties((prev) => prev.filter((_, idx) => idx !== i));
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        )
+                  }
+                />
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="neighbors">
             <div className="max-h-[60vh] overflow-auto pr-1">
