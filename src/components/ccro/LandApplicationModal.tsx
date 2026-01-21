@@ -178,7 +178,7 @@ export default function LandApplicationModal({
   const [partyRegistry, setPartyRegistry] = useState<PartyListItem[]>([]);
   const [partyRegistryLoading, setPartyRegistryLoading] = useState(false);
   const [partyRegistrySearch, setPartyRegistrySearch] = useState("");
-  const [partyPickerOpenIndex, setPartyPickerOpenIndex] = useState<number | null>(null);
+  const [_partyPickerOpenIndex, _setPartyPickerOpenIndex] = useState<number | null>(null);
   const [ownerAddOpen, setOwnerAddOpen] = useState(false);
   const [familyAddOpen, setFamilyAddOpen] = useState(false);
   const [repPickerOpen, setRepPickerOpen] = useState(false);
