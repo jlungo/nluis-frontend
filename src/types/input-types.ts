@@ -16,4 +16,6 @@ export type InputType =
   | "report"
   | "addquestionnaires"
   | "viewquestionnaires"
-  | "landsubdivision";
+  | "landsubdivision"
+  | "ccro_register_application"
+  | "ccro_review_application";

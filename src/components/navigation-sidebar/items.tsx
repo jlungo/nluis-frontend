@@ -4,6 +4,7 @@ import {
   Shield,
   FileText,
   List,
+  Users,
   LayoutDashboard,
   ClipboardPlus,
   ClipboardList,
@@ -124,6 +125,11 @@ export const getNavigationItems = (page: PageMetadata | null): (
             id: "ccro-projects",
             label: "CCRO Projects",
             icon: <FileText className="h-4 w-4" />
+          },
+          {
+            id: "parties",
+            label: "Parties",
+            icon: <Users className="h-4 w-4" />
           },
           {
             id: "land-formalization",
