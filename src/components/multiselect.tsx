@@ -21,7 +21,7 @@ interface MultiselectProps {
     title: string;
     data: { value: string; label: string }[];
     selected: string[];
-    setSelected: (selected: string[]) => void;
+    setSelected?: (selected: string[]) => void;
     isLoading?: boolean;
     search?: string;
     setSearch?: (search: string) => void
@@ -36,6 +36,7 @@ export function MultiSelect({ title, data, selected, setSelected, isLoading, sea
     const [open, setOpen] = useState(false)
 
     const toggleValue = (value: string) => {
+        if (!setSelected) return
         if (isSingle) {
             if (selected.includes(value)) setSelected([])
             else setSelected([value])

@@ -1,23 +1,23 @@
-import { type FormEvent, useEffect } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
-import { questionnaireQueryKey, type FormProps, type SectionProps, type QuestionnaireProps } from '@/queries/useQuestionnaireQuery';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
+import { type FormProps, type SectionProps, type QuestionnaireProps } from '@/queries/useQuestionnaireQuery';
 import { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, ChevronRight, ChevronDown, Edit, Save, CheckCircle, X, Edit2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FormField, { type ValueType } from '@/components/form-field';
 import type { InputType } from '@/types/input-types';
 import { useAuth } from '@/store/auth';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/axios';
-import { toast } from 'sonner';
-import type { AxiosError } from 'axios';
-import { type questionnaireDataI, questionnaireDataQueryKey } from '@/queries/useQuestionnaireDataQuery';
+// import { useMutation, useQueryClient } from '@tanstack/react-query';
+// import api from '@/lib/axios';
+// import { toast } from 'sonner';
+// import type { AxiosError } from 'axios';
+import { type questionnaireDataI } from '@/queries/useQuestionnaireDataQuery';
 import { Progress } from '../ui/progress';
-import { queryProjectKey } from '@/queries/useProjectQuery';
+// import { queryProjectKey } from '@/queries/useProjectQuery';
 
 interface FieldValue {
     value?: ValueType;
@@ -42,17 +42,17 @@ type Props = {
 }
 
 export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, subLevelModule, moduleLevel, projectId, questionnaireProgress }: Props) {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     const navigate = useNavigate()
-    const location = useLocation()
+    // const location = useLocation()
     const [searchParams] = useSearchParams();
     const { user } = useAuth()
 
-    const [isLoading, setIsLoading] = useState(false);
+    // const [isLoading, setIsLoading] = useState(false);
     const [expandedSections, setExpandedSections] = useState<string[]>([]);
     const [activeForm, setActiveForm] = useState<string>('');
     const [fieldData, setFieldData] = useState<Record<string, FieldValue>>({});
-    const [editForm, setEditForm] = useState(false);
+    // const [editForm, setEditForm] = useState(false);
 
     const updateFieldValue = (formSlug: string, value: ValueType, type: InputType, field_id: number, project_locality_id: string) => {
         if (!user || project_locality_id.length === 0) return
@@ -62,102 +62,102 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         }));
     };
 
-    const { mutateAsync, isPending } = useMutation({
-        mutationFn: (e: FormData) => {
-            // TODO: Add edit questionnairedata endpoint
-            if (editForm) return api.put(`/form-management/submit-questionnaire-data/`, e, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                }
-            })
-            return api.post(`/collect/questionnaire/submit-form-data/`, e, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                }
-            })
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [questionnaireDataQueryKey],
-            })
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [queryProjectKey],
-            })
-            queryClient.invalidateQueries({
-                refetchType: "active",
-                queryKey: [questionnaireQueryKey],
-            })
-        },
-        onError: e => console.log(e),
-    });
+    // const { mutateAsync, isPending } = useMutation({
+    //     mutationFn: (e: FormData) => {
+    //         // TODO: Add edit questionnairedata endpoint
+    //         if (editForm) return api.put(`/form-management/submit-questionnaire-data/`, e, {
+    //             headers: {
+    //                 "Content-Type": "multipart/form-data",
+    //             }
+    //         })
+    //         return api.post(`/collect/questionnaire/submit-form-data/`, e, {
+    //             headers: {
+    //                 "Content-Type": "multipart/form-data",
+    //             }
+    //         })
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries({
+    //             refetchType: "active",
+    //             queryKey: [questionnaireDataQueryKey],
+    //         })
+    //         queryClient.invalidateQueries({
+    //             refetchType: "active",
+    //             queryKey: [queryProjectKey],
+    //         })
+    //         queryClient.invalidateQueries({
+    //             refetchType: "active",
+    //             queryKey: [questionnaireQueryKey],
+    //         })
+    //     },
+    //     onError: e => console.log(e),
+    // });
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>, formSlug: string) => {
-        e.preventDefault()
-        if (!user) return
-        try {
-            setIsLoading(true)
+    // const handleSubmit = async (e: FormEvent<HTMLFormElement>, formSlug: string) => {
+    //     e.preventDefault()
+    //     if (!user) return
+    //     try {
+    //         setIsLoading(true)
 
-            const entries = Object.entries(fieldData).filter(([key]) => {
-                const i = key.lastIndexOf("-");
-                if (i === -1) return false;
-                const slug = key.slice(0, i); // everything before the last "-"
-                return slug === formSlug;
-            }).map(([key, value]) => {
-                const i = key.lastIndexOf("-");
-                const field_id = key.slice(i + 1); // everything before the last "-"
-                return {
-                    ...value,
-                    field_id: isNaN(Number(field_id)) ? field_id : Number(field_id), // convert to number if numeric
-                };
-            });
-            const formData = new FormData();
+    //         const entries = Object.entries(fieldData).filter(([key]) => {
+    //             const i = key.lastIndexOf("-");
+    //             if (i === -1) return false;
+    //             const slug = key.slice(0, i); // everything before the last "-"
+    //             return slug === formSlug;
+    //         }).map(([key, value]) => {
+    //             const i = key.lastIndexOf("-");
+    //             const field_id = key.slice(i + 1); // everything before the last "-"
+    //             return {
+    //                 ...value,
+    //                 field_id: isNaN(Number(field_id)) ? field_id : Number(field_id), // convert to number if numeric
+    //             };
+    //         });
+    //         const formData = new FormData();
 
-            entries.forEach((field) => {
-                const { value, type, field_id, project_locality_id } = field;
+    //         entries.forEach((field) => {
+    //             const { value, type, field_id, project_locality_id } = field;
 
-                if (Array.isArray(value) && type === 'file')
-                    // If value is File[] or multiple files
-                    // @ts-expect-error incorrect type
-                    formData.append(`data-${field_id}`, value[0]);
-                else if (Array.isArray(value))
-                    // If value is MembersI[] or string[]
-                    formData.append(`data-${field_id}`, JSON.stringify(value));
-                else formData.append(`data-${field_id}`, value as string);
+    //             if (Array.isArray(value) && type === 'file')
+    //                 // If value is File[] or multiple files
+    //                 // @ts-expect-error incorrect type
+    //                 formData.append(`data-${field_id}`, value[0]);
+    //             else if (Array.isArray(value))
+    //                 // If value is MembersI[] or string[]
+    //                 formData.append(`data-${field_id}`, JSON.stringify(value));
+    //             else formData.append(`data-${field_id}`, value as string);
 
-                // Include project slug for field
-                formData.append(`${field_id}`, project_locality_id);
-                // Include questionnaireId
-                formData.append(`${field_id}-questionnaire_slug`, data.slug);
-            });
+    //             // Include project slug for field
+    //             formData.append(`${field_id}`, project_locality_id);
+    //             // Include questionnaireId
+    //             formData.append(`${field_id}-questionnaire_slug`, data.slug);
+    //         });
 
-            toast.promise(mutateAsync(formData), {
-                loading: "Processing...",
-                success: () => {
-                    const active = searchParams.get("form");
-                    if (active) navigate(`${location.pathname}`, { replace: true });
-                    else navigate(-1)
-                    return `Success`
-                },
-                error: (e: AxiosError) => {
-                    const detail =
-                        e?.response?.data &&
-                            typeof e.response.data === "object" &&
-                            "detail" in e.response.data
-                            ? (e.response.data as { detail?: string }).detail
-                            : undefined;
-                    return `${detail || "Network error!"}`;
-                }
-            })
+    //         toast.promise(mutateAsync(formData), {
+    //             loading: "Processing...",
+    //             success: () => {
+    //                 const active = searchParams.get("form");
+    //                 if (active) navigate(`${location.pathname}`, { replace: true });
+    //                 else navigate(-1)
+    //                 return `Success`
+    //             },
+    //             error: (e: AxiosError) => {
+    //                 const detail =
+    //                     e?.response?.data &&
+    //                         typeof e.response.data === "object" &&
+    //                         "detail" in e.response.data
+    //                         ? (e.response.data as { detail?: string }).detail
+    //                         : undefined;
+    //                 return `${detail || "Network error!"}`;
+    //             }
+    //         })
 
-        } catch (e) {
-            console.log(e)
-            toast.error("Failed to post!");
-        } finally {
-            setIsLoading(false)
-        }
-    }
+    //     } catch (e) {
+    //         console.log(e)
+    //         toast.error("Failed to post!");
+    //     } finally {
+    //         setIsLoading(false)
+    //     }
+    // }
 
     const toggleSection = (sectionId: string) => {
         setExpandedSections(prev =>
@@ -167,13 +167,21 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         );
     };
 
+    // const isFilledForm = (formSlug: string): boolean => {
+    //     if (!values) return false
+    //     const formValues = values.filter(value => value.form_slug === formSlug)
+    //     const formFields = data.questionnaire_sections.flatMap(section =>
+    //         section.questionnaire_section_forms.filter(form => form.slug === formSlug).flatMap(form => form.custom_form_fields))
+
+    //     if (formValues.length !== formFields.length) return false
+    //     return true
+    // }
+
     const isFilledForm = (formSlug: string): boolean => {
         if (!values) return false
         const formValues = values.filter(value => value.form_slug === formSlug)
-        const formFields = data.questionnaire_sections.flatMap(section =>
-            section.questionnaire_section_forms.filter(form => form.slug === formSlug).flatMap(form => form.custom_form_fields))
 
-        if (formValues.length !== formFields.length) return false
+        if (formValues.length === 0) return false
         return true
     }
 
@@ -207,7 +215,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
         }, 0)
     }
 
-    const renderForm = (formId: string, isFilled: boolean) => {
+    const renderForm = (formId: string) => {
         if (!data) return
         const section = data.questionnaire_sections.find(section => section.questionnaire_section_forms.some(form => form.slug === formId))
         if (!section) return null
@@ -228,7 +236,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 <p className="text-xs lg:text-sm text-muted-foreground">{form?.description || null}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3">
                             {isFilled && !disabled && canEditForm(form) && !isSectionApproved(section) ?
                                 editForm ?
                                     <Button
@@ -261,19 +269,23 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     Edit<span className='hidden md:inline'> Questionnaire</span>
                                 </Link>
                             ) : null}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
                 <div className={`flex-1 overflow-y-auto ${!disabled ? "px-4 md:px-6 pb-4 md:pb-4" : ""}`}>
                     <Card>
-                        <form onSubmit={(e) => handleSubmit(e, form.slug)} className='space-y-4'>
+                        <div
+                            // onSubmit={(e) => handleSubmit(e, form.slug)}
+                            className='space-y-4'
+                        >
                             <CardContent>
                                 <div className="flex flex-col md:flex-row flex-wrap gap-4 justify-between">
                                     {form.custom_form_fields.slice().sort((a, b) => a.position - b.position).map((field) => (
                                         <FormField
                                             key={field.id}
-                                            disabled={disabled || !canEditForm(form) || (isFilled && !editForm)}
+                                            // disabled={disabled || !canEditForm(form) || (isFilled && !editForm)}
+                                            disabled={true}
                                             value={fieldData[`${form.slug}-${field.id}`]?.value}
                                             setValue={updateFieldValue}
                                             project_locality_id={projectLocalityId || ""}
@@ -291,7 +303,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                     ))}
                                 </div>
                             </CardContent>
-                            {!(disabled || !canEditForm(form) || isFilled) || editForm ? (
+                            {/* {!(disabled || !canEditForm(form) || isFilled) || editForm ? (
                                 <CardFooter>
                                     <Button
                                         type='submit'
@@ -314,8 +326,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                         }
                                     </Button>
                                 </CardFooter>
-                            ) : null}
-                        </form>
+                            ) : null} */}
+                        </div>
                     </Card>
                 </div>
             </div>
@@ -324,7 +336,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     useEffect(() => {
         const active = searchParams.get("form");
-        setEditForm(false)
+        // setEditForm(false)
         if (active) setActiveForm(active)
         else setActiveForm('')
     }, [searchParams])
@@ -352,7 +364,8 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
 
     if (!user) return
 
-    if (activeForm) return renderForm(activeForm, isFilledForm(activeForm));
+    if (activeForm) return renderForm(activeForm);
+    // if (activeForm) return renderForm(activeForm, isFilledForm(activeForm));
 
     return (
         <div className="h-fit flex flex-col mb-20">
@@ -372,7 +385,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {disabled ? (
+                        {/* {disabled ? (
                             <Link
                                 to={`/system-settings/form-management/questionnaires/${data.slug}/edit`}
                                 className={cn(buttonVariants({ variant: 'outline' }), 'text-sm')}
@@ -380,7 +393,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                 <Edit className="h-4 w-4" />
                                 Edit<span className='hidden md:inline'> Questionnaire</span>
                             </Link>
-                        ) : null}
+                        ) : null} */}
                         {questionnaireProgress !== undefined ? (
                             <div className='flex flex-col gap-1 items-end'>
                                 <p className='text-xs md:text-sm'>{Number.isInteger(questionnaireProgress)

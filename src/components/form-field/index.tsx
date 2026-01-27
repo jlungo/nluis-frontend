@@ -158,7 +158,7 @@ export default function Index(
                     name={data.name}
                     // disabled={data.disabled}
                     required={data.required}
-                    // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
+                // baseMapId={data?.baseMapId ? data.baseMapId : undefined}
                 // value={data?.value}
                 // onValueChange={(e) => data.setValue(data.form_slug, e, data.type, data.id, data.project_locality_id)}
                 />
@@ -222,6 +222,7 @@ export default function Index(
                     required={data.required}
                     localityId={data.baseMapId ?? data.project_locality_id}
                     value={data?.value}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onChange={(e: any) => data.setValue(formSlug, e, data.type, data.id, data.project_locality_id)}
                 />
             )
