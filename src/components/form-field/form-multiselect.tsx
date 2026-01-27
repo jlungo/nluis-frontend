@@ -26,8 +26,8 @@ const FormMultiselect = (props: FormMultiselectProps) => {
                 title={label ?? ''}
                 data={selectOptions.sort((a, b) => a.position - b.position).map(option => ({ label: option.text_label, value: option.text_label }))}
                 selected={values}
-                setSelected={(e) => setValues(e)}
-                disabled={disabled}
+                setSelected={!disabled ? (e) => setValues(e) : undefined}
+                // disabled={disabled}
                 className="2xl:w-[600px]"
                 mutedColor={!isPreview}
             />

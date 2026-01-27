@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CCROApplication, NIDA_STATUS_LABELS } from "@/types/ccro";
 import { CCROStatusBadge } from "@/components/ccro/CCROStatusBadge";
+import { AllocationShareValidator } from "./AllocationShareValidator";
 import { Button } from "@/components/ui/button";
 import { NidaVerificationModal } from "./NidaVerificationModal";
 import { useCCROStore } from "@/store/ccroStore";
@@ -18,16 +19,28 @@ export function CCROApplicationDetail({
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   
-  const { verifyPartyNida, checkNidaStatus, approveCCRO, issueCCRO, error } = useCCROStore();
+  const { verifyPartyNida, checkNidaStatus, approveCCRO, rejectCCRO, issueCCRO, error } = useCCROStore();
+  
+  // Validation checks
+  const hasValidNida = application.nida_check_status === 'verified';
+  const sharesTotal = application.parcel_details?.allocations?.reduce((sum, a) => sum + (a.proposed_share || 0), 0) || 0;
+  const sharesValid = sharesTotal === 100;
   
   const canApprove = 
     application.stage === 'submitted' && 
-    application.nida_check_status === 'verified';
+    hasValidNida &&
+    sharesValid;
   
   const canIssue = 
     application.stage === 'approved' && 
-    application.nida_check_status === 'verified';
+    hasValidNida &&
+    sharesValid;
+  
+  const canReject = 
+    application.stage === 'submitted' || 
+    application.stage === 'review';
 
   const handleVerifyClick = (partyId: number) => {
     setSelectedPartyId(partyId);
@@ -52,11 +65,28 @@ export function CCROApplicationDetail({
   };
 
   const handleApproveCCRO = async () => {
+    if (!sharesValid) {
+      alert(`Allocation shares must total 100%. Current total: ${sharesTotal}%`);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await approveCCRO(application.id);
     } catch (err) {
       console.error('Approve CCRO failed:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRejectCCRO = async () => {
+    setIsLoading(true);
+    try {
+      await rejectCCRO(application.id);
+      setShowRejectConfirm(false);
+    } catch (err) {
+      console.error('Reject CCRO failed:', err);
     } finally {
       setIsLoading(false);
     }
@@ -144,48 +174,79 @@ export function CCROApplicationDetail({
 
       {/* Party/Parties Information */}
       {application.parcel_details?.allocations && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Owners (Allocations)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {application.parcel_details.allocations.map((allocation) => (
-                <div key={allocation.id} className="flex items-center justify-between border-b pb-4">
-                  <div>
-                    <p className="font-medium">{allocation.party_name}</p>
-                    <p className="text-sm text-gray-500">Share: {allocation.proposed_share}%</p>
-                    {allocation.proposed_right_type && (
-                      <p className="text-sm text-gray-500">Right Type: {allocation.proposed_right_type}</p>
-                    )}
+        <>
+          <AllocationShareValidator 
+            allocations={application.parcel_details.allocations}
+          />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Owners (Allocations)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {application.parcel_details.allocations.map((allocation) => (
+                  <div key={allocation.id} className="flex items-center justify-between border-b pb-4">
+                    <div>
+                      <p className="font-medium">{allocation.party_name}</p>
+                      <p className="text-sm text-gray-500">Share: {allocation.proposed_share}%</p>
+                      {allocation.proposed_right_type && (
+                        <p className="text-sm text-gray-500">Right Type: {allocation.proposed_right_type}</p>
+                      )}
+                    </div>
+                    <div className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                      {allocation.status}
+                    </div>
                   </div>
-                  <div className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                    {allocation.status}
-                  </div>
-                </div>
-              ))}
-              
-              {/* Total shares validation */}
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm font-medium">
-                  Total Share: {application.parcel_details.allocations.reduce((sum, a) => sum + (a.proposed_share || 0), 0)}%
-                </p>
-                {application.parcel_details.allocations.reduce((sum, a) => sum + (a.proposed_share || 0), 0) !== 100 && (
-                  <p className="text-xs text-red-600 mt-1">⚠️ Shares must total exactly 100%</p>
-                )}
+                ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-2">
+        {canReject && (
+          <>
+            {!showRejectConfirm ? (
+              <Button
+                size="lg"
+                variant="destructive"
+                disabled={isLoading}
+                onClick={() => setShowRejectConfirm(true)}
+              >
+                Reject CCRO
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="lg"
+                  variant="destructive"
+                  disabled={isLoading}
+                  onClick={handleRejectCCRO}
+                >
+                  {isLoading ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  disabled={isLoading}
+                  onClick={() => setShowRejectConfirm(false)}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </>
+        )}
+        
         {application.stage === 'submitted' && (
           <Button
             size="lg"
             variant="outline"
             disabled={!canApprove || isLoading}
+            title={!hasValidNida ? 'Verify all party NIDA numbers first' : !sharesValid ? `Allocations must total 100% (current: ${sharesTotal}%)` : ''}
             onClick={handleApproveCCRO}
           >
             {isLoading ? 'Approving...' : 'Approve CCRO'}
@@ -196,6 +257,7 @@ export function CCROApplicationDetail({
           <Button
             size="lg"
             disabled={!canIssue || isLoading}
+            title={!hasValidNida ? 'Verify all party NIDA numbers first' : !sharesValid ? `Allocations must total 100% (current: ${sharesTotal}%)` : ''}
             onClick={handleIssueCCRO}
           >
             {isLoading ? 'Issuing...' : 'Issue CCRO Certificate'}
