@@ -17,10 +17,11 @@ type Props = {
     topLevelModule?: ModuleTypes;
     module: ModuleTypes;
     moduleLevel: string;
-    worklowCategory: string
+    worklowCategory: string;
+    noLink?: boolean
 }
 
-export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, topLevelModule, module, moduleLevel, worklowCategory }: Props) {
+export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, topLevelModule, module, moduleLevel, worklowCategory, noLink = false }: Props) {
     const { setPage } = usePageStore();
     const navigate = useNavigate()
 
@@ -123,6 +124,7 @@ export default function ViewWorkflow({ pageTitle, projectId, projectLocalityId, 
             projectLocaleProgress={projectLocaleProgress}
             moduleLevel={moduleLevel}
             projectId={projectId}
+            noLink={noLink}
         />
     )
 }
