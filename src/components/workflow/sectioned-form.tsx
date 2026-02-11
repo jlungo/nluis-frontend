@@ -40,9 +40,10 @@ type Props = {
     moduleLevel?: string
     projectId?: string
     projectLocaleProgress?: number
+    noLink?: boolean
 }
 
-export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, subLevelModule, moduleLevel, projectId, projectLocaleProgress }: Props) {
+export function SectionedForm({ data, values, disabled, projectLocalityId, projectName, projectLocaleName, projectLocaleId, subLevelModule, moduleLevel, projectId, projectLocaleProgress, noLink = false }: Props) {
     const queryClient = useQueryClient();
     const navigate = useNavigate()
     const location = useLocation()
@@ -300,9 +301,17 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                 <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <Button type='button' variant="ghost" size="sm" onClick={() => navigate(-1)}>
+                            <Button
+                                type='button'
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    if (noLink) setActiveForm('')
+                                    else navigate(-1)
+                                }}
+                            >
                                 <ArrowLeft className="h-4 w-4" />
-                                {isSingle ? 'Back' : 'Sections'}
+                                {isSingle && !noLink ? 'Back' : 'Sections'}
                             </Button>
                             <div>
                                 <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground">{form.name}{isSingle && section.name.length > 0 ? `: ${section.name}` : null}</h1>
@@ -405,14 +414,15 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
     };
 
     useEffect(() => {
+        if (noLink) return
         const active = searchParams.get("form");
         setEditForm(false)
         if (active) setActiveForm(active)
         else setActiveForm('')
-    }, [searchParams])
+    }, [searchParams, noLink])
 
     useEffect(() => {
-        if (!data) return
+        if (!data || noLink) return
         if (data.sections.length == 1 && data.sections.every(section => section.forms.length == 1))
             setActiveForm(data.sections[0].forms[0].slug);
         if (data?.sections.length > 0) {
@@ -422,7 +432,7 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             if (lowest) setExpandedSections([lowest.slug])
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [values])
+    }, [values, noLink])
 
     useEffect(() => {
         if (values && projectLocalityId)
@@ -442,10 +452,12 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
             <div className={`bg-primary/5 border-b border-border px-4 md:px-6 py-3 mb-6 ${disabled && "-mt-6"}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Button type='button' variant="ghost" size="sm" onClick={() => navigate(-1)}>
-                            <ArrowLeft className="h-4 w-4" />
-                            Back
-                        </Button>
+                        {!noLink ? (
+                            <Button type='button' variant="ghost" size="sm" onClick={() => navigate(-1)}>
+                                <ArrowLeft className="h-4 w-4" />
+                                Back
+                            </Button>
+                        ) : null}
                         <div>
                             <h1 className="text-sm md:text-base lg:text-lg font-semibold text-foreground/70">{data.name}{projectLocaleName ? <span className='text-foreground'>: {projectLocaleName}</span> : null}{projectLocaleName ? <span className='text-foreground'> - {projectName}</span> : null}</h1>
                             <p className="text-xs lg:text-sm text-muted-foreground">
@@ -537,7 +549,10 @@ export function SectionedForm({ data, values, disabled, projectLocalityId, proje
                                                             "border-green-700 dark:border-green-800": isFilledForm(form.slug),
                                                         }
                                                     )}
-                                                    onClick={() => navigate(`?form=${form.slug}`)}
+                                                    onClick={() => {
+                                                        if (noLink) setActiveForm(form.slug)
+                                                        else navigate(`?form=${form.slug}`)
+                                                    }}
                                                     disabled={!canViewForm(form, section)}
                                                 >
                                                     <div className="flex items-center gap-3">
