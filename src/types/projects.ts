@@ -24,6 +24,38 @@ export interface ProjectI {
     progress: number
     remarks: string | null
   }> | null
+  related_projects: Array<{
+    id: string
+    name: string
+    description?: string | null
+    project_status: number
+    approval_status: number
+    budget: string
+    reference_number: string
+    remarks?: string | null
+    reg_date: string
+    auth_date: string
+    localities: Array<{
+      approval_status: number
+      id: string
+      locality__id: string
+      locality__name: string
+      locality__level: string
+      progress: number
+      remarks: string | null
+    }> | null
+  }>
+}
+
+export interface RelatedProjectI {
+  id: string
+  project_id: string
+  related_project: {
+    id: string
+    name: string
+    reference_number: string
+    description: string
+  }
 }
 
 export interface ProjectsListPageProps {
